@@ -109,8 +109,7 @@ export const InventoryView: React.FC = () => {
                         src="/Blumen/0.jpg"
                         alt={userSeed.seedName}
                         rarity={userSeed.seedRarity as RarityTier}
-                        size="medium"
-                        className="w-12 h-12"
+                        size="large"
                       />
                       <div className="flex-1">
                         <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
