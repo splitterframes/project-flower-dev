@@ -234,12 +234,9 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
-        // Refresh garden data to update UI immediately
-        await fetchPlantedFields();
-        // Stop animation after refreshing data
-        setHarvestingField(null);
         // Show success feedback with animation - could be enhanced with toast
         console.log('Blume erfolgreich geerntet!');
+        // Animation will handle the refresh and cleanup
       } else {
         const error = await response.json();
         alert(error.message || 'Fehler beim Ernten');
@@ -254,7 +251,9 @@ export const GardenView: React.FC = () => {
     }
   };
 
-  const handleHarvestAnimationComplete = () => {
+  const handleHarvestAnimationComplete = async () => {
+    // Refresh garden data when animation completes
+    await fetchPlantedFields();
     setHarvestingField(null);
   };
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getRarityBorder, type RarityTier } from "@shared/rarity";
+import { type RarityTier } from "@shared/rarity";
 import { Flower, Sparkles } from "lucide-react";
 
 interface RarityImageProps {
@@ -37,23 +37,40 @@ export const RarityImage: React.FC<RarityImageProps> = ({
     large: 'h-8 w-8'
   };
 
+  const getBorderColor = (rarity: RarityTier): string => {
+    switch (rarity) {
+      case 'common': return '#fbbf24';      // yellow-400
+      case 'uncommon': return '#4ade80';    // green-400  
+      case 'rare': return '#3b82f6';        // blue-400
+      case 'super-rare': return '#06b6d4';  // cyan-400
+      case 'epic': return '#a855f7';        // purple-400
+      case 'legendary': return '#f97316';   // orange-400
+      case 'mythical': return '#ef4444';    // red-400
+      default: return '#9ca3af';            // gray-400
+    }
+  };
+
   const handleImageError = () => {
     setImageError(true);
   };
 
   return (
-    <div className={`
-      ${sizeClasses[size]} 
-      ${borderSize[size]} 
-      ${getRarityBorder(rarity)} 
-      rounded-lg 
-      overflow-hidden 
-      bg-slate-800 
-      flex 
-      items-center 
-      justify-center 
-      ${className}
-    `} style={{ borderStyle: 'solid' }}>
+    <div 
+      className={`
+        ${sizeClasses[size]} 
+        ${borderSize[size]} 
+        rounded-lg 
+        overflow-hidden 
+        bg-slate-800 
+        flex 
+        items-center 
+        justify-center 
+        ${className}
+      `} 
+      style={{ 
+        borderStyle: 'solid',
+        borderColor: getBorderColor(rarity)
+      }}>
       {!imageError ? (
         <img
           src={src}
