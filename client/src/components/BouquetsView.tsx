@@ -2,24 +2,30 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useCredits } from "@/lib/stores/useCredits";
 import { Flower2, Star, Heart, Gift, Plus, Sparkles } from "lucide-react";
 import { BouquetCreationModal } from "./BouquetCreationModal";
+import { BouquetRecipeDisplay } from "./BouquetRecipeDisplay";
 import { RarityImage } from "./RarityImage";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
-import type { UserFlower, UserBouquet, PlacedBouquet } from "@shared/schema";
+import type { UserFlower, UserBouquet, PlacedBouquet, BouquetRecipe } from "@shared/schema";
 
 export const BouquetsView: React.FC = () => {
   const { user } = useAuth();
+  const { credits, updateCredits } = useCredits();
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showBouquetCreation, setShowBouquetCreation] = useState(false);
+  const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
+  const [expandedBouquet, setExpandedBouquet] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchMyFlowers();
       fetchMyBouquets();
       fetchPlacedBouquets();
+      fetchBouquetRecipes();
     }
   }, [user]);
 
@@ -63,6 +69,51 @@ export const BouquetsView: React.FC = () => {
     }
   };
 
+  const fetchBouquetRecipes = async () => {
+    try {
+      const response = await fetch('/api/bouquets/recipes');
+      if (response.ok) {
+        const data = await response.json();
+        const recipeMap: Record<number, BouquetRecipe> = {};
+        data.recipes.forEach((recipe: BouquetRecipe) => {
+          recipeMap[recipe.bouquetId] = recipe;
+        });
+        setBouquetRecipes(recipeMap);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bouquet recipes:', error);
+    }
+  };
+
+  const [ingredientsCache, setIngredientsCache] = useState<Record<number, any[]>>({});
+
+  const fetchBouquetIngredients = async (bouquetId: number) => {
+    if (ingredientsCache[bouquetId]) return ingredientsCache[bouquetId];
+    
+    const recipe = bouquetRecipes[bouquetId];
+    if (!recipe) return [];
+    
+    try {
+      const flowerIds = [recipe.flowerId1, recipe.flowerId2, recipe.flowerId3];
+      const ingredients = [];
+      
+      // Get flower details for each ingredient
+      for (const flowerId of flowerIds) {
+        const flowerResponse = await fetch(`/api/flower/${flowerId}`);
+        if (flowerResponse.ok) {
+          const flower = await flowerResponse.json();
+          ingredients.push(flower);
+        }
+      }
+      
+      setIngredientsCache(prev => ({ ...prev, [bouquetId]: ingredients }));
+      return ingredients;
+    } catch (error) {
+      console.error('Failed to fetch flower ingredients:', error);
+      return [];
+    }
+  };
+
   const handleCreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string, generateName?: boolean) => {
     try {
       const response = await fetch('/api/bouquets/create', {
@@ -83,6 +134,10 @@ export const BouquetsView: React.FC = () => {
         // Refresh all data
         await fetchMyFlowers();
         await fetchMyBouquets();
+        // Update credits after successful bouquet creation
+        if (user) {
+          updateCredits(user.id, -30);
+        }
         setShowBouquetCreation(false);
       } else {
         const error = await response.json();
@@ -154,22 +209,45 @@ export const BouquetsView: React.FC = () => {
                     className="bg-slate-900 rounded-lg p-3 border-2"
                     style={{ borderColor: getBorderColor('rare' as RarityTier) }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <RarityImage 
-                        src="/Blumen/Bouquet.jpg"
-                        alt="Bouquet"
-                        rarity={"rare" as RarityTier}
-                        size="medium"
-                        className="w-12 h-12"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">Bouquet #{bouquet.id}</h4>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-rose-400">Bouquet</span>
-                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
+                    <div>
+                      <div className="flex items-center space-x-3">
+                        <RarityImage 
+                          src="/Blumen/Bouquet.jpg"
+                          alt="Bouquet"
+                          rarity={"rare" as RarityTier}
+                          size="medium"
+                          className="w-12 h-12"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-bold text-white text-sm">{bouquet.bouquetName || `Bouquet #${bouquet.id}`}</h4>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs text-rose-400">Bouquet</span>
+                            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
+                          </div>
                         </div>
                       </div>
+                      
+                      <div className="mt-2">
+                        <button
+                          onClick={() => setExpandedBouquet(expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId)}
+                          className="w-full px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded transition-colors"
+                        >
+                          {expandedBouquet === bouquet.bouquetId ? 'Rezept verbergen' : 'Rezept zeigen'}
+                        </button>
+                      </div>
                     </div>
+
+                    {expandedBouquet === bouquet.bouquetId && (
+                      <div className="mt-2">
+                        <BouquetRecipeDisplay 
+                          bouquetId={bouquet.bouquetId} 
+                          recipe={bouquetRecipes[bouquet.bouquetId]} 
+                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
+                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -240,7 +318,7 @@ export const BouquetsView: React.FC = () => {
         onClose={() => setShowBouquetCreation(false)}
         userFlowers={myFlowers}
         onCreateBouquet={handleCreateBouquet}
-        credits={1000} // TODO: Get real credits from user state
+        credits={credits}
       />
     </div>
   );

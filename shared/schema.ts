@@ -133,6 +133,9 @@ export const userBouquets = pgTable("user_bouquets", {
   userId: integer("user_id").notNull().references(() => users.id),
   bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
   quantity: integer("quantity").notNull().default(1),
+  bouquetName: text("bouquet_name").notNull(),
+  bouquetRarity: text("bouquet_rarity").notNull(),
+  bouquetImageUrl: text("bouquet_image_url").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -58,9 +58,14 @@ export interface IStorage {
   // Bouquet methods
   createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }>;
   getUserBouquets(userId: number): Promise<UserBouquet[]>;
+  getBouquetRecipes(): Promise<BouquetRecipe[]>;
+  getBouquetRecipe(bouquetId: number): Promise<BouquetRecipe | null>;
   placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }>;
   getPlacedBouquets(userId: number): Promise<PlacedBouquet[]>;
   getUserButterflies(userId: number): Promise<UserButterfly[]>;
+  
+  // Seed management methods
+  addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -689,6 +694,15 @@ export class MemStorage implements IStorage {
     return { success: true, bouquet };
   }
 
+  async getBouquetRecipes(): Promise<BouquetRecipe[]> {
+    return Array.from(this.bouquetRecipes.values());
+  }
+
+  async getBouquetRecipe(bouquetId: number): Promise<BouquetRecipe | null> {
+    const recipe = Array.from(this.bouquetRecipes.values()).find(r => r.bouquetId === bouquetId);
+    return recipe || null;
+  }
+
   async getUserBouquets(userId: number): Promise<UserBouquet[]> {
     return Array.from(this.userBouquets.values())
       .filter(bouquet => bouquet.userId === userId)
@@ -697,6 +711,9 @@ export class MemStorage implements IStorage {
         userId: b.userId,
         bouquetId: b.bouquetId,
         quantity: b.quantity,
+        bouquetName: b.bouquetName,
+        bouquetRarity: b.bouquetRarity,
+        bouquetImageUrl: b.bouquetImageUrl,
         createdAt: b.createdAt
       }));
   }
@@ -760,8 +777,9 @@ export class MemStorage implements IStorage {
         // Generate seed drop
         const seedDrop = getBouquetSeedDrop(expiredBouquet.bouquetRarity as RarityTier);
         
-        // Add seeds to user inventory (would need to implement addSeedToInventory)
-        // For now, we'll skip the seed drop implementation
+        // Add seeds to user inventory
+        this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
+        console.log(`💧 Bouquet expired, dropped ${seedDrop.quantity}x ${seedDrop.rarity} seeds for user ${userId}`);
         
         // Remove expired bouquet
         this.placedBouquets.delete(expiredBouquet.id);
@@ -783,6 +801,30 @@ export class MemStorage implements IStorage {
   async getUserButterflies(userId: number): Promise<UserButterfly[]> {
     return Array.from(this.userButterflies.values())
       .filter(butterfly => butterfly.userId === userId);
+  }
+
+  async addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void> {
+    // Find existing seed of this rarity in user's inventory
+    const existingSeed = Array.from(this.userSeeds.values())
+      .find(seed => seed.userId === userId && seed.seedRarity === rarity);
+    
+    if (existingSeed) {
+      // Add to existing quantity
+      existingSeed.quantity += quantity;
+      this.userSeeds.set(existingSeed.id, existingSeed);
+    } else {
+      // Create new seed inventory entry
+      const newUserSeed = {
+        id: this.currentUserSeedId++,
+        userId,
+        seedId: 1, // Generic seed ID for now
+        quantity,
+        createdAt: new Date(),
+        seedName: `${rarity} Samen`,
+        seedRarity: rarity
+      };
+      this.userSeeds.set(newUserSeed.id, newUserSeed);
+    }
   }
 
   // New system: Spawn butterfly on a garden field

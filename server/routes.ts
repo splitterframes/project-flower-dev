@@ -207,6 +207,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/flower/:id", async (req, res) => {
+    try {
+      const flowerId = parseInt(req.params.id);
+      
+      // For demo purposes, create a basic flower object
+      // In a real app, this would come from a flowers table
+      const flower = {
+        id: flowerId,
+        name: `Blume ${flowerId}`,
+        rarity: flowerId <= 100 ? 'common' : flowerId <= 150 ? 'uncommon' : 'rare',
+        imageUrl: `/Blumen/${flowerId}.jpg`
+      };
+      
+      res.json(flower);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Bouquet routes
   app.post("/api/bouquets/generate-name", async (req, res) => {
     try {
@@ -252,6 +271,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       const bouquets = await storage.getUserBouquets(userId);
       res.json({ bouquets });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/bouquet/:id/recipe", async (req, res) => {
+    try {
+      const bouquetId = parseInt(req.params.id);
+      const recipe = await storage.getBouquetRecipe(bouquetId);
+      if (!recipe) {
+        return res.status(404).json({ message: "Recipe not found" });
+      }
+      res.json({ recipe });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/bouquets/recipes", async (req, res) => {
+    try {
+      const recipes = await storage.getBouquetRecipes();
+      res.json({ recipes });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
