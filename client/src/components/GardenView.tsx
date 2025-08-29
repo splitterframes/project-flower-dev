@@ -252,7 +252,7 @@ export const GardenView: React.FC = () => {
   };
 
   const handleHarvestAnimationComplete = async () => {
-    // Refresh garden data when animation completes
+    // Animation is complete, now refresh garden data and clear harvesting state
     await fetchPlantedFields();
     setHarvestingField(null);
   };

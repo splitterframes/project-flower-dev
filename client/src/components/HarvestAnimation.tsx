@@ -9,11 +9,11 @@ export const HarvestAnimation: React.FC<HarvestAnimationProps> = ({ fieldIndex, 
   const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
-    // Auto-complete animation after 1.5 seconds
+    // Auto-complete animation after exactly 2 blinks (1.2 seconds)
     const timer = setTimeout(() => {
       setIsAnimating(false);
       onComplete();
-    }, 1500);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -33,8 +33,11 @@ export const HarvestAnimation: React.FC<HarvestAnimationProps> = ({ fieldIndex, 
       {/* Success message */}
       <div className="absolute inset-0 flex items-center justify-center z-10">
         <div 
-          className="bg-green-500 text-white px-3 py-1 rounded-lg font-bold text-sm shadow-lg animate-bounce"
-          style={{ animationDuration: '0.6s' }}
+          className="bg-green-500 text-white px-3 py-1 rounded-lg font-bold text-sm shadow-lg"
+          style={{ 
+            animation: 'pulse 0.6s ease-in-out 2',
+            animationFillMode: 'forwards'
+          }}
         >
           +1 Blume!
         </div>
