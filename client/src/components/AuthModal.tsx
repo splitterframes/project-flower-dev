@@ -24,8 +24,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     await login(loginForm.username, loginForm.password);
-    if (!error) {
-      setCredits(1000); // Set initial credits
+    // Check if login was successful
+    const currentState = useAuth.getState();
+    if (currentState.user && !currentState.error) {
+      setCredits(currentState.user.credits); // Use actual user credits
       onClose();
     }
   };
@@ -36,8 +38,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
     await register(registerForm.username, registerForm.password);
-    if (!error) {
-      setCredits(1000); // Set initial credits
+    // Check if registration was successful
+    const currentState = useAuth.getState();
+    if (currentState.user && !currentState.error) {
+      setCredits(currentState.user.credits); // Use actual user credits
       onClose();
     }
   };

@@ -430,6 +430,7 @@ export class MemStorage implements IStorage {
       plantedAt: new Date(),
       isGrown: false,
       flowerId: randomFlower?.id || null,
+      flowerName: randomFlower?.name || null,
       flowerImageUrl: randomFlower?.imageUrl || null,
       createdAt: new Date()
     };

@@ -72,6 +72,7 @@ export const plantedFields = pgTable("planted_fields", {
   plantedAt: timestamp("planted_at").notNull().defaultNow(),
   isGrown: boolean("is_grown").notNull().default(false),
   flowerId: integer("flower_id"),
+  flowerName: text("flower_name"),
   flowerImageUrl: text("flower_image_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
