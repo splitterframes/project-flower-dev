@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { getRarityColor, getRarityBorder, type RarityTier } from "@shared/rarity";
 import { 
   Store,
   TrendingUp,
@@ -136,31 +137,6 @@ export const MarketView: React.FC = () => {
     setIsLoading(false);
   };
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'text-yellow-400';
-      case 'uncommon': return 'text-green-400';
-      case 'rare': return 'text-blue-400';
-      case 'super-rare': return 'text-cyan-400';
-      case 'epic': return 'text-purple-400';
-      case 'legendary': return 'text-orange-400';
-      case 'mythical': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getRarityBorder = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'border-yellow-400';
-      case 'uncommon': return 'border-green-400';
-      case 'rare': return 'border-blue-400';
-      case 'super-rare': return 'border-cyan-400';
-      case 'epic': return 'border-purple-400';
-      case 'legendary': return 'border-orange-400';
-      case 'mythical': return 'border-red-400';
-      default: return 'border-gray-400';
-    }
-  };
 
   if (!user) {
     return (
@@ -263,13 +239,13 @@ export const MarketView: React.FC = () => {
                 {marketListings.map((listing) => (
                   <div
                     key={listing.id}
-                    className={`bg-slate-900 rounded-lg p-4 border-2 ${getRarityBorder(listing.seedRarity)}`}
+                    className={`bg-slate-900 rounded-lg p-4 border-2 ${getRarityBorder(listing.seedRarity as RarityTier)}`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-bold text-white">{listing.seedName}</h4>
                       <div className="flex items-center">
-                        <Star className={`h-4 w-4 mr-1 ${getRarityColor(listing.seedRarity)}`} />
-                        <span className={`text-xs ${getRarityColor(listing.seedRarity)}`}>
+                        <Star className={`h-4 w-4 mr-1 ${getRarityColor(listing.seedRarity as RarityTier)}`} />
+                        <span className={`text-xs ${getRarityColor(listing.seedRarity as RarityTier)}`}>
                           {listing.seedRarity}
                         </span>
                       </div>

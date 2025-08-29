@@ -72,3 +72,37 @@ Preferred communication style: Simple, everyday language.
 - **Class Variance Authority**: Type-safe CSS class generation
 - **Date-fns**: Date manipulation and formatting utilities
 - **Lucide React**: Consistent icon library for UI elements
+
+# Game Asset Distribution
+
+## 7-Tier Rarity System
+The game uses a weighted distribution system for flowers and butterflies across 7 rarity tiers:
+
+### Rarity Tiers with Colors
+- **Common** (gelb/yellow): 45% - Most frequent, basic varieties
+- **Uncommon** (grün/green): 30% - Slightly rarer, colorful varieties  
+- **Rare** (blau/blue): 15% - Beautiful, harder to find species
+- **Super-rare** (türkis/turquoise): 7% - Exotic, stunning varieties
+- **Epic** (lila/purple): 2.5% - Magnificent, powerful species
+- **Legendary** (orange): 0.4% - Mythic, awe-inspiring varieties
+- **Mythical** (rot/red): 0.1% - Ultimate, legendary species
+
+### Asset Distribution
+
+#### 200 Flower Images (/Blumen folder)
+- **Common**: 90 flowers (45%) - Images 01-90
+- **Uncommon**: 60 flowers (30%) - Images 91-150  
+- **Rare**: 30 flowers (15%) - Images 151-180
+- **Super-rare**: 14 flowers (7%) - Images 181-194
+- **Epic**: 5 flowers (2.5%) - Images 195-199
+- **Legendary**: 1 flower (0.5%) - Image 200
+- **Mythical**: 0 flowers (reserved for special events)
+
+#### 1000 Butterfly Images (/Schmetterlinge folder)
+- **Common**: 450 butterflies (45%) - Images 001-450
+- **Uncommon**: 300 butterflies (30%) - Images 451-750
+- **Rare**: 150 butterflies (15%) - Images 751-900  
+- **Super-rare**: 70 butterflies (7%) - Images 901-970
+- **Epic**: 25 butterflies (2.5%) - Images 971-995
+- **Legendary**: 4 butterflies (0.4%) - Images 996-999
+- **Mythical**: 1 butterfly (0.1%) - Image 1000
