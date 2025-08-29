@@ -44,14 +44,15 @@ export const HarvestAnimation: React.FC<HarvestAnimationProps> = ({ fieldIndex, 
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="absolute w-2 h-2 bg-orange-400 rounded-full opacity-80"
+          className="absolute w-2 h-2 bg-orange-400 rounded-full animate-ping"
           style={{
             left: '50%',
             top: '50%',
-            transform: `translate(-50%, -50%) rotate(${particle.direction}deg) translateY(-${particle.distance}px) scale(0.3)`,
-            transition: `all 1s ease-out ${particle.delay}s`,
-            animation: `ping 1s ease-out ${particle.delay}s 1`,
-            opacity: 0,
+            transform: `translate(-50%, -50%)`,
+            animationDelay: `${particle.delay}s`,
+            animationDuration: '1s',
+            animationFillMode: 'forwards',
+            opacity: 1,
           }}
         />
       ))}

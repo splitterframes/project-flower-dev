@@ -27,7 +27,7 @@ export const RarityImage: React.FC<RarityImageProps> = ({
 
   const borderSize = {
     small: 'border-2',
-    medium: 'border-3',
+    medium: 'border-2',
     large: 'border-4'
   };
 
@@ -51,9 +51,9 @@ export const RarityImage: React.FC<RarityImageProps> = ({
       bg-slate-800 
       flex 
       items-center 
-      justify-center
+      justify-center 
       ${className}
-    `}>
+    `} style={{ borderStyle: 'solid' }}>
       {!imageError ? (
         <img
           src={src}
