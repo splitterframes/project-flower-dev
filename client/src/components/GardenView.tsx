@@ -199,7 +199,7 @@ export const GardenView: React.FC = () => {
   };
 
   const getFieldStatus = (field: GardenField) => {
-    if (!field.hasPlant || !field.isGrowing || !field.plantedAt || !field.growthTimeSeconds) {
+    if (!field.hasPlant || !field.plantedAt || !field.growthTimeSeconds) {
       return null;
     }
 
