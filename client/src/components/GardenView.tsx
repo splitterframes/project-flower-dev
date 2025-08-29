@@ -105,44 +105,45 @@ export const GardenView: React.FC = () => {
 
   const updateGardenWithPlantedFields = (plantedFields: any[]) => {
     console.log('Updating garden with planted fields:', plantedFields);
-    setGardenFields(prev => 
-      prev.map(field => {
-        const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
-        if (plantedField) {
-          const plantedAt = new Date(plantedField.plantedAt);
-          const growthTimeSeconds = getGrowthTime(plantedField.seedRarity as RarityTier);
-          const isGrown = plantedField.isGrown || 
-            (currentTime.getTime() - plantedAt.getTime()) / 1000 >= growthTimeSeconds;
-          
-          return {
-            ...field,
-            hasPlant: true,
-            isGrowing: !isGrown,
-            plantedAt,
-            growthTimeSeconds,
-            seedRarity: plantedField.seedRarity,
-            flowerId: plantedField.flowerId,
-            flowerName: plantedField.flowerName,
-            flowerImageUrl: plantedField.flowerImageUrl
-          };
-        }
-        // Field was harvested - reset to empty state (only if it previously had a plant)
-        if (field.hasPlant) {
-          console.log(`Clearing field ${field.id} - was harvested`);
-        }
+    const newFields = gardenFields.map(field => {
+      const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
+      if (plantedField) {
+        const plantedAt = new Date(plantedField.plantedAt);
+        const growthTimeSeconds = getGrowthTime(plantedField.seedRarity as RarityTier);
+        const isGrown = plantedField.isGrown || 
+          (currentTime.getTime() - plantedAt.getTime()) / 1000 >= growthTimeSeconds;
+        
         return {
           ...field,
-          hasPlant: false,
-          isGrowing: false,
-          plantedAt: undefined,
-          growthTimeSeconds: undefined,
-          seedRarity: undefined,
-          flowerId: undefined,
-          flowerName: undefined,
-          flowerImageUrl: undefined
+          hasPlant: true,
+          isGrowing: !isGrown,
+          plantedAt,
+          growthTimeSeconds,
+          seedRarity: plantedField.seedRarity,
+          flowerId: plantedField.flowerId,
+          flowerName: plantedField.flowerName,
+          flowerImageUrl: plantedField.flowerImageUrl
         };
-      })
-    );
+      }
+      // Field was harvested or never had a plant - reset to empty state
+      if (field.hasPlant) {
+        console.log(`Clearing field ${field.id} - was harvested`);
+      }
+      return {
+        ...field,
+        hasPlant: false,
+        isGrowing: false,
+        plantedAt: undefined,
+        growthTimeSeconds: undefined,
+        seedRarity: undefined,
+        flowerId: undefined,
+        flowerName: undefined,
+        flowerImageUrl: undefined
+      };
+    });
+    
+    console.log('New garden state:', newFields.filter(f => f.hasPlant).map(f => `Field ${f.id}: ${f.flowerName}`));
+    setGardenFields(newFields);
   };
 
   if (!user) {
@@ -402,8 +403,10 @@ export const GardenView: React.FC = () => {
                     <>
                       <Lock className="h-4 w-4 text-slate-400" />
                       {isNextToUnlock && (
-                        <div className="absolute -bottom-6 text-xs text-orange-400">
-                          {calculateUnlockCost(field.id)} Cr
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-orange-500/80 text-white text-xs font-bold px-2 py-1 rounded">
+                            {calculateUnlockCost(field.id)} Cr
+                          </div>
                         </div>
                       )}
                     </>
