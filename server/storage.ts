@@ -477,8 +477,18 @@ export class MemStorage implements IStorage {
       return { success: false, message: "Kein Feld zum Ernten gefunden" };
     }
 
+    // Check if field should be grown by now (same logic as getPlantedFields)
     if (!plantedField.isGrown) {
-      return { success: false, message: "Die Blume ist noch nicht gewachsen" };
+      const currentTime = new Date();
+      const growthTime = getGrowthTime(plantedField.seedRarity as RarityTier);
+      const elapsedSeconds = (currentTime.getTime() - plantedField.plantedAt.getTime()) / 1000;
+      
+      if (elapsedSeconds >= growthTime) {
+        plantedField.isGrown = true;
+        this.plantedFields.set(plantedField.id, plantedField);
+      } else {
+        return { success: false, message: "Die Blume ist noch nicht gewachsen" };
+      }
     }
 
     // Remove planted field
