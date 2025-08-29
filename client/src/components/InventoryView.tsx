@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
-import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
+import { Package, Flower, Bug, Gem, Sprout, Star, Heart } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { BouquetCreationModal } from "./BouquetCreationModal";
+import type { UserFlower, UserBouquet, UserButterfly } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
-  const { user } = useAuth();
+  const { user, credits } = useAuth();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
-  const [myFlowers, setMyFlowers] = useState<any[]>([]);
+  const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
+  const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
+  const [myButterflies, setMyButterflies] = useState<UserButterfly[]>([]);
+  const [showBouquetCreation, setShowBouquetCreation] = useState(false);
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -107,6 +113,8 @@ export const InventoryView: React.FC = () => {
     if (user) {
       fetchMySeeds();
       fetchMyFlowers();
+      fetchMyBouquets();
+      fetchMyButterflies();
     }
   }, [user]);
 

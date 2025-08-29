@@ -110,4 +110,71 @@ export type BuyListingRequest = z.infer<typeof buyListingSchema>;
 export type PlantedField = typeof plantedFields.$inferSelect;
 export type PlantSeedRequest = z.infer<typeof plantSeedSchema>;
 export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;
+// Bouquet system
+export const bouquets = pgTable("bouquets", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  rarity: text("rarity").notNull(), // Average rarity of the 3 flowers
+  imageUrl: text("image_url").notNull().default("/Blumen/bouquet.jpg"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const bouquetRecipes = pgTable("bouquet_recipes", {
+  id: serial("id").primaryKey(),
+  bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
+  flowerId1: integer("flower_id_1").notNull(),
+  flowerId2: integer("flower_id_2").notNull(),
+  flowerId3: integer("flower_id_3").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userBouquets = pgTable("user_bouquets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const placedBouquets = pgTable("placed_bouquets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
+  fieldIndex: integer("field_index").notNull(),
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(), // 21 minutes after placement
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userButterflies = pgTable("user_butterflies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  butterflyId: integer("butterfly_id").notNull(),
+  butterflyName: text("butterfly_name").notNull(),
+  butterflyRarity: text("butterfly_rarity").notNull(),
+  butterflyImageUrl: text("butterfly_image_url").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const createBouquetSchema = z.object({
+  flowerId1: z.number().min(1),
+  flowerId2: z.number().min(1),
+  flowerId3: z.number().min(1),
+  name: z.string().min(1).max(50).optional(),
+  generateName: z.boolean().optional(),
+});
+
+export const placeBouquetSchema = z.object({
+  bouquetId: z.number().min(1),
+  fieldIndex: z.number().min(0).max(49),
+});
+
 export type UserFlower = typeof userFlowers.$inferSelect;
+export type Bouquet = typeof bouquets.$inferSelect;
+export type BouquetRecipe = typeof bouquetRecipes.$inferSelect;
+export type UserBouquet = typeof userBouquets.$inferSelect;
+export type PlacedBouquet = typeof placedBouquets.$inferSelect;
+export type UserButterfly = typeof userButterflies.$inferSelect;
+export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
+export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;

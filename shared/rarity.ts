@@ -281,3 +281,19 @@ export function generateLatinButterflyName(): string {
   
   return `${prefix} ${suffix}`;
 }
+
+/**
+ * Get numeric index for rarity tier (useful for calculations)
+ */
+export function getRarityTierIndex(rarity: RarityTier): number {
+  switch (rarity) {
+    case 'common': return 0;
+    case 'uncommon': return 1;
+    case 'rare': return 2;
+    case 'super-rare': return 3;
+    case 'epic': return 4;
+    case 'legendary': return 5;
+    case 'mythical': return 6;
+    default: return 0;
+  }
+}
