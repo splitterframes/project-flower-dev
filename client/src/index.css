@@ -145,6 +145,24 @@ canvas {
   @apply text-red-400;
 }
 
+/* Layout fixes for fixed footer */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.layout-footer {
+  flex-shrink: 0;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .mobile-hidden {

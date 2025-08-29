@@ -53,10 +53,10 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
+    <div className="layout-container h-screen bg-slate-950 flex flex-col">
       <Header onAuthClick={handleAuthClick} />
       
-      <main className="flex-1 overflow-auto">
+      <main className="layout-main flex-1 overflow-y-auto">
         {renderContent()}
       </main>
       
