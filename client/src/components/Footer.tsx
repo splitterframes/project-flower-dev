@@ -15,11 +15,10 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   const navigationItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "game", label: "Game", icon: Gamepad2 },
-    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "garten", label: "Garten", icon: Home },
+    { id: "inventar", label: "Inventar", icon: Gamepad2 },
+    { id: "bouquets", label: "Bouquets", icon: Trophy },
+    { id: "ausstellung", label: "Ausstellung", icon: User },
   ];
 
   return (

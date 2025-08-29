@@ -53,7 +53,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">Welcome to GameHub</DialogTitle>
+          <DialogTitle className="text-center text-2xl">Welcome to Mariposa</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="login" className="w-full">

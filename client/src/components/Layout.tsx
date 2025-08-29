@@ -4,12 +4,16 @@ import { Footer } from "./Footer";
 import { AuthModal } from "./AuthModal";
 import { Dashboard } from "./Dashboard";
 import { GameView } from "./GameView";
+import { GardenView } from "./GardenView";
+import { InventoryView } from "./InventoryView";
+import { BouquetsView } from "./BouquetsView";
+import { ExhibitionView } from "./ExhibitionView";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const Layout: React.FC = () => {
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState("garten");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user } = useAuth();
   const { setCredits } = useCredits();
@@ -30,55 +34,21 @@ export const Layout: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (!user && currentView !== "dashboard") {
-      return (
-        <div className="flex-1 flex items-center justify-center">
-          <Card className="bg-slate-800 border-slate-700 text-white">
-            <CardContent className="pt-6">
-              <p className="text-center text-slate-400">Please log in to access this feature</p>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
     switch (currentView) {
+      case "garten":
+        return <GardenView />;
+      case "inventar":
+        return <InventoryView />;
+      case "bouquets":
+        return <BouquetsView />;
+      case "ausstellung":
+        return <ExhibitionView />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":
         return <GameView />;
-      case "leaderboard":
-        return (
-          <div className="flex-1 flex items-center justify-center">
-            <Card className="bg-slate-800 border-slate-700 text-white">
-              <CardContent className="pt-6">
-                <p className="text-center text-slate-400">Leaderboard coming soon!</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      case "profile":
-        return (
-          <div className="flex-1 flex items-center justify-center">
-            <Card className="bg-slate-800 border-slate-700 text-white">
-              <CardContent className="pt-6">
-                <p className="text-center text-slate-400">Profile management coming soon!</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      case "settings":
-        return (
-          <div className="flex-1 flex items-center justify-center">
-            <Card className="bg-slate-800 border-slate-700 text-white">
-              <CardContent className="pt-6">
-                <p className="text-center text-slate-400">Settings panel coming soon!</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
       default:
-        return <Dashboard onViewChange={handleViewChange} />;
+        return <GardenView />;
     }
   };
 

@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
       <div className="flex items-center justify-between">
         {/* Logo/Title */}
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-white">GameHub</h1>
+          <h1 className="text-2xl font-bold text-white">Mariposa</h1>
         </div>
 
         {/* Right side - User info or Login button */}
