@@ -170,7 +170,7 @@ export const BouquetsView: React.FC = () => {
                   >
                     <div className="flex items-center space-x-3">
                       <RarityImage 
-                        src="/Blumen/bouquet.jpg"
+                        src="/Blumen/Bouquet.jpg"
                         alt="Bouquet"
                         rarity={"rare" as RarityTier}
                         size="medium"

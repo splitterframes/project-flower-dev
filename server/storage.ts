@@ -633,7 +633,7 @@ export class MemStorage implements IStorage {
       id: this.currentBouquetId++,
       name: bouquetName,
       rarity: averageRarity,
-      imageUrl: "/Blumen/bouquet.jpg",
+      imageUrl: "/Blumen/Bouquet.jpg",
       createdAt: new Date()
     };
     this.bouquets.set(bouquet.id, bouquet);
@@ -678,6 +678,7 @@ export class MemStorage implements IStorage {
     // Deduct credits
     user.credits -= 30;
     this.users.set(userId, user);
+    console.log(`Credits deducted: ${user.credits} remaining for user ${userId}`);
 
     return { success: true, bouquet };
   }

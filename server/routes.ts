@@ -208,6 +208,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bouquet routes
+  app.post("/api/bouquets/generate-name", async (req, res) => {
+    try {
+      const { rarity } = req.body;
+      if (!rarity) {
+        return res.status(400).json({ message: "Rarity is required" });
+      }
+      
+      const { generateBouquetName } = await import('./bouquet');
+      const name = await generateBouquetName(rarity);
+      
+      res.json({ name });
+    } catch (error) {
+      console.error('Error generating bouquet name:', error);
+      res.status(500).json({ message: "Failed to generate name" });
+    }
+  });
+
   app.post("/api/bouquets/create", async (req, res) => {
     try {
       const bouquetData = createBouquetSchema.parse(req.body);
