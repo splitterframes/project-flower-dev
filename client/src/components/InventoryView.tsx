@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
-import { Package, Flower, Bug, Gem, Sprout, Star, Heart } from "lucide-react";
+import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
-import { BouquetCreationModal } from "./BouquetCreationModal";
 import type { UserFlower, UserBouquet, UserButterfly } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
@@ -16,7 +15,6 @@ export const InventoryView: React.FC = () => {
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
   const [myButterflies, setMyButterflies] = useState<UserButterfly[]>([]);
-  const [showBouquetCreation, setShowBouquetCreation] = useState(false);
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -271,22 +269,12 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Flowers with Bouquet Creation */}
+        {/* Flowers */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center justify-between">
-              <div className="flex items-center">
-                <Flower className="h-5 w-5 mr-2 text-pink-400" />
-                Blumen
-              </div>
-              <Button
-                onClick={() => setShowBouquetCreation(true)}
-                disabled={myFlowers.length < 3}
-                className="bg-pink-600 hover:bg-pink-700 text-xs px-2 py-1 h-7"
-              >
-                <Heart className="h-3 w-3 mr-1" />
-                Bouquet
-              </Button>
+            <CardTitle className="text-white flex items-center">
+              <Flower className="h-5 w-5 mr-2 text-pink-400" />
+              Blumen
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -345,14 +333,6 @@ export const InventoryView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Bouquet Creation Modal */}
-      <BouquetCreationModal
-        isOpen={showBouquetCreation}
-        onClose={() => setShowBouquetCreation(false)}
-        userFlowers={myFlowers}
-        onCreateBouquet={handleCreateBouquet}
-        credits={1000} // TODO: Get real credits from user state
-      />
     </div>
   );
 };
