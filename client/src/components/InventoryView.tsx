@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
-import { getRarityColor, getRarityBorder, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityBorder, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 
 export const InventoryView: React.FC = () => {
@@ -102,12 +102,7 @@ export const InventoryView: React.FC = () => {
                         <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs ${getRarityColor(userSeed.seedRarity as RarityTier)}`}>
-                            {userSeed.seedRarity === 'super-rare' ? 'Super-Rare' : 
-                             userSeed.seedRarity === 'mythical' ? 'Mythisch' :
-                             userSeed.seedRarity === 'legendary' ? 'Legendär' :
-                             userSeed.seedRarity === 'epic' ? 'Episch' :
-                             userSeed.seedRarity === 'rare' ? 'Selten' :
-                             userSeed.seedRarity === 'uncommon' ? 'Ungewöhnlich' : 'Gewöhnlich'}
+                            {getRarityDisplayName(userSeed.seedRarity as RarityTier)}
                           </span>
                           <span className="text-sm font-bold text-green-400">x{userSeed.quantity}</span>
                         </div>
@@ -153,12 +148,7 @@ export const InventoryView: React.FC = () => {
                         <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
-                            {flower.flowerRarity === 'super-rare' ? 'Super-Rare' : 
-                             flower.flowerRarity === 'mythical' ? 'Mythisch' :
-                             flower.flowerRarity === 'legendary' ? 'Legendär' :
-                             flower.flowerRarity === 'epic' ? 'Episch' :
-                             flower.flowerRarity === 'rare' ? 'Selten' :
-                             flower.flowerRarity === 'uncommon' ? 'Ungewöhnlich' : 'Gewöhnlich'}
+                            {getRarityDisplayName(flower.flowerRarity as RarityTier)}
                           </span>
                           <span className="text-sm font-bold text-green-400">x{flower.quantity}</span>
                         </div>

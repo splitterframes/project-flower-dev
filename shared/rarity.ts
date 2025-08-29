@@ -187,6 +187,22 @@ export function formatTime(seconds: number): string {
 }
 
 /**
+ * Get German display name for rarity tier
+ */
+export function getRarityDisplayName(rarity: RarityTier): string {
+  switch (rarity) {
+    case 'common': return 'Gewöhnlich';
+    case 'uncommon': return 'Ungewöhnlich';
+    case 'rare': return 'Selten';
+    case 'super-rare': return 'Super-Rare';
+    case 'epic': return 'Episch';
+    case 'legendary': return 'Legendär';
+    case 'mythical': return 'Mythisch';
+    default: return 'Unbekannt';
+  }
+}
+
+/**
  * Generate a random flower from a specific rarity tier
  */
 export function generateRandomFlower(rarity: RarityTier): { id: number; name: string; imageUrl: string } | null {

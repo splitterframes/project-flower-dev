@@ -6,7 +6,8 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { RarityImage } from "./RarityImage";
 import { HarvestAnimation } from "./HarvestAnimation";
-import { getGrowthTime, formatTime, type RarityTier } from "@shared/rarity";
+import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
   Lock,
@@ -233,10 +234,10 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
+        // Stop animation immediately
+        setHarvestingField(null);
         // Refresh garden data to update UI
         await fetchPlantedFields();
-        // Stop animation after successful harvest
-        setHarvestingField(null);
         // Show success feedback with animation - could be enhanced with toast
         console.log('Blume erfolgreich geerntet!');
       } else {
@@ -377,27 +378,35 @@ export const GardenView: React.FC = () => {
                   {field.isUnlocked && field.hasPlant && (() => {
                     const status = getFieldStatus(field);
                     if (status?.isGrown && field.flowerImageUrl) {
-                      // Show grown flower with its actual image and tooltip
+                      // Show grown flower with hover preview and tooltip
                       return (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger className="cursor-pointer">
-                              <RarityImage 
-                                src={field.flowerImageUrl}
-                                alt="Blume"
-                                rarity={field.seedRarity as RarityTier}
-                                size="large"
-                                className="mx-auto w-12 h-12"
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-800 border-slate-600 text-white">
-                              <div className="text-center">
-                                <div className="font-bold text-sm">{field.flowerName}</div>
-                                <div className="text-xs opacity-80">{field.seedRarity}</div>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <FlowerHoverPreview
+                          flowerImageUrl={field.flowerImageUrl}
+                          flowerName={field.flowerName || "Unbekannte Blume"}
+                          rarity={field.seedRarity as RarityTier}
+                        >
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-pointer">
+                                <RarityImage 
+                                  src={field.flowerImageUrl}
+                                  alt="Blume"
+                                  rarity={field.seedRarity as RarityTier}
+                                  size="large"
+                                  className="mx-auto w-16 h-16"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-slate-800 border-slate-600 text-white">
+                                <div className="text-center">
+                                  <div className="font-bold text-sm">{field.flowerName}</div>
+                                  <div className={`text-xs ${getRarityColor(field.seedRarity as RarityTier)}`}>
+                                    {getRarityDisplayName(field.seedRarity as RarityTier)}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </FlowerHoverPreview>
                       );
                     } else if (field.isGrowing) {
                       // Show seed image while growing
@@ -408,7 +417,7 @@ export const GardenView: React.FC = () => {
                             alt="Wachsender Samen"
                             rarity={field.seedRarity as RarityTier}
                             size="medium"
-                            className="mx-auto w-10 h-10"
+                            className="mx-auto w-14 h-14"
                           />
                           {status && (
                             <div className="text-xs text-green-400 mt-1">
