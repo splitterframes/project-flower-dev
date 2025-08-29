@@ -87,7 +87,7 @@ export const BouquetsView: React.FC = () => {
 
   const [ingredientsCache, setIngredientsCache] = useState<Record<number, any[]>>({});
 
-  const fetchBouquetIngredients = async (bouquetId: number) => {
+  const fetchBouquetIngredients = async (bouquetId: number): Promise<any[]> => {
     if (ingredientsCache[bouquetId]) return ingredientsCache[bouquetId];
     
     const recipe = bouquetRecipes[bouquetId];
@@ -95,7 +95,7 @@ export const BouquetsView: React.FC = () => {
     
     try {
       const flowerIds = [recipe.flowerId1, recipe.flowerId2, recipe.flowerId3];
-      const ingredients = [];
+      const ingredients: any[] = [];
       
       // Get flower details for each ingredient
       for (const flowerId of flowerIds) {
@@ -134,10 +134,7 @@ export const BouquetsView: React.FC = () => {
         // Refresh all data
         await fetchMyFlowers();
         await fetchMyBouquets();
-        // Update credits after successful bouquet creation
-        if (user) {
-          updateCredits(user.id, -30);
-        }
+        // Credits are already deducted on server side, no need to deduct here
         setShowBouquetCreation(false);
       } else {
         const error = await response.json();

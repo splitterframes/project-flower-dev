@@ -66,6 +66,7 @@ export interface IStorage {
   
   // Seed management methods
   addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void>;
+  collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }>;
 }
 
 export class MemStorage implements IStorage {
@@ -825,6 +826,33 @@ export class MemStorage implements IStorage {
       };
       this.userSeeds.set(newUserSeed.id, newUserSeed);
     }
+  }
+
+  async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
+    // Find the expired bouquet on the specified field
+    const placedBouquet = Array.from(this.placedBouquets.values()).find(pb => 
+      pb.userId === userId && 
+      pb.fieldIndex === fieldIndex &&
+      new Date() > new Date(pb.expiresAt)
+    );
+
+    if (!placedBouquet) {
+      return { success: false };
+    }
+    
+    // Generate seed drop
+    const seedDrop = getBouquetSeedDrop(placedBouquet.bouquetRarity as RarityTier);
+    
+    // Add seeds to user inventory
+    await this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
+    
+    // Remove the expired bouquet
+    this.placedBouquets.delete(placedBouquet.id);
+
+    return { 
+      success: true, 
+      seedDrop: seedDrop 
+    };
   }
 
   // New system: Spawn butterfly on a garden field

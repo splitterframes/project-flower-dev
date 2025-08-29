@@ -104,7 +104,7 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
                           className="w-12 h-12"
                         />
                         <div className="flex-1">
-                          <h4 className="font-bold text-white text-sm">Bouquet #{bouquet.id}</h4>
+                          <h4 className="font-bold text-white text-sm">{bouquet.bouquetName || `Bouquet #${bouquet.id}`}</h4>
                           <div className="flex items-center justify-between gap-2">
                             <Badge className="text-xs text-rose-400 bg-rose-400/20">
                               Bouquet

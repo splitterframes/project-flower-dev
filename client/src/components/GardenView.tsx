@@ -173,6 +173,7 @@ export const GardenView: React.FC = () => {
           ...field,
           hasBouquet: true,
           bouquetId: placedBouquet.bouquetId,
+          bouquetName: (placedBouquet as any).bouquetName || undefined,
           bouquetPlacedAt: new Date(placedBouquet.placedAt),
           bouquetExpiresAt: new Date(placedBouquet.expiresAt)
         };
@@ -181,6 +182,7 @@ export const GardenView: React.FC = () => {
           ...field,
           hasBouquet: false,
           bouquetId: undefined,
+          bouquetName: undefined,
           bouquetPlacedAt: undefined,
           bouquetExpiresAt: undefined
         };
@@ -406,6 +408,36 @@ export const GardenView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to collect butterfly:', error);
+    }
+  };
+
+  const collectExpiredBouquet = async (fieldIndex: number) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/bouquets/collect-expired', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fieldIndex,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`💧 ${data.message}`);
+        // Refresh all garden data
+        await fetchPlacedBouquets();
+        await fetchUserSeeds();
+        await fetchFieldButterflies();
+      } else {
+        const error = await response.json();
+        console.error('Failed to collect expired bouquet:', error.message);
+      }
+    } catch (error) {
+      console.error('Failed to collect expired bouquet:', error);
     }
   };
 
@@ -685,7 +717,10 @@ export const GardenView: React.FC = () => {
                       <div className="flex flex-col items-center">
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger className="cursor-default">
+                            <TooltipTrigger 
+                              className={bouquetStatus?.isExpired ? "cursor-pointer" : "cursor-default"}
+                              onClick={() => bouquetStatus?.isExpired && collectExpiredBouquet(field.id - 1)}
+                            >
                               <div className="relative">
                                 <RarityImage 
                                   src="/Blumen/Bouquet.jpg"
@@ -704,7 +739,7 @@ export const GardenView: React.FC = () => {
                             </TooltipTrigger>
                             <TooltipContent className="bg-slate-800 border-slate-600 text-white">
                               <div className="text-center">
-                                <div className="font-bold text-sm">Bouquet #{field.bouquetId}</div>
+                                <div className="font-bold text-sm">{field.bouquetName || `Bouquet #${field.bouquetId}`}</div>
                                 {bouquetStatus && (
                                   <div className="text-xs text-pink-400">
                                     {bouquetStatus.isExpired ? "Verwelkt - klicke zum Sammeln" : bouquetStatus.remainingTime}
@@ -728,7 +763,10 @@ export const GardenView: React.FC = () => {
                     <div className="flex flex-col items-center">
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger className="cursor-pointer">
+                          <TooltipTrigger 
+                            className="cursor-pointer"
+                            onClick={() => collectButterfly(field.id - 1)}
+                          >
                             <div className="relative">
                               <RarityImage 
                                 src={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}

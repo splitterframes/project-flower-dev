@@ -360,6 +360,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/bouquets/collect-expired", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = 1; // TODO: Get from session/auth
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.collectExpiredBouquet(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ 
+          message: `Verwelktes Bouquet gesammelt! Erhalten: ${result.seedDrop?.quantity || 0}x ${result.seedDrop?.rarity || 'common'} Samen`,
+          seedDrop: result.seedDrop 
+        });
+      } else {
+        res.status(404).json({ message: 'Kein verwelktes Bouquet auf diesem Feld gefunden' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/placed-bouquets", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
