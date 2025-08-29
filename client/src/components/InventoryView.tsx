@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
@@ -38,6 +38,38 @@ export const InventoryView: React.FC = () => {
     
     return filtered.sort((a, b) => a.flowerName.localeCompare(b.flowerName));
   };
+
+  const getFlowersByRarity = (rarity: string) => {
+    return myFlowers.filter(flower => flower.flowerRarity === rarity);
+  };
+
+  const getRarityLabel = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'Gewöhnlich';
+      case 'uncommon': return 'Ungewöhnlich'; 
+      case 'rare': return 'Selten';
+      case 'super-rare': return 'Super-Selten';
+      case 'epic': return 'Episch';
+      case 'legendary': return 'Legendär';
+      case 'mythical': return 'Mythisch';
+      default: return rarity;
+    }
+  };
+
+  const getRarityColorClass = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'text-yellow-400';
+      case 'uncommon': return 'text-green-400';
+      case 'rare': return 'text-blue-400';
+      case 'super-rare': return 'text-cyan-400';
+      case 'epic': return 'text-purple-400';
+      case 'legendary': return 'text-orange-400';
+      case 'mythical': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
 
   const FlowerCard = ({ flower, getBorderColor }: { flower: any; getBorderColor: (rarity: RarityTier) => string }) => (
     <div
@@ -191,82 +223,34 @@ export const InventoryView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Züchte Blumen in deinem Garten</p>
               </div>
             ) : (
-              <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-8 bg-slate-700">
-                  <TabsTrigger value="all" className="text-xs">Alle</TabsTrigger>
-                  <TabsTrigger value="common" className="text-xs text-yellow-400">Gewöhnlich</TabsTrigger>
-                  <TabsTrigger value="uncommon" className="text-xs text-green-400">Ungewöhnlich</TabsTrigger>
-                  <TabsTrigger value="rare" className="text-xs text-blue-400">Selten</TabsTrigger>
-                  <TabsTrigger value="super-rare" className="text-xs text-cyan-400">Super-Selten</TabsTrigger>
-                  <TabsTrigger value="epic" className="text-xs text-purple-400">Episch</TabsTrigger>
-                  <TabsTrigger value="legendary" className="text-xs text-orange-400">Legendär</TabsTrigger>
-                  <TabsTrigger value="mythical" className="text-xs text-red-400">Mythisch</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="all" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers().map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="common" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('common').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="uncommon" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('uncommon').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="rare" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('rare').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="super-rare" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('super-rare').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="epic" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('epic').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="legendary" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('legendary').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="mythical" className="mt-4">
-                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers('mythical').map((flower) => (
-                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
+              <Accordion type="multiple" className="w-full space-y-2">
+                {rarities.map((rarity) => {
+                  const flowersInRarity = getFlowersByRarity(rarity);
+                  if (flowersInRarity.length === 0) return null;
+                  
+                  return (
+                    <AccordionItem key={rarity} value={rarity} className="border border-slate-600 rounded-lg bg-slate-800/50">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`font-semibold ${getRarityColorClass(rarity)}`}>
+                            {getRarityLabel(rarity)}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            {flowersInRarity.reduce((sum, flower) => sum + flower.quantity, 0)} Blumen
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {getSortedFlowers(rarity).map((flower) => (
+                            <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             )}
           </CardContent>
         </Card>
