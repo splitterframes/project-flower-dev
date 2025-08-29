@@ -1,11 +1,10 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
-  Home, 
-  Gamepad2, 
-  Trophy, 
-  Settings, 
-  User 
+  Flower,
+  Package,
+  Flower2,
+  Trophy
 } from "lucide-react";
 
 interface FooterProps {
@@ -15,14 +14,14 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   const navigationItems = [
-    { id: "garten", label: "Garten", icon: Home },
-    { id: "inventar", label: "Inventar", icon: Gamepad2 },
-    { id: "bouquets", label: "Bouquets", icon: Trophy },
-    { id: "ausstellung", label: "Ausstellung", icon: User },
+    { id: "garten", label: "Garten", icon: Flower },
+    { id: "inventar", label: "Inventar", icon: Package },
+    { id: "bouquets", label: "Bouquets", icon: Flower2 },
+    { id: "ausstellung", label: "Ausstellung", icon: Trophy },
   ];
 
   return (
-    <footer className="bg-slate-900 border-t border-slate-700 px-6 py-4">
+    <footer className="bg-slate-900 border-t border-slate-700 px-6 py-4 flex-shrink-0">
       <div className="flex justify-center">
         <div className="flex space-x-2">
           {navigationItems.map((item) => {
