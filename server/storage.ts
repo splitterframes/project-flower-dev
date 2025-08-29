@@ -3,13 +3,17 @@ import {
   seeds, 
   userSeeds, 
   marketListings,
+  plantedFields,
   type User, 
   type InsertUser, 
   type Seed, 
   type UserSeed, 
   type MarketListing,
+  type PlantedField,
   type CreateMarketListingRequest,
-  type BuyListingRequest
+  type BuyListingRequest,
+  type PlantSeedRequest,
+  type HarvestFieldRequest
 } from "@shared/schema";
 
 export interface IStorage {
@@ -23,6 +27,11 @@ export interface IStorage {
   createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any>;
   buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }>;
   getUserSeeds(userId: number): Promise<any[]>;
+  
+  // Garden methods
+  plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }>;
+  getPlantedFields(userId: number): Promise<PlantedField[]>;
+  harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }>;
 }
 
 export class MemStorage implements IStorage {
@@ -30,20 +39,24 @@ export class MemStorage implements IStorage {
   private seeds: Map<number, Seed>;
   private userSeeds: Map<number, UserSeed & { seedName: string; seedRarity: string }>;
   private marketListings: Map<number, MarketListing & { sellerUsername: string; seedName: string; seedRarity: string }>;
+  private plantedFields: Map<number, PlantedField>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
   private currentListingId: number;
+  private currentFieldId: number;
 
   constructor() {
     this.users = new Map();
     this.seeds = new Map();
     this.userSeeds = new Map();
     this.marketListings = new Map();
+    this.plantedFields = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
     this.currentListingId = 1;
+    this.currentFieldId = 1;
     
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
@@ -375,6 +388,85 @@ export class MemStorage implements IStorage {
     });
 
     this.currentListingId = 7;
+  }
+
+  async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
+    const user = this.users.get(userId);
+    const seed = this.seeds.get(data.seedId);
+    const userSeed = this.userSeeds.get(data.userSeedId);
+    
+    if (!user || !seed || !userSeed) {
+      return { success: false, message: "Nutzer, Samen oder Inventar nicht gefunden" };
+    }
+
+    if (userSeed.userId !== userId || userSeed.seedId !== data.seedId) {
+      return { success: false, message: "Ungültiger Samen im Inventar" };
+    }
+
+    if (userSeed.quantity < 1) {
+      return { success: false, message: "Nicht genügend Samen verfügbar" };
+    }
+
+    // Check if field is already planted
+    const existingField = Array.from(this.plantedFields.values()).find(
+      field => field.userId === userId && field.fieldIndex === data.fieldIndex
+    );
+
+    if (existingField) {
+      return { success: false, message: "Dieses Feld ist bereits bepflanzt" };
+    }
+
+    // Create planted field
+    const fieldId = this.currentFieldId++;
+    const plantedField: PlantedField = {
+      id: fieldId,
+      userId,
+      fieldIndex: data.fieldIndex,
+      seedId: data.seedId,
+      seedRarity: seed.rarity,
+      plantedAt: new Date(),
+      isGrown: false,
+      flowerId: null,
+      flowerImageUrl: null,
+      createdAt: new Date()
+    };
+
+    this.plantedFields.set(fieldId, plantedField);
+
+    // Reduce user seed quantity
+    const updatedUserSeed = {
+      ...userSeed,
+      quantity: userSeed.quantity - 1
+    };
+    this.userSeeds.set(data.userSeedId, updatedUserSeed);
+
+    return { success: true };
+  }
+
+  async getPlantedFields(userId: number): Promise<PlantedField[]> {
+    return Array.from(this.plantedFields.values())
+      .filter(field => field.userId === userId);
+  }
+
+  async harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }> {
+    const plantedField = Array.from(this.plantedFields.values()).find(
+      field => field.userId === userId && field.fieldIndex === data.fieldIndex
+    );
+
+    if (!plantedField) {
+      return { success: false, message: "Kein Feld zum Ernten gefunden" };
+    }
+
+    if (!plantedField.isGrown) {
+      return { success: false, message: "Die Blume ist noch nicht gewachsen" };
+    }
+
+    // Remove planted field
+    this.plantedFields.delete(plantedField.id);
+
+    // TODO: Add flower/butterfly to user inventory
+    
+    return { success: true };
   }
 }
 

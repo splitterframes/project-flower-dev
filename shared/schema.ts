@@ -62,6 +62,30 @@ export const buyListingSchema = z.object({
   quantity: z.number().min(1),
 });
 
+// Garden field schema
+export const plantedFields = pgTable("planted_fields", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(),
+  seedId: integer("seed_id").notNull().references(() => seeds.id),
+  seedRarity: text("seed_rarity").notNull(),
+  plantedAt: timestamp("planted_at").notNull().defaultNow(),
+  isGrown: boolean("is_grown").notNull().default(false),
+  flowerId: integer("flower_id"),
+  flowerImageUrl: text("flower_image_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const plantSeedSchema = z.object({
+  fieldIndex: z.number().min(0).max(49),
+  seedId: z.number(),
+  userSeedId: z.number()
+});
+
+export const harvestFieldSchema = z.object({
+  fieldIndex: z.number().min(0).max(49)
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;
@@ -70,3 +94,6 @@ export type UserSeed = typeof userSeeds.$inferSelect;
 export type MarketListing = typeof marketListings.$inferSelect;
 export type CreateMarketListingRequest = z.infer<typeof createMarketListingSchema>;
 export type BuyListingRequest = z.infer<typeof buyListingSchema>;
+export type PlantedField = typeof plantedFields.$inferSelect;
+export type PlantSeedRequest = z.infer<typeof plantSeedSchema>;
+export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;

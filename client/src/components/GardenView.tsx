@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { SeedSelectionModal } from "./SeedSelectionModal";
+import { getGrowthTime, formatTime, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
   Lock,
   Coins,
-  Shovel
+  Shovel,
+  Sprout,
+  Clock
 } from "lucide-react";
 
 interface GardenField {
@@ -15,6 +19,20 @@ interface GardenField {
   isUnlocked: boolean;
   hasPlant: boolean;
   plantType?: string;
+  isGrowing?: boolean;
+  plantedAt?: Date;
+  growthTimeSeconds?: number;
+  seedRarity?: string;
+  flowerId?: number;
+  flowerImageUrl?: string;
+}
+
+interface UserSeed {
+  id: number;
+  seedId: number;
+  seedName: string;
+  seedRarity: string;
+  quantity: number;
 }
 
 export const GardenView: React.FC = () => {
@@ -30,6 +48,79 @@ export const GardenView: React.FC = () => {
       plantType: undefined
     }));
   });
+
+  const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
+  const [showSeedSelection, setShowSeedSelection] = useState(false);
+  const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    if (user) {
+      fetchUserSeeds();
+      fetchPlantedFields();
+    }
+  }, [user]);
+
+  // Update timer every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchUserSeeds = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/seeds`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserSeeds(data.seeds || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user seeds:', error);
+    }
+  };
+
+  const fetchPlantedFields = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/garden/fields/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        updateGardenWithPlantedFields(data.fields || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch planted fields:', error);
+    }
+  };
+
+  const updateGardenWithPlantedFields = (plantedFields: any[]) => {
+    setGardenFields(prev => 
+      prev.map(field => {
+        const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
+        if (plantedField) {
+          const plantedAt = new Date(plantedField.plantedAt);
+          const growthTimeSeconds = getGrowthTime(plantedField.seedRarity as RarityTier);
+          const isGrown = plantedField.isGrown || 
+            (currentTime.getTime() - plantedAt.getTime()) / 1000 >= growthTimeSeconds;
+          
+          return {
+            ...field,
+            hasPlant: true,
+            isGrowing: !isGrown,
+            plantedAt,
+            growthTimeSeconds,
+            seedRarity: plantedField.seedRarity,
+            flowerId: plantedField.flowerId,
+            flowerImageUrl: plantedField.flowerImageUrl
+          };
+        }
+        return field;
+      })
+    );
+  };
 
   if (!user) {
     return (
@@ -70,14 +161,54 @@ export const GardenView: React.FC = () => {
     );
   };
 
-  const plantFlower = (fieldId: number) => {
-    setGardenFields(prev => 
-      prev.map(field => 
-        field.id === fieldId 
-          ? { ...field, hasPlant: true, plantType: "flower" }
-          : field
-      )
-    );
+  const openSeedSelection = (fieldIndex: number) => {
+    setSelectedFieldIndex(fieldIndex);
+    setShowSeedSelection(true);
+  };
+
+  const plantSeed = async (userSeedId: number, seedId: number, fieldIndex: number) => {
+    try {
+      const response = await fetch('/api/garden/plant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fieldIndex,
+          seedId,
+          userSeedId
+        })
+      });
+
+      if (response.ok) {
+        // Refresh data
+        await fetchUserSeeds();
+        await fetchPlantedFields();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Pflanzen');
+      }
+    } catch (error) {
+      console.error('Failed to plant seed:', error);
+      alert('Fehler beim Pflanzen');
+    }
+  };
+
+  const getFieldStatus = (field: GardenField) => {
+    if (!field.hasPlant || !field.isGrowing || !field.plantedAt || !field.growthTimeSeconds) {
+      return null;
+    }
+
+    const plantedAt = field.plantedAt.getTime();
+    const currentTimeMs = currentTime.getTime();
+    const elapsedSeconds = Math.floor((currentTimeMs - plantedAt) / 1000);
+    const remainingSeconds = Math.max(0, field.growthTimeSeconds - elapsedSeconds);
+
+    return {
+      isGrown: remainingSeconds === 0,
+      remainingTime: formatTime(remainingSeconds),
+      progress: Math.min(100, (elapsedSeconds / field.growthTimeSeconds) * 100)
+    };
   };
 
   return (
@@ -169,9 +300,20 @@ export const GardenView: React.FC = () => {
                     if (!field.isUnlocked && isNextToUnlock) {
                       unlockField(field.id);
                     } else if (field.isUnlocked && !field.hasPlant) {
-                      plantFlower(field.id);
+                      openSeedSelection(field.id - 1);
                     }
                   }}
+                  title={(() => {
+                    const status = getFieldStatus(field);
+                    if (status && field.hasPlant) {
+                      if (status.isGrown) {
+                        return "Blume ist gewachsen! Klicke zum Ernten";
+                      } else {
+                        return `Wächst noch: ${status.remainingTime}`;
+                      }
+                    }
+                    return undefined;
+                  })()}
                 >
                   {!field.isUnlocked && (
                     <>
@@ -184,9 +326,23 @@ export const GardenView: React.FC = () => {
                     </>
                   )}
                   
-                  {field.isUnlocked && field.hasPlant && (
-                    <Flower className="h-6 w-6 text-pink-400" />
-                  )}
+                  {field.isUnlocked && field.hasPlant && (() => {
+                    const status = getFieldStatus(field);
+                    if (status?.isGrown) {
+                      return <Flower className="h-6 w-6 text-pink-400" />;
+                    } else {
+                      return (
+                        <div className="flex flex-col items-center">
+                          <Sprout className="h-4 w-4 text-green-400" />
+                          {status && (
+                            <div className="text-xs text-green-400 mt-1">
+                              {status.remainingTime}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  })()}
                   
                   {field.isUnlocked && !field.hasPlant && (
                     <div className="text-xs text-green-400">+</div>
@@ -206,12 +362,22 @@ export const GardenView: React.FC = () => {
       <Card className="bg-slate-800 border-slate-700">
         <CardContent className="pt-6">
           <div className="text-center text-slate-400">
-            <p className="mb-2">🌱 Klicke auf ein freies Feld um eine Blume zu pflanzen</p>
+            <p className="mb-2">🌱 Klicke auf ein freies Feld um einen Samen zu pflanzen</p>
+            <p className="mb-2">⏰ Hover über wachsende Pflanzen um die Restzeit zu sehen</p>
             <p className="mb-2">🔓 Klicke auf ein gesperrtes Feld um es freizuschalten</p>
             <p>💰 Jedes weitere Feld kostet 20% mehr als das vorherige</p>
           </div>
         </CardContent>
       </Card>
+
+      {/* Seed Selection Modal */}
+      <SeedSelectionModal
+        isOpen={showSeedSelection}
+        onClose={() => setShowSeedSelection(false)}
+        seeds={userSeeds}
+        fieldIndex={selectedFieldIndex}
+        onSelectSeed={plantSeed}
+      />
     </div>
   );
 };

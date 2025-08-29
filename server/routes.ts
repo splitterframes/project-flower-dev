@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -143,6 +143,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const seeds = await storage.getUserSeeds(userId);
       res.json({ seeds });
     } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Garden routes
+  app.post("/api/garden/plant", async (req, res) => {
+    try {
+      const plantData = plantSeedSchema.parse(req.body);
+      const userId = 1; // TODO: Get from session/auth
+      
+      const result = await storage.plantSeed(userId, plantData);
+      if (result.success) {
+        res.json({ message: "Samen erfolgreich gepflanzt" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/garden/fields/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const fields = await storage.getPlantedFields(userId);
+      res.json({ fields });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/garden/harvest", async (req, res) => {
+    try {
+      const harvestData = harvestFieldSchema.parse(req.body);
+      const userId = 1; // TODO: Get from session/auth
+      
+      const result = await storage.harvestField(userId, harvestData);
+      if (result.success) {
+        res.json({ message: "Blume erfolgreich geerntet" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   });
