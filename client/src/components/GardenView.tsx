@@ -124,7 +124,18 @@ export const GardenView: React.FC = () => {
             flowerImageUrl: plantedField.flowerImageUrl
           };
         }
-        return field;
+        // Field was harvested - reset to empty state
+        return {
+          ...field,
+          hasPlant: false,
+          isGrowing: false,
+          plantedAt: undefined,
+          growthTimeSeconds: undefined,
+          seedRarity: undefined,
+          flowerId: undefined,
+          flowerName: undefined,
+          flowerImageUrl: undefined
+        };
       })
     );
   };
