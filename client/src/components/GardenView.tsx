@@ -402,7 +402,7 @@ export const GardenView: React.FC = () => {
                     <>
                       <Lock className="h-4 w-4 text-slate-400" />
                       {isNextToUnlock && (
-                        <div className="absolute -bottom-6 text-xs text-orange-400">
+                        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-xs text-orange-400 font-bold">
                           {calculateUnlockCost(field.id)} Cr
                         </div>
                       )}
