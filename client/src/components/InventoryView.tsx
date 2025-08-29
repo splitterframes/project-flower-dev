@@ -192,11 +192,15 @@ export const InventoryView: React.FC = () => {
               </div>
             ) : (
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-slate-700">
+                <TabsList className="grid w-full grid-cols-8 bg-slate-700">
                   <TabsTrigger value="all" className="text-xs">Alle</TabsTrigger>
                   <TabsTrigger value="common" className="text-xs text-yellow-400">Gewöhnlich</TabsTrigger>
                   <TabsTrigger value="uncommon" className="text-xs text-green-400">Ungewöhnlich</TabsTrigger>
-                  <TabsTrigger value="rare+" className="text-xs text-blue-400">Selten+</TabsTrigger>
+                  <TabsTrigger value="rare" className="text-xs text-blue-400">Selten</TabsTrigger>
+                  <TabsTrigger value="super-rare" className="text-xs text-cyan-400">Super-Selten</TabsTrigger>
+                  <TabsTrigger value="epic" className="text-xs text-purple-400">Episch</TabsTrigger>
+                  <TabsTrigger value="legendary" className="text-xs text-orange-400">Legendär</TabsTrigger>
+                  <TabsTrigger value="mythical" className="text-xs text-red-400">Mythisch</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="mt-4">
@@ -223,9 +227,41 @@ export const InventoryView: React.FC = () => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="rare+" className="mt-4">
+                <TabsContent value="rare" className="mt-4">
                   <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                    {getSortedFlowers(['rare', 'super-rare', 'epic', 'legendary', 'mythical']).map((flower) => (
+                    {getSortedFlowers('rare').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="super-rare" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('super-rare').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="epic" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('epic').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="legendary" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('legendary').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="mythical" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('mythical').map((flower) => (
                       <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
                     ))}
                   </div>
