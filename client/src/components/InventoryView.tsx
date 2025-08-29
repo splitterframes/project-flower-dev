@@ -90,17 +90,28 @@ export const InventoryView: React.FC = () => {
                     key={userSeed.id}
                     className={`bg-slate-900 rounded-lg p-3 border-2 ${getRarityBorder(userSeed.seedRarity as RarityTier)}`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
-                      <div className="flex items-center">
-                        <Star className={`h-3 w-3 mr-1 ${getRarityColor(userSeed.seedRarity as RarityTier)}`} />
-                        <span className={`text-xs ${getRarityColor(userSeed.seedRarity as RarityTier)}`}>
-                          {userSeed.seedRarity}
-                        </span>
+                    <div className="flex items-center space-x-3">
+                      <RarityImage 
+                        src="/Blumen/0.jpg"
+                        alt={userSeed.seedName}
+                        rarity={userSeed.seedRarity as RarityTier}
+                        size="medium"
+                        className="w-12 h-12"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs ${getRarityColor(userSeed.seedRarity as RarityTier)}`}>
+                            {userSeed.seedRarity === 'super-rare' ? 'Super-Rare' : 
+                             userSeed.seedRarity === 'mythical' ? 'Mythisch' :
+                             userSeed.seedRarity === 'legendary' ? 'Legendär' :
+                             userSeed.seedRarity === 'epic' ? 'Episch' :
+                             userSeed.seedRarity === 'rare' ? 'Selten' :
+                             userSeed.seedRarity === 'uncommon' ? 'Ungewöhnlich' : 'Gewöhnlich'}
+                          </span>
+                          <span className="text-sm font-bold text-green-400">x{userSeed.quantity}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-lg font-bold text-green-400">x{userSeed.quantity}</span>
                     </div>
                   </div>
                 ))}
