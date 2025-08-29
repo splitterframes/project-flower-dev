@@ -252,8 +252,7 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
-        // Let animation complete before refreshing
-        // This prevents race conditions with the UI
+        // Animation will handle the refresh when it completes
       } else {
         const error = await response.json();
         alert(error.message || 'Fehler beim Ernten');
@@ -269,11 +268,11 @@ export const GardenView: React.FC = () => {
   };
 
   const handleHarvestAnimationComplete = async () => {
-    // Animation is complete, now refresh the garden data
+    // Animation is complete, refresh data immediately and clear harvest state
     console.log('Animation complete, refreshing fields...');
+    setHarvestingField(null);
     await fetchPlantedFields();
     console.log('Fields refreshed after animation');
-    setHarvestingField(null);
   };
 
   return (
@@ -403,10 +402,8 @@ export const GardenView: React.FC = () => {
                     <>
                       <Lock className="h-4 w-4 text-slate-400" />
                       {isNextToUnlock && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-orange-500/80 text-white text-xs font-bold px-2 py-1 rounded">
-                            {calculateUnlockCost(field.id)} Cr
-                          </div>
+                        <div className="absolute -bottom-6 text-xs text-orange-400">
+                          {calculateUnlockCost(field.id)} Cr
                         </div>
                       )}
                     </>
