@@ -370,7 +370,7 @@ export const GardenView: React.FC = () => {
                           alt="Blume"
                           rarity={field.seedRarity as RarityTier}
                           size="medium"
-                          className="mx-auto"
+                          className="mx-auto w-8 h-8"
                         />
                       );
                     } else if (field.isGrowing) {
@@ -382,7 +382,7 @@ export const GardenView: React.FC = () => {
                             alt="Wachsender Samen"
                             rarity={field.seedRarity as RarityTier}
                             size="small"
-                            className="mx-auto"
+                            className="mx-auto w-6 h-6"
                           />
                           {status && (
                             <div className="text-xs text-green-400 mt-1">

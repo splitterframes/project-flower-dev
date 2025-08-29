@@ -20,9 +20,9 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   const [imageError, setImageError] = useState(false);
   
   const sizeClasses = {
-    small: 'w-8 h-8',
-    medium: 'w-12 h-12', 
-    large: 'w-16 h-16'
+    small: 'w-6 h-6',      // 32px -> 24px (8px smaller)
+    medium: 'w-10 h-10',   // 48px -> 40px (8px smaller) 
+    large: 'w-14 h-14'     // 64px -> 56px (8px smaller)
   };
 
   const borderSize = {
