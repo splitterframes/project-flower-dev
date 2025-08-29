@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
+import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
@@ -13,8 +14,11 @@ import {
   Coins,
   Shovel,
   Sprout,
-  Clock
+  Clock,
+  Heart,
+  Sparkles
 } from "lucide-react";
+import type { UserBouquet, PlacedBouquet } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GardenField {
@@ -29,6 +33,10 @@ interface GardenField {
   flowerId?: number;
   flowerName?: string;
   flowerImageUrl?: string;
+  hasBouquet?: boolean;
+  bouquetId?: number;
+  bouquetPlacedAt?: Date;
+  bouquetExpiresAt?: Date;
 }
 
 interface UserSeed {
@@ -55,7 +63,10 @@ export const GardenView: React.FC = () => {
   });
 
   const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
+  const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
+  const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showSeedSelection, setShowSeedSelection] = useState(false);
+  const [showBouquetSelection, setShowBouquetSelection] = useState(false);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
@@ -65,6 +76,8 @@ export const GardenView: React.FC = () => {
     if (user) {
       fetchUserSeeds();
       fetchPlantedFields();
+      fetchUserBouquets();
+      fetchPlacedBouquets();
     }
   }, [user]);
 
@@ -101,6 +114,57 @@ export const GardenView: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch planted fields:', error);
     }
+  };
+
+  const fetchUserBouquets = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/bouquets`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserBouquets(data.bouquets || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user bouquets:', error);
+    }
+  };
+
+  const fetchPlacedBouquets = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/placed-bouquets`);
+      if (response.ok) {
+        const data = await response.json();
+        setPlacedBouquets(data.placedBouquets || []);
+        updateGardenWithPlacedBouquets(data.placedBouquets || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch placed bouquets:', error);
+    }
+  };
+
+  const updateGardenWithPlacedBouquets = (placedBouquets: PlacedBouquet[]) => {
+    console.log('Updating garden with placed bouquets:', placedBouquets);
+    setGardenFields(prev => prev.map(field => {
+      const placedBouquet = placedBouquets.find(pb => pb.fieldIndex === field.id - 1);
+      if (placedBouquet) {
+        return {
+          ...field,
+          hasBouquet: true,
+          bouquetId: placedBouquet.bouquetId,
+          bouquetPlacedAt: new Date(placedBouquet.placedAt),
+          bouquetExpiresAt: new Date(placedBouquet.expiresAt)
+        };
+      } else {
+        return {
+          ...field,
+          hasBouquet: false,
+          bouquetId: undefined,
+          bouquetPlacedAt: undefined,
+          bouquetExpiresAt: undefined
+        };
+      }
+    }));
   };
 
   const updateGardenWithPlantedFields = (plantedFields: any[]) => {
@@ -188,6 +252,57 @@ export const GardenView: React.FC = () => {
   const openSeedSelection = (fieldIndex: number) => {
     setSelectedFieldIndex(fieldIndex);
     setShowSeedSelection(true);
+  };
+
+  const openBouquetSelection = (fieldIndex: number) => {
+    setSelectedFieldIndex(fieldIndex);
+    setShowBouquetSelection(true);
+  };
+
+  const placeBouquet = async (bouquetId: number, fieldIndex: number) => {
+    try {
+      const response = await fetch('/api/bouquets/place', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          bouquetId,
+          fieldIndex
+        })
+      });
+
+      if (response.ok) {
+        // Refresh data
+        await fetchUserBouquets();
+        await fetchPlacedBouquets();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Platzieren');
+      }
+    } catch (error) {
+      console.error('Failed to place bouquet:', error);
+      alert('Fehler beim Platzieren');
+    }
+  };
+
+  const getBouquetStatus = (field: GardenField) => {
+    if (!field.hasBouquet || !field.bouquetPlacedAt || !field.bouquetExpiresAt) {
+      return null;
+    }
+
+    const placedAt = field.bouquetPlacedAt.getTime();
+    const expiresAt = field.bouquetExpiresAt.getTime();
+    const currentTimeMs = currentTime.getTime();
+    const totalDuration = expiresAt - placedAt;
+    const elapsed = currentTimeMs - placedAt;
+    const remaining = Math.max(0, expiresAt - currentTimeMs);
+
+    return {
+      isExpired: remaining === 0,
+      remainingTime: formatTime(Math.floor(remaining / 1000)),
+      progress: Math.min(100, (elapsed / totalDuration) * 100)
+    };
   };
 
   const plantSeed = async (userSeedId: number, seedId: number, fieldIndex: number) => {
@@ -392,13 +507,19 @@ export const GardenView: React.FC = () => {
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
                       unlockField(field.id);
-                    } else if (field.isUnlocked && !field.hasPlant) {
+                    } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet) {
                       openSeedSelection(field.id - 1);
                     } else if (field.isUnlocked && field.hasPlant) {
                       const status = getFieldStatus(field);
                       if (status?.isGrown) {
                         harvestField(field.id - 1);
                       }
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault(); // Prevent default context menu
+                    if (field.isUnlocked && !field.hasPlant && !field.hasBouquet) {
+                      openBouquetSelection(field.id - 1);
                     }
                   }}
                 >
@@ -478,8 +599,53 @@ export const GardenView: React.FC = () => {
                       return <Flower className="h-6 w-6 text-pink-400" />;
                     }
                   })()}
+
+                  {/* Bouquet Display */}
+                  {field.isUnlocked && field.hasBouquet && (() => {
+                    const bouquetStatus = getBouquetStatus(field);
+                    return (
+                      <div className="flex flex-col items-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-default">
+                              <div className="relative">
+                                <RarityImage 
+                                  src="/Blumen/Bouquet.jpg"
+                                  alt="Bouquet"
+                                  rarity={"rare" as RarityTier}
+                                  size="large"
+                                  className="mx-auto w-16 h-16"
+                                />
+                                <Heart className="absolute -top-1 -right-1 h-4 w-4 text-pink-400" />
+                                {bouquetStatus?.isExpired && (
+                                  <div className="absolute inset-0 bg-gray-800/70 rounded-lg flex items-center justify-center">
+                                    <Sparkles className="h-6 w-6 text-yellow-400" />
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-slate-800 border-slate-600 text-white">
+                              <div className="text-center">
+                                <div className="font-bold text-sm">Bouquet #{field.bouquetId}</div>
+                                {bouquetStatus && (
+                                  <div className="text-xs text-pink-400">
+                                    {bouquetStatus.isExpired ? "Verwelkt - klicke zum Sammeln" : bouquetStatus.remainingTime}
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {bouquetStatus && !bouquetStatus.isExpired && (
+                          <div className="text-xs text-pink-400 mt-1">
+                            {bouquetStatus.remainingTime}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   
-                  {field.isUnlocked && !field.hasPlant && (
+                  {field.isUnlocked && !field.hasPlant && !field.hasBouquet && (
                     <div className="text-xs text-green-400">+</div>
                   )}
                   
@@ -497,7 +663,8 @@ export const GardenView: React.FC = () => {
       <Card className="bg-slate-800 border-slate-700">
         <CardContent className="pt-6">
           <div className="text-center text-slate-400">
-            <p className="mb-2">🌱 Klicke auf ein freies Feld um einen Samen zu pflanzen</p>
+            <p className="mb-2">🌱 Linksklick auf ein freies Feld um einen Samen zu pflanzen</p>
+            <p className="mb-2">💐 Rechtsklick auf ein freies Feld um ein Bouquet zu platzieren</p>
             <p className="mb-2">⏰ Hover über wachsende Pflanzen um die Restzeit zu sehen</p>
             <p className="mb-2">🌸 Klicke auf gewachsene Blumen um sie zu ernten</p>
             <p className="mb-2">🔓 Klicke auf ein gesperrtes Feld um es freizuschalten</p>
@@ -513,6 +680,15 @@ export const GardenView: React.FC = () => {
         seeds={userSeeds}
         fieldIndex={selectedFieldIndex}
         onSelectSeed={plantSeed}
+      />
+
+      {/* Bouquet Selection Modal */}
+      <BouquetSelectionModal
+        isOpen={showBouquetSelection}
+        onClose={() => setShowBouquetSelection(false)}
+        fieldIndex={selectedFieldIndex}
+        userBouquets={userBouquets}
+        onPlaceBouquet={placeBouquet}
       />
     </div>
   );
