@@ -113,8 +113,8 @@ export const InventoryView: React.FC = () => {
     if (user) {
       fetchMySeeds();
       fetchMyFlowers();
-      // fetchMyBouquets();
-      // fetchMyButterflies();
+      fetchMyBouquets();
+      fetchMyButterflies();
     }
   }, [user]);
 
