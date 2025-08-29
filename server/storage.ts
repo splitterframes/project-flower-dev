@@ -5,6 +5,11 @@ import {
   marketListings,
   plantedFields,
   userFlowers,
+  bouquets,
+  userBouquets,
+  bouquetRecipes,
+  placedBouquets,
+  userButterflies,
   type User, 
   type InsertUser, 
   type Seed, 
@@ -15,9 +20,17 @@ import {
   type BuyListingRequest,
   type PlantSeedRequest,
   type HarvestFieldRequest,
-  type UserFlower
+  type UserFlower,
+  type Bouquet,
+  type UserBouquet,
+  type BouquetRecipe,
+  type PlacedBouquet,
+  type UserButterfly,
+  type CreateBouquetRequest,
+  type PlaceBouquetRequest
 } from "@shared/schema";
 import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
+import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -39,6 +52,13 @@ export interface IStorage {
   // Flower inventory methods
   getUserFlowers(userId: number): Promise<UserFlower[]>;
   addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void>;
+  
+  // Bouquet methods
+  createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }>;
+  getUserBouquets(userId: number): Promise<UserBouquet[]>;
+  placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }>;
+  getPlacedBouquets(userId: number): Promise<PlacedBouquet[]>;
+  getUserButterflies(userId: number): Promise<UserButterfly[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -48,11 +68,21 @@ export class MemStorage implements IStorage {
   private marketListings: Map<number, MarketListing & { sellerUsername: string; seedName: string; seedRarity: string }>;
   private plantedFields: Map<number, PlantedField>;
   private userFlowers: Map<number, UserFlower>;
+  private bouquets: Map<number, Bouquet>;
+  private userBouquets: Map<number, UserBouquet & { bouquetName: string; bouquetRarity: string; bouquetImageUrl: string }>;
+  private bouquetRecipes: Map<number, BouquetRecipe>;
+  private placedBouquets: Map<number, PlacedBouquet & { bouquetName: string; bouquetRarity: string }>;
+  private userButterflies: Map<number, UserButterfly>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
   private currentListingId: number;
   private currentFieldId: number;
+  private currentBouquetId: number;
+  private currentUserBouquetId: number;
+  private currentRecipeId: number;
+  private currentPlacedBouquetId: number;
+  private currentButterflyId: number;
   private currentFlowerId: number;
 
   constructor() {
@@ -62,11 +92,21 @@ export class MemStorage implements IStorage {
     this.marketListings = new Map();
     this.plantedFields = new Map();
     this.userFlowers = new Map();
+    this.bouquets = new Map();
+    this.userBouquets = new Map();
+    this.bouquetRecipes = new Map();
+    this.placedBouquets = new Map();
+    this.userButterflies = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
     this.currentListingId = 1;
     this.currentFieldId = 1;
+    this.currentBouquetId = 1;
+    this.currentUserBouquetId = 1;
+    this.currentRecipeId = 1;
+    this.currentPlacedBouquetId = 1;
+    this.currentButterflyId = 1;
     this.currentFlowerId = 1;
     
     // Initialize with some sample seeds and demo market listings
@@ -544,6 +584,198 @@ export class MemStorage implements IStorage {
       };
       this.userFlowers.set(newFlower.id, newFlower);
     }
+  }
+
+  // Bouquet methods implementation
+  async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return { success: false, message: "Benutzer nicht gefunden" };
+    }
+
+    // Check if user has enough credits
+    if (user.credits < 30) {
+      return { success: false, message: "Nicht genügend Credits (30 benötigt)" };
+    }
+
+    // Get the three flowers from user inventory
+    const flower1 = Array.from(this.userFlowers.values()).find(f => f.userId === userId && f.flowerId === data.flowerId1);
+    const flower2 = Array.from(this.userFlowers.values()).find(f => f.userId === userId && f.flowerId === data.flowerId2);
+    const flower3 = Array.from(this.userFlowers.values()).find(f => f.userId === userId && f.flowerId === data.flowerId3);
+
+    if (!flower1 || !flower2 || !flower3) {
+      return { success: false, message: "Eine oder mehrere Blumen nicht im Inventar gefunden" };
+    }
+
+    if (flower1.quantity < 1 || flower2.quantity < 1 || flower3.quantity < 1) {
+      return { success: false, message: "Nicht genügend Blumen verfügbar" };
+    }
+
+    // Calculate average rarity
+    const averageRarity = calculateAverageRarity(
+      flower1.flowerRarity as RarityTier,
+      flower2.flowerRarity as RarityTier,
+      flower3.flowerRarity as RarityTier
+    );
+
+    // Generate or use provided name
+    let bouquetName: string;
+    if (data.name) {
+      bouquetName = data.name;
+    } else if (data.generateName) {
+      bouquetName = await generateBouquetName(averageRarity);
+    } else {
+      bouquetName = `${flower1.flowerName} Bouquet`;
+    }
+
+    // Create bouquet
+    const bouquet: Bouquet = {
+      id: this.currentBouquetId++,
+      name: bouquetName,
+      rarity: averageRarity,
+      imageUrl: "/Blumen/bouquet.jpg",
+      createdAt: new Date()
+    };
+    this.bouquets.set(bouquet.id, bouquet);
+
+    // Create recipe
+    const recipe: BouquetRecipe = {
+      id: this.currentRecipeId++,
+      bouquetId: bouquet.id,
+      flowerId1: data.flowerId1,
+      flowerId2: data.flowerId2,
+      flowerId3: data.flowerId3,
+      createdAt: new Date()
+    };
+    this.bouquetRecipes.set(recipe.id, recipe);
+
+    // Add to user's bouquet inventory
+    const userBouquet = {
+      id: this.currentUserBouquetId++,
+      userId,
+      bouquetId: bouquet.id,
+      quantity: 1,
+      createdAt: new Date(),
+      bouquetName: bouquet.name,
+      bouquetRarity: bouquet.rarity,
+      bouquetImageUrl: bouquet.imageUrl
+    };
+    this.userBouquets.set(userBouquet.id, userBouquet);
+
+    // Remove flowers from inventory
+    flower1.quantity -= 1;
+    flower2.quantity -= 1;
+    flower3.quantity -= 1;
+
+    // Remove flowers with 0 quantity
+    if (flower1.quantity === 0) this.userFlowers.delete(flower1.id);
+    else this.userFlowers.set(flower1.id, flower1);
+    if (flower2.quantity === 0) this.userFlowers.delete(flower2.id);
+    else this.userFlowers.set(flower2.id, flower2);
+    if (flower3.quantity === 0) this.userFlowers.delete(flower3.id);
+    else this.userFlowers.set(flower3.id, flower3);
+
+    // Deduct credits
+    user.credits -= 30;
+    this.users.set(userId, user);
+
+    return { success: true, bouquet };
+  }
+
+  async getUserBouquets(userId: number): Promise<UserBouquet[]> {
+    return Array.from(this.userBouquets.values())
+      .filter(bouquet => bouquet.userId === userId)
+      .map(b => ({
+        id: b.id,
+        userId: b.userId,
+        bouquetId: b.bouquetId,
+        quantity: b.quantity,
+        createdAt: b.createdAt
+      }));
+  }
+
+  async placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }> {
+    const userBouquet = Array.from(this.userBouquets.values())
+      .find(b => b.userId === userId && b.bouquetId === data.bouquetId);
+
+    if (!userBouquet || userBouquet.quantity < 1) {
+      return { success: false, message: "Bouquet nicht im Inventar gefunden" };
+    }
+
+    const bouquet = this.bouquets.get(data.bouquetId);
+    if (!bouquet) {
+      return { success: false, message: "Bouquet-Daten nicht gefunden" };
+    }
+
+    // Check if field is already occupied
+    const existingPlacement = Array.from(this.placedBouquets.values())
+      .find(p => p.userId === userId && p.fieldIndex === data.fieldIndex);
+
+    if (existingPlacement) {
+      return { success: false, message: "Feld ist bereits belegt" };
+    }
+
+    // Create placed bouquet (expires in 21 minutes)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 21);
+
+    const placedBouquet = {
+      id: this.currentPlacedBouquetId++,
+      userId,
+      bouquetId: data.bouquetId,
+      fieldIndex: data.fieldIndex,
+      placedAt: new Date(),
+      expiresAt,
+      createdAt: new Date(),
+      bouquetName: bouquet.name,
+      bouquetRarity: bouquet.rarity
+    };
+    this.placedBouquets.set(placedBouquet.id, placedBouquet);
+
+    // Remove bouquet from inventory
+    userBouquet.quantity -= 1;
+    if (userBouquet.quantity === 0) {
+      this.userBouquets.delete(userBouquet.id);
+    } else {
+      this.userBouquets.set(userBouquet.id, userBouquet);
+    }
+
+    return { success: true };
+  }
+
+  async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
+    const currentTime = new Date();
+    
+    // Clean up expired bouquets first
+    Array.from(this.placedBouquets.values())
+      .filter(pb => pb.userId === userId && pb.expiresAt <= currentTime)
+      .forEach(expiredBouquet => {
+        // Generate seed drop
+        const seedDrop = getBouquetSeedDrop(expiredBouquet.bouquetRarity as RarityTier);
+        
+        // Add seeds to user inventory (would need to implement addSeedToInventory)
+        // For now, we'll skip the seed drop implementation
+        
+        // Remove expired bouquet
+        this.placedBouquets.delete(expiredBouquet.id);
+      });
+
+    return Array.from(this.placedBouquets.values())
+      .filter(bouquet => bouquet.userId === userId)
+      .map(pb => ({
+        id: pb.id,
+        userId: pb.userId,
+        bouquetId: pb.bouquetId,
+        fieldIndex: pb.fieldIndex,
+        placedAt: pb.placedAt,
+        expiresAt: pb.expiresAt,
+        createdAt: pb.createdAt
+      }));
+  }
+
+  async getUserButterflies(userId: number): Promise<UserButterfly[]> {
+    return Array.from(this.userButterflies.values())
+      .filter(butterfly => butterfly.userId === userId);
   }
 }
 

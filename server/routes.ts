@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -202,6 +202,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       const flowers = await storage.getUserFlowers(userId);
       res.json({ flowers });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Bouquet routes
+  app.post("/api/bouquets/create", async (req, res) => {
+    try {
+      const bouquetData = createBouquetSchema.parse(req.body);
+      const userId = 1; // TODO: Get from session/auth
+      
+      const result = await storage.createBouquet(userId, bouquetData);
+      if (result.success) {
+        res.json({ 
+          message: "Bouquet erfolgreich erstellt", 
+          bouquet: result.bouquet 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/bouquets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const bouquets = await storage.getUserBouquets(userId);
+      res.json({ bouquets });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const butterflies = await storage.getUserButterflies(userId);
+      res.json({ butterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/bouquets/place", async (req, res) => {
+    try {
+      const placeData = placeBouquetSchema.parse(req.body);
+      const userId = 1; // TODO: Get from session/auth
+      
+      const result = await storage.placeBouquet(userId, placeData);
+      if (result.success) {
+        res.json({ message: "Bouquet erfolgreich platziert" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/placed-bouquets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const placedBouquets = await storage.getPlacedBouquets(userId);
+      res.json({ placedBouquets });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
