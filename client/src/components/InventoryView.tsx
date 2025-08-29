@@ -2,13 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
-import { getRarityColor, getRarityBorder, getRarityDisplayName, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [myFlowers, setMyFlowers] = useState<any[]>([]);
+
+  const getBorderColor = (rarity: RarityTier): string => {
+    switch (rarity) {
+      case 'common': return '#fbbf24';      // yellow-400
+      case 'uncommon': return '#4ade80';    // green-400  
+      case 'rare': return '#3b82f6';        // blue-400
+      case 'super-rare': return '#06b6d4';  // cyan-400
+      case 'epic': return '#a855f7';        // purple-400
+      case 'legendary': return '#f97316';   // orange-400
+      case 'mythical': return '#ef4444';    // red-400
+      default: return '#9ca3af';            // gray-400
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -88,7 +101,8 @@ export const InventoryView: React.FC = () => {
                 {mySeeds.map((userSeed) => (
                   <div
                     key={userSeed.id}
-                    className={`bg-slate-900 rounded-lg p-3 border-2 ${getRarityBorder(userSeed.seedRarity as RarityTier)}`}
+                    className="bg-slate-900 rounded-lg p-3 border-2"
+                    style={{ borderColor: getBorderColor(userSeed.seedRarity as RarityTier) }}
                   >
                     <div className="flex items-center space-x-3">
                       <RarityImage 
@@ -134,7 +148,8 @@ export const InventoryView: React.FC = () => {
                 {myFlowers.map((flower) => (
                   <div
                     key={flower.id}
-                    className={`bg-slate-900 rounded-lg p-3 border-2 ${getRarityBorder(flower.flowerRarity as RarityTier)}`}
+                    className="bg-slate-900 rounded-lg p-3 border-2"
+                    style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
                   >
                     <div className="flex items-center space-x-3">
                       <RarityImage 
