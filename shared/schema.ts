@@ -157,6 +157,20 @@ export const userButterflies = pgTable("user_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Butterflies spawned on garden fields (waiting to be collected)
+export const fieldButterflies = pgTable("field_butterflies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // 0-49 for the 50 garden fields
+  butterflyId: integer("butterfly_id").notNull(),
+  butterflyName: text("butterfly_name").notNull(),
+  butterflyRarity: text("butterfly_rarity").notNull(),
+  butterflyImageUrl: text("butterfly_image_url").notNull(),
+  bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
+  spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const createBouquetSchema = z.object({
   flowerId1: z.number().min(1),
   flowerId2: z.number().min(1),
@@ -176,5 +190,6 @@ export type BouquetRecipe = typeof bouquetRecipes.$inferSelect;
 export type UserBouquet = typeof userBouquets.$inferSelect;
 export type PlacedBouquet = typeof placedBouquets.$inferSelect;
 export type UserButterfly = typeof userButterflies.$inferSelect;
+export type FieldButterfly = typeof fieldButterflies.$inferSelect;
 export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
 export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;

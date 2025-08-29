@@ -267,6 +267,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get butterflies on garden fields
+  app.get("/api/user/:id/field-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const fieldButterflies = await storage.getFieldButterflies(userId);
+      res.json({ fieldButterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Collect butterfly from field
+  app.post("/api/garden/collect-butterfly", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = 1; // TODO: Get from session/auth
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.collectFieldButterfly(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich gesammelt!', butterfly: result.butterfly });
+      } else {
+        res.status(404).json({ message: 'Kein Schmetterling auf diesem Feld gefunden' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/bouquets/place", async (req, res) => {
     try {
       const placeData = placeBouquetSchema.parse(req.body);

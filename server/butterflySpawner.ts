@@ -77,7 +77,7 @@ export class ButterflySpawner {
           // Use the rarity stored in the placed bouquet
           const rarity = (placedBouquet as any).bouquetRarity as RarityTier || 'common';
           
-          const result = await storage.spawnButterflyFromBouquet(
+          const result = await storage.spawnButterflyOnField(
             userId, 
             placedBouquet.bouquetId, 
             rarity
@@ -85,7 +85,7 @@ export class ButterflySpawner {
           
           if (result.success) {
             totalSpawns++;
-            console.log(`✨ Spawned butterfly from ${rarity} bouquet #${placedBouquet.bouquetId}!`);
+            console.log(`✨ Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}!`);
           }
         }
       } catch (error) {

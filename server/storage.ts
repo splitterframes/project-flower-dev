@@ -10,6 +10,7 @@ import {
   bouquetRecipes,
   placedBouquets,
   userButterflies,
+  fieldButterflies,
   type User, 
   type InsertUser, 
   type Seed, 
@@ -26,6 +27,7 @@ import {
   type BouquetRecipe,
   type PlacedBouquet,
   type UserButterfly,
+  type FieldButterfly,
   type CreateBouquetRequest,
   type PlaceBouquetRequest
 } from "@shared/schema";
@@ -73,6 +75,7 @@ export class MemStorage implements IStorage {
   private bouquetRecipes: Map<number, BouquetRecipe>;
   private placedBouquets: Map<number, PlacedBouquet & { bouquetName: string; bouquetRarity: string }>;
   private userButterflies: Map<number, UserButterfly>;
+  private fieldButterflies: Map<number, FieldButterfly>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
@@ -83,6 +86,7 @@ export class MemStorage implements IStorage {
   private currentRecipeId: number;
   private currentPlacedBouquetId: number;
   private currentButterflyId: number;
+  private currentFieldButterflyId: number;
   private currentFlowerId: number;
 
   constructor() {
@@ -97,6 +101,7 @@ export class MemStorage implements IStorage {
     this.bouquetRecipes = new Map();
     this.placedBouquets = new Map();
     this.userButterflies = new Map();
+    this.fieldButterflies = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
@@ -107,6 +112,7 @@ export class MemStorage implements IStorage {
     this.currentRecipeId = 1;
     this.currentPlacedBouquetId = 1;
     this.currentButterflyId = 1;
+    this.currentFieldButterflyId = 1;
     this.currentFlowerId = 1;
     
     // Initialize with some sample seeds and demo market listings
@@ -718,7 +724,7 @@ export class MemStorage implements IStorage {
 
     // Create placed bouquet (expires in 21 minutes)
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 21);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 6); // Reduced to 6 minutes for testing
 
     const placedBouquet = {
       id: this.currentPlacedBouquetId++,
@@ -779,7 +785,8 @@ export class MemStorage implements IStorage {
       .filter(butterfly => butterfly.userId === userId);
   }
 
-  async spawnButterflyFromBouquet(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+  // New system: Spawn butterfly on a garden field
+  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
     const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
     
     // Check if butterfly should spawn based on rarity
@@ -787,33 +794,103 @@ export class MemStorage implements IStorage {
       return { success: false };
     }
 
+    // Find an available field (not occupied by plants or other butterflies)
+    const occupiedFields = new Set<number>();
+    
+    // Add planted fields
+    Array.from(this.plantedFields.values())
+      .filter(pf => pf.userId === userId)
+      .forEach(pf => occupiedFields.add(pf.fieldIndex));
+    
+    // Add fields with butterflies  
+    Array.from(this.fieldButterflies.values())
+      .filter(fb => fb.userId === userId)
+      .forEach(fb => occupiedFields.add(fb.fieldIndex));
+    
+    // Add fields with placed bouquets
+    Array.from(this.placedBouquets.values())
+      .filter(pb => pb.userId === userId)
+      .forEach(pb => occupiedFields.add(pb.fieldIndex));
+    
+    // Find first available field (0-49)
+    let availableField = -1;
+    for (let i = 0; i < 50; i++) {
+      if (!occupiedFields.has(i)) {
+        availableField = i;
+        break;
+      }
+    }
+    
+    if (availableField === -1) {
+      console.log(`🦋 No available fields for butterfly spawn (user ${userId})`);
+      return { success: false };
+    }
+
     // Generate new butterfly
     const butterflyData = generateRandomButterfly(bouquetRarity);
     
-    // Check if user already has this butterfly
+    // Create field butterfly
+    const fieldButterfly: FieldButterfly = {
+      id: this.currentFieldButterflyId++,
+      userId,
+      fieldIndex: availableField,
+      butterflyId: butterflyData.id,
+      butterflyName: butterflyData.name,
+      butterflyRarity: bouquetRarity,
+      butterflyImageUrl: butterflyData.imageUrl,
+      bouquetId,
+      spawnedAt: new Date(),
+      createdAt: new Date()
+    };
+    
+    this.fieldButterflies.set(fieldButterfly.id, fieldButterfly);
+    console.log(`🦋 Butterfly spawned on field ${availableField}: ${butterflyData.name} (${bouquetRarity})`);
+    return { success: true, fieldButterfly, fieldIndex: availableField };
+  }
+
+  // Get butterflies on garden fields
+  async getFieldButterflies(userId: number): Promise<FieldButterfly[]> {
+    return Array.from(this.fieldButterflies.values())
+      .filter(fb => fb.userId === userId);
+  }
+
+  // Collect butterfly from field (move to inventory)
+  async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    // Find butterfly on this field
+    const fieldButterfly = Array.from(this.fieldButterflies.values())
+      .find(fb => fb.userId === userId && fb.fieldIndex === fieldIndex);
+    
+    if (!fieldButterfly) {
+      return { success: false };
+    }
+    
+    // Remove from field
+    this.fieldButterflies.delete(fieldButterfly.id);
+    
+    // Add to user inventory
     const existingButterfly = Array.from(this.userButterflies.values())
-      .find(b => b.userId === userId && b.butterflyId === butterflyData.id);
+      .find(b => b.userId === userId && b.butterflyId === fieldButterfly.butterflyId);
     
     if (existingButterfly) {
       // Increase quantity
       existingButterfly.quantity += 1;
       this.userButterflies.set(existingButterfly.id, existingButterfly);
-      console.log(`🦋 Butterfly spawn: User ${userId} got +1 ${butterflyData.name} (total: ${existingButterfly.quantity})`);
+      console.log(`🦋 Collected butterfly: +1 ${fieldButterfly.butterflyName} (total: ${existingButterfly.quantity})`);
       return { success: true, butterfly: existingButterfly };
     } else {
-      // Create new butterfly
+      // Create new butterfly in inventory
       const newButterfly: UserButterfly = {
         id: this.currentButterflyId++,
         userId,
-        butterflyId: butterflyData.id,
-        butterflyName: butterflyData.name,
-        butterflyRarity: bouquetRarity,
-        butterflyImageUrl: butterflyData.imageUrl,
+        butterflyId: fieldButterfly.butterflyId,
+        butterflyName: fieldButterfly.butterflyName,
+        butterflyRarity: fieldButterfly.butterflyRarity,
+        butterflyImageUrl: fieldButterfly.butterflyImageUrl,
         quantity: 1,
         createdAt: new Date()
       };
       this.userButterflies.set(newButterfly.id, newButterfly);
-      console.log(`🦋 New butterfly spawn: User ${userId} got ${butterflyData.name} (${bouquetRarity})`);
+      console.log(`🦋 Collected new butterfly: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
       return { success: true, butterfly: newButterfly };
     }
   }

@@ -18,7 +18,7 @@ import {
   Heart,
   Sparkles
 } from "lucide-react";
-import type { UserBouquet, PlacedBouquet } from "@shared/schema";
+import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GardenField {
@@ -37,6 +37,11 @@ interface GardenField {
   bouquetId?: number;
   bouquetPlacedAt?: Date;
   bouquetExpiresAt?: Date;
+  hasButterfly?: boolean;
+  butterflyId?: number;
+  butterflyName?: string;
+  butterflyImageUrl?: string;
+  butterflyRarity?: string;
 }
 
 interface UserSeed {
@@ -63,6 +68,7 @@ export const GardenView: React.FC = () => {
   });
 
   const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
+  const [fieldButterflies, setFieldButterflies] = useState<FieldButterfly[]>([]);
   const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showSeedSelection, setShowSeedSelection] = useState(false);
@@ -78,6 +84,7 @@ export const GardenView: React.FC = () => {
       fetchPlantedFields();
       fetchUserBouquets();
       fetchPlacedBouquets();
+      fetchFieldButterflies();
     }
   }, [user]);
 
@@ -100,6 +107,20 @@ export const GardenView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch user seeds:', error);
+    }
+  };
+
+  const fetchFieldButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/field-butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setFieldButterflies(data.fieldButterflies || []);
+        updateGardenWithFieldButterflies(data.fieldButterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch field butterflies:', error);
     }
   };
 
@@ -162,6 +183,32 @@ export const GardenView: React.FC = () => {
           bouquetId: undefined,
           bouquetPlacedAt: undefined,
           bouquetExpiresAt: undefined
+        };
+      }
+    }));
+  };
+
+  const updateGardenWithFieldButterflies = (butterflies: FieldButterfly[]) => {
+    console.log('Updating garden with field butterflies:', butterflies);
+    setGardenFields(prev => prev.map(field => {
+      const butterfly = butterflies.find(bf => bf.fieldIndex === field.id - 1);
+      if (butterfly) {
+        return {
+          ...field,
+          hasButterfly: true,
+          butterflyId: butterfly.butterflyId,
+          butterflyName: butterfly.butterflyName,
+          butterflyImageUrl: butterfly.butterflyImageUrl,
+          butterflyRarity: butterfly.butterflyRarity
+        };
+      } else {
+        return {
+          ...field,
+          hasButterfly: false,
+          butterflyId: undefined,
+          butterflyName: undefined,
+          butterflyImageUrl: undefined,
+          butterflyRarity: undefined
         };
       }
     }));
@@ -323,6 +370,7 @@ export const GardenView: React.FC = () => {
         // Refresh data
         await fetchUserSeeds();
         await fetchPlantedFields();
+        await fetchFieldButterflies();
       } else {
         const error = await response.json();
         alert(error.message || 'Fehler beim Pflanzen');
@@ -330,6 +378,34 @@ export const GardenView: React.FC = () => {
     } catch (error) {
       console.error('Failed to plant seed:', error);
       alert('Fehler beim Pflanzen');
+    }
+  };
+
+  const collectButterfly = async (fieldIndex: number) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/garden/collect-butterfly', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fieldIndex,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh data
+        await fetchFieldButterflies();
+        const data = await response.json();
+        console.log(`🦋 ${data.message}`);
+      } else {
+        const error = await response.json();
+        console.error('Failed to collect butterfly:', error.message);
+      }
+    } catch (error) {
+      console.error('Failed to collect butterfly:', error);
     }
   };
 
@@ -507,7 +583,9 @@ export const GardenView: React.FC = () => {
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
                       unlockField(field.id);
-                    } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet) {
+                    } else if (field.hasButterfly) {
+                      collectButterfly(field.id - 1);
+                    } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly) {
                       openSeedSelection(field.id - 1);
                     } else if (field.isUnlocked && field.hasPlant) {
                       const status = getFieldStatus(field);
@@ -518,7 +596,7 @@ export const GardenView: React.FC = () => {
                   }}
                   onContextMenu={(e) => {
                     e.preventDefault(); // Prevent default context menu
-                    if (field.isUnlocked && !field.hasPlant && !field.hasBouquet) {
+                    if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly) {
                       openBouquetSelection(field.id - 1);
                     }
                   }}
@@ -644,8 +722,39 @@ export const GardenView: React.FC = () => {
                       </div>
                     );
                   })()}
+
+                  {/* Butterfly Display */}
+                  {field.isUnlocked && field.hasButterfly && (
+                    <div className="flex flex-col items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-pointer">
+                            <div className="relative">
+                              <RarityImage 
+                                src={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
+                                alt="Schmetterling"
+                                rarity={field.butterflyRarity as RarityTier || "common"}
+                                size="large"
+                                className="mx-auto w-16 h-16 animate-pulse"
+                              />
+                              <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-slate-800 border-slate-600 text-white">
+                            <div className="text-center">
+                              <div className="font-bold text-sm">{field.butterflyName}</div>
+                              <div className={`text-xs ${getRarityColor(field.butterflyRarity as RarityTier || "common")}`}>
+                                {getRarityDisplayName(field.butterflyRarity as RarityTier || "common")}
+                              </div>
+                              <div className="text-xs text-orange-400 mt-1">Klicke zum Sammeln</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                   
-                  {field.isUnlocked && !field.hasPlant && !field.hasBouquet && (
+                  {field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly && (
                     <div className="text-xs text-green-400">+</div>
                   )}
                   
@@ -667,6 +776,7 @@ export const GardenView: React.FC = () => {
             <p className="mb-2">💐 Rechtsklick auf ein freies Feld um ein Bouquet zu platzieren</p>
             <p className="mb-2">⏰ Hover über wachsende Pflanzen um die Restzeit zu sehen</p>
             <p className="mb-2">🌸 Klicke auf gewachsene Blumen um sie zu ernten</p>
+            <p className="mb-2">🦋 Klicke auf Schmetterlinge um sie zu sammeln</p>
             <p className="mb-2">🔓 Klicke auf ein gesperrtes Feld um es freizuschalten</p>
             <p>💰 Jedes weitere Feld kostet 20% mehr als das vorherige</p>
           </div>
