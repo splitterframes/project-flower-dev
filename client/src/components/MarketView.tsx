@@ -138,18 +138,26 @@ export const MarketView: React.FC = () => {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'legendary': return 'text-yellow-400';
-      case 'rare': return 'text-purple-400';
-      case 'uncommon': return 'text-blue-400';
+      case 'common': return 'text-yellow-400';
+      case 'uncommon': return 'text-green-400';
+      case 'rare': return 'text-blue-400';
+      case 'super-rare': return 'text-cyan-400';
+      case 'epic': return 'text-purple-400';
+      case 'legendary': return 'text-orange-400';
+      case 'mythical': return 'text-red-400';
       default: return 'text-gray-400';
     }
   };
 
   const getRarityBorder = (rarity: string) => {
     switch (rarity) {
-      case 'legendary': return 'border-yellow-400';
-      case 'rare': return 'border-purple-400';
-      case 'uncommon': return 'border-blue-400';
+      case 'common': return 'border-yellow-400';
+      case 'uncommon': return 'border-green-400';
+      case 'rare': return 'border-blue-400';
+      case 'super-rare': return 'border-cyan-400';
+      case 'epic': return 'border-purple-400';
+      case 'legendary': return 'border-orange-400';
+      case 'mythical': return 'border-red-400';
       default: return 'border-gray-400';
     }
   };

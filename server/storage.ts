@@ -56,7 +56,10 @@ export class MemStorage implements IStorage {
       { id: 2, name: "Rose", rarity: "uncommon", price: 25, description: "Eine duftende rote Rose", imageUrl: "/Blumen/02.png", createdAt: new Date() },
       { id: 3, name: "Tulpe", rarity: "common", price: 15, description: "Eine elegante Frühlingsblume", imageUrl: "/Blumen/03.png", createdAt: new Date() },
       { id: 4, name: "Orchidee", rarity: "rare", price: 50, description: "Eine exotische Schönheit", imageUrl: "/Blumen/04.png", createdAt: new Date() },
-      { id: 5, name: "Lotus", rarity: "legendary", price: 100, description: "Eine mystische Wasserblume", imageUrl: "/Blumen/05.png", createdAt: new Date() }
+      { id: 5, name: "Lotus", rarity: "super-rare", price: 100, description: "Eine mystische Wasserblume", imageUrl: "/Blumen/05.png", createdAt: new Date() },
+      { id: 6, name: "Enzian", rarity: "epic", price: 200, description: "Eine magische Bergblume", imageUrl: "/Blumen/06.png", createdAt: new Date() },
+      { id: 7, name: "Edelweiß", rarity: "legendary", price: 500, description: "Eine legendäre Alpenblume", imageUrl: "/Blumen/07.png", createdAt: new Date() },
+      { id: 8, name: "Drachenblume", rarity: "mythical", price: 1000, description: "Eine sagenumwobene Blume der Drachen", imageUrl: "/Blumen/08.png", createdAt: new Date() }
     ];
 
     sampleSeeds.forEach(seed => {
@@ -73,20 +76,6 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const now = new Date();
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      credits: 1000,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.users.set(id, user);
-    return user;
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
@@ -283,7 +272,10 @@ export class MemStorage implements IStorage {
     const demoUserSeeds = [
       { id: 1000, userId: 99, seedId: 1, quantity: 10, seedName: "Sonnenblume", seedRarity: "common", createdAt: new Date() },
       { id: 1001, userId: 99, seedId: 2, quantity: 5, seedName: "Rose", seedRarity: "uncommon", createdAt: new Date() },
-      { id: 1002, userId: 99, seedId: 4, quantity: 2, seedName: "Orchidee", seedRarity: "rare", createdAt: new Date() }
+      { id: 1002, userId: 99, seedId: 4, quantity: 3, seedName: "Orchidee", seedRarity: "rare", createdAt: new Date() },
+      { id: 1003, userId: 99, seedId: 5, quantity: 2, seedName: "Lotus", seedRarity: "super-rare", createdAt: new Date() },
+      { id: 1004, userId: 99, seedId: 6, quantity: 1, seedName: "Enzian", seedRarity: "epic", createdAt: new Date() },
+      { id: 1005, userId: 99, seedId: 7, quantity: 1, seedName: "Edelweiß", seedRarity: "legendary", createdAt: new Date() }
     ];
 
     demoUserSeeds.forEach(userSeed => {
@@ -333,6 +325,48 @@ export class MemStorage implements IStorage {
         sellerUsername: "Demo_Händler",
         seedName: "Orchidee",
         seedRarity: "rare"
+      },
+      {
+        id: 4,
+        sellerId: 99,
+        seedId: 5,
+        quantity: 1,
+        pricePerUnit: 150,
+        totalPrice: 150,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Lotus",
+        seedRarity: "super-rare"
+      },
+      {
+        id: 5,
+        sellerId: 99,
+        seedId: 6,
+        quantity: 1,
+        pricePerUnit: 300,
+        totalPrice: 300,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Enzian",
+        seedRarity: "epic"
+      },
+      {
+        id: 6,
+        sellerId: 99,
+        seedId: 7,
+        quantity: 1,
+        pricePerUnit: 750,
+        totalPrice: 750,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Edelweiß",
+        seedRarity: "legendary"
       }
     ];
 
@@ -340,7 +374,7 @@ export class MemStorage implements IStorage {
       this.marketListings.set(listing.id, listing);
     });
 
-    this.currentListingId = 4;
+    this.currentListingId = 7;
   }
 }
 
