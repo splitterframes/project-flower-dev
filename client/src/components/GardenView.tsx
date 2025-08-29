@@ -387,6 +387,7 @@ export const GardenView: React.FC = () => {
     if (!user) return;
 
     try {
+      console.log(`🦋 Attempting to collect butterfly on field ${fieldIndex}`);
       const response = await fetch('/api/garden/collect-butterfly', {
         method: 'POST',
         headers: {
@@ -404,7 +405,10 @@ export const GardenView: React.FC = () => {
         console.log(`🦋 ${data.message}`);
       } else {
         const error = await response.json();
-        console.error('Failed to collect butterfly:', error.message);
+        // Only log error if it's not a "no butterfly found" message
+        if (!error.message.includes('Kein Schmetterling')) {
+          console.error('Failed to collect butterfly:', error.message);
+        }
       }
     } catch (error) {
       console.error('Failed to collect butterfly:', error);
@@ -415,6 +419,7 @@ export const GardenView: React.FC = () => {
     if (!user) return;
 
     try {
+      console.log(`💧 Attempting to collect expired bouquet on field ${fieldIndex}`);
       const response = await fetch('/api/bouquets/collect-expired', {
         method: 'POST',
         headers: {
@@ -434,7 +439,10 @@ export const GardenView: React.FC = () => {
         await fetchFieldButterflies();
       } else {
         const error = await response.json();
-        console.error('Failed to collect expired bouquet:', error.message);
+        // Only log error if it's not a "no expired bouquet" message for debugging
+        if (!error.message.includes('Kein verwelktes Bouquet')) {
+          console.error('Failed to collect expired bouquet:', error.message);
+        }
       }
     } catch (error) {
       console.error('Failed to collect expired bouquet:', error);

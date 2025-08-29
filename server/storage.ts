@@ -769,23 +769,8 @@ export class MemStorage implements IStorage {
   }
 
   async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
-    const currentTime = new Date();
-    
-    // Clean up expired bouquets first
-    Array.from(this.placedBouquets.values())
-      .filter(pb => pb.userId === userId && pb.expiresAt <= currentTime)
-      .forEach(expiredBouquet => {
-        // Generate seed drop
-        const seedDrop = getBouquetSeedDrop(expiredBouquet.bouquetRarity as RarityTier);
-        
-        // Add seeds to user inventory
-        this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
-        console.log(`💧 Bouquet expired, dropped ${seedDrop.quantity}x ${seedDrop.rarity} seeds for user ${userId}`);
-        
-        // Remove expired bouquet
-        this.placedBouquets.delete(expiredBouquet.id);
-      });
-
+    // Return all bouquets (expired and non-expired) for display
+    // Expired bouquets will be processed only when manually collected
     return Array.from(this.placedBouquets.values())
       .filter(bouquet => bouquet.userId === userId)
       .map(pb => ({
@@ -845,6 +830,7 @@ export class MemStorage implements IStorage {
     
     // Add seeds to user inventory
     await this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
+    console.log(`💧 Expired bouquet collected manually, dropped ${seedDrop.quantity}x ${seedDrop.rarity} seeds for user ${userId}`);
     
     // Remove the expired bouquet
     this.placedBouquets.delete(placedBouquet.id);
