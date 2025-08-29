@@ -11,7 +11,7 @@ import { BouquetCreationModal } from "./BouquetCreationModal";
 import type { UserFlower, UserBouquet, UserButterfly } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
-  const { user, credits } = useAuth();
+  const { user } = useAuth();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
@@ -113,8 +113,8 @@ export const InventoryView: React.FC = () => {
     if (user) {
       fetchMySeeds();
       fetchMyFlowers();
-      fetchMyBouquets();
-      fetchMyButterflies();
+      // fetchMyBouquets();
+      // fetchMyButterflies();
     }
   }, [user]);
 
@@ -141,6 +141,61 @@ export const InventoryView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch my flowers:', error);
+    }
+  };
+
+  const fetchMyBouquets = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/bouquets`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyBouquets(data.bouquets || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my bouquets:', error);
+    }
+  };
+
+  const fetchMyButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyButterflies(data.butterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my butterflies:', error);
+    }
+  };
+
+  const handleCreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string, generateName?: boolean) => {
+    try {
+      const response = await fetch('/api/bouquets/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flowerId1,
+          flowerId2,
+          flowerId3,
+          name,
+          generateName
+        })
+      });
+
+      if (response.ok) {
+        // Refresh all relevant data
+        await fetchMyFlowers();
+        await fetchMyBouquets();
+        // Update credits would be here if we had access to it
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Erstellen des Bouquets');
+      }
+    } catch (error) {
+      console.error('Failed to create bouquet:', error);
+      alert('Fehler beim Erstellen des Bouquets');
     }
   };
 
@@ -216,12 +271,22 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Flowers */}
+        {/* Flowers with Bouquet Creation */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Flower className="h-5 w-5 mr-2 text-pink-400" />
-              Blumen
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center">
+                <Flower className="h-5 w-5 mr-2 text-pink-400" />
+                Blumen
+              </div>
+              <Button
+                onClick={() => setShowBouquetCreation(true)}
+                disabled={myFlowers.length < 3}
+                className="bg-pink-600 hover:bg-pink-700 text-xs px-2 py-1 h-7"
+              >
+                <Heart className="h-3 w-3 mr-1" />
+                Bouquet
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -279,6 +344,15 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bouquet Creation Modal */}
+      <BouquetCreationModal
+        isOpen={showBouquetCreation}
+        onClose={() => setShowBouquetCreation(false)}
+        userFlowers={myFlowers}
+        onCreateBouquet={handleCreateBouquet}
+        credits={1000} // TODO: Get real credits from user state
+      />
     </div>
   );
 };
