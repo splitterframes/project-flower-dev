@@ -454,7 +454,7 @@ export const GardenView: React.FC = () => {
         onClose={() => setShowSeedSelection(false)}
         seeds={userSeeds}
         fieldIndex={selectedFieldIndex}
-        onPlantSeed={plantSeed}
+        onSelectSeed={plantSeed}
       />
     </div>
   );
