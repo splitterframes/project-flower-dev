@@ -65,17 +65,20 @@ export const RarityImage: React.FC<RarityImageProps> = ({
         flex 
         items-center 
         justify-center 
+        flex-shrink-0
         ${className}
       `} 
       style={{ 
         borderStyle: 'solid',
-        borderColor: getBorderColor(rarity)
+        borderColor: getBorderColor(rarity),
+        aspectRatio: '1/1'
       }}>
       {!imageError ? (
         <img
           src={src}
           alt={alt}
           className="w-full h-full object-cover"
+          style={{ aspectRatio: '1/1' }}
           onError={handleImageError}
         />
       ) : (
