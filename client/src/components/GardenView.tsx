@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { RarityImage } from "./RarityImage";
-import { HarvestAnimation } from "./HarvestAnimation";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
@@ -60,6 +59,7 @@ export const GardenView: React.FC = () => {
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
+  const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -237,8 +237,10 @@ export const GardenView: React.FC = () => {
 
   const harvestField = async (fieldIndex: number) => {
     try {
-      // Start harvest animation
-      setHarvestingField(fieldIndex);
+      console.log('Starting harvest for field:', fieldIndex);
+      
+      // Add visual feedback immediately
+      setHarvestedFields(prev => new Set([...Array.from(prev), fieldIndex]));
       
       const response = await fetch('/api/garden/harvest', {
         method: 'POST',
@@ -252,28 +254,38 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
-        // Animation will handle the refresh when it completes
+        // Refresh data immediately
+        await fetchPlantedFields();
+        // Remove visual feedback after short delay
+        setTimeout(() => {
+          setHarvestedFields(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldIndex);
+            return newSet;
+          });
+        }, 800);
       } else {
         const error = await response.json();
         alert(error.message || 'Fehler beim Ernten');
-        // Stop animation on error
-        setHarvestingField(null);
+        // Remove visual feedback on error
+        setHarvestedFields(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldIndex);
+          return newSet;
+        });
       }
     } catch (error) {
-      console.error('Failed to harvest field:', error);
+      console.error('Failed to harvest:', error);
       alert('Fehler beim Ernten');
-      // Stop animation on error
-      setHarvestingField(null);
+      // Remove visual feedback on error
+      setHarvestedFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldIndex);
+        return newSet;
+      });
     }
   };
 
-  const handleHarvestAnimationComplete = async () => {
-    // Animation is complete, refresh data immediately and clear harvest state
-    console.log('Animation complete, refreshing fields...');
-    setHarvestingField(null);
-    await fetchPlantedFields();
-    console.log('Fields refreshed after animation');
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -390,12 +402,13 @@ export const GardenView: React.FC = () => {
                     }
                   }}
                 >
-                  {/* Harvest Animation */}
-                  {harvestingField === field.id - 1 && (
-                    <HarvestAnimation 
-                      fieldIndex={field.id - 1}
-                      onComplete={handleHarvestAnimationComplete}
-                    />
+                  {/* Harvest Visual Feedback */}
+                  {harvestedFields.has(field.id - 1) && (
+                    <div className="absolute inset-0 bg-green-400/30 rounded-lg flex items-center justify-center z-10">
+                      <div className="text-white font-bold text-lg animate-pulse">
+                        +1 Blume!
+                      </div>
+                    </div>
                   )}
                   
                   {!field.isUnlocked && (
@@ -409,7 +422,7 @@ export const GardenView: React.FC = () => {
                     </>
                   )}
                   
-                  {field.isUnlocked && field.hasPlant && harvestingField !== field.id - 1 && (() => {
+                  {field.isUnlocked && field.hasPlant && !harvestedFields.has(field.id - 1) && (() => {
                     const status = getFieldStatus(field);
                     if (status?.isGrown && field.flowerImageUrl) {
                       // Show grown flower with hover preview and tooltip
