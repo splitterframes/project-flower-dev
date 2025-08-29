@@ -1,19 +1,68 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { 
+  users, 
+  seeds, 
+  userSeeds, 
+  marketListings,
+  type User, 
+  type InsertUser, 
+  type Seed, 
+  type UserSeed, 
+  type MarketListing,
+  type CreateMarketListingRequest,
+  type BuyListingRequest
+} from "@shared/schema";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: number, amount: number): Promise<User | undefined>;
+  
+  // Market methods
+  getMarketListings(): Promise<any[]>;
+  createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any>;
+  buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }>;
+  getUserSeeds(userId: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
-  currentId: number;
+  private seeds: Map<number, Seed>;
+  private userSeeds: Map<number, UserSeed & { seedName: string; seedRarity: string }>;
+  private marketListings: Map<number, MarketListing & { sellerUsername: string; seedName: string; seedRarity: string }>;
+  private currentId: number;
+  private currentSeedId: number;
+  private currentUserSeedId: number;
+  private currentListingId: number;
 
   constructor() {
     this.users = new Map();
+    this.seeds = new Map();
+    this.userSeeds = new Map();
+    this.marketListings = new Map();
     this.currentId = 1;
+    this.currentSeedId = 1;
+    this.currentUserSeedId = 1;
+    this.currentListingId = 1;
+    
+    // Initialize with some sample seeds and demo market listings
+    this.initializeSampleSeeds();
+    this.createDemoMarketListings();
+  }
+
+  private initializeSampleSeeds() {
+    const sampleSeeds = [
+      { id: 1, name: "Sonnenblume", rarity: "common", price: 10, description: "Eine strahlende gelbe Blume", imageUrl: "/Blumen/01.png", createdAt: new Date() },
+      { id: 2, name: "Rose", rarity: "uncommon", price: 25, description: "Eine duftende rote Rose", imageUrl: "/Blumen/02.png", createdAt: new Date() },
+      { id: 3, name: "Tulpe", rarity: "common", price: 15, description: "Eine elegante Frühlingsblume", imageUrl: "/Blumen/03.png", createdAt: new Date() },
+      { id: 4, name: "Orchidee", rarity: "rare", price: 50, description: "Eine exotische Schönheit", imageUrl: "/Blumen/04.png", createdAt: new Date() },
+      { id: 5, name: "Lotus", rarity: "legendary", price: 100, description: "Eine mystische Wasserblume", imageUrl: "/Blumen/05.png", createdAt: new Date() }
+    ];
+
+    sampleSeeds.forEach(seed => {
+      this.seeds.set(seed.id, seed);
+      this.currentSeedId = Math.max(this.currentSeedId, seed.id + 1);
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -51,6 +100,247 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+
+  async getMarketListings(): Promise<any[]> {
+    return Array.from(this.marketListings.values()).filter(listing => listing.isActive);
+  }
+
+  async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
+    const seller = this.users.get(sellerId);
+    const seed = this.seeds.get(data.seedId);
+    if (!seller || !seed) {
+      throw new Error("Seller or seed not found");
+    }
+
+    const userSeed = Array.from(this.userSeeds.values()).find(
+      us => us.userId === sellerId && us.seedId === data.seedId
+    );
+    
+    if (!userSeed || userSeed.quantity < data.quantity) {
+      throw new Error("Nicht genügend Samen verfügbar");
+    }
+
+    const id = this.currentListingId++;
+    const now = new Date();
+    const listing = {
+      id,
+      sellerId,
+      seedId: data.seedId,
+      quantity: data.quantity,
+      pricePerUnit: data.pricePerUnit,
+      totalPrice: data.quantity * data.pricePerUnit,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+      sellerUsername: seller.username,
+      seedName: seed.name,
+      seedRarity: seed.rarity
+    };
+
+    this.marketListings.set(id, listing);
+
+    // Reduce seller's seed quantity
+    const updatedUserSeed = {
+      ...userSeed,
+      quantity: userSeed.quantity - data.quantity
+    };
+    this.userSeeds.set(userSeed.id, updatedUserSeed);
+
+    return listing;
+  }
+
+  async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
+    const buyer = this.users.get(buyerId);
+    const listing = this.marketListings.get(data.listingId);
+    
+    if (!buyer || !listing || !listing.isActive) {
+      return { success: false, message: "Angebot nicht verfügbar" };
+    }
+
+    if (listing.sellerId === buyerId) {
+      return { success: false, message: "Du kannst deine eigenen Angebote nicht kaufen" };
+    }
+
+    const totalCost = Math.min(data.quantity, listing.quantity) * listing.pricePerUnit;
+    
+    if (buyer.credits < totalCost) {
+      return { success: false, message: "Nicht genügend Credits" };
+    }
+
+    const quantityToBuy = Math.min(data.quantity, listing.quantity);
+
+    // Update buyer credits
+    await this.updateUserCredits(buyerId, -totalCost);
+    
+    // Update seller credits
+    await this.updateUserCredits(listing.sellerId, totalCost);
+
+    // Give seeds to buyer
+    const existingUserSeed = Array.from(this.userSeeds.values()).find(
+      us => us.userId === buyerId && us.seedId === listing.seedId
+    );
+
+    if (existingUserSeed) {
+      const updatedUserSeed = {
+        ...existingUserSeed,
+        quantity: existingUserSeed.quantity + quantityToBuy
+      };
+      this.userSeeds.set(existingUserSeed.id, updatedUserSeed);
+    } else {
+      const seed = this.seeds.get(listing.seedId);
+      const newUserSeed = {
+        id: this.currentUserSeedId++,
+        userId: buyerId,
+        seedId: listing.seedId,
+        quantity: quantityToBuy,
+        createdAt: new Date(),
+        seedName: seed?.name || "Unknown",
+        seedRarity: seed?.rarity || "common"
+      };
+      this.userSeeds.set(newUserSeed.id, newUserSeed);
+    }
+
+    // Update or remove listing
+    if (listing.quantity <= quantityToBuy) {
+      // Remove listing completely
+      listing.isActive = false;
+      this.marketListings.set(listing.id, listing);
+    } else {
+      // Reduce listing quantity
+      const updatedListing = {
+        ...listing,
+        quantity: listing.quantity - quantityToBuy,
+        totalPrice: (listing.quantity - quantityToBuy) * listing.pricePerUnit,
+        updatedAt: new Date()
+      };
+      this.marketListings.set(listing.id, updatedListing);
+    }
+
+    return { success: true };
+  }
+
+  async getUserSeeds(userId: number): Promise<any[]> {
+    return Array.from(this.userSeeds.values())
+      .filter(userSeed => userSeed.userId === userId && userSeed.quantity > 0);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentId++;
+    const now = new Date();
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      credits: 1000,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.users.set(id, user);
+
+    // Give new users some starter seeds
+    this.giveStarterSeeds(id);
+    
+    return user;
+  }
+
+  private giveStarterSeeds(userId: number) {
+    // Give new users some common seeds to start with
+    const starterSeeds = [
+      { seedId: 1, quantity: 5 }, // 5 Sonnenblume seeds
+      { seedId: 3, quantity: 3 }, // 3 Tulpe seeds
+    ];
+
+    for (const starter of starterSeeds) {
+      const seed = this.seeds.get(starter.seedId);
+      if (seed) {
+        const userSeed = {
+          id: this.currentUserSeedId++,
+          userId,
+          seedId: starter.seedId,
+          quantity: starter.quantity,
+          createdAt: new Date(),
+          seedName: seed.name,
+          seedRarity: seed.rarity
+        };
+        this.userSeeds.set(userSeed.id, userSeed);
+      }
+    }
+  }
+
+  private createDemoMarketListings() {
+    // Create some demo users and listings so the market isn't empty
+    const demoUser = {
+      id: 99,
+      username: "Demo_Händler",
+      password: "demo",
+      credits: 5000,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.users.set(99, demoUser);
+
+    // Give demo user some seeds
+    const demoUserSeeds = [
+      { id: 1000, userId: 99, seedId: 1, quantity: 10, seedName: "Sonnenblume", seedRarity: "common", createdAt: new Date() },
+      { id: 1001, userId: 99, seedId: 2, quantity: 5, seedName: "Rose", seedRarity: "uncommon", createdAt: new Date() },
+      { id: 1002, userId: 99, seedId: 4, quantity: 2, seedName: "Orchidee", seedRarity: "rare", createdAt: new Date() }
+    ];
+
+    demoUserSeeds.forEach(userSeed => {
+      this.userSeeds.set(userSeed.id, userSeed);
+    });
+
+    // Create demo market listings
+    const demoListings = [
+      {
+        id: 1,
+        sellerId: 99,
+        seedId: 1,
+        quantity: 3,
+        pricePerUnit: 15,
+        totalPrice: 45,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Sonnenblume",
+        seedRarity: "common"
+      },
+      {
+        id: 2,
+        sellerId: 99,
+        seedId: 2,
+        quantity: 2,
+        pricePerUnit: 30,
+        totalPrice: 60,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Rose",
+        seedRarity: "uncommon"
+      },
+      {
+        id: 3,
+        sellerId: 99,
+        seedId: 4,
+        quantity: 1,
+        pricePerUnit: 75,
+        totalPrice: 75,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        sellerUsername: "Demo_Händler",
+        seedName: "Orchidee",
+        seedRarity: "rare"
+      }
+    ];
+
+    demoListings.forEach(listing => {
+      this.marketListings.set(listing.id, listing);
+    });
+
+    this.currentListingId = 4;
   }
 }
 

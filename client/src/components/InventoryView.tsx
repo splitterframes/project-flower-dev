@@ -1,10 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
-import { Package, Flower, Bug, Gem } from "lucide-react";
+import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
+  const [mySeeds, setMySeeds] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchMySeeds();
+    }
+  }, [user]);
+
+  const fetchMySeeds = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/seeds`);
+      if (response.ok) {
+        const data = await response.json();
+        setMySeeds(data.seeds || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my seeds:', error);
+    }
+  };
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return 'text-yellow-400';
+      case 'rare': return 'text-purple-400';
+      case 'uncommon': return 'text-blue-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getRarityBorder = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return 'border-yellow-400';
+      case 'rare': return 'border-purple-400';
+      case 'uncommon': return 'border-blue-400';
+      default: return 'border-gray-400';
+    }
+  };
 
   if (!user) {
     return (
@@ -30,7 +68,47 @@ export const InventoryView: React.FC = () => {
       </div>
 
       {/* Inventory Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Seeds */}
+        <Card className="bg-slate-800 border-slate-700 lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Sprout className="h-5 w-5 mr-2 text-green-400" />
+              Samen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {mySeeds.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">Noch keine Samen gesammelt</p>
+                <p className="text-slate-500 text-sm mt-2">Kaufe Samen im Markt oder erhalte sie durch Gärtnern</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {mySeeds.map((userSeed) => (
+                  <div
+                    key={userSeed.id}
+                    className={`bg-slate-900 rounded-lg p-3 border-2 ${getRarityBorder(userSeed.seedRarity)}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
+                      <div className="flex items-center">
+                        <Star className={`h-3 w-3 mr-1 ${getRarityColor(userSeed.seedRarity)}`} />
+                        <span className={`text-xs ${getRarityColor(userSeed.seedRarity)}`}>
+                          {userSeed.seedRarity}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-lg font-bold text-green-400">x{userSeed.quantity}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Flowers */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
@@ -59,22 +137,6 @@ export const InventoryView: React.FC = () => {
             <div className="text-center py-8">
               <p className="text-slate-400">Noch keine Schmetterlinge gefangen</p>
               <p className="text-slate-500 text-sm mt-2">Schmetterlinge werden von deinen Blumen angezogen</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Materials */}
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Gem className="h-5 w-5 mr-2 text-purple-400" />
-              Materialien
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-slate-400">Noch keine Materialien gesammelt</p>
-              <p className="text-slate-500 text-sm mt-2">Sammle seltene Materialien beim Spielen</p>
             </div>
           </CardContent>
         </Card>

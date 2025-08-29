@@ -5,6 +5,7 @@ import { AuthModal } from "./AuthModal";
 import { Dashboard } from "./Dashboard";
 import { GameView } from "./GameView";
 import { GardenView } from "./GardenView";
+import { MarketView } from "./MarketView";
 import { InventoryView } from "./InventoryView";
 import { BouquetsView } from "./BouquetsView";
 import { ExhibitionView } from "./ExhibitionView";
@@ -37,6 +38,8 @@ export const Layout: React.FC = () => {
     switch (currentView) {
       case "garten":
         return <GardenView />;
+      case "markt":
+        return <MarketView />;
       case "inventar":
         return <InventoryView />;
       case "bouquets":

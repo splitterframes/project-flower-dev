@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, loginSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -88,6 +88,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ credits: user.credits });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Market routes
+  app.get("/api/market/listings", async (req, res) => {
+    try {
+      const listings = await storage.getMarketListings();
+      res.json({ listings });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/market/create-listing", async (req, res) => {
+    try {
+      const listingData = createMarketListingSchema.parse(req.body);
+      const sellerId = 1; // TODO: Get from session/auth
+      
+      const listing = await storage.createMarketListing(sellerId, listingData);
+      res.json({ listing });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/market/buy", async (req, res) => {
+    try {
+      const buyData = buyListingSchema.parse(req.body);
+      const buyerId = 1; // TODO: Get from session/auth
+      
+      const result = await storage.buyMarketListing(buyerId, buyData);
+      if (result.success) {
+        res.json({ message: "Purchase successful" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/seeds", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const seeds = await storage.getUserSeeds(userId);
+      res.json({ seeds });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
