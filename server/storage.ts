@@ -401,15 +401,23 @@ export class MemStorage implements IStorage {
   }
 
   async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
+    console.log(`[PLANT] Attempting to plant - UserId: ${userId}, SeedId: ${data.seedId}, UserSeedId: ${data.userSeedId}`);
+    
     const user = this.users.get(userId);
     const seed = this.seeds.get(data.seedId);
     const userSeed = this.userSeeds.get(data.userSeedId);
+    
+    console.log(`[PLANT] Found - User: ${!!user}, Seed: ${!!seed}, UserSeed: ${!!userSeed}`);
+    if (userSeed) {
+      console.log(`[PLANT] UserSeed details - userId: ${userSeed.userId}, seedId: ${userSeed.seedId}, quantity: ${userSeed.quantity}`);
+    }
     
     if (!user || !seed || !userSeed) {
       return { success: false, message: "Nutzer, Samen oder Inventar nicht gefunden" };
     }
 
     if (userSeed.userId !== userId || userSeed.seedId !== data.seedId) {
+      console.log(`[PLANT] Validation failed - userSeed.userId: ${userSeed.userId}, expected: ${userId}, userSeed.seedId: ${userSeed.seedId}, expected: ${data.seedId}`);
       return { success: false, message: "Ungültiger Samen im Inventar" };
     }
 
