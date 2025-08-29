@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
+import { FlowerHoverPreview } from "./FlowerHoverPreview";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
@@ -151,13 +152,19 @@ export const InventoryView: React.FC = () => {
                     style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
                   >
                     <div className="flex items-center space-x-3">
-                      <RarityImage 
-                        src={flower.flowerImageUrl}
-                        alt={flower.flowerName}
+                      <FlowerHoverPreview
+                        flowerImageUrl={flower.flowerImageUrl}
+                        flowerName={flower.flowerName}
                         rarity={flower.flowerRarity as RarityTier}
-                        size="medium"
-                        className="w-12 h-12"
-                      />
+                      >
+                        <RarityImage 
+                          src={flower.flowerImageUrl}
+                          alt={flower.flowerName}
+                          rarity={flower.flowerRarity as RarityTier}
+                          size="medium"
+                          className="w-12 h-12"
+                        />
+                      </FlowerHoverPreview>
                       <div className="flex-1">
                         <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
                         <div className="flex items-center justify-between gap-2">
