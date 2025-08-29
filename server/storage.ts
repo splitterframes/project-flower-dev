@@ -4,6 +4,7 @@ import {
   userSeeds, 
   marketListings,
   plantedFields,
+  userFlowers,
   type User, 
   type InsertUser, 
   type Seed, 
@@ -13,7 +14,8 @@ import {
   type CreateMarketListingRequest,
   type BuyListingRequest,
   type PlantSeedRequest,
-  type HarvestFieldRequest
+  type HarvestFieldRequest,
+  type UserFlower
 } from "@shared/schema";
 import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
 
@@ -33,6 +35,10 @@ export interface IStorage {
   plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }>;
   getPlantedFields(userId: number): Promise<PlantedField[]>;
   harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }>;
+  
+  // Flower inventory methods
+  getUserFlowers(userId: number): Promise<UserFlower[]>;
+  addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -41,11 +47,13 @@ export class MemStorage implements IStorage {
   private userSeeds: Map<number, UserSeed & { seedName: string; seedRarity: string }>;
   private marketListings: Map<number, MarketListing & { sellerUsername: string; seedName: string; seedRarity: string }>;
   private plantedFields: Map<number, PlantedField>;
+  private userFlowers: Map<number, UserFlower>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
   private currentListingId: number;
   private currentFieldId: number;
+  private currentFlowerId: number;
 
   constructor() {
     this.users = new Map();
@@ -53,11 +61,13 @@ export class MemStorage implements IStorage {
     this.userSeeds = new Map();
     this.marketListings = new Map();
     this.plantedFields = new Map();
+    this.userFlowers = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
     this.currentListingId = 1;
     this.currentFieldId = 1;
+    this.currentFlowerId = 1;
     
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
@@ -491,12 +501,49 @@ export class MemStorage implements IStorage {
       }
     }
 
+    // Add flower to user inventory
+    await this.addFlowerToInventory(
+      userId, 
+      plantedField.flowerId!, 
+      plantedField.flowerName!, 
+      plantedField.seedRarity, 
+      plantedField.flowerImageUrl!
+    );
+
     // Remove planted field
     this.plantedFields.delete(plantedField.id);
-
-    // TODO: Add flower/butterfly to user inventory
     
     return { success: true };
+  }
+
+  async getUserFlowers(userId: number): Promise<UserFlower[]> {
+    return Array.from(this.userFlowers.values())
+      .filter(flower => flower.userId === userId);
+  }
+
+  async addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void> {
+    // Check if user already has this flower
+    const existingFlower = Array.from(this.userFlowers.values())
+      .find(flower => flower.userId === userId && flower.flowerId === flowerId && flower.flowerName === flowerName);
+
+    if (existingFlower) {
+      // Increase quantity
+      existingFlower.quantity += 1;
+      this.userFlowers.set(existingFlower.id, existingFlower);
+    } else {
+      // Add new flower
+      const newFlower: UserFlower = {
+        id: this.currentFlowerId++,
+        userId,
+        flowerId,
+        flowerName,
+        flowerRarity,
+        flowerImageUrl,
+        quantity: 1,
+        createdAt: new Date()
+      };
+      this.userFlowers.set(newFlower.id, newFlower);
+    }
   }
 }
 

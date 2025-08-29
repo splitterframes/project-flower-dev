@@ -87,6 +87,18 @@ export const harvestFieldSchema = z.object({
   fieldIndex: z.number().min(0).max(49)
 });
 
+// User flowers inventory
+export const userFlowers = pgTable("user_flowers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  flowerId: integer("flower_id").notNull(),
+  flowerName: text("flower_name").notNull(),
+  flowerRarity: text("flower_rarity").notNull(),
+  flowerImageUrl: text("flower_image_url").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;
@@ -98,3 +110,4 @@ export type BuyListingRequest = z.infer<typeof buyListingSchema>;
 export type PlantedField = typeof plantedFields.$inferSelect;
 export type PlantSeedRequest = z.infer<typeof plantSeedSchema>;
 export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;
+export type UserFlower = typeof userFlowers.$inferSelect;

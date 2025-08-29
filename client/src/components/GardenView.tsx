@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { RarityImage } from "./RarityImage";
+import { HarvestAnimation } from "./HarvestAnimation";
 import { getGrowthTime, formatTime, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
@@ -56,6 +57,7 @@ export const GardenView: React.FC = () => {
   const [showSeedSelection, setShowSeedSelection] = useState(false);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [harvestingField, setHarvestingField] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -217,6 +219,9 @@ export const GardenView: React.FC = () => {
 
   const harvestField = async (fieldIndex: number) => {
     try {
+      // Start harvest animation
+      setHarvestingField(fieldIndex);
+      
       const response = await fetch('/api/garden/harvest', {
         method: 'POST',
         headers: {
@@ -228,18 +233,26 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
-        // Refresh data
+        // Refresh garden data to update UI
         await fetchPlantedFields();
         // Show success feedback with animation - could be enhanced with toast
         console.log('Blume erfolgreich geerntet!');
       } else {
         const error = await response.json();
         alert(error.message || 'Fehler beim Ernten');
+        // Stop animation on error
+        setHarvestingField(null);
       }
     } catch (error) {
       console.error('Failed to harvest field:', error);
       alert('Fehler beim Ernten');
+      // Stop animation on error
+      setHarvestingField(null);
     }
+  };
+
+  const handleHarvestAnimationComplete = () => {
+    setHarvestingField(null);
   };
 
   return (
@@ -339,20 +352,15 @@ export const GardenView: React.FC = () => {
                       }
                     }
                   }}
-                  title={(() => {
-                    const status = getFieldStatus(field);
-                    if (status && field.hasPlant) {
-                      if (status.isGrown) {
-                        return "Blume ist gewachsen! Klicke zum Ernten";
-                      } else {
-                        return `Wächst noch: ${status.remainingTime}`;
-                      }
-                    } else if (field.isUnlocked && !field.hasPlant) {
-                      return "Klicke um einen Samen zu pflanzen";
-                    }
-                    return undefined;
-                  })()}
                 >
+                  {/* Harvest Animation */}
+                  {harvestingField === field.id - 1 && (
+                    <HarvestAnimation 
+                      fieldIndex={field.id - 1}
+                      onComplete={handleHarvestAnimationComplete}
+                    />
+                  )}
+                  
                   {!field.isUnlocked && (
                     <>
                       <Lock className="h-4 w-4 text-slate-400" />
@@ -381,24 +389,9 @@ export const GardenView: React.FC = () => {
                               />
                             </TooltipTrigger>
                             <TooltipContent className="bg-slate-800 border-slate-600 text-white">
-                              <div className="flex flex-col items-center">
-                                <div className="font-semibold">{field.flowerName || "Unbekannte Blume"}</div>
-                                <div className={`text-xs capitalize`} style={{
-                                  color: field.seedRarity === 'common' ? '#facc15' : 
-                                         field.seedRarity === 'uncommon' ? '#22c55e' :
-                                         field.seedRarity === 'rare' ? '#3b82f6' :
-                                         field.seedRarity === 'super-rare' ? '#06b6d4' :
-                                         field.seedRarity === 'epic' ? '#8b5cf6' :
-                                         field.seedRarity === 'legendary' ? '#f97316' :
-                                         field.seedRarity === 'mythical' ? '#ef4444' : '#ffffff'
-                                }}>
-                                  {field.seedRarity === 'super-rare' ? 'Super-Rare' : 
-                                   field.seedRarity === 'mythical' ? 'Mythisch' :
-                                   field.seedRarity === 'legendary' ? 'Legendär' :
-                                   field.seedRarity === 'epic' ? 'Episch' :
-                                   field.seedRarity === 'rare' ? 'Selten' :
-                                   field.seedRarity === 'uncommon' ? 'Ungewöhnlich' : 'Gewöhnlich'}
-                                </div>
+                              <div className="text-center">
+                                <div className="font-bold text-sm">{field.flowerName}</div>
+                                <div className="text-xs opacity-80">{field.seedRarity}</div>
                               </div>
                             </TooltipContent>
                           </Tooltip>
@@ -461,7 +454,7 @@ export const GardenView: React.FC = () => {
         onClose={() => setShowSeedSelection(false)}
         seeds={userSeeds}
         fieldIndex={selectedFieldIndex}
-        onSelectSeed={plantSeed}
+        onPlantSeed={plantSeed}
       />
     </div>
   );

@@ -3,14 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
 import { getRarityColor, getRarityBorder, type RarityTier } from "@shared/rarity";
+import { RarityImage } from "./RarityImage";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
+  const [myFlowers, setMyFlowers] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchMySeeds();
+      fetchMyFlowers();
     }
   }, [user]);
 
@@ -24,6 +27,19 @@ export const InventoryView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch my seeds:', error);
+    }
+  };
+
+  const fetchMyFlowers = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/flowers`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyFlowers(data.flowers || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my flowers:', error);
     }
   };
 
@@ -102,10 +118,45 @@ export const InventoryView: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <p className="text-slate-400">Noch keine Blumen gesammelt</p>
-              <p className="text-slate-500 text-sm mt-2">Züchte Blumen in deinem Garten</p>
-            </div>
+            {myFlowers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">Noch keine Blumen gesammelt</p>
+                <p className="text-slate-500 text-sm mt-2">Züchte Blumen in deinem Garten</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                {myFlowers.map((flower) => (
+                  <div
+                    key={flower.id}
+                    className={`bg-slate-900 rounded-lg p-3 border-2 ${getRarityBorder(flower.flowerRarity as RarityTier)}`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <RarityImage 
+                        src={flower.flowerImageUrl}
+                        alt={flower.flowerName}
+                        rarity={flower.flowerRarity as RarityTier}
+                        size="medium"
+                        className="w-12 h-12"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
+                            {flower.flowerRarity === 'super-rare' ? 'Super-Rare' : 
+                             flower.flowerRarity === 'mythical' ? 'Mythisch' :
+                             flower.flowerRarity === 'legendary' ? 'Legendär' :
+                             flower.flowerRarity === 'epic' ? 'Episch' :
+                             flower.flowerRarity === 'rare' ? 'Selten' :
+                             flower.flowerRarity === 'uncommon' ? 'Ungewöhnlich' : 'Gewöhnlich'}
+                          </span>
+                          <span className="text-sm font-bold text-green-400">x{flower.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

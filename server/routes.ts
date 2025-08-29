@@ -196,6 +196,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Flower inventory routes
+  app.get("/api/user/:id/flowers", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const flowers = await storage.getUserFlowers(userId);
+      res.json({ flowers });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
