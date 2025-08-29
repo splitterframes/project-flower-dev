@@ -15,6 +15,7 @@ import {
   type PlantSeedRequest,
   type HarvestFieldRequest
 } from "@shared/schema";
+import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -416,6 +417,9 @@ export class MemStorage implements IStorage {
       return { success: false, message: "Dieses Feld ist bereits bepflanzt" };
     }
 
+    // Generate random flower for this seed rarity
+    const randomFlower = generateRandomFlower(seed.rarity as RarityTier);
+    
     // Create planted field
     const fieldId = this.currentFieldId++;
     const plantedField: PlantedField = {
@@ -426,8 +430,8 @@ export class MemStorage implements IStorage {
       seedRarity: seed.rarity,
       plantedAt: new Date(),
       isGrown: false,
-      flowerId: null,
-      flowerImageUrl: null,
+      flowerId: randomFlower?.id || null,
+      flowerImageUrl: randomFlower?.imageUrl || null,
       createdAt: new Date()
     };
 
@@ -444,8 +448,24 @@ export class MemStorage implements IStorage {
   }
 
   async getPlantedFields(userId: number): Promise<PlantedField[]> {
-    return Array.from(this.plantedFields.values())
+    const fields = Array.from(this.plantedFields.values())
       .filter(field => field.userId === userId);
+    
+    // Check if any fields should be grown by now
+    const currentTime = new Date();
+    fields.forEach(field => {
+      if (!field.isGrown) {
+        const growthTime = getGrowthTime(field.seedRarity as RarityTier);
+        const elapsedSeconds = (currentTime.getTime() - field.plantedAt.getTime()) / 1000;
+        
+        if (elapsedSeconds >= growthTime) {
+          field.isGrown = true;
+          this.plantedFields.set(field.id, field);
+        }
+      }
+    });
+    
+    return fields;
   }
 
   async harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }> {

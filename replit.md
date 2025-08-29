@@ -87,22 +87,36 @@ The game uses a weighted distribution system for flowers and butterflies across 
 - **Legendary** (orange): 0.4% - Mythic, awe-inspiring varieties
 - **Mythical** (rot/red): 0.1% - Ultimate, legendary species
 
-### Asset Distribution
+### Updated Asset Distribution (August 2025)
 
 #### 200 Flower Images (/Blumen folder)
-- **Common**: 90 flowers (45%) - Images 01-90
-- **Uncommon**: 60 flowers (30%) - Images 91-150  
-- **Rare**: 30 flowers (15%) - Images 151-180
-- **Super-rare**: 14 flowers (7%) - Images 181-194
-- **Epic**: 5 flowers (2.5%) - Images 195-199
-- **Legendary**: 1 flower (0.5%) - Image 200
-- **Mythical**: 0 flowers (reserved for special events)
+- **Common**: 55 flowers - Images 1-55
+- **Uncommon**: 45 flowers - Images 56-100  
+- **Rare**: 35 flowers - Images 101-135
+- **Super-rare**: 25 flowers - Images 136-160
+- **Epic**: 20 flowers - Images 161-180
+- **Legendary**: 15 flowers - Images 181-195
+- **Mythical**: 5 flowers - Images 196-200
 
 #### 1000 Butterfly Images (/Schmetterlinge folder)
-- **Common**: 450 butterflies (45%) - Images 001-450
-- **Uncommon**: 300 butterflies (30%) - Images 451-750
-- **Rare**: 150 butterflies (15%) - Images 751-900  
-- **Super-rare**: 70 butterflies (7%) - Images 901-970
-- **Epic**: 25 butterflies (2.5%) - Images 971-995
-- **Legendary**: 4 butterflies (0.4%) - Images 996-999
-- **Mythical**: 1 butterfly (0.1%) - Image 1000
+- **Common**: 443 butterflies - Images 001-443
+- **Uncommon**: 300 butterflies - Images 444-743
+- **Rare**: 100 butterflies - Images 744-843  
+- **Super-rare**: 75 butterflies - Images 844-918
+- **Epic**: 45 butterflies - Images 919-963
+- **Legendary**: 25 butterflies - Images 964-988
+- **Mythical**: 12 butterflies - Images 989-1000
+
+## Visual System
+- Seeds use the universal seed image (0.jpg) with rarity-colored borders
+- Flowers use their specific numbered images (1-200.jpg) with rarity borders
+- All images appear smaller than field size with prominent rarity borders
+- Fallback icons (Flower/Sparkles) for missing images
+- Latin-sounding names generated dynamically for flowers and butterflies
+
+## Planting & Growth System
+- Growth times: Common 75s → Mythical 600s (10min)
+- Random flower generation based on seed rarity when planted
+- Real-time countdown timers with hover display
+- Visual progression: Seed image → Grown flower image
+- Click to plant seeds, click grown flowers to harvest

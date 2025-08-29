@@ -10,55 +10,55 @@ export interface RarityConfig {
   growthTimeSeconds: number;
 }
 
-// Weighted distribution configuration
+// Weighted distribution configuration - NEW DISTRIBUTION  
 export const RARITY_CONFIG: RarityConfig[] = [
   {
     tier: 'common',
     weight: 45,
-    flowerRange: [1, 90],
-    butterflyRange: [1, 450],
+    flowerRange: [1, 55],          // 55 flowers
+    butterflyRange: [1, 443],      // 443 butterflies
     growthTimeSeconds: 75 // 1:15 min
   },
   {
     tier: 'uncommon', 
     weight: 30,
-    flowerRange: [91, 150],
-    butterflyRange: [451, 750],
+    flowerRange: [56, 100],        // 45 flowers  
+    butterflyRange: [444, 743],    // 300 butterflies
     growthTimeSeconds: 150 // 2:30 min
   },
   {
     tier: 'rare',
     weight: 15,
-    flowerRange: [151, 180],
-    butterflyRange: [751, 900],
+    flowerRange: [101, 135],       // 35 flowers
+    butterflyRange: [744, 843],    // 100 butterflies
     growthTimeSeconds: 240 // 4:00 min
   },
   {
     tier: 'super-rare',
     weight: 7,
-    flowerRange: [181, 194],
-    butterflyRange: [901, 970],
+    flowerRange: [136, 160],       // 25 flowers
+    butterflyRange: [844, 918],    // 75 butterflies
     growthTimeSeconds: 330 // 5:30 min
   },
   {
     tier: 'epic',
     weight: 2.5,
-    flowerRange: [195, 199],
-    butterflyRange: [971, 995],
+    flowerRange: [161, 180],       // 20 flowers
+    butterflyRange: [919, 963],    // 45 butterflies
     growthTimeSeconds: 420 // 7:00 min
   },
   {
     tier: 'legendary',
     weight: 0.4,
-    flowerRange: [200, 200],
-    butterflyRange: [996, 999],
+    flowerRange: [181, 195],       // 15 flowers
+    butterflyRange: [964, 988],    // 25 butterflies
     growthTimeSeconds: 510 // 8:30 min
   },
   {
     tier: 'mythical',
     weight: 0.1,
-    flowerRange: null, // No mythical flowers (reserved for events)
-    butterflyRange: [1000, 1000],
+    flowerRange: [196, 200],       // 5 flowers
+    butterflyRange: [989, 1000],   // 12 butterflies
     growthTimeSeconds: 600 // 10:00 min
   }
 ];
@@ -184,4 +184,84 @@ export function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Generate a random flower from a specific rarity tier
+ */
+export function generateRandomFlower(rarity: RarityTier): { id: number; name: string; imageUrl: string } | null {
+  const config = RARITY_CONFIG.find(c => c.tier === rarity);
+  if (!config || !config.flowerRange) {
+    return null;
+  }
+  
+  const [min, max] = config.flowerRange;
+  const flowerId = Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  return {
+    id: flowerId,
+    name: generateLatinFlowerName(),
+    imageUrl: `/Blumen/${flowerId}.jpg`
+  };
+}
+
+/**
+ * Generate a random butterfly from a specific rarity tier  
+ */
+export function generateRandomButterfly(rarity: RarityTier): { id: number; name: string; imageUrl: string } | null {
+  const config = RARITY_CONFIG.find(c => c.tier === rarity);
+  if (!config || !config.butterflyRange) {
+    return null;
+  }
+  
+  const [min, max] = config.butterflyRange;
+  const butterflyId = Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  return {
+    id: butterflyId,
+    name: generateLatinButterflyName(),
+    imageUrl: `/Schmetterlinge/${butterflyId.toString().padStart(3, '0')}.jpg`
+  };
+}
+
+/**
+ * Generate Latin-sounding flower names (2 words)
+ */
+export function generateLatinFlowerName(): string {
+  const prefixes = [
+    'Rosa', 'Flos', 'Petala', 'Corona', 'Stella', 'Luna', 'Aurora', 'Viola', 'Iris', 'Bella',
+    'Magna', 'Alba', 'Rubra', 'Purpura', 'Aurea', 'Celeste', 'Divina', 'Mystica', 'Splendida', 'Elegans'
+  ];
+  
+  const suffixes = [
+    'magnificus', 'splendidus', 'elegantia', 'celestis', 'mysticus', 'divinus', 'imperialis', 'regalis',
+    'luminous', 'radiatus', 'gloriosus', 'mirabilis', 'spectabilis', 'nobilis', 'perfectus', 'eternus',
+    'crystallinus', 'argenteus', 'aureus', 'diamanteus'
+  ];
+  
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  
+  return `${prefix} ${suffix}`;
+}
+
+/**
+ * Generate Latin-sounding butterfly names (2 words)
+ */
+export function generateLatinButterflyName(): string {
+  const prefixes = [
+    'Papilio', 'Lepidoptera', 'Morpho', 'Vanessa', 'Pieris', 'Monarch', 'Danaus', 'Heliconius', 'Nymphalis', 'Lycaena',
+    'Colias', 'Pontia', 'Anthocharis', 'Gonepteryx', 'Callophrys', 'Celastrina', 'Cupido', 'Plebejus', 'Polyommatus', 'Aricia'
+  ];
+  
+  const suffixes = [
+    'magnificus', 'splendidus', 'elegantia', 'celestis', 'mysticus', 'divinus', 'imperialis', 'regalis',
+    'luminous', 'radiatus', 'gloriosus', 'mirabilis', 'spectabilis', 'nobilis', 'perfectus', 'eternus',
+    'crystallinus', 'argenteus', 'aureus', 'diamanteus', 'volans', 'gracilis', 'delicatus', 'aereus'
+  ];
+  
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  
+  return `${prefix} ${suffix}`;
 }

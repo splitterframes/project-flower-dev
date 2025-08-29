@@ -2,6 +2,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { RarityImage } from "./RarityImage";
 import { Sprout, Star, X } from "lucide-react";
 import { getRarityColor, getRarityBorder, type RarityTier, getGrowthTime, formatTime } from "@shared/rarity";
 
@@ -62,25 +63,36 @@ export const SeedSelectionModal: React.FC<SeedSelectionModalProps> = ({
               {seeds.map((seed) => (
                 <Card 
                   key={seed.id}
-                  className={`bg-slate-900 border-2 ${getRarityBorder(seed.seedRarity as RarityTier)} cursor-pointer hover:bg-slate-800 transition-colors`}
+                  className="bg-slate-900 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors"
                   onClick={() => handleSeedSelect(seed.id, seed.seedId)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-white text-sm">{seed.seedName}</h4>
-                      <div className="flex items-center">
-                        <Star className={`h-3 w-3 mr-1 ${getRarityColor(seed.seedRarity as RarityTier)}`} />
-                        <span className={`text-xs ${getRarityColor(seed.seedRarity as RarityTier)}`}>
-                          {seed.seedRarity}
-                        </span>
+                    <div className="flex items-start space-x-3">
+                      <RarityImage 
+                        src="/Blumen/0.jpg"
+                        alt="Samen"
+                        rarity={seed.seedRarity as RarityTier}
+                        size="medium"
+                      />
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-white text-sm truncate">{seed.seedName}</h4>
+                          <div className="flex items-center ml-2">
+                            <Star className={`h-3 w-3 mr-1 ${getRarityColor(seed.seedRarity as RarityTier)}`} />
+                            <span className={`text-xs ${getRarityColor(seed.seedRarity as RarityTier)}`}>
+                              {seed.seedRarity}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-green-400">x{seed.quantity}</span>
+                          <span className="text-slate-400">
+                            Wachszeit: {formatTime(getGrowthTime(seed.seedRarity as RarityTier))}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-green-400">x{seed.quantity}</span>
-                      <span className="text-xs text-slate-400">
-                        Wachszeit: {formatTime(getGrowthTime(seed.seedRarity as RarityTier))}
-                      </span>
                     </div>
                   </CardContent>
                 </Card>

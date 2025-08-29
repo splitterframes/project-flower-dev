@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
+import { RarityImage } from "./RarityImage";
 import { getGrowthTime, formatTime, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
@@ -211,6 +212,32 @@ export const GardenView: React.FC = () => {
     };
   };
 
+  const harvestField = async (fieldIndex: number) => {
+    try {
+      const response = await fetch('/api/garden/harvest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fieldIndex
+        })
+      });
+
+      if (response.ok) {
+        // Refresh data
+        await fetchPlantedFields();
+        alert('Blume erfolgreich geerntet!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Ernten');
+      }
+    } catch (error) {
+      console.error('Failed to harvest field:', error);
+      alert('Fehler beim Ernten');
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Garden Header */}
@@ -301,6 +328,11 @@ export const GardenView: React.FC = () => {
                       unlockField(field.id);
                     } else if (field.isUnlocked && !field.hasPlant) {
                       openSeedSelection(field.id - 1);
+                    } else if (field.isUnlocked && field.hasPlant) {
+                      const status = getFieldStatus(field);
+                      if (status?.isGrown) {
+                        harvestField(field.id - 1);
+                      }
                     }
                   }}
                   title={(() => {
@@ -311,6 +343,8 @@ export const GardenView: React.FC = () => {
                       } else {
                         return `Wächst noch: ${status.remainingTime}`;
                       }
+                    } else if (field.isUnlocked && !field.hasPlant) {
+                      return "Klicke um einen Samen zu pflanzen";
                     }
                     return undefined;
                   })()}
@@ -328,12 +362,28 @@ export const GardenView: React.FC = () => {
                   
                   {field.isUnlocked && field.hasPlant && (() => {
                     const status = getFieldStatus(field);
-                    if (status?.isGrown) {
-                      return <Flower className="h-6 w-6 text-pink-400" />;
-                    } else {
+                    if (status?.isGrown && field.flowerImageUrl) {
+                      // Show grown flower with its actual image
+                      return (
+                        <RarityImage 
+                          src={field.flowerImageUrl}
+                          alt="Blume"
+                          rarity={field.seedRarity as RarityTier}
+                          size="medium"
+                          className="mx-auto"
+                        />
+                      );
+                    } else if (field.isGrowing) {
+                      // Show seed image while growing
                       return (
                         <div className="flex flex-col items-center">
-                          <Sprout className="h-4 w-4 text-green-400" />
+                          <RarityImage 
+                            src="/Blumen/0.jpg"
+                            alt="Wachsender Samen"
+                            rarity={field.seedRarity as RarityTier}
+                            size="small"
+                            className="mx-auto"
+                          />
                           {status && (
                             <div className="text-xs text-green-400 mt-1">
                               {status.remainingTime}
@@ -341,6 +391,9 @@ export const GardenView: React.FC = () => {
                           )}
                         </div>
                       );
+                    } else {
+                      // Fallback to icon
+                      return <Flower className="h-6 w-6 text-pink-400" />;
                     }
                   })()}
                   
@@ -364,6 +417,7 @@ export const GardenView: React.FC = () => {
           <div className="text-center text-slate-400">
             <p className="mb-2">🌱 Klicke auf ein freies Feld um einen Samen zu pflanzen</p>
             <p className="mb-2">⏰ Hover über wachsende Pflanzen um die Restzeit zu sehen</p>
+            <p className="mb-2">🌸 Klicke auf gewachsene Blumen um sie zu ernten</p>
             <p className="mb-2">🔓 Klicke auf ein gesperrtes Feld um es freizuschalten</p>
             <p>💰 Jedes weitere Feld kostet 20% mehr als das vorherige</p>
           </div>
