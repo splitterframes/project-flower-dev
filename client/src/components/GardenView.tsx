@@ -44,11 +44,12 @@ export const GardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
 
-  // Initialize garden with first 4 fields unlocked
+  // Initialize garden with fields 1,2,11,12 unlocked (indices 0,1,10,11)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
+    const startFields = [1, 2, 11, 12]; // Field IDs that should be unlocked
     return Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
-      isUnlocked: i < 4,
+      isUnlocked: startFields.includes(i + 1),
       hasPlant: false,
       plantType: undefined
     }));
@@ -103,6 +104,7 @@ export const GardenView: React.FC = () => {
   };
 
   const updateGardenWithPlantedFields = (plantedFields: any[]) => {
+    console.log('Updating garden with planted fields:', plantedFields);
     setGardenFields(prev => 
       prev.map(field => {
         const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
@@ -124,7 +126,10 @@ export const GardenView: React.FC = () => {
             flowerImageUrl: plantedField.flowerImageUrl
           };
         }
-        // Field was harvested - reset to empty state
+        // Field was harvested - reset to empty state (only if it previously had a plant)
+        if (field.hasPlant) {
+          console.log(`Clearing field ${field.id} - was harvested`);
+        }
         return {
           ...field,
           hasPlant: false,
@@ -264,7 +269,9 @@ export const GardenView: React.FC = () => {
 
   const handleHarvestAnimationComplete = async () => {
     // Animation is complete, now refresh the garden data
+    console.log('Animation complete, refreshing fields...');
     await fetchPlantedFields();
+    console.log('Fields refreshed after animation');
     setHarvestingField(null);
   };
 
@@ -333,8 +340,25 @@ export const GardenView: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-10 gap-2">
             {gardenFields.map((field) => {
-              const isNextToUnlock = !field.isUnlocked && 
-                gardenFields.filter(f => f.isUnlocked).length === field.id - 1;
+              // Check if field is adjacent to any unlocked field
+              const isNextToUnlock = !field.isUnlocked && (() => {
+                const row = Math.floor((field.id - 1) / 10);
+                const col = (field.id - 1) % 10;
+                
+                // Check all 8 adjacent positions (including diagonals)
+                const adjacent = [
+                  { r: row - 1, c: col - 1 }, { r: row - 1, c: col }, { r: row - 1, c: col + 1 },
+                  { r: row, c: col - 1 },                             { r: row, c: col + 1 },
+                  { r: row + 1, c: col - 1 }, { r: row + 1, c: col }, { r: row + 1, c: col + 1 }
+                ];
+                
+                return adjacent.some(pos => {
+                  if (pos.r < 0 || pos.r >= 5 || pos.c < 0 || pos.c >= 10) return false;
+                  const adjacentFieldId = pos.r * 10 + pos.c + 1;
+                  const adjacentField = gardenFields.find(f => f.id === adjacentFieldId);
+                  return adjacentField?.isUnlocked;
+                });
+              })();
               
               return (
                 <div
