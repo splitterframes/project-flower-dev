@@ -376,7 +376,7 @@ export const GardenView: React.FC = () => {
                     </>
                   )}
                   
-                  {field.isUnlocked && field.hasPlant && (() => {
+                  {field.isUnlocked && field.hasPlant && harvestingField !== field.id - 1 && (() => {
                     const status = getFieldStatus(field);
                     if (status?.isGrown && field.flowerImageUrl) {
                       // Show grown flower with hover preview and tooltip

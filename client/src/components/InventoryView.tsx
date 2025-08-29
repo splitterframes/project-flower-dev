@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
@@ -23,6 +24,52 @@ export const InventoryView: React.FC = () => {
       default: return '#9ca3af';            // gray-400
     }
   };
+
+  const getSortedFlowers = (rarityFilter?: string | string[]) => {
+    let filtered = myFlowers;
+    
+    if (rarityFilter) {
+      if (Array.isArray(rarityFilter)) {
+        filtered = myFlowers.filter(flower => rarityFilter.includes(flower.flowerRarity));
+      } else {
+        filtered = myFlowers.filter(flower => flower.flowerRarity === rarityFilter);
+      }
+    }
+    
+    return filtered.sort((a, b) => a.flowerName.localeCompare(b.flowerName));
+  };
+
+  const FlowerCard = ({ flower, getBorderColor }: { flower: any; getBorderColor: (rarity: RarityTier) => string }) => (
+    <div
+      className="bg-slate-900 rounded-lg p-3 border-2"
+      style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
+    >
+      <div className="flex items-center space-x-3">
+        <FlowerHoverPreview
+          flowerImageUrl={flower.flowerImageUrl}
+          flowerName={flower.flowerName}
+          rarity={flower.flowerRarity as RarityTier}
+        >
+          <RarityImage 
+            src={flower.flowerImageUrl}
+            alt={flower.flowerName}
+            rarity={flower.flowerRarity as RarityTier}
+            size="medium"
+            className="w-12 h-12"
+          />
+        </FlowerHoverPreview>
+        <div className="flex-1">
+          <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
+              {getRarityDisplayName(flower.flowerRarity as RarityTier)}
+            </span>
+            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{flower.quantity}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     if (user) {
@@ -144,40 +191,46 @@ export const InventoryView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Züchte Blumen in deinem Garten</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                {myFlowers.map((flower) => (
-                  <div
-                    key={flower.id}
-                    className="bg-slate-900 rounded-lg p-3 border-2"
-                    style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FlowerHoverPreview
-                        flowerImageUrl={flower.flowerImageUrl}
-                        flowerName={flower.flowerName}
-                        rarity={flower.flowerRarity as RarityTier}
-                      >
-                        <RarityImage 
-                          src={flower.flowerImageUrl}
-                          alt={flower.flowerName}
-                          rarity={flower.flowerRarity as RarityTier}
-                          size="medium"
-                          className="w-12 h-12"
-                        />
-                      </FlowerHoverPreview>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
-                            {getRarityDisplayName(flower.flowerRarity as RarityTier)}
-                          </span>
-                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{flower.quantity}</span>
-                        </div>
-                      </div>
-                    </div>
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-slate-700">
+                  <TabsTrigger value="all" className="text-xs">Alle</TabsTrigger>
+                  <TabsTrigger value="common" className="text-xs text-yellow-400">Gewöhnlich</TabsTrigger>
+                  <TabsTrigger value="uncommon" className="text-xs text-green-400">Ungewöhnlich</TabsTrigger>
+                  <TabsTrigger value="rare+" className="text-xs text-blue-400">Selten+</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers().map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </TabsContent>
+                
+                <TabsContent value="common" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('common').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="uncommon" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers('uncommon').map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="rare+" className="mt-4">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                    {getSortedFlowers(['rare', 'super-rare', 'epic', 'legendary', 'mythical']).map((flower) => (
+                      <FlowerCard key={flower.id} flower={flower} getBorderColor={getBorderColor} />
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
         </Card>
