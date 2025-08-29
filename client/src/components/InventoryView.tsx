@@ -111,13 +111,13 @@ export const InventoryView: React.FC = () => {
                         rarity={userSeed.seedRarity as RarityTier}
                         size="large"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">{userSeed.seedName}</h4>
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs ${getRarityColor(userSeed.seedRarity as RarityTier)}`}>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-sm truncate">{userSeed.seedName}</h4>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-xs ${getRarityColor(userSeed.seedRarity as RarityTier)} truncate`}>
                             {getRarityDisplayName(userSeed.seedRarity as RarityTier)}
                           </span>
-                          <span className="text-sm font-bold text-green-400">x{userSeed.quantity}</span>
+                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{userSeed.quantity}</span>
                         </div>
                       </div>
                     </div>
@@ -158,13 +158,13 @@ export const InventoryView: React.FC = () => {
                         size="medium"
                         className="w-12 h-12"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-sm truncate">{flower.flowerName}</h4>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-xs ${getRarityColor(flower.flowerRarity as RarityTier)} truncate`}>
                             {getRarityDisplayName(flower.flowerRarity as RarityTier)}
                           </span>
-                          <span className="text-sm font-bold text-green-400">x{flower.quantity}</span>
+                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{flower.quantity}</span>
                         </div>
                       </div>
                     </div>
