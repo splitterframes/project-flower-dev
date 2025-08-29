@@ -778,6 +778,45 @@ export class MemStorage implements IStorage {
     return Array.from(this.userButterflies.values())
       .filter(butterfly => butterfly.userId === userId);
   }
+
+  async spawnButterflyFromBouquet(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
+    
+    // Check if butterfly should spawn based on rarity
+    if (!shouldSpawnButterfly(bouquetRarity)) {
+      return { success: false };
+    }
+
+    // Generate new butterfly
+    const butterflyData = generateRandomButterfly(bouquetRarity);
+    
+    // Check if user already has this butterfly
+    const existingButterfly = Array.from(this.userButterflies.values())
+      .find(b => b.userId === userId && b.butterflyId === butterflyData.id);
+    
+    if (existingButterfly) {
+      // Increase quantity
+      existingButterfly.quantity += 1;
+      this.userButterflies.set(existingButterfly.id, existingButterfly);
+      console.log(`🦋 Butterfly spawn: User ${userId} got +1 ${butterflyData.name} (total: ${existingButterfly.quantity})`);
+      return { success: true, butterfly: existingButterfly };
+    } else {
+      // Create new butterfly
+      const newButterfly: UserButterfly = {
+        id: this.currentButterflyId++,
+        userId,
+        butterflyId: butterflyData.id,
+        butterflyName: butterflyData.name,
+        butterflyRarity: bouquetRarity,
+        butterflyImageUrl: butterflyData.imageUrl,
+        quantity: 1,
+        createdAt: new Date()
+      };
+      this.userButterflies.set(newButterfly.id, newButterfly);
+      console.log(`🦋 New butterfly spawn: User ${userId} got ${butterflyData.name} (${bouquetRarity})`);
+      return { success: true, butterfly: newButterfly };
+    }
+  }
 }
 
 export const storage = new MemStorage();

@@ -65,5 +65,11 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start butterfly spawning system
+    import('./butterflySpawner').then(({ butterflySpawner }) => {
+      butterflySpawner.start();
+      log('🦋 Butterfly spawning system initialized');
+    });
   });
 })();
