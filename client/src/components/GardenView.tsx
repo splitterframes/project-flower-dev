@@ -35,6 +35,7 @@ interface GardenField {
   flowerImageUrl?: string;
   hasBouquet?: boolean;
   bouquetId?: number;
+  bouquetName?: string;
   bouquetPlacedAt?: Date;
   bouquetExpiresAt?: Date;
   hasButterfly?: boolean;
@@ -86,6 +87,17 @@ export const GardenView: React.FC = () => {
       fetchPlacedBouquets();
       fetchFieldButterflies();
     }
+  }, [user]);
+
+  // Auto-refresh butterflies every 10 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      fetchFieldButterflies();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, [user]);
 
   // Update timer every second

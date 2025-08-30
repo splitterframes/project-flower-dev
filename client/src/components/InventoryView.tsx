@@ -116,6 +116,17 @@ export const InventoryView: React.FC = () => {
     }
   }, [user]);
 
+  // Auto-refresh butterflies inventory every 15 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      fetchMyButterflies();
+    }, 15000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchMySeeds = async () => {
     if (!user) return;
     try {
@@ -321,14 +332,45 @@ export const InventoryView: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Bug className="h-5 w-5 mr-2 text-yellow-400" />
-              Schmetterlinge
+              Schmetterlinge ({myButterflies.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <p className="text-slate-400">Noch keine Schmetterlinge gefangen</p>
-              <p className="text-slate-500 text-sm mt-2">Schmetterlinge werden von deinen Blumen angezogen</p>
-            </div>
+            {myButterflies.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">Noch keine Schmetterlinge gefangen</p>
+                <p className="text-slate-500 text-sm mt-2">Schmetterlinge werden von deinen Blumen angezogen</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                {myButterflies.map((butterfly) => (
+                  <div
+                    key={butterfly.id}
+                    className="bg-slate-900 rounded-lg p-3 border-2"
+                    style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <RarityImage 
+                        src={butterfly.butterflyImageUrl}
+                        alt={butterfly.butterflyName}
+                        rarity={butterfly.butterflyRarity as RarityTier}
+                        size="medium"
+                        className="w-12 h-12"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white text-sm">{butterfly.butterflyName}</h4>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-xs ${getRarityColorClass(butterfly.butterflyRarity as RarityTier)}`}>
+                            {getRarityLabel(butterfly.butterflyRarity as RarityTier)}
+                          </span>
+                          <span className="text-sm font-bold text-green-400">x{butterfly.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
