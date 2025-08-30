@@ -394,6 +394,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Exhibition routes
+  app.get("/api/user/:id/exhibition-frames", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const frames = await storage.getExhibitionFrames(userId);
+      res.json({ frames });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/exhibition-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const butterflies = await storage.getExhibitionButterflies(userId);
+      res.json({ butterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/purchase-frame", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'Missing userId' });
+      }
+
+      const result = await storage.purchaseExhibitionFrame(userId);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Rahmen erfolgreich gekauft!',
+          newCredits: result.newCredits,
+          frame: result.frame
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/place-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex, butterflyId } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined || !butterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.placeExhibitionButterfly(userId, frameId, slotIndex, butterflyId);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich platziert!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/remove-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.removeExhibitionButterfly(userId, frameId, slotIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich entfernt!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/process-income", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'Missing userId' });
+      }
+
+      const result = await storage.processPassiveIncome(userId);
+      
+      if (result.success) {
+        res.json({ 
+          message: `${result.creditsEarned || 0} Credits aus der Ausstellung erhalten!`,
+          creditsEarned: result.creditsEarned
+        });
+      } else {
+        res.status(400).json({ message: 'Fehler beim Verarbeiten des passiven Einkommens' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -11,6 +11,9 @@ import {
   placedBouquets,
   userButterflies,
   fieldButterflies,
+  exhibitionFrames,
+  exhibitionButterflies,
+  passiveIncomeLog,
   type User, 
   type InsertUser, 
   type Seed, 
@@ -28,6 +31,9 @@ import {
   type PlacedBouquet,
   type UserButterfly,
   type FieldButterfly,
+  type ExhibitionFrame,
+  type ExhibitionButterfly,
+  type PassiveIncomeLog,
   type CreateBouquetRequest,
   type PlaceBouquetRequest
 } from "@shared/schema";
@@ -67,6 +73,18 @@ export interface IStorage {
   // Seed management methods
   addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void>;
   collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }>;
+  
+  // Butterfly management methods
+  spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }>;
+  collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }>;
+  
+  // Exhibition methods
+  getExhibitionFrames(userId: number): Promise<ExhibitionFrame[]>;
+  purchaseExhibitionFrame(userId: number): Promise<{ success: boolean; message?: string; newCredits?: number; frame?: ExhibitionFrame }>;
+  getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]>;
+  placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }>;
+  removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }>;
+  processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }>;
 }
 
 export class MemStorage implements IStorage {
@@ -82,6 +100,9 @@ export class MemStorage implements IStorage {
   private placedBouquets: Map<number, PlacedBouquet & { bouquetName: string; bouquetRarity: string }>;
   private userButterflies: Map<number, UserButterfly>;
   private fieldButterflies: Map<number, FieldButterfly>;
+  private exhibitionFrames: Map<number, ExhibitionFrame>;
+  private exhibitionButterflies: Map<number, ExhibitionButterfly>;
+  private passiveIncomeLog: Map<number, PassiveIncomeLog>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
@@ -94,6 +115,9 @@ export class MemStorage implements IStorage {
   private currentButterflyId: number;
   private currentFieldButterflyId: number;
   private currentFlowerId: number;
+  private currentExhibitionFrameId: number;
+  private currentExhibitionButterflyId: number;
+  private currentPassiveIncomeId: number;
 
   constructor() {
     this.users = new Map();
@@ -108,6 +132,9 @@ export class MemStorage implements IStorage {
     this.placedBouquets = new Map();
     this.userButterflies = new Map();
     this.fieldButterflies = new Map();
+    this.exhibitionFrames = new Map();
+    this.exhibitionButterflies = new Map();
+    this.passiveIncomeLog = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
@@ -120,6 +147,9 @@ export class MemStorage implements IStorage {
     this.currentButterflyId = 1;
     this.currentFieldButterflyId = 1;
     this.currentFlowerId = 1;
+    this.currentExhibitionFrameId = 1;
+    this.currentExhibitionButterflyId = 1;
+    this.currentPassiveIncomeId = 1;
     
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
@@ -950,6 +980,192 @@ export class MemStorage implements IStorage {
       console.log(`🦋 Collected new butterfly: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
       return { success: true, butterfly: newButterfly };
     }
+  }
+
+  // Exhibition methods
+  async getExhibitionFrames(userId: number): Promise<ExhibitionFrame[]> {
+    return Array.from(this.exhibitionFrames.values())
+      .filter(frame => frame.userId === userId)
+      .sort((a, b) => a.frameNumber - b.frameNumber);
+  }
+
+  async purchaseExhibitionFrame(userId: number): Promise<{ success: boolean; message?: string; newCredits?: number; frame?: ExhibitionFrame }> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    const userFrames = await this.getExhibitionFrames(userId);
+    const frameNumber = userFrames.length + 1;
+    
+    let cost = 0;
+    if (frameNumber > 1) {
+      // First frame is free, subsequent frames cost credits
+      cost = Math.round(500 * Math.pow(1.2, frameNumber - 2));
+    }
+
+    if (user.credits < cost) {
+      return { success: false, message: "Nicht genügend Credits" };
+    }
+
+    // Deduct credits
+    user.credits -= cost;
+    this.users.set(userId, user);
+
+    // Create frame
+    const frame: ExhibitionFrame = {
+      id: this.currentExhibitionFrameId++,
+      userId,
+      frameNumber,
+      purchasedAt: new Date(),
+      createdAt: new Date()
+    };
+
+    this.exhibitionFrames.set(frame.id, frame);
+    console.log(`🖼️ User ${userId} purchased exhibition frame #${frameNumber} for ${cost} credits`);
+    
+    return { success: true, newCredits: user.credits, frame };
+  }
+
+  async getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]> {
+    return Array.from(this.exhibitionButterflies.values())
+      .filter(butterfly => butterfly.userId === userId);
+  }
+
+  async placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
+    // Check if frame belongs to user
+    const frame = this.exhibitionFrames.get(frameId);
+    if (!frame || frame.userId !== userId) {
+      return { success: false, message: "Frame not found" };
+    }
+
+    // Check if slot is already occupied
+    const existingButterfly = Array.from(this.exhibitionButterflies.values())
+      .find(eb => eb.frameId === frameId && eb.slotIndex === slotIndex);
+    
+    if (existingButterfly) {
+      return { success: false, message: "Slot already occupied" };
+    }
+
+    // Check if user has this butterfly
+    const userButterfly = Array.from(this.userButterflies.values())
+      .find(ub => ub.userId === userId && ub.id === butterflyId);
+    
+    if (!userButterfly || userButterfly.quantity < 1) {
+      return { success: false, message: "Butterfly not available" };
+    }
+
+    // Remove butterfly from inventory
+    if (userButterfly.quantity > 1) {
+      userButterfly.quantity -= 1;
+      this.userButterflies.set(userButterfly.id, userButterfly);
+    } else {
+      this.userButterflies.delete(userButterfly.id);
+    }
+
+    // Place butterfly in exhibition
+    const exhibitionButterfly: ExhibitionButterfly = {
+      id: this.currentExhibitionButterflyId++,
+      userId,
+      frameId,
+      slotIndex,
+      butterflyId: userButterfly.butterflyId,
+      butterflyName: userButterfly.butterflyName,
+      butterflyRarity: userButterfly.butterflyRarity,
+      butterflyImageUrl: userButterfly.butterflyImageUrl,
+      placedAt: new Date(),
+      createdAt: new Date()
+    };
+
+    this.exhibitionButterflies.set(exhibitionButterfly.id, exhibitionButterfly);
+    console.log(`🦋 Placed ${userButterfly.butterflyName} in exhibition frame ${frameId}, slot ${slotIndex}`);
+    
+    return { success: true };
+  }
+
+  async removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
+    // Find butterfly in exhibition
+    const exhibitionButterfly = Array.from(this.exhibitionButterflies.values())
+      .find(eb => eb.userId === userId && eb.frameId === frameId && eb.slotIndex === slotIndex);
+    
+    if (!exhibitionButterfly) {
+      return { success: false, message: "Butterfly not found in exhibition" };
+    }
+
+    // Remove from exhibition
+    this.exhibitionButterflies.delete(exhibitionButterfly.id);
+
+    // Add back to user inventory
+    const existingButterfly = Array.from(this.userButterflies.values())
+      .find(ub => ub.userId === userId && ub.butterflyId === exhibitionButterfly.butterflyId);
+    
+    if (existingButterfly) {
+      existingButterfly.quantity += 1;
+      this.userButterflies.set(existingButterfly.id, existingButterfly);
+    } else {
+      const newButterfly: UserButterfly = {
+        id: this.currentButterflyId++,
+        userId,
+        butterflyId: exhibitionButterfly.butterflyId,
+        butterflyName: exhibitionButterfly.butterflyName,
+        butterflyRarity: exhibitionButterfly.butterflyRarity,
+        butterflyImageUrl: exhibitionButterfly.butterflyImageUrl,
+        quantity: 1,
+        createdAt: new Date()
+      };
+      this.userButterflies.set(newButterfly.id, newButterfly);
+    }
+
+    console.log(`🦋 Removed ${exhibitionButterfly.butterflyName} from exhibition back to inventory`);
+    return { success: true };
+  }
+
+  async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
+    const exhibitionButterflies = await this.getExhibitionButterflies(userId);
+    
+    if (exhibitionButterflies.length === 0) {
+      return { success: true, creditsEarned: 0 };
+    }
+
+    // Calculate hourly income
+    let totalHourlyIncome = 0;
+    for (const butterfly of exhibitionButterflies) {
+      switch (butterfly.butterflyRarity) {
+        case 'common': totalHourlyIncome += 1; break;
+        case 'uncommon': totalHourlyIncome += 3; break;
+        case 'rare': totalHourlyIncome += 8; break;
+        case 'super-rare': totalHourlyIncome += 15; break;
+        case 'epic': totalHourlyIncome += 25; break;
+        case 'legendary': totalHourlyIncome += 50; break;
+        case 'mythical': totalHourlyIncome += 100; break;
+        default: totalHourlyIncome += 1; break;
+      }
+    }
+
+    // For now, we'll process income every hour
+    // In a real implementation, this would be called by a cron job
+    const user = this.users.get(userId);
+    if (user) {
+      user.credits += totalHourlyIncome;
+      this.users.set(userId, user);
+
+      // Log the income
+      const incomeLog: PassiveIncomeLog = {
+        id: this.currentPassiveIncomeId++,
+        userId,
+        amount: totalHourlyIncome,
+        sourceType: 'exhibition',
+        sourceDetails: `${exhibitionButterflies.length} butterflies`,
+        earnedAt: new Date(),
+        createdAt: new Date()
+      };
+      this.passiveIncomeLog.set(incomeLog.id, incomeLog);
+
+      console.log(`💰 User ${userId} earned ${totalHourlyIncome} credits from exhibition`);
+      return { success: true, creditsEarned: totalHourlyIncome };
+    }
+
+    return { success: false };
   }
 }
 

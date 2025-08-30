@@ -160,6 +160,40 @@ export const userButterflies = pgTable("user_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Exhibition frames for butterfly displays
+export const exhibitionFrames = pgTable("exhibition_frames", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  frameNumber: integer("frame_number").notNull(), // 1, 2, 3, etc.
+  purchasedAt: timestamp("purchased_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Butterflies placed in exhibition frames
+export const exhibitionButterflies = pgTable("exhibition_butterflies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  frameId: integer("frame_id").notNull().references(() => exhibitionFrames.id),
+  slotIndex: integer("slot_index").notNull(), // 0-5 for 3x2 grid
+  butterflyId: integer("butterfly_id").notNull(),
+  butterflyName: text("butterfly_name").notNull(),
+  butterflyRarity: text("butterfly_rarity").notNull(),
+  butterflyImageUrl: text("butterfly_image_url").notNull(),
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Passive income tracking
+export const passiveIncomeLog = pgTable("passive_income_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(), // credits earned
+  sourceType: text("source_type").notNull(), // 'exhibition'
+  sourceDetails: text("source_details").notNull(), // frame and butterfly info
+  earnedAt: timestamp("earned_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Butterflies spawned on garden fields (waiting to be collected)
 export const fieldButterflies = pgTable("field_butterflies", {
   id: serial("id").primaryKey(),
@@ -194,5 +228,8 @@ export type UserBouquet = typeof userBouquets.$inferSelect;
 export type PlacedBouquet = typeof placedBouquets.$inferSelect;
 export type UserButterfly = typeof userButterflies.$inferSelect;
 export type FieldButterfly = typeof fieldButterflies.$inferSelect;
+export type ExhibitionFrame = typeof exhibitionFrames.$inferSelect;
+export type ExhibitionButterfly = typeof exhibitionButterflies.$inferSelect;
+export type PassiveIncomeLog = typeof passiveIncomeLog.$inferSelect;
 export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
 export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;
