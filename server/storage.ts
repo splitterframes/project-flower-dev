@@ -757,13 +757,10 @@ export class MemStorage implements IStorage {
     };
     this.placedBouquets.set(placedBouquet.id, placedBouquet);
 
-    // Remove bouquet from inventory
+    // Remove bouquet from inventory but keep for recipe viewing
     userBouquet.quantity -= 1;
-    if (userBouquet.quantity === 0) {
-      this.userBouquets.delete(userBouquet.id);
-    } else {
-      this.userBouquets.set(userBouquet.id, userBouquet);
-    }
+    // Always keep the bouquet in inventory, even with quantity 0, for recipe viewing
+    this.userBouquets.set(userBouquet.id, userBouquet);
 
     return { success: true };
   }
