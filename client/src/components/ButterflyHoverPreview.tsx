@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
+import { Sparkles } from "lucide-react";
 
 interface ButterflyHoverPreviewProps {
   butterflyImageUrl: string;
@@ -16,6 +17,7 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [imageError, setImageError] = useState(false);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     setIsHovering(true);
@@ -87,16 +89,17 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
           style={getPreviewPosition()}
         >
           <div className="bg-slate-900 border-2 border-slate-600 rounded-lg p-4 shadow-2xl">
-            <div className="w-96 h-96 rounded-lg overflow-hidden mb-3">
-              <img
-                src={butterflyImageUrl}
-                alt={butterflyName}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback if image doesn't load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+            <div className="w-96 h-96 rounded-lg overflow-hidden mb-3 bg-slate-800 flex items-center justify-center">
+              {!imageError ? (
+                <img
+                  src={butterflyImageUrl}
+                  alt={butterflyName}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <Sparkles className="w-24 h-24 text-purple-400" />
+              )}
             </div>
             <div className="text-center">
               <div className="font-bold text-white text-lg mb-1">{butterflyName}</div>

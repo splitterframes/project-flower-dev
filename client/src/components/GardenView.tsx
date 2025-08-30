@@ -83,11 +83,15 @@ export const GardenView: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      fetchUserSeeds();
-      fetchPlantedFields();
-      fetchUserBouquets();
-      fetchPlacedBouquets();
-      fetchFieldButterflies();
+      // Use async function to ensure proper order
+      const fetchAllData = async () => {
+        await fetchUserSeeds();
+        await fetchPlantedFields();
+        await fetchUserBouquets();
+        await fetchPlacedBouquets();
+        await fetchFieldButterflies();
+      };
+      fetchAllData();
     }
   }, [user]);
 
@@ -232,7 +236,7 @@ export const GardenView: React.FC = () => {
 
   const updateGardenWithPlantedFields = (plantedFields: any[]) => {
     console.log('Updating garden with planted fields:', plantedFields);
-    const newFields = gardenFields.map(field => {
+    setGardenFields(prev => prev.map(field => {
       const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
       if (plantedField) {
         const plantedAt = new Date(plantedField.plantedAt);
@@ -252,7 +256,7 @@ export const GardenView: React.FC = () => {
           flowerImageUrl: plantedField.flowerImageUrl
         };
       }
-      // Field was harvested or never had a plant - reset to empty state
+      // Field was harvested or never had a plant - clear only plant data
       if (field.hasPlant) {
         console.log(`Clearing field ${field.id} - was harvested`);
       }
@@ -266,11 +270,11 @@ export const GardenView: React.FC = () => {
         flowerId: undefined,
         flowerName: undefined,
         flowerImageUrl: undefined
+        // Keep bouquet and butterfly data intact
       };
-    });
+    }));
     
-    console.log('New garden state:', newFields.filter(f => f.hasPlant).map(f => `Field ${f.id}: ${f.flowerName}`));
-    setGardenFields(newFields);
+    console.log('New garden state:', gardenFields.filter(f => f.hasPlant).map(f => `Field ${f.id}: ${f.flowerName}`));
   };
 
   if (!user) {
