@@ -82,6 +82,8 @@ export const ExhibitionView: React.FC = () => {
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{frameId: number, slotIndex: number} | null>(null);
+  const [showInventoryDialog, setShowInventoryDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -174,6 +176,43 @@ export const ExhibitionView: React.FC = () => {
     setShowButterflyDialog(true);
   };
 
+  const handleEmptySlotClick = (frameId: number, slotIndex: number) => {
+    setSelectedSlot({ frameId, slotIndex });
+    setShowInventoryDialog(true);
+  };
+
+  const placeButterflyInSlot = async (butterflyId: number) => {
+    if (!selectedSlot || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/exhibition/place-butterfly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: user.id, 
+          frameId: selectedSlot.frameId, 
+          slotIndex: selectedSlot.slotIndex, 
+          butterflyId 
+        })
+      });
+      
+      if (response.ok) {
+        await fetchExhibitionData();
+        await fetchUserButterflies();
+        setShowInventoryDialog(false);
+        setSelectedSlot(null);
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Platzieren des Schmetterlings');
+      }
+    } catch (error) {
+      console.error('Failed to place butterfly:', error);
+      alert('Fehler beim Platzieren des Schmetterlings');
+    }
+    setIsLoading(false);
+  };
+
   const renderFrame = (frame: ExhibitionFrame, index: number) => {
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
     
@@ -218,7 +257,12 @@ export const ExhibitionView: React.FC = () => {
                         </div>
                       </ButterflyHoverPreview>
                     ) : (
-                      <div className="text-slate-400 text-4xl">+</div>
+                      <div 
+                        className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleEmptySlotClick(frame.id, slotIndex)}
+                      >
+                        <div className="text-slate-400 text-4xl hover:text-slate-600">+</div>
+                      </div>
                     )}
                   </div>
                 );
@@ -313,6 +357,61 @@ export const ExhibitionView: React.FC = () => {
         isOpen={showButterflyDialog}
         onClose={() => setShowButterflyDialog(false)}
       />
+
+      {/* Butterfly Inventory Dialog */}
+      <Dialog open={showInventoryDialog} onOpenChange={setShowInventoryDialog}>
+        <DialogContent className="bg-slate-900 border-slate-600 text-white max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold">
+              Schmetterling auswählen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {userButterflies.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                Keine Schmetterlinge im Inventar
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {userButterflies.map((butterfly) => (
+                  <Card
+                    key={butterfly.id}
+                    className="bg-slate-800 border-slate-600 cursor-pointer hover:bg-slate-700 transition-colors"
+                    onClick={() => placeButterflyInSlot(butterfly.id)}
+                  >
+                    <CardContent className="p-4">
+                      <ButterflyHoverPreview
+                        butterflyImageUrl={butterfly.butterflyImageUrl}
+                        butterflyName={butterfly.butterflyName}
+                        rarity={butterfly.butterflyRarity as RarityTier}
+                      >
+                        <div className="text-center">
+                          <RarityImage 
+                            src={butterfly.butterflyImageUrl}
+                            alt={butterfly.butterflyName}
+                            rarity={butterfly.butterflyRarity as RarityTier}
+                            size="large"
+                            className="w-16 h-16 mx-auto mb-2"
+                          />
+                          <div className="text-sm font-semibold text-white mb-1">
+                            {butterfly.butterflyName}
+                          </div>
+                          <div className={`text-xs ${getRarityColor(butterfly.butterflyRarity as RarityTier)} mb-1`}>
+                            {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            Anzahl: {butterfly.quantity}
+                          </div>
+                        </div>
+                      </ButterflyHoverPreview>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
