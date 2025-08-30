@@ -779,8 +779,10 @@ export class MemStorage implements IStorage {
         fieldIndex: pb.fieldIndex,
         placedAt: pb.placedAt,
         expiresAt: pb.expiresAt,
-        createdAt: pb.createdAt
-      }));
+        createdAt: pb.createdAt,
+        bouquetName: pb.bouquetName,
+        bouquetRarity: pb.bouquetRarity
+      } as any));
   }
 
   async getUserButterflies(userId: number): Promise<UserButterfly[]> {

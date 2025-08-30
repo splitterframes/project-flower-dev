@@ -78,6 +78,7 @@ export const GardenView: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
   const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
+  const [collectedBouquets, setCollectedBouquets] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -432,6 +433,10 @@ export const GardenView: React.FC = () => {
 
     try {
       console.log(`💧 Attempting to collect expired bouquet on field ${fieldIndex}`);
+      
+      // Add visual feedback immediately
+      setCollectedBouquets(prev => new Set([...Array.from(prev), fieldIndex]));
+      
       const response = await fetch('/api/bouquets/collect-expired', {
         method: 'POST',
         headers: {
@@ -444,20 +449,41 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`💧 ${data.message}`);
+        console.log(`💧 ${data.message}`);
         // Refresh all garden data
         await fetchPlacedBouquets();
         await fetchUserSeeds();
         await fetchFieldButterflies();
+        
+        // Remove visual feedback after short delay
+        setTimeout(() => {
+          setCollectedBouquets(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldIndex);
+            return newSet;
+          });
+        }, 1200);
       } else {
         const error = await response.json();
         // Only log error if it's not a "no expired bouquet" message for debugging
         if (!error.message.includes('Kein verwelktes Bouquet')) {
           console.error('Failed to collect expired bouquet:', error.message);
         }
+        // Remove visual feedback on error
+        setCollectedBouquets(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldIndex);
+          return newSet;
+        });
       }
     } catch (error) {
       console.error('Failed to collect expired bouquet:', error);
+      // Remove visual feedback on error
+      setCollectedBouquets(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldIndex);
+        return newSet;
+      });
     }
   };
 
@@ -658,6 +684,14 @@ export const GardenView: React.FC = () => {
                     <div className="absolute inset-0 bg-green-400/30 rounded-lg flex items-center justify-center z-10">
                       <div className="text-white font-bold text-lg animate-pulse">
                         +1 Blume!
+                      </div>
+                    </div>
+                  )}
+                  
+                  {collectedBouquets.has(field.id - 1) && (
+                    <div className="absolute inset-0 bg-yellow-400/30 rounded-lg flex items-center justify-center z-10">
+                      <div className="text-white font-bold text-sm animate-pulse text-center">
+                        +3 Samen<br/>erhalten!
                       </div>
                     </div>
                   )}

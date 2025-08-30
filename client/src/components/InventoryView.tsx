@@ -342,28 +342,28 @@ export const InventoryView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Schmetterlinge werden von deinen Blumen angezogen</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
                 {myButterflies.map((butterfly) => (
                   <div
                     key={butterfly.id}
-                    className="bg-slate-900 rounded-lg p-3 border-2"
+                    className="bg-slate-900 rounded-lg p-4 border-2 min-h-[60px]"
                     style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-4">
                       <RarityImage 
                         src={butterfly.butterflyImageUrl}
                         alt={butterfly.butterflyName}
                         rarity={butterfly.butterflyRarity as RarityTier}
                         size="medium"
-                        className="w-12 h-12"
+                        className="w-14 h-14 flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">{butterfly.butterflyName}</h4>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-sm mb-1 truncate">{butterfly.butterflyName}</h4>
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs ${getRarityColorClass(butterfly.butterflyRarity as RarityTier)}`}>
+                          <span className={`text-xs font-medium ${getRarityColorClass(butterfly.butterflyRarity as RarityTier)}`}>
                             {getRarityLabel(butterfly.butterflyRarity as RarityTier)}
                           </span>
-                          <span className="text-sm font-bold text-green-400">x{butterfly.quantity}</span>
+                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
                         </div>
                       </div>
                     </div>
