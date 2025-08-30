@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import type { UserFlower, UserBouquet, UserButterfly } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
@@ -350,13 +351,19 @@ export const InventoryView: React.FC = () => {
                     style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
                   >
                     <div className="flex items-center space-x-4">
-                      <RarityImage 
-                        src={butterfly.butterflyImageUrl}
-                        alt={butterfly.butterflyName}
+                      <ButterflyHoverPreview
+                        butterflyImageUrl={butterfly.butterflyImageUrl}
+                        butterflyName={butterfly.butterflyName}
                         rarity={butterfly.butterflyRarity as RarityTier}
-                        size="medium"
-                        className="w-14 h-14 flex-shrink-0"
-                      />
+                      >
+                        <RarityImage 
+                          src={butterfly.butterflyImageUrl}
+                          alt={butterfly.butterflyName}
+                          rarity={butterfly.butterflyRarity as RarityTier}
+                          size="medium"
+                          className="w-14 h-14 flex-shrink-0"
+                        />
+                      </ButterflyHoverPreview>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-white text-sm mb-1 truncate">{butterfly.butterflyName}</h4>
                         <div className="flex items-center justify-between gap-2">

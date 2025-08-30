@@ -7,6 +7,7 @@ import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
@@ -815,34 +816,40 @@ export const GardenView: React.FC = () => {
                   {/* Butterfly Display */}
                   {field.isUnlocked && field.hasButterfly && (
                     <div className="flex flex-col items-center">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger 
-                            className="cursor-pointer"
-                            onClick={() => collectButterfly(field.id - 1)}
-                          >
-                            <div className="relative">
-                              <RarityImage 
-                                src={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
-                                alt="Schmetterling"
-                                rarity={field.butterflyRarity as RarityTier || "common"}
-                                size="large"
-                                className="mx-auto w-16 h-16 animate-pulse"
-                              />
-                              <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-slate-800 border-slate-600 text-white">
-                            <div className="text-center">
-                              <div className="font-bold text-sm">{field.butterflyName}</div>
-                              <div className={`text-xs ${getRarityColor(field.butterflyRarity as RarityTier || "common")}`}>
-                                {getRarityDisplayName(field.butterflyRarity as RarityTier || "common")}
+                      <ButterflyHoverPreview
+                        butterflyImageUrl={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
+                        butterflyName={field.butterflyName || "Schmetterling"}
+                        rarity={field.butterflyRarity as RarityTier || "common"}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger 
+                              className="cursor-pointer"
+                              onClick={() => collectButterfly(field.id - 1)}
+                            >
+                              <div className="relative">
+                                <RarityImage 
+                                  src={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
+                                  alt="Schmetterling"
+                                  rarity={field.butterflyRarity as RarityTier || "common"}
+                                  size="large"
+                                  className="mx-auto w-16 h-16 animate-pulse"
+                                />
+                                <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
                               </div>
-                              <div className="text-xs text-orange-400 mt-1">Klicke zum Sammeln</div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-slate-800 border-slate-600 text-white">
+                              <div className="text-center">
+                                <div className="font-bold text-sm">{field.butterflyName}</div>
+                                <div className={`text-xs ${getRarityColor(field.butterflyRarity as RarityTier || "common")}`}>
+                                  {getRarityDisplayName(field.butterflyRarity as RarityTier || "common")}
+                                </div>
+                                <div className="text-xs text-orange-400 mt-1">Klicke zum Sammeln</div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </ButterflyHoverPreview>
                     </div>
                   )}
                   
