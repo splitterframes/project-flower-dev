@@ -48,7 +48,9 @@ export const BouquetsView: React.FC = () => {
       const response = await fetch(`/api/user/${user.id}/bouquets`);
       if (response.ok) {
         const data = await response.json();
+        // Show all bouquets regardless of quantity for recipe viewing
         setMyBouquets(data.bouquets || []);
+        console.log('Bouquets loaded:', data.bouquets);
       }
     } catch (error) {
       console.error('Failed to fetch my bouquets:', error);
@@ -134,6 +136,7 @@ export const BouquetsView: React.FC = () => {
         // Refresh all data
         await fetchMyFlowers();
         await fetchMyBouquets();
+        await fetchBouquetRecipes();
         // Credits are already deducted on server side, no need to deduct here
         setShowBouquetCreation(false);
       } else {
@@ -219,14 +222,23 @@ export const BouquetsView: React.FC = () => {
                           <h4 className="font-bold text-white text-sm">{bouquet.bouquetName || `Bouquet #${bouquet.id}`}</h4>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs text-rose-400">Bouquet</span>
-                            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
+                            <span className={`text-sm font-bold flex-shrink-0 ${
+                              bouquet.quantity > 0 ? 'text-green-400' : 'text-gray-500'
+                            }`}>x{bouquet.quantity}</span>
                           </div>
                         </div>
                       </div>
                       
                       <div className="mt-2">
                         <button
-                          onClick={() => setExpandedBouquet(expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId)}
+                          onClick={async () => {
+                            const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
+                            setExpandedBouquet(newExpanded);
+                            // Refresh recipes when showing recipe
+                            if (newExpanded === bouquet.bouquetId) {
+                              await fetchBouquetRecipes();
+                            }
+                          }}
                           className="w-full px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded transition-colors"
                         >
                           {expandedBouquet === bouquet.bouquetId ? 'Rezept verbergen' : 'Rezept zeigen'}
