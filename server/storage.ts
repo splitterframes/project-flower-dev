@@ -705,9 +705,9 @@ export class MemStorage implements IStorage {
   }
 
   async getUserBouquets(userId: number): Promise<UserBouquet[]> {
-    return Array.from(this.userBouquets.values())
-      .filter(bouquet => bouquet.userId === userId)
-      .map(b => ({
+    const allBouquets = Array.from(this.userBouquets.values()).filter(bouquet => bouquet.userId === userId);
+    console.log(`🌹 Getting bouquets for user ${userId}:`, allBouquets.map(b => `ID:${b.id} Q:${b.quantity} Name:${b.bouquetName}`));
+    return allBouquets.map(b => ({
         id: b.id,
         userId: b.userId,
         bouquetId: b.bouquetId,
@@ -759,8 +759,10 @@ export class MemStorage implements IStorage {
 
     // Remove bouquet from inventory but keep for recipe viewing
     userBouquet.quantity -= 1;
+    console.log(`🌹 Before placing: Bouquet quantity: ${userBouquet.quantity}, ID: ${userBouquet.id}`);
     // Always keep the bouquet in inventory, even with quantity 0, for recipe viewing
     this.userBouquets.set(userBouquet.id, userBouquet);
+    console.log(`🌹 After placing: Bouquet kept in inventory with quantity: ${userBouquet.quantity}`);
 
     return { success: true };
   }
