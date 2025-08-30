@@ -137,7 +137,16 @@ export const BouquetsView: React.FC = () => {
         await fetchMyFlowers();
         await fetchMyBouquets();
         await fetchBouquetRecipes();
-        // Credits are already deducted on server side, no need to deduct here
+        // Fetch updated credits from server after deduction
+        if (user) {
+          const creditsResponse = await fetch(`/api/user/${user.id}/credits`);
+          if (creditsResponse.ok) {
+            const creditsData = await creditsResponse.json();
+            // Update credits display with current value from server
+            const { setCredits } = useCredits.getState();
+            setCredits(creditsData.credits);
+          }
+        }
         setShowBouquetCreation(false);
       } else {
         const error = await response.json();
