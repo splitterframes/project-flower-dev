@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Flower2, Star, Heart, Gift, Plus, Sparkles } from "lucide-react";
@@ -132,7 +133,23 @@ export const BouquetsView: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`✨ ${result.message}`);
+        
+        // Show beautiful success toast
+        if (result.bouquet) {
+          const rarityName = getRarityDisplayName(result.bouquet.rarity as RarityTier);
+          
+          toast.success("Bouquet erfolgreich erstellt!", {
+            description: `"${result.bouquet.name}" (${rarityName}) wurde erstellt! 💐`,
+            duration: 4000,
+            className: "border-l-4 " + getRarityColor(result.bouquet.rarity as RarityTier).replace('text-', 'border-l-'),
+          });
+        } else {
+          toast.success("Bouquet erfolgreich erstellt!", {
+            description: "Dein neues Bouquet steht bereit! 💐",
+            duration: 4000,
+          });
+        }
+        
         // Refresh all data
         await fetchMyFlowers();
         await fetchMyBouquets();
@@ -150,11 +167,17 @@ export const BouquetsView: React.FC = () => {
         setShowBouquetCreation(false);
       } else {
         const error = await response.json();
-        alert(error.message || 'Fehler beim Erstellen des Bouquets');
+        toast.error("Fehler beim Erstellen", {
+          description: error.message || 'Bouquet konnte nicht erstellt werden',
+          duration: 4000,
+        });
       }
     } catch (error) {
       console.error('Error creating bouquet:', error);
-      alert('Fehler beim Erstellen des Bouquets');
+      toast.error("Verbindungsfehler", {
+        description: 'Bouquet konnte nicht erstellt werden',
+        duration: 4000,
+      });
     }
   };
 
