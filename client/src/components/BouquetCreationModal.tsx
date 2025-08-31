@@ -28,18 +28,25 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
   const [bouquetName, setBouquetName] = useState("");
   const [isGeneratingName, setIsGeneratingName] = useState(false);
 
-  const selectFlower = (flower: UserFlower, slotIndex: number) => {
-    // Check if flower is already selected in another slot
-    const isAlreadySelected = selectedFlowers.some((selected, index) => 
-      selected && selected.flowerId === flower.flowerId && index !== slotIndex
+  const selectFlower = (flower: UserFlower) => {
+    // Check if flower is already selected
+    const isAlreadySelected = selectedFlowers.some(selected => 
+      selected && selected.flowerId === flower.flowerId
     );
     
     if (isAlreadySelected) {
       return; // Don't allow selecting the same flower twice
     }
 
+    // Find first empty slot
+    const firstEmptySlotIndex = selectedFlowers.findIndex(slot => slot === null);
+    
+    if (firstEmptySlotIndex === -1) {
+      return; // All slots are full
+    }
+
     const newSelection = [...selectedFlowers];
-    newSelection[slotIndex] = flower;
+    newSelection[firstEmptySlotIndex] = flower;
     setSelectedFlowers(newSelection);
   };
 
@@ -325,24 +332,26 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                         </div>
                         <div className="text-xs font-medium text-white truncate mb-2">{flower.flowerName}</div>
                         
-                        {/* Enhanced Selection buttons */}
-                        <div className="flex gap-1 justify-center">
-                          {[0, 1, 2].map(slotIndex => (
-                            <Button
-                              key={slotIndex}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => selectFlower(flower, slotIndex)}
-                              disabled={selectedFlowers[slotIndex] !== null}
-                              className={`text-xs px-3 py-2 h-8 font-bold transition-all duration-200 ${
-                                selectedFlowers[slotIndex] !== null 
-                                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
-                                  : 'border-pink-400/50 text-pink-300 hover:bg-pink-500/20 hover:border-pink-400 hover:scale-110'
-                              }`}
-                            >
-                              Slot {slotIndex + 1}
-                            </Button>
-                          ))}
+                        {/* Enhanced Selection button */}
+                        <div className="flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => selectFlower(flower)}
+                            disabled={selectedFlowers.every(slot => slot !== null) || selectedFlowers.some(selected => selected && selected.flowerId === flower.flowerId)}
+                            className={`px-4 py-2 h-9 font-bold transition-all duration-200 ${
+                              selectedFlowers.every(slot => slot !== null) || selectedFlowers.some(selected => selected && selected.flowerId === flower.flowerId)
+                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
+                                : 'border-pink-400/50 text-pink-300 hover:bg-pink-500/20 hover:border-pink-400 hover:scale-110'
+                            }`}
+                          >
+                            {selectedFlowers.some(selected => selected && selected.flowerId === flower.flowerId)
+                              ? '✓ Ausgewählt'
+                              : selectedFlowers.every(slot => slot !== null)
+                              ? 'Alle Slots belegt'
+                              : '+ Hinzufügen'
+                            }
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

@@ -207,24 +207,65 @@ export const BouquetsView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Bouquets Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
-          <Flower2 className="h-8 w-8 mr-3 text-rose-400" />
-          Bouquets
-        </h1>
-        <p className="text-slate-400">Erstelle wunderschöne Blumensträuße aus deinen Blumen</p>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Enhanced Bouquets Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-rose-500/10 rounded-2xl blur-xl"></div>
+        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-pink-500/30 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <Heart className="h-12 w-12 mr-4 text-pink-400 animate-pulse" />
+              <div className="absolute inset-0 h-12 w-12 mr-4 text-pink-400 animate-ping opacity-20"></div>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-300 via-purple-300 to-rose-300 bg-clip-text text-transparent">
+                Bouquet Kollektion
+              </h1>
+            </div>
+          </div>
+          <p className="text-slate-300 text-xl">Erstelle wunderschöne Blumensträuße aus deinen Blumen 🌸</p>
+          
+          {/* Stats Bar */}
+          <div className="flex justify-center gap-8 mt-8">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-400/30">
+                <Flower2 className="h-6 w-6 text-blue-400" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">{myFlowers.length}</div>
+                <div className="text-slate-400">Verfügbare Blumen</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-pink-500/20 rounded-lg border border-pink-400/30">
+                <Gift className="h-6 w-6 text-pink-400" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">{myBouquets.length}</div>
+                <div className="text-slate-400">Bouquet Rezepte</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* My Bouquets Collection */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Created Bouquets */}
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Gift className="h-5 w-5 mr-2 text-rose-400" />
-              Meine Bouquets ({myBouquets.length})
+        {/* Enhanced Created Bouquets */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-purple-500/30 shadow-2xl">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <CardTitle className="text-white flex items-center relative z-10">
+              <div className="relative">
+                <Gift className="h-7 w-7 mr-3 text-yellow-400 animate-pulse" />
+                <div className="absolute inset-0 h-7 w-7 mr-3 text-yellow-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+                Meine Bouquet Rezepte
+              </span>
+              <Badge className="ml-4 bg-purple-600 text-white px-3 py-1 font-semibold">
+                {myBouquets.length}
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -234,12 +275,11 @@ export const BouquetsView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                 {myBouquets.map((bouquet) => (
                   <div
                     key={bouquet.id}
-                    className="bg-slate-900 rounded-lg p-3 border-2"
-                    style={{ borderColor: getBorderColor('rare' as RarityTier) }}
+                    className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border-2 border-pink-400/30 hover:border-pink-400/50 transition-all duration-300 hover:scale-105 shadow-lg group"
                   >
                     <div>
                       <div className="flex items-center space-x-3">
@@ -254,15 +294,15 @@ export const BouquetsView: React.FC = () => {
                           <h4 className="font-bold text-white text-sm">{bouquet.bouquetName || `Bouquet #${bouquet.id}`}</h4>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs text-rose-400">Bouquet</span>
-                            <span className={`text-sm font-bold flex-shrink-0 ${
-                              bouquet.quantity > 0 ? 'text-green-400' : 'text-gray-500'
-                            }`}>x{bouquet.quantity}</span>
+                            <Badge className={`px-3 py-1 font-bold ${
+                              bouquet.quantity > 0 ? 'bg-green-500/20 text-green-400 border border-green-400/30' : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
+                            }`}>x{bouquet.quantity}</Badge>
                           </div>
                         </div>
                       </div>
                       
                       <div className="mt-2">
-                        <button
+                        <Button
                           onClick={async () => {
                             const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
                             setExpandedBouquet(newExpanded);
@@ -271,10 +311,12 @@ export const BouquetsView: React.FC = () => {
                               await fetchBouquetRecipes();
                             }
                           }}
-                          className="w-full px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded transition-colors"
+                          variant="outline"
+                          className="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-400/40 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400/60 transition-all duration-200 group-hover:scale-105"
                         >
+                          <Sparkles className="h-4 w-4 mr-2" />
                           {expandedBouquet === bouquet.bouquetId ? 'Rezept verbergen' : 'Rezept zeigen'}
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -298,53 +340,105 @@ export const BouquetsView: React.FC = () => {
 
       </div>
 
-      {/* Bouquet Creation Workshop */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center justify-between">
+      {/* Enhanced Bouquet Creation Workshop */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-orange-500/30 shadow-2xl">
+        <CardHeader className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-t-lg -mx-6 -my-2"></div>
+          <CardTitle className="text-white flex items-center justify-between relative z-10">
             <div className="flex items-center">
-              <Gift className="h-5 w-5 mr-2 text-purple-400" />
-              Bouquet Werkstatt
+              <div className="relative">
+                <Palette className="h-7 w-7 mr-3 text-orange-400 animate-pulse" />
+                <div className="absolute inset-0 h-7 w-7 mr-3 text-orange-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
+                Bouquet Werkstatt 🎨
+              </span>
             </div>
             <Button
               onClick={() => setShowBouquetCreation(true)}
               disabled={myFlowers.length < 3}
-              className="bg-purple-600 hover:bg-purple-700"
+              className={`px-6 py-3 text-lg font-semibold rounded-xl transition-all duration-300 ${
+                myFlowers.length >= 3
+                  ? 'bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 hover:scale-105 shadow-lg'
+                  : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+              }`}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Bouquet erstellen
+              <Plus className="h-5 w-5 mr-2" />
+              {myFlowers.length >= 3 ? 'Bouquet erstellen' : 'Sammle mehr Blumen'}
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {myFlowers.length < 3 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-400 mb-4">Du benötigst mindestens 3 Blumen für ein Bouquet</p>
-              <p className="text-slate-500 text-sm">
-                Du hast derzeit <span className="text-rose-400 font-bold">{myFlowers.length}</span> Blumen
-              </p>
-              <p className="text-slate-500 text-sm mt-2">Züchte mehr Blumen in deinem Garten!</p>
+            <div className="text-center py-16">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-red-400/30">
+                <Heart className="h-12 w-12 text-red-400" />
+              </div>
+              <p className="text-slate-300 mb-4 text-xl font-semibold">Du benötigst mindestens 3 Blumen für ein Bouquet</p>
+              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600 inline-block">
+                <p className="text-slate-400 text-lg">
+                  Du hast derzeit <Badge className="bg-rose-500/20 text-rose-400 border border-rose-400/30 px-3 py-1 font-bold">{myFlowers.length}</Badge> Blumen
+                </p>
+                <p className="text-slate-500 mt-3">Züchte mehr Blumen in deinem Garten! 🌱</p>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-green-400 mb-4">✨ Du kannst jetzt Bouquets erstellen!</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-600">
-                  <h4 className="text-white font-bold mb-2">🌸 Bouquet Erstellung</h4>
-                  <ul className="text-slate-400 text-sm space-y-1">
-                    <li>• Wähle 3 beliebige Blumen aus</li>
-                    <li>• Kosten: 30 Credits</li>
-                    <li>• AI generiert deutschen Namen</li>
-                    <li>• Bouquet wird ins Inventar hinzugefügt</li>
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-green-400/30">
+                <Sparkles className="h-10 w-10 text-green-400 animate-pulse" />
+              </div>
+              <p className="text-green-300 mb-8 text-2xl font-bold">✨ Du kannst jetzt Bouquets erstellen!</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-xl p-6 border-2 border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-purple-500/20 rounded-lg mr-3 border border-purple-400/30">
+                      <Heart className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <h4 className="text-white font-bold text-lg">🌸 Bouquet Erstellung</h4>
+                  </div>
+                  <ul className="text-slate-300 space-y-2">
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                      Wähle 3 beliebige Blumen aus
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                      Kosten: 30 Credits
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                      AI generiert deutschen Namen
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                      Bouquet wird ins Inventar hinzugefügt
+                    </li>
                   </ul>
                 </div>
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-600">
-                  <h4 className="text-white font-bold mb-2">🦋 Schmetterling System</h4>
-                  <ul className="text-slate-400 text-sm space-y-1">
-                    <li>• Platziere Bouquets im Garten</li>
-                    <li>• Schmetterlinge spawnen alle 1-5min</li>
-                    <li>• Bouquet verwelkt nach 21min</li>
-                    <li>• Erhalte Samen als Belohnung</li>
+                <div className="bg-gradient-to-br from-blue-800/40 to-cyan-800/40 rounded-xl p-6 border-2 border-blue-400/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-blue-500/20 rounded-lg mr-3 border border-blue-400/30">
+                      <Sparkles className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <h4 className="text-white font-bold text-lg">🦋 Schmetterling System</h4>
+                  </div>
+                  <ul className="text-slate-300 space-y-2">
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
+                      Platziere Bouquets im Garten
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
+                      Schmetterlinge spawnen alle 1-5min
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
+                      Bouquet verwelkt nach 21min
+                    </li>
+                    <li className="flex items-center">
+                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
+                      Erhalte Samen als Belohnung
+                    </li>
                   </ul>
                 </div>
               </div>
