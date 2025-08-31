@@ -99,7 +99,10 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     try {
       const response = await fetch('/api/exhibition/sell-butterfly', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': butterfly.userId.toString() || '1'
+        },
         body: JSON.stringify({
           userId: butterfly.userId,
           exhibitionButterflyId: butterfly.id

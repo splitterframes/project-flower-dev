@@ -86,6 +86,7 @@ export const useMarket = create<MarketState>()(
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-User-Id': '1', // Note: This will be overridden by component
           },
           body: JSON.stringify({ listingId, quantity }),
         });
@@ -116,6 +117,7 @@ export const useMarket = create<MarketState>()(
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-User-Id': '1', // Note: This will be overridden by component
           },
           body: JSON.stringify({ seedId, quantity, pricePerUnit }),
         });

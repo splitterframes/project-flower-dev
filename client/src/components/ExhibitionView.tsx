@@ -69,7 +69,10 @@ export const ExhibitionView: React.FC = () => {
     try {
       const response = await fetch('/api/exhibition/process-income', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({ userId: user.id })
       });
       
@@ -99,7 +102,10 @@ export const ExhibitionView: React.FC = () => {
     try {
       const response = await fetch('/api/exhibition/purchase-frame', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({ userId: user.id })
       });
       
@@ -172,7 +178,10 @@ export const ExhibitionView: React.FC = () => {
     try {
       const response = await fetch('/api/exhibition/place-butterfly', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({ 
           userId: user.id, 
           frameId: selectedSlot.frameId, 

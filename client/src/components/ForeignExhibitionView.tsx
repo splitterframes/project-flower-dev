@@ -87,7 +87,10 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
       const response = await fetch('/api/exhibition/like', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({
           likerId: user.id,
           frameOwnerId: ownerId,

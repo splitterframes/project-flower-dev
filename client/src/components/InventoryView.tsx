@@ -184,7 +184,10 @@ export const InventoryView: React.FC = () => {
     try {
       const response = await fetch('/api/bouquets/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({
           flowerId1,
           flowerId2,
