@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { Sparkles } from "lucide-react";
 
@@ -18,6 +18,13 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(butterflyImageUrl);
+
+  // Reset state when butterflyImageUrl prop changes
+  useEffect(() => {
+    setCurrentSrc(butterflyImageUrl);
+    setImageError(false);
+  }, [butterflyImageUrl]);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     setIsHovering(true);
@@ -92,10 +99,17 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
             <div className="w-96 h-96 rounded-lg overflow-hidden mb-3 bg-slate-800 flex items-center justify-center">
               {!imageError ? (
                 <img
-                  src={butterflyImageUrl}
+                  src={currentSrc}
                   alt={butterflyName}
                   className="w-full h-full object-cover"
-                  onError={() => setImageError(true)}
+                  onError={() => {
+                    // For butterflies, try fallback to 0.jpg before showing icon
+                    if (currentSrc.includes('Schmetterlinge') && !currentSrc.includes('0.jpg')) {
+                      setCurrentSrc('/Schmetterlinge/0.jpg');
+                    } else {
+                      setImageError(true);
+                    }
+                  }}
                 />
               ) : (
                 <Sparkles className="w-24 h-24 text-purple-400" />
