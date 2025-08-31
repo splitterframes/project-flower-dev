@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users } from "lucide-react";
+import { UserListModal } from "./UserListModal";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
     butterflies: 0
   });
   const [passiveIncome, setPassiveIncome] = useState(0);
+  const [showUserList, setShowUserList] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -146,6 +148,17 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
                 <span className="text-orange-400 font-semibold">{credits} Cr</span>
               </div>
               
+              {/* User List Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowUserList(true)}
+                className="border-cyan-500 text-cyan-300 hover:bg-cyan-800 hover:text-white"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                👥 User
+              </Button>
+              
               {/* User Info */}
               <div className="flex items-center space-x-2 text-slate-300">
                 <User className="h-5 w-5" />
@@ -173,6 +186,12 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
           )}
         </div>
       </div>
+      
+      {/* User List Modal */}
+      <UserListModal 
+        isOpen={showUserList} 
+        onClose={() => setShowUserList(false)} 
+      />
     </header>
   );
 };

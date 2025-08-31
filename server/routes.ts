@@ -501,6 +501,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users with their online status and exhibition butterflies count
+  app.get("/api/users/list", async (req, res) => {
+    try {
+      const users = await storage.getAllUsersWithStatus();
+      res.json({ users });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

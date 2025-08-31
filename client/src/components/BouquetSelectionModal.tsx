@@ -42,11 +42,17 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center text-white">
-            <Heart className="h-5 w-5 mr-2 text-pink-400" />
-            Bouquet platzieren - Feld {fieldIndex + 1}
+      <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-purple-500/30 text-white max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <DialogHeader className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
+          <DialogTitle className="flex items-center text-white relative z-10">
+            <div className="relative">
+              <Heart className="h-8 w-8 mr-3 text-pink-400 animate-pulse" />
+              <div className="absolute inset-0 h-8 w-8 mr-3 text-pink-400 animate-ping opacity-30"></div>
+            </div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">
+              Bouquet platzieren 💐 - Feld {fieldIndex + 1}
+            </span>
           </DialogTitle>
           <Button
             variant="ghost"
@@ -59,38 +65,53 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Info Box */}
-          <div className="bg-slate-900 rounded-lg p-4 border border-slate-600">
-            <div className="flex items-center mb-2">
-              <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
-              <span className="font-semibold text-white">Bouquet-System</span>
+          {/* Enhanced Info Box */}
+          <div className="bg-gradient-to-r from-yellow-800/30 to-orange-800/30 rounded-xl p-6 border-2 border-yellow-500/30 shadow-xl relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-xl"></div>
+            <div className="relative z-10">
+              <div className="flex items-center mb-4">
+                <div className="relative">
+                  <Sparkles className="h-6 w-6 mr-3 text-yellow-400 animate-pulse" />
+                  <div className="absolute inset-0 h-6 w-6 mr-3 text-yellow-400 animate-ping opacity-20"></div>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">Bouquet-System ✨</span>
+              </div>
+              <ul className="text-slate-300 space-y-2 text-lg">
+                <li className="flex items-center">⏰ Bouquet wird 21 Minuten lang Schmetterlinge anlocken</li>
+                <li className="flex items-center">🦋 Schmetterlinge spawnen alle 1-5 Minuten</li>
+                <li className="flex items-center">🥀 Nach 21 Minuten verwelkt das Bouquet und gibt Samen</li>
+                <li className="flex items-center">📍 Ein Bouquet pro Feld möglich</li>
+              </ul>
             </div>
-            <ul className="text-sm text-slate-400 space-y-1">
-              <li>• Bouquet wird 21 Minuten lang Schmetterlinge anlocken</li>
-              <li>• Schmetterlinge spawnen alle 1-5 Minuten</li>
-              <li>• Nach 21 Minuten verwelkt das Bouquet und gibt Samen</li>
-              <li>• Ein Bouquet pro Feld möglich</li>
-            </ul>
           </div>
 
-          {/* Bouquet Selection */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Wähle ein Bouquet ({userBouquets.length} verfügbar)</h3>
+          {/* Enhanced Bouquet Selection */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent flex items-center">
+              💐 Wähle ein Bouquet ({userBouquets.length} verfügbar)
+            </h3>
             
             {userBouquets.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400">Keine Bouquets verfügbar</p>
-                <p className="text-slate-500 text-sm mt-2">Erstelle zuerst Bouquets im Bouquets-Tab</p>
+              <div className="text-center py-12 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-lg"></div>
+                <div className="relative z-10">
+                  <div className="relative mb-6">
+                    <Heart className="h-16 w-16 text-purple-400 mx-auto animate-bounce" />
+                    <div className="absolute inset-0 h-16 w-16 mx-auto text-purple-400 animate-ping opacity-20"></div>
+                  </div>
+                  <p className="text-slate-300 text-xl mb-3">💐 Keine Bouquets verfügbar</p>
+                  <p className="text-slate-400 text-lg">Erstelle zuerst Bouquets im Bouquets-Tab</p>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
                 {userBouquets.map((bouquet) => (
                   <Card 
                     key={bouquet.id} 
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg ${
                       selectedBouquet?.id === bouquet.id 
-                        ? 'bg-purple-900/50 border-purple-400 ring-2 ring-purple-400' 
-                        : 'bg-slate-900 border-slate-700 hover:bg-slate-800'
+                        ? 'bg-gradient-to-br from-purple-800/60 to-pink-800/60 border-2 border-purple-400 ring-2 ring-purple-400 shadow-purple-500/50' 
+                        : 'bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600 hover:border-purple-400/50'
                     }`}
                     onClick={() => setSelectedBouquet(bouquet)}
                   >
@@ -120,22 +141,24 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between">
+          {/* Enhanced Action Buttons */}
+          <div className="flex items-center justify-between pt-4">
             <Button
               variant="outline"
               onClick={onClose}
-              className="text-slate-400 border-slate-600 hover:bg-slate-700"
+              className="text-slate-300 border-2 border-slate-600 hover:bg-slate-700 hover:border-slate-500 text-lg px-6 py-3 transition-all duration-300"
             >
-              Abbrechen
+              ❌ Abbrechen
             </Button>
             <Button
               onClick={handlePlaceBouquet}
               disabled={!selectedBouquet}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-lg px-6 py-3 font-bold transition-all duration-300 hover:scale-110 shadow-lg"
             >
-              <Clock className="h-4 w-4 mr-2" />
-              Bouquet platzieren
+              <div className="relative">
+                <Clock className="h-5 w-5 mr-2 animate-pulse" />
+              </div>
+              💐 Bouquet platzieren
             </Button>
           </div>
         </div>

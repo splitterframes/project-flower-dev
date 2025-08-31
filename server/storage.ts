@@ -1051,6 +1051,68 @@ export class MemStorage implements IStorage {
 
     return { success: false };
   }
+
+  async getAllUsersWithStatus(): Promise<Array<{
+    id: number;
+    username: string;
+    isOnline: boolean;
+    exhibitionButterflies: number;
+    lastSeen: string;
+  }>> {
+    const users = Array.from(this.users.values());
+    const userList = [];
+    
+    for (const user of users) {
+      // Skip demo users
+      if (user.id === 99) continue;
+      
+      // Get exhibition butterflies count
+      const exhibitionButterflies = Array.from(this.exhibitionButterflies.values())
+        .filter(eb => eb.userId === user.id);
+      
+      // For now, we'll simulate online status based on recent activity
+      // In a real app, this would track actual login/logout events
+      const now = new Date();
+      const lastActivity = user.updatedAt || user.createdAt;
+      const timeDiff = now.getTime() - lastActivity.getTime();
+      const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+      
+      // Consider user online if last activity was within 5 minutes
+      const isOnline = minutesDiff < 5;
+      
+      // Format last seen
+      let lastSeen = '';
+      if (!isOnline) {
+        if (minutesDiff < 60) {
+          lastSeen = `vor ${minutesDiff} Min`;
+        } else if (minutesDiff < 1440) { // 24 hours
+          const hours = Math.floor(minutesDiff / 60);
+          lastSeen = `vor ${hours} Std`;
+        } else {
+          const days = Math.floor(minutesDiff / 1440);
+          lastSeen = `vor ${days} Tag${days === 1 ? '' : 'en'}`;
+        }
+      }
+      
+      userList.push({
+        id: user.id,
+        username: user.username,
+        isOnline,
+        exhibitionButterflies: exhibitionButterflies.length,
+        lastSeen
+      });
+    }
+    
+    // Sort by online status first, then by username
+    userList.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) {
+        return b.isOnline ? 1 : -1; // Online users first
+      }
+      return a.username.localeCompare(b.username);
+    });
+    
+    return userList;
+  }
 }
 
 export const storage = new MemStorage();
