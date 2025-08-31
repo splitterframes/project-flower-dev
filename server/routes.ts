@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/garden/plant", async (req, res) => {
     try {
       const plantData = plantSeedSchema.parse(req.body);
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const result = await storage.plantSeed(userId, plantData);
       if (result.success) {
@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/garden/harvest", async (req, res) => {
     try {
       const harvestData = harvestFieldSchema.parse(req.body);
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const result = await storage.harvestField(userId, harvestData);
       if (result.success) {
@@ -246,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bouquets/create", async (req, res) => {
     try {
       const bouquetData = createBouquetSchema.parse(req.body);
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const result = await storage.createBouquet(userId, bouquetData);
       if (result.success) {
@@ -322,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/garden/collect-butterfly", async (req, res) => {
     try {
       const { fieldIndex } = req.body;
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       if (fieldIndex === undefined) {
         return res.status(400).json({ message: 'Missing fieldIndex' });
@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bouquets/place", async (req, res) => {
     try {
       const placeData = placeBouquetSchema.parse(req.body);
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const result = await storage.placeBouquet(userId, placeData);
       if (result.success) {
@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bouquets/collect-expired", async (req, res) => {
     try {
       const { fieldIndex } = req.body;
-      const userId = 1; // TODO: Get from session/auth
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       if (fieldIndex === undefined) {
         return res.status(400).json({ message: 'Missing fieldIndex' });

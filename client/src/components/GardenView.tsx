@@ -332,7 +332,8 @@ export const GardenView: React.FC = () => {
       const response = await fetch('/api/bouquets/place', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           bouquetId,
@@ -378,7 +379,8 @@ export const GardenView: React.FC = () => {
       const response = await fetch('/api/garden/plant', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           fieldIndex,
@@ -411,6 +413,7 @@ export const GardenView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           fieldIndex,
@@ -447,6 +450,7 @@ export const GardenView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           fieldIndex,
@@ -533,7 +537,8 @@ export const GardenView: React.FC = () => {
       const response = await fetch('/api/garden/harvest', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           fieldIndex
