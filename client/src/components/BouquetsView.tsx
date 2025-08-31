@@ -336,6 +336,7 @@ export const BouquetsView: React.FC = () => {
                         <BouquetRecipeDisplay 
                           bouquetId={bouquet.bouquetId} 
                           recipe={bouquetRecipes[bouquet.bouquetId]} 
+                          userFlowers={myFlowers}
                           onRecreate={(flowerId1, flowerId2, flowerId3) => 
                             handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
                           }

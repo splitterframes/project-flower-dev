@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RarityImage } from './RarityImage';
-import type { BouquetRecipe } from '@shared/schema';
+import type { BouquetRecipe, UserFlower } from '@shared/schema';
 import type { RarityTier } from '@shared/rarity';
 
 interface Flower {
@@ -14,15 +14,42 @@ interface BouquetRecipeDisplayProps {
   bouquetId: number;
   recipe?: BouquetRecipe;
   onRecreate?: (flowerId1: number, flowerId2: number, flowerId3: number) => void;
+  userFlowers?: UserFlower[];
 }
 
 export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
   bouquetId,
   recipe,
-  onRecreate
+  onRecreate,
+  userFlowers = []
 }) => {
   const [ingredients, setIngredients] = useState<Flower[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Check if user has enough flowers to recreate bouquet
+  const canRecreate = () => {
+    if (!recipe || !userFlowers.length) return false;
+    
+    const requiredFlowerIds = [recipe.flowerId1, recipe.flowerId2, recipe.flowerId3];
+    
+    // Count required flowers
+    const flowerCounts: Record<number, number> = {};
+    requiredFlowerIds.forEach(id => {
+      flowerCounts[id] = (flowerCounts[id] || 0) + 1;
+    });
+    
+    // Check if user has enough of each required flower
+    for (const [flowerId, requiredCount] of Object.entries(flowerCounts)) {
+      const userFlower = userFlowers.find(f => f.flowerId === parseInt(flowerId));
+      const availableCount = userFlower?.quantity || 0;
+      
+      if (availableCount < requiredCount) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
   useEffect(() => {
     if (recipe) {
@@ -93,9 +120,15 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
         {onRecreate && (
           <button
             onClick={() => onRecreate(recipe.flowerId1, recipe.flowerId2, recipe.flowerId3)}
-            className="w-full px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-sm rounded transition-colors"
+            disabled={!canRecreate()}
+            className={`w-full px-3 py-1 text-white text-sm rounded transition-colors ${
+              canRecreate() 
+                ? 'bg-rose-600 hover:bg-rose-700' 
+                : 'bg-slate-600 cursor-not-allowed opacity-50'
+            }`}
+            title={!canRecreate() ? 'Nicht genügend Blumen im Inventar' : 'Bouquet mit deinen Blumen neustecken'}
           >
-            Bouquet nachbauen
+            Bouquet neustecken
           </button>
         )}
       </div>

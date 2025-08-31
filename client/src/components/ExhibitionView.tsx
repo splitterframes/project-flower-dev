@@ -353,7 +353,7 @@ export const ExhibitionView: React.FC = () => {
           butterflyName: selectedButterfly.butterflyName,
           butterflyRarity: selectedButterfly.butterflyRarity,
           butterflyImageUrl: selectedButterfly.butterflyImageUrl,
-          placedAt: selectedButterfly.placedAt,
+          placedAt: selectedButterfly.placedAt.toISOString(),
           userId: selectedButterfly.userId
         } : null}
         isOpen={showButterflyDialog}
