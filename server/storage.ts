@@ -153,7 +153,7 @@ export class MemStorage implements IStorage {
     
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
-    this.createDemoMarketListings();
+    // this.createDemoMarketListings(); // Demo handlers removed
   }
 
   private initializeSampleSeeds() {
@@ -361,126 +361,10 @@ export class MemStorage implements IStorage {
     }
   }
 
-  private createDemoMarketListings() {
-    // Create some demo users and listings so the market isn't empty
-    const demoUser = {
-      id: 99,
-      username: "Demo_Händler",
-      password: "demo",
-      credits: 5000,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.users.set(99, demoUser);
-
-    // Give demo user some seeds
-    const demoUserSeeds = [
-      { id: 1000, userId: 99, seedId: 1, quantity: 10, seedName: "Common Samen", seedRarity: "common", createdAt: new Date() },
-      { id: 1001, userId: 99, seedId: 2, quantity: 5, seedName: "Uncommon Samen", seedRarity: "uncommon", createdAt: new Date() },
-      { id: 1002, userId: 99, seedId: 3, quantity: 3, seedName: "Rare Samen", seedRarity: "rare", createdAt: new Date() },
-      { id: 1003, userId: 99, seedId: 4, quantity: 2, seedName: "Super-rare Samen", seedRarity: "super-rare", createdAt: new Date() },
-      { id: 1004, userId: 99, seedId: 5, quantity: 1, seedName: "Epic Samen", seedRarity: "epic", createdAt: new Date() },
-      { id: 1005, userId: 99, seedId: 6, quantity: 1, seedName: "Legendary Samen", seedRarity: "legendary", createdAt: new Date() }
-    ];
-
-    demoUserSeeds.forEach(userSeed => {
-      this.userSeeds.set(userSeed.id, userSeed);
-    });
-
-    // Create demo market listings
-    const demoListings = [
-      {
-        id: 1,
-        sellerId: 99,
-        seedId: 1,
-        quantity: 3,
-        pricePerUnit: 15,
-        totalPrice: 45,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Common Samen",
-        seedRarity: "common"
-      },
-      {
-        id: 2,
-        sellerId: 99,
-        seedId: 2,
-        quantity: 2,
-        pricePerUnit: 30,
-        totalPrice: 60,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Uncommon Samen",
-        seedRarity: "uncommon"
-      },
-      {
-        id: 3,
-        sellerId: 99,
-        seedId: 3,
-        quantity: 1,
-        pricePerUnit: 75,
-        totalPrice: 75,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Rare Samen",
-        seedRarity: "rare"
-      },
-      {
-        id: 4,
-        sellerId: 99,
-        seedId: 4,
-        quantity: 1,
-        pricePerUnit: 150,
-        totalPrice: 150,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Super-rare Samen",
-        seedRarity: "super-rare"
-      },
-      {
-        id: 5,
-        sellerId: 99,
-        seedId: 5,
-        quantity: 1,
-        pricePerUnit: 300,
-        totalPrice: 300,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Epic Samen",
-        seedRarity: "epic"
-      },
-      {
-        id: 6,
-        sellerId: 99,
-        seedId: 6,
-        quantity: 1,
-        pricePerUnit: 750,
-        totalPrice: 750,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sellerUsername: "Demo_Händler",
-        seedName: "Legendary Samen",
-        seedRarity: "legendary"
-      }
-    ];
-
-    demoListings.forEach(listing => {
-      this.marketListings.set(listing.id, listing);
-    });
-
-    this.currentListingId = 7;
-  }
+  // private createDemoMarketListings() {
+  //   // Demo market listings function removed - market now starts empty
+  //   // Real users will create their own listings
+  // }
 
   async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
     const user = this.users.get(userId);
@@ -772,7 +656,7 @@ export class MemStorage implements IStorage {
 
     // Create placed bouquet (expires in 21 minutes)
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 6); // Reduced to 6 minutes for testing
+    expiresAt.setMinutes(expiresAt.getMinutes() + 21); // Standard 21 minutes for bouquet placement
 
     const placedBouquet = {
       id: this.currentPlacedBouquetId++,
