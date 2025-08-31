@@ -103,6 +103,7 @@ export class MemStorage implements IStorage {
   private exhibitionFrames: Map<number, ExhibitionFrame>;
   private exhibitionButterflies: Map<number, ExhibitionButterfly>;
   private passiveIncomeLog: Map<number, PassiveIncomeLog>;
+  private exhibitionFrameLikes: Map<number, ExhibitionFrameLike>;
   private currentId: number;
   private currentSeedId: number;
   private currentUserSeedId: number;
@@ -118,6 +119,7 @@ export class MemStorage implements IStorage {
   private currentExhibitionFrameId: number;
   private currentExhibitionButterflyId: number;
   private currentPassiveIncomeId: number;
+  private currentFrameLikeId: number;
 
   constructor() {
     this.users = new Map();
@@ -135,6 +137,7 @@ export class MemStorage implements IStorage {
     this.exhibitionFrames = new Map();
     this.exhibitionButterflies = new Map();
     this.passiveIncomeLog = new Map();
+    this.exhibitionFrameLikes = new Map();
     this.currentId = 1;
     this.currentSeedId = 1;
     this.currentUserSeedId = 1;
@@ -150,6 +153,7 @@ export class MemStorage implements IStorage {
     this.currentExhibitionFrameId = 1;
     this.currentExhibitionButterflyId = 1;
     this.currentPassiveIncomeId = 1;
+    this.currentFrameLikeId = 1;
     
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
@@ -1058,6 +1062,7 @@ export class MemStorage implements IStorage {
     isOnline: boolean;
     exhibitionButterflies: number;
     lastSeen: string;
+    totalLikes: number;
   }>> {
     const users = Array.from(this.users.values());
     const userList = [];
@@ -1094,12 +1099,17 @@ export class MemStorage implements IStorage {
         }
       }
       
+      // Calculate total likes for this user's exhibition
+      const totalLikes = Array.from(this.exhibitionFrameLikes.values())
+        .filter(like => like.frameOwnerId === user.id).length;
+      
       userList.push({
         id: user.id,
         username: user.username,
         isOnline,
         exhibitionButterflies: exhibitionButterflies.length,
-        lastSeen
+        lastSeen,
+        totalLikes
       });
     }
     
@@ -1113,6 +1123,87 @@ export class MemStorage implements IStorage {
     
     return userList;
   }
+
+  // Like system methods
+  async likeExhibitionFrame(likerId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    // Check if the frame exists
+    const frame = this.exhibitionFrames.get(frameId);
+    if (!frame) {
+      return { success: false, message: 'Exhibition frame not found' };
+    }
+
+    // Check if user is trying to like their own frame
+    if (frameOwnerId === likerId) {
+      return { success: false, message: 'Cannot like your own exhibition frame' };
+    }
+
+    // Check if already liked
+    const existingLike = Array.from(this.exhibitionFrameLikes.values())
+      .find(like => like.frameOwnerId === frameOwnerId && like.likerId === likerId && like.frameId === frameId);
+    
+    if (existingLike) {
+      return { success: false, message: 'Already liked this frame' };
+    }
+
+    // Create new like
+    const like: ExhibitionFrameLike = {
+      id: this.currentFrameLikeId++,
+      frameOwnerId,
+      likerId,
+      frameId,
+      createdAt: new Date()
+    };
+
+    this.exhibitionFrameLikes.set(like.id, like);
+    return { success: true };
+  }
+
+  async unlikeExhibitionFrame(likerId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    // Find the like
+    const existingLike = Array.from(this.exhibitionFrameLikes.values())
+      .find(like => like.frameOwnerId === frameOwnerId && like.likerId === likerId && like.frameId === frameId);
+    
+    if (!existingLike) {
+      return { success: false, message: 'Like not found' };
+    }
+
+    // Remove the like
+    this.exhibitionFrameLikes.delete(existingLike.id);
+    return { success: true };
+  }
+
+  async getUserFrameLikes(userId: number, frameOwnerId: number): Promise<Array<{ frameId: number; isLiked: boolean; totalLikes: number }>> {
+    // Get all frames for the owner
+    const ownerFrames = Array.from(this.exhibitionFrames.values())
+      .filter(frame => frame.userId === frameOwnerId);
+    
+    return ownerFrames.map(frame => {
+      const totalLikes = Array.from(this.exhibitionFrameLikes.values())
+        .filter(like => like.frameId === frame.id).length;
+      
+      const isLiked = Array.from(this.exhibitionFrameLikes.values())
+        .some(like => like.frameId === frame.id && like.likerId === userId);
+      
+      return {
+        frameId: frame.id,
+        isLiked,
+        totalLikes
+      };
+    });
+  }
+
+  async getForeignExhibitionButterflies(ownerId: number): Promise<ExhibitionButterfly[]> {
+    return Array.from(this.exhibitionButterflies.values())
+      .filter(eb => eb.userId === ownerId);
+  }
+}
+
+interface ExhibitionFrameLike {
+  id: number;
+  frameOwnerId: number;
+  likerId: number;
+  frameId: number;
+  createdAt: Date;
 }
 
 export const storage = new MemStorage();

@@ -194,6 +194,19 @@ export const passiveIncomeLog = pgTable("passive_income_log", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Exhibition frame likes table
+export const exhibitionFrameLikes = pgTable("exhibition_frame_likes", {
+  id: serial("id").primaryKey(),
+  frameOwnerId: integer("frame_owner_id").notNull().references(() => users.id), // Owner of the exhibition frame
+  likerId: integer("liker_id").notNull().references(() => users.id), // User who liked the frame
+  frameId: integer("frame_id").notNull().references(() => exhibitionFrames.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    uniqueFrameLike: unique("unique_frame_like").on(table.frameOwnerId, table.likerId, table.frameId)
+  };
+});
+
 // Butterflies spawned on garden fields (waiting to be collected)
 export const fieldButterflies = pgTable("field_butterflies", {
   id: serial("id").primaryKey(),

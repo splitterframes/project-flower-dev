@@ -511,6 +511,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Like system routes
+  app.post('/api/exhibition/like', async (req, res) => {
+    try {
+      const { likerId, frameOwnerId, frameId } = req.body;
+      
+      if (!likerId || !frameOwnerId || !frameId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      const result = await storage.likeExhibitionFrame(likerId, frameOwnerId, frameId);
+      
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to like frame:', error);
+      res.status(500).json({ error: 'Failed to like frame' });
+    }
+  });
+
+  app.delete('/api/exhibition/like', async (req, res) => {
+    try {
+      const { likerId, frameOwnerId, frameId } = req.body;
+      
+      if (!likerId || !frameOwnerId || !frameId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      const result = await storage.unlikeExhibitionFrame(likerId, frameOwnerId, frameId);
+      
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to unlike frame:', error);
+      res.status(500).json({ error: 'Failed to unlike frame' });
+    }
+  });
+
+  app.get('/api/user/:userId/exhibition/:frameOwnerId/likes', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const frameOwnerId = parseInt(req.params.frameOwnerId);
+      
+      if (isNaN(userId) || isNaN(frameOwnerId)) {
+        return res.status(400).json({ error: 'Invalid user IDs' });
+      }
+      
+      const likes = await storage.getUserFrameLikes(userId, frameOwnerId);
+      res.json({ likes });
+    } catch (error) {
+      console.error('Failed to get frame likes:', error);
+      res.status(500).json({ error: 'Failed to get frame likes' });
+    }
+  });
+
+  app.get('/api/user/:ownerId/foreign-exhibition', async (req, res) => {
+    try {
+      const ownerId = parseInt(req.params.ownerId);
+      
+      if (isNaN(ownerId)) {
+        return res.status(400).json({ error: 'Invalid owner ID' });
+      }
+      
+      const butterflies = await storage.getForeignExhibitionButterflies(ownerId);
+      res.json({ butterflies });
+    } catch (error) {
+      console.error('Failed to get foreign exhibition:', error);
+      res.status(500).json({ error: 'Failed to get foreign exhibition' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -11,16 +11,19 @@ interface UserListData {
   isOnline: boolean;
   exhibitionButterflies: number;
   lastSeen: string;
+  totalLikes: number;
 }
 
 interface UserListModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onVisitExhibition: (userId: number, username: string) => void;
 }
 
 export const UserListModal: React.FC<UserListModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  onVisitExhibition
 }) => {
   const [users, setUsers] = useState<UserListData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -132,7 +135,11 @@ export const UserListModal: React.FC<UserListModalProps> = ({
                 {users.map((user) => (
                   <Card 
                     key={user.id} 
-                    className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600 hover:border-cyan-400/50 transition-all duration-300 hover:scale-105 shadow-lg"
+                    className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600 hover:border-cyan-400/50 transition-all duration-300 hover:scale-105 shadow-lg cursor-pointer"
+                    onClick={() => {
+                      onVisitExhibition(user.id, user.username);
+                      onClose();
+                    }}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
@@ -154,6 +161,12 @@ export const UserListModal: React.FC<UserListModalProps> = ({
                               <Bug className="h-4 w-4 mr-2 text-blue-400" />
                               <span className="text-sm text-slate-300">
                                 {user.exhibitionButterflies} 🦋 in Ausstellung
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center">
+                              <span className="text-sm text-pink-400">
+                                ❤️ {user.totalLikes || 0} Likes
                               </span>
                             </div>
                           </div>

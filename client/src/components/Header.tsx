@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users } from "lucide-react";
 import { UserListModal } from "./UserListModal";
+import { ForeignExhibitionView } from "./ForeignExhibitionView";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -20,6 +21,18 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
   });
   const [passiveIncome, setPassiveIncome] = useState(0);
   const [showUserList, setShowUserList] = useState(false);
+  const [foreignExhibition, setForeignExhibition] = useState<{
+    ownerId: number;
+    ownerName: string;
+  } | null>(null);
+  
+  const handleVisitExhibition = (userId: number, username: string) => {
+    setForeignExhibition({ ownerId: userId, ownerName: username });
+  };
+  
+  const handleBackFromForeign = () => {
+    setForeignExhibition(null);
+  };
 
   useEffect(() => {
     if (user) {
@@ -190,8 +203,20 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
       {/* User List Modal */}
       <UserListModal 
         isOpen={showUserList} 
-        onClose={() => setShowUserList(false)} 
+        onClose={() => setShowUserList(false)}
+        onVisitExhibition={handleVisitExhibition}
       />
+      
+      {/* Foreign Exhibition Modal/View */}
+      {foreignExhibition && (
+        <div className="fixed inset-0 z-50 bg-black/80">
+          <ForeignExhibitionView
+            ownerId={foreignExhibition.ownerId}
+            ownerName={foreignExhibition.ownerName}
+            onBack={handleBackFromForeign}
+          />
+        </div>
+      )}
     </header>
   );
 };
