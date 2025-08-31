@@ -104,7 +104,10 @@ export const MarketView: React.FC = () => {
     try {
       const response = await fetch('/api/market/buy', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify({ listingId, quantity })
       });
 
@@ -131,7 +134,10 @@ export const MarketView: React.FC = () => {
     try {
       const response = await fetch('/api/market/create-listing', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
         body: JSON.stringify(sellForm)
       });
 

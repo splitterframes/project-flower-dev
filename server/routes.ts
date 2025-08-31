@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/market/create-listing", async (req, res) => {
     try {
       const listingData = createMarketListingSchema.parse(req.body);
-      const sellerId = 1; // TODO: Get from session/auth
+      const sellerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const listing = await storage.createMarketListing(sellerId, listingData);
       res.json({ listing });
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/market/buy", async (req, res) => {
     try {
       const buyData = buyListingSchema.parse(req.body);
-      const buyerId = 1; // TODO: Get from session/auth
+      const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const result = await storage.buyMarketListing(buyerId, buyData);
       if (result.success) {
