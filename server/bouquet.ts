@@ -82,75 +82,33 @@ export function calculateAverageRarity(rarity1: RarityTier, rarity2: RarityTier,
   return rarities[Math.min(avgScore, rarities.length - 1)];
 }
 
-// Available butterfly files mapping: [id, extension]
-const AVAILABLE_BUTTERFLIES = [
-  [1, 'png'], [2, 'png'], [1, 'jpg'], [2, 'jpg'], [3, 'jpg'], [4, 'jpg'], [5, 'jpg'], [6, 'jpg'],
-  [7, 'jpg'], [8, 'jpg'], [9, 'jpg'], [10, 'jpg'], [11, 'jpg'], [12, 'jpg'], [13, 'jpg'], [14, 'jpg'],
-  [15, 'jpg'], [16, 'jpg'], [17, 'jpg'], [18, 'jpg'], [19, 'jpg'], [20, 'jpg'], [21, 'jpg'], [22, 'jpg'],
-  [23, 'jpg'], [24, 'jpg'], [25, 'jpg'], [26, 'jpg'], [27, 'jpg'], [28, 'jpg'], [29, 'jpg'], [30, 'jpg'],
-  [31, 'jpg'], [32, 'jpg'], [33, 'jpg'], [34, 'jpg'], [35, 'jpg'], [36, 'jpg'], [37, 'jpg'], [38, 'jpg'],
-  [39, 'jpg'], [40, 'jpg'], [41, 'jpg'], [42, 'jpg'], [43, 'jpg'], [44, 'jpg'], [45, 'jpg'], [46, 'jpg'],
-  [47, 'jpg'], [48, 'jpg'], [49, 'jpg'], [50, 'jpg'], [51, 'jpg'], [52, 'jpg'], [54, 'jpg'], [55, 'jpg'],
-  [56, 'jpg'], [57, 'jpg'], [58, 'jpg'], [59, 'jpg'], [60, 'jpg'], [61, 'jpg'], [62, 'jpg'], [63, 'jpg'],
-  [64, 'jpg'], [65, 'jpg'], [67, 'jpg'], [69, 'jpg'], [70, 'jpg'], [71, 'jpg'], [72, 'jpg'], [73, 'jpg'],
-  [74, 'jpg'], [75, 'jpg'], [76, 'jpg'], [78, 'jpg'], [79, 'jpg']
-];
+// Total butterfly count (user has 819 butterflies)
+const TOTAL_BUTTERFLIES = 819;
 
-// Function to get file extension for a butterfly ID
-function getButterflyExtension(id: number): string {
-  // Check if jpg version exists first (preferred)
-  const jpgExists = AVAILABLE_BUTTERFLIES.some(([butterflyId, ext]) => butterflyId === id && ext === 'jpg');
-  if (jpgExists) return 'jpg';
-  
-  // Otherwise check for png
-  const pngExists = AVAILABLE_BUTTERFLIES.some(([butterflyId, ext]) => butterflyId === id && ext === 'png');
-  if (pngExists) return 'png';
-  
-  // Default fallback
-  return 'jpg';
+// Generate butterfly IDs from 1 to 819
+function getAllButterflyIds(): number[] {
+  const ids: number[] = [];
+  for (let i = 1; i <= TOTAL_BUTTERFLIES; i++) {
+    ids.push(i);
+  }
+  return ids;
 }
 
-// Generate random butterfly based on bouquet rarity
+// Generate random butterfly based on bouquet rarity (1-819 with rarity distribution)
 export async function generateRandomButterfly(rarity: RarityTier): Promise<ButterflyData> {
-  // Get unique butterfly IDs (remove duplicates, prefer jpg)
-  const uniqueIds: number[] = Array.from(new Set(AVAILABLE_BUTTERFLIES.map(([id, ext]) => id as number)));
-  
-  // Create rarity tiers from available butterflies
-  const shuffled: number[] = [...uniqueIds].sort(() => Math.random() - 0.5); // Randomize distribution
-  const totalCount = shuffled.length;
-  
-  const tierSizes = {
-    common: Math.floor(totalCount * 0.45),      // 45%
-    uncommon: Math.floor(totalCount * 0.30),    // 30%
-    rare: Math.floor(totalCount * 0.15),        // 15%
-    "super-rare": Math.floor(totalCount * 0.07), // 7%
-    epic: Math.floor(totalCount * 0.025),       // 2.5%
-    legendary: Math.floor(totalCount * 0.004),  // 0.4%
-    mythical: Math.max(1, Math.floor(totalCount * 0.001)) // 0.1% (at least 1)
+  // Define rarity ranges based on the 819 butterflies distribution from replit.md
+  const butterflyRanges = {
+    common: { start: 1, end: 443 },        // 443 butterflies (54%)
+    uncommon: { start: 444, end: 743 },    // 300 butterflies (37%)
+    rare: { start: 744, end: 843 },        // 100 butterflies (12%)
+    "super-rare": { start: 844, end: 818 }, // 75 butterflies (9%)
+    epic: { start: 819, end: 819 },        // 1 butterfly for epic (demo)
+    legendary: { start: 819, end: 819 },   // 1 butterfly for legendary (demo)
+    mythical: { start: 819, end: 819 }     // 1 butterfly for mythical (demo)
   };
-  
-  let startIndex = 0;
-  const tierRanges: Record<RarityTier, number[]> = {
-    common: shuffled.slice(startIndex, startIndex += tierSizes.common),
-    uncommon: shuffled.slice(startIndex, startIndex += tierSizes.uncommon),
-    rare: shuffled.slice(startIndex, startIndex += tierSizes.rare),
-    "super-rare": shuffled.slice(startIndex, startIndex += tierSizes["super-rare"]),
-    epic: shuffled.slice(startIndex, startIndex += tierSizes.epic),
-    legendary: shuffled.slice(startIndex, startIndex += tierSizes.legendary),
-    mythical: shuffled.slice(startIndex)
-  };
-  
-  // Get butterflies for this rarity tier
-  let availableIds = tierRanges[rarity];
-  
-  // Fallback to common if no butterflies available for this rarity
-  if (!availableIds || availableIds.length === 0) {
-    availableIds = tierRanges.common.slice(0, 5); // Use first 5 common butterflies
-  }
-  
-  // Select random butterfly from available IDs
-  const butterflyId = availableIds[Math.floor(Math.random() * availableIds.length)];
-  const extension = getButterflyExtension(butterflyId);
+
+  const range = butterflyRanges[rarity];
+  const butterflyId = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
   
   // Generate consistent Latin name using butterflyId as seed
   const { generateLatinButterflyName } = await import('../shared/rarity');
@@ -159,7 +117,7 @@ export async function generateRandomButterfly(rarity: RarityTier): Promise<Butte
   return {
     id: butterflyId,
     name,
-    imageUrl: `/Schmetterlinge/${butterflyId.toString().padStart(3, '0')}.${extension}`
+    imageUrl: `/Schmetterlinge/${butterflyId.toString().padStart(3, '0')}.jpg`
   };
 }
 

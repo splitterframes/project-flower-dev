@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { type RarityTier } from "@shared/rarity";
 import { Flower, Sparkles } from "lucide-react";
 
@@ -18,6 +18,13 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   className = ""
 }) => {
   const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  // Reset state when src prop changes
+  useEffect(() => {
+    setCurrentSrc(src);
+    setImageError(false);
+  }, [src]);
   
   const sizeClasses = {
     small: 'w-8 h-8',      // 32px
@@ -51,7 +58,12 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   };
 
   const handleImageError = () => {
-    setImageError(true);
+    // For butterflies, try fallback to 0.jpg before showing icon
+    if (currentSrc.includes('Schmetterlinge') && !currentSrc.includes('0.jpg')) {
+      setCurrentSrc('/Schmetterlinge/0.jpg');
+    } else {
+      setImageError(true);
+    }
   };
 
   return (
@@ -75,7 +87,7 @@ export const RarityImage: React.FC<RarityImageProps> = ({
       }}>
       {!imageError ? (
         <img
-          src={src}
+          src={currentSrc}
           alt={alt}
           className="w-full h-full object-cover"
           style={{ aspectRatio: '1/1' }}
@@ -83,7 +95,7 @@ export const RarityImage: React.FC<RarityImageProps> = ({
         />
       ) : (
         // Fallback icon for missing images
-        src.includes('Blumen') ? (
+        currentSrc.includes('Blumen') ? (
           <Flower className={`${iconSize[size]} text-pink-400`} />
         ) : (
           <Sparkles className={`${iconSize[size]} text-purple-400`} />
