@@ -297,7 +297,7 @@ export const BouquetsView: React.FC = () => {
                         <RarityImage 
                           src="/Blumen/Bouquet.jpg"
                           alt="Bouquet"
-                          rarity={"rare" as RarityTier}
+                          rarity={(bouquet.bouquetRarity || "common") as RarityTier}
                           size="medium"
                           className="w-12 h-12"
                         />

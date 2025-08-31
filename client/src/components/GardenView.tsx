@@ -845,7 +845,10 @@ export const GardenView: React.FC = () => {
                                 <RarityImage 
                                   src="/Blumen/Bouquet.jpg"
                                   alt="Bouquet"
-                                  rarity={"rare" as RarityTier}
+                                  rarity={(() => {
+                                    const placedBouquet = placedBouquets.find(b => b.fieldIndex === (field.id - 1));
+                                    return (placedBouquet?.bouquetRarity || "common") as RarityTier;
+                                  })()}
                                   size="large"
                                   className="mx-auto w-16 h-16"
                                 />
