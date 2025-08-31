@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
-import { Flower2, Star, Heart, Gift, Plus, Sparkles } from "lucide-react";
+import { Flower2, Star, Heart, Gift, Plus, Sparkles, Palette } from "lucide-react";
 import { BouquetCreationModal } from "./BouquetCreationModal";
 import { BouquetRecipeDisplay } from "./BouquetRecipeDisplay";
 import { RarityImage } from "./RarityImage";
