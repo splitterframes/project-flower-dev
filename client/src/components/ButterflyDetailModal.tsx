@@ -139,8 +139,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-md shadow-2xl">
-        <DialogHeader className="relative">
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-7xl w-full shadow-2xl">
+        <DialogHeader className="relative mb-6">
           {/* Enhanced Header Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
           
@@ -164,91 +164,116 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           </Button>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Butterfly Display */}
-          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg relative overflow-hidden">
-            <div className={`absolute inset-0 rounded-lg opacity-20 ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'bg-')}`}></div>
-            
-            <CardContent className="p-6 relative z-10 text-center">
-              <div className="relative mb-4">
-                <RarityImage 
-                  src={butterfly.butterflyImageUrl}
-                  alt={butterfly.butterflyName}
-                  rarity={butterfly.butterflyRarity as RarityTier}
-                  size="large"
-                  className="mx-auto"
-                />
-              </div>
+        {/* Horizontal Layout: Image Left, Details Right */}
+        <div className="flex gap-8 min-h-[800px]">
+          {/* Left Side - Large Butterfly Image (800x800) */}
+          <div className="flex-shrink-0">
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg relative overflow-hidden">
+              <div className={`absolute inset-0 rounded-lg opacity-20 ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'bg-')}`}></div>
               
-              <h3 className="text-xl font-bold text-white mb-2">{butterfly.butterflyName}</h3>
-              
-              <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-sm font-bold px-3 py-1 mb-4`}>
-                <Star className="h-3 w-3 mr-1" />
-                {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          {/* Countdown Timer */}
-          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-            <CardContent className="p-6 text-center">
-              <div className="flex items-center justify-center mb-4">
+              <CardContent className="p-6 relative z-10 text-center">
                 <div className="relative">
-                  <Timer className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
-                  {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                  <img 
+                    src={butterfly.butterflyImageUrl}
+                    alt={butterfly.butterflyName}
+                    className={`w-[800px] h-[800px] object-contain mx-auto border-4 rounded-lg shadow-lg ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'border-')}`}
+                    style={{
+                      filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
+                    }}
+                  />
                 </div>
-                <span className="text-lg font-semibold">
-                  {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
-                </span>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              <div className={`text-3xl font-bold mb-4 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
-                {formatTimeRemaining(timeRemaining)}
-              </div>
-
-              <div className="text-sm text-slate-400">
-                {canSell 
-                  ? "Dieser Schmetterling kann jetzt verkauft werden!"
-                  : "Schmetterlinge können nach 72 Stunden verkauft werden"
-                }
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sell Price & Button */}
-          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <Coins className="h-6 w-6 mr-3 text-yellow-400" />
-                  <span className="text-lg font-semibold">Verkaufspreis:</span>
-                </div>
-                <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
-                  {sellPrice} Credits
+          {/* Right Side - Details */}
+          <div className="flex-1 space-y-6">
+            {/* Butterfly Name and Rarity */}
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <h3 className="text-3xl font-bold text-white mb-4">{butterfly.butterflyName}</h3>
+                
+                <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-lg font-bold px-4 py-2`}>
+                  <Star className="h-4 w-4 mr-2" />
+                  {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
                 </Badge>
-              </div>
+              </CardContent>
+            </Card>
 
-              <Button
-                onClick={handleSell}
-                disabled={!canSell || isSelling}
-                className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
-                  canSell 
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
-                    : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
-                }`}
-              >
-                <div className="flex items-center justify-center">
-                  <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
-                  {isSelling 
-                    ? "Verkaufe..." 
-                    : canSell 
-                      ? `💰 Für ${sellPrice} Credits verkaufen`
-                      : "🕐 Noch nicht verkaufbar"
+            {/* Countdown Timer */}
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="relative">
+                    <Timer className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
+                    {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                  </div>
+                  <span className="text-lg font-semibold">
+                    {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
+                  </span>
+                </div>
+
+                <div className={`text-3xl font-bold mb-4 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                  {formatTimeRemaining(timeRemaining)}
+                </div>
+
+                <div className="text-sm text-slate-400">
+                  {canSell 
+                    ? "Dieser Schmetterling kann jetzt verkauft werden!"
+                    : "Schmetterlinge können nach 72 Stunden verkauft werden"
                   }
                 </div>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Sell Price & Button */}
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Coins className="h-6 w-6 mr-3 text-yellow-400" />
+                    <span className="text-lg font-semibold">Verkaufspreis:</span>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
+                    {sellPrice} Credits
+                  </Badge>
+                </div>
+
+                <Button
+                  onClick={handleSell}
+                  disabled={!canSell || isSelling}
+                  className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
+                    canSell 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
+                      : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center">
+                    <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
+                    {isSelling 
+                      ? "Verkaufe..." 
+                      : canSell 
+                        ? `💰 Für ${sellPrice} Credits verkaufen`
+                        : "🕐 Noch nicht verkaufbar"
+                    }
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Exit Button */}
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <CardContent className="p-6">
+                <Button
+                  onClick={onClose}
+                  className="w-full text-lg font-bold py-4 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
+                >
+                  <X className="h-5 w-5 mr-3" />
+                  Verlassen
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
