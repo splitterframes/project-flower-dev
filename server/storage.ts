@@ -331,6 +331,7 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       credits: 1000,
+      lastPassiveIncomeAt: null,
       createdAt: now,
       updatedAt: now
     };
@@ -1127,7 +1128,7 @@ export class MemStorage implements IStorage {
       return { success: true, creditsEarned: 0 };
     }
 
-    // Calculate hourly income
+    // Calculate hourly income rate
     let totalHourlyIncome = 0;
     for (const butterfly of exhibitionButterflies) {
       switch (butterfly.butterflyRarity) {
@@ -1142,30 +1143,58 @@ export class MemStorage implements IStorage {
       }
     }
 
-    // For now, we'll process income every hour
-    // In a real implementation, this would be called by a cron job
+    // Calculate minutes needed for 1 credit
+    // If hourly income is 6, then 1 credit every 10 minutes (60/6 = 10)
+    const minutesPerCredit = totalHourlyIncome > 0 ? 60 / totalHourlyIncome : 0;
+    
+    if (minutesPerCredit === 0) {
+      return { success: true, creditsEarned: 0 };
+    }
+
+    // Get user's last passive income timestamp
     const user = this.users.get(userId);
-    if (user) {
-      user.credits += totalHourlyIncome;
+    if (!user) {
+      return { success: false };
+    }
+
+    // Check if user has lastPassiveIncomeAt property, if not set it to now
+    if (!user.lastPassiveIncomeAt) {
+      user.lastPassiveIncomeAt = new Date();
+      this.users.set(userId, user);
+      return { success: true, creditsEarned: 0 };
+    }
+
+    const now = new Date();
+    const timeSinceLastIncome = now.getTime() - user.lastPassiveIncomeAt.getTime();
+    const minutesSinceLastIncome = timeSinceLastIncome / (1000 * 60);
+
+    // Calculate how many credits to award
+    const creditsToAward = Math.floor(minutesSinceLastIncome / minutesPerCredit);
+
+    if (creditsToAward >= 1) {
+      // Award the credits
+      user.credits += creditsToAward;
+      // Update timestamp - add the exact time for the credited minutes
+      user.lastPassiveIncomeAt = new Date(user.lastPassiveIncomeAt.getTime() + (creditsToAward * minutesPerCredit * 60 * 1000));
       this.users.set(userId, user);
 
       // Log the income
       const incomeLog: PassiveIncomeLog = {
         id: this.currentPassiveIncomeId++,
         userId,
-        amount: totalHourlyIncome,
+        amount: creditsToAward,
         sourceType: 'exhibition',
-        sourceDetails: `${exhibitionButterflies.length} butterflies`,
+        sourceDetails: `${exhibitionButterflies.length} butterflies, ${totalHourlyIncome}cr/h`,
         earnedAt: new Date(),
         createdAt: new Date()
       };
       this.passiveIncomeLog.set(incomeLog.id, incomeLog);
 
-      console.log(`💰 User ${userId} earned ${totalHourlyIncome} credits from exhibition`);
-      return { success: true, creditsEarned: totalHourlyIncome };
+      console.log(`💰 User ${userId} earned ${creditsToAward} credits from exhibition (${totalHourlyIncome}cr/h, ${minutesPerCredit.toFixed(1)}min/cr)`);
+      return { success: true, creditsEarned: creditsToAward };
     }
 
-    return { success: false };
+    return { success: true, creditsEarned: 0 };
   }
 
   async getAllUsersWithStatus(): Promise<Array<{
