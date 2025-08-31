@@ -185,9 +185,11 @@ export const ExhibitionView: React.FC = () => {
                           className="w-full h-full cursor-pointer relative group"
                           onClick={() => handleButterflyClick(butterfly)}
                         >
-                          <img
+                          <RarityImage
                             src={butterfly.butterflyImageUrl}
                             alt={butterfly.butterflyName}
+                            rarity={butterfly.butterflyRarity as RarityTier}
+                            size="large"
                             className="w-full h-full object-cover rounded transition-transform group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
