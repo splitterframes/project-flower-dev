@@ -23,19 +23,18 @@ export class ButterflySpawner {
     // Run immediately once, then start interval
     this.checkForButterflySpawns();
     
-    // Random interval between 1-5 minutes (60000ms - 300000ms)
-    const getRandomInterval = () => Math.floor(Math.random() * 240000) + 60000;
+    // Fixed 5-minute interval (300000ms)
+    const SPAWN_INTERVAL = 5 * 60 * 1000; // 5 minutes
     
     const scheduleNext = () => {
       if (!this.isRunning) return;
       
-      const nextInterval = getRandomInterval();
-      console.log(`🦋 Next butterfly check in ${Math.floor(nextInterval / 60000)}:${Math.floor((nextInterval % 60000) / 1000).toString().padStart(2, '0')} minutes`);
+      console.log(`🦋 Next butterfly check in 5:00 minutes`);
       
       this.intervalId = setTimeout(() => {
         this.checkForButterflySpawns();
         scheduleNext(); // Schedule the next check
-      }, nextInterval);
+      }, SPAWN_INTERVAL);
     };
 
     scheduleNext();
@@ -54,46 +53,57 @@ export class ButterflySpawner {
     try {
       console.log('🦋 Checking for butterfly spawns...');
       
-      // Get all active (non-expired) placed bouquets
       const currentTime = new Date();
-      
-      // For now, we'll check for user ID 1 (the main user)
-      // In a real system, we'd iterate through all users
-      const userId = 1;
       let totalSpawns = 0;
       
-      try {
-        const placedBouquets = await storage.getPlacedBouquets(userId);
-        const activeBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) > currentTime);
-        
-        if (activeBouquets.length === 0) {
-          console.log('🦋 No active bouquets found');
-          return;
-        }
-        
-        console.log(`🦋 Found ${activeBouquets.length} active bouquets`);
-        
-        for (const placedBouquet of activeBouquets) {
-          // Use the rarity stored in the placed bouquet
-          const rarity = (placedBouquet as any).bouquetRarity as RarityTier || 'common';
+      // Get all users with active bouquets
+      const allUsers = await storage.getAllUsersWithStatus();
+      
+      for (const user of allUsers) {
+        try {
+          const placedBouquets = await storage.getPlacedBouquets(user.id);
+          const activeBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) > currentTime);
           
-          const result = await storage.spawnButterflyOnField(
-            userId, 
-            placedBouquet.bouquetId, 
-            rarity
-          );
-          
-          if (result.success) {
-            totalSpawns++;
-            console.log(`✨ Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}!`);
+          if (activeBouquets.length === 0) {
+            continue; // Skip this user, no active bouquets
           }
+          
+          console.log(`🦋 User ${user.id}: Found ${activeBouquets.length} active bouquets`);
+          
+          for (const placedBouquet of activeBouquets) {
+            // Check how many butterflies already spawned for this bouquet
+            const existingButterflies = await storage.getFieldButterflies(user.id);
+            const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === placedBouquet.bouquetId).length;
+            
+            // Each bouquet can spawn 1-4 butterflies over 21 minutes (every 5 minutes)
+            // So after 4 spawns (20 minutes), stop spawning
+            const maxSpawns = this.getBouquetMaxSpawns((placedBouquet as any).bouquetRarity as RarityTier);
+            
+            if (butterflyCount >= maxSpawns) {
+              continue; // This bouquet has reached its spawn limit
+            }
+            
+            // Use the rarity stored in the placed bouquet
+            const rarity = (placedBouquet as any).bouquetRarity as RarityTier || 'common';
+            
+            const result = await storage.spawnButterflyOnField(
+              user.id, 
+              placedBouquet.bouquetId, 
+              rarity
+            );
+            
+            if (result.success) {
+              totalSpawns++;
+              console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (${butterflyCount + 1}/${maxSpawns})`);
+            }
+          }
+        } catch (error) {
+          console.error(`🦋 Error checking bouquets for user ${user.id}:`, error);
         }
-      } catch (error) {
-        console.error('🦋 Error checking bouquets for user:', error);
       }
       
       if (totalSpawns > 0) {
-        console.log(`🦋 Spawn cycle complete: ${totalSpawns} butterflies spawned`);
+        console.log(`🦋 Spawn cycle complete: ${totalSpawns} butterflies spawned across all users`);
       } else {
         console.log('🦋 Spawn cycle complete: No butterflies spawned this time');
       }
@@ -107,6 +117,20 @@ export class ButterflySpawner {
   async forceSpawnCheck() {
     console.log('🦋 Forcing butterfly spawn check...');
     await this.checkForButterflySpawns();
+  }
+
+  // Determine max spawns based on bouquet rarity (1-4 butterflies)
+  private getBouquetMaxSpawns(rarity: RarityTier): number {
+    const spawnCounts = {
+      'common': 1,      // 1 butterfly over 21 minutes
+      'uncommon': 2,    // 2 butterflies over 21 minutes  
+      'rare': 2,        // 2 butterflies over 21 minutes
+      'super-rare': 3,  // 3 butterflies over 21 minutes
+      'epic': 3,        // 3 butterflies over 21 minutes
+      'legendary': 4,   // 4 butterflies over 21 minutes
+      'mythical': 4     // 4 butterflies over 21 minutes
+    };
+    return spawnCounts[rarity] || 1;
   }
 
   getStatus() {
