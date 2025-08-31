@@ -221,12 +221,18 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                         </Button>
                       </div>
                     ) : (
-                      <div className="py-12">
-                        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gradient-to-br group-hover:from-slate-500 group-hover:to-slate-600 transition-all duration-300">
-                          <Heart className="h-10 w-10 text-slate-400 group-hover:text-pink-400 transition-colors duration-300" />
+                      <div className="space-y-3" style={{ minHeight: '240px' }}>
+                        <div className="relative">
+                          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-slate-500 group-hover:to-slate-600 transition-all duration-300">
+                            <Heart className="h-10 w-10 text-slate-400 group-hover:text-pink-400 transition-colors duration-300" />
+                          </div>
                         </div>
                         <div className="text-slate-400 font-medium">Slot {index + 1}</div>
-                        <div className="text-xs text-slate-500 mt-1">Blume auswählen</div>
+                        <div className="text-xs text-slate-500">Blume auswählen</div>
+                        <div className="opacity-0 pointer-events-none">
+                          <div className="h-6 bg-transparent rounded"></div>
+                          <div className="h-8 bg-transparent rounded mt-2"></div>
+                        </div>
                       </div>
                     )}
                   </CardContent>
