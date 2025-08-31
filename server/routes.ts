@@ -612,6 +612,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug route to show rarity distribution
+  app.get("/api/debug/rarity-distribution", async (req, res) => {
+    try {
+      const { getRarityDistribution } = await import('./bouquet');
+      const distribution = getRarityDistribution();
+      
+      let total = 0;
+      const formattedDistribution = Object.entries(distribution).map(([rarity, count]) => {
+        total += count;
+        return {
+          rarity,
+          count,
+          percentage: ((count / 81) * 100).toFixed(1)
+        };
+      });
+      
+      res.json({
+        distribution: formattedDistribution,
+        total,
+        message: `Schmetterlings-Rarität Verteilung für ${total} verfügbare Bilder`
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error loading rarity distribution" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
