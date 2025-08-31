@@ -26,6 +26,18 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
     }
   }, [user]);
 
+  // Auto-refresh header data every 10 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      fetchInventoryCounts();
+      fetchPassiveIncome();
+    }, 10000); // Update every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchInventoryCounts = async () => {
     if (!user) return;
     
@@ -37,22 +49,24 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
         fetch(`/api/user/${user.id}/butterflies`)
       ]);
 
-      const seedsData = await seedsRes.json();
-      const flowersData = await flowersRes.json();
-      const bouquetsData = await bouquetsRes.json();
-      const butterfliesData = await butterfliesRes.json();
+      if (seedsRes.ok && flowersRes.ok && bouquetsRes.ok && butterfliesRes.ok) {
+        const seedsData = await seedsRes.json();
+        const flowersData = await flowersRes.json();
+        const bouquetsData = await bouquetsRes.json();
+        const butterfliesData = await butterfliesRes.json();
 
-      const seedsTotal = (seedsData.seeds || []).reduce((sum: number, seed: any) => sum + seed.quantity, 0);
-      const flowersTotal = (flowersData.flowers || []).reduce((sum: number, flower: any) => sum + flower.quantity, 0);
-      const bouquetsTotal = (bouquetsData.bouquets || []).reduce((sum: number, bouquet: any) => sum + bouquet.quantity, 0);
-      const butterfliesTotal = (butterfliesData.butterflies || []).reduce((sum: number, butterfly: any) => sum + butterfly.quantity, 0);
+        const seedsTotal = (seedsData.seeds || []).reduce((sum: number, seed: any) => sum + seed.quantity, 0);
+        const flowersTotal = (flowersData.flowers || []).reduce((sum: number, flower: any) => sum + flower.quantity, 0);
+        const bouquetsTotal = (bouquetsData.bouquets || []).reduce((sum: number, bouquet: any) => sum + bouquet.quantity, 0);
+        const butterfliesTotal = (butterfliesData.butterflies || []).reduce((sum: number, butterfly: any) => sum + butterfly.quantity, 0);
 
-      setInventoryCounts({
-        seeds: seedsTotal,
-        flowers: flowersTotal,
-        bouquets: bouquetsTotal,
-        butterflies: butterfliesTotal
-      });
+        setInventoryCounts({
+          seeds: seedsTotal,
+          flowers: flowersTotal,
+          bouquets: bouquetsTotal,
+          butterflies: butterfliesTotal
+        });
+      }
     } catch (error) {
       console.error('Failed to fetch inventory counts:', error);
     }
@@ -63,22 +77,24 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
     
     try {
       const butterfliesRes = await fetch(`/api/user/${user.id}/exhibition-butterflies`);
-      const butterfliesData = await butterfliesRes.json();
-      
-      const hourlyIncome = (butterfliesData.butterflies || []).reduce((total: number, butterfly: any) => {
-        switch (butterfly.butterflyRarity) {
-          case 'common': return total + 1;
-          case 'uncommon': return total + 3;
-          case 'rare': return total + 8;
-          case 'super-rare': return total + 15;
-          case 'epic': return total + 25;
-          case 'legendary': return total + 50;
-          case 'mythical': return total + 100;
-          default: return total + 1;
-        }
-      }, 0);
-      
-      setPassiveIncome(hourlyIncome);
+      if (butterfliesRes.ok) {
+        const butterfliesData = await butterfliesRes.json();
+        
+        const hourlyIncome = (butterfliesData.butterflies || []).reduce((total: number, butterfly: any) => {
+          switch (butterfly.butterflyRarity) {
+            case 'common': return total + 1;
+            case 'uncommon': return total + 3;
+            case 'rare': return total + 8;
+            case 'super-rare': return total + 15;
+            case 'epic': return total + 25;
+            case 'legendary': return total + 50;
+            case 'mythical': return total + 100;
+            default: return total + 1;
+          }
+        }, 0);
+        
+        setPassiveIncome(hourlyIncome);
+      }
     } catch (error) {
       console.error('Failed to fetch passive income:', error);
     }
