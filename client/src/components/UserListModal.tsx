@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, X, Eye, Bug } from "lucide-react";
+import { useAuth } from "@/lib/stores/useAuth";
 
 interface UserListData {
   id: number;
@@ -27,6 +28,7 @@ export const UserListModal: React.FC<UserListModalProps> = ({
 }) => {
   const [users, setUsers] = useState<UserListData[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -35,9 +37,15 @@ export const UserListModal: React.FC<UserListModalProps> = ({
   }, [isOpen]);
 
   const fetchUsers = async () => {
+    if (!currentUser) return;
+    
     setLoading(true);
     try {
-      const response = await fetch('/api/users/list');
+      const response = await fetch('/api/users/list', {
+        headers: {
+          'X-User-Id': currentUser.id.toString()
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);

@@ -56,7 +56,7 @@ export class ButterflySpawner {
       const currentTime = new Date();
       let totalSpawns = 0;
       
-      // Get all users with active bouquets
+      // Get all users with active bouquets  
       const allUsers = await storage.getAllUsersWithStatus();
       
       for (const user of allUsers) {
@@ -119,18 +119,10 @@ export class ButterflySpawner {
     await this.checkForButterflySpawns();
   }
 
-  // Determine max spawns based on bouquet rarity (1-4 butterflies)
+  // Determine max spawns (always random 2-4 butterflies regardless of rarity)
   private getBouquetMaxSpawns(rarity: RarityTier): number {
-    const spawnCounts = {
-      'common': 1,      // 1 butterfly over 21 minutes
-      'uncommon': 2,    // 2 butterflies over 21 minutes  
-      'rare': 2,        // 2 butterflies over 21 minutes
-      'super-rare': 3,  // 3 butterflies over 21 minutes
-      'epic': 3,        // 3 butterflies over 21 minutes
-      'legendary': 4,   // 4 butterflies over 21 minutes
-      'mythical': 4     // 4 butterflies over 21 minutes
-    };
-    return spawnCounts[rarity] || 1;
+    // Random 2-4 butterflies per bouquet (independent of rarity)
+    return Math.floor(Math.random() * 3) + 2; // 2-4 butterflies
   }
 
   getStatus() {

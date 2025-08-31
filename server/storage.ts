@@ -1233,7 +1233,15 @@ export class MemStorage implements IStorage {
     return { success: true, creditsEarned: 0 };
   }
 
-  async getAllUsersWithStatus(): Promise<Array<{
+  async updateUserActivity(userId: number): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.updatedAt = new Date();
+      this.users.set(userId, user);
+    }
+  }
+
+  async getAllUsersWithStatus(excludeUserId?: number): Promise<Array<{
     id: number;
     username: string;
     isOnline: boolean;
@@ -1245,8 +1253,8 @@ export class MemStorage implements IStorage {
     const userList = [];
     
     for (const user of users) {
-      // Skip demo users
-      if (user.id === 99) continue;
+      // Skip demo users and current user
+      if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
       
       // Get exhibition butterflies count
       const exhibitionButterflies = Array.from(this.exhibitionButterflies.values())

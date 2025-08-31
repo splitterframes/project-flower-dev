@@ -529,7 +529,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users with their online status and exhibition butterflies count
   app.get("/api/users/list", async (req, res) => {
     try {
-      const users = await storage.getAllUsersWithStatus();
+      const currentUserId = parseInt(req.headers['x-user-id'] as string);
+      
+      if (!currentUserId) {
+        return res.status(400).json({ message: "User ID required" });
+      }
+      
+      // Update current user's last activity timestamp
+      await storage.updateUserActivity(currentUserId);
+      
+      const users = await storage.getAllUsersWithStatus(currentUserId);
       res.json({ users });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
