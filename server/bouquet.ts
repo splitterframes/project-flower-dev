@@ -96,15 +96,15 @@ function getAllButterflyIds(): number[] {
 
 // Generate random butterfly based on bouquet rarity (1-819 with rarity distribution)
 export async function generateRandomButterfly(rarity: RarityTier): Promise<ButterflyData> {
-  // Define rarity ranges based on the 819 butterflies distribution from replit.md
+  // Define rarity ranges based on the 1000 butterflies distribution from replit.md
   const butterflyRanges = {
-    common: { start: 1, end: 443 },        // 443 butterflies (54%)
-    uncommon: { start: 444, end: 743 },    // 300 butterflies (37%)
-    rare: { start: 744, end: 843 },        // 100 butterflies (12%)
-    "super-rare": { start: 844, end: 818 }, // 75 butterflies (9%)
-    epic: { start: 819, end: 819 },        // 1 butterfly for epic (demo)
-    legendary: { start: 819, end: 819 },   // 1 butterfly for legendary (demo)
-    mythical: { start: 819, end: 819 }     // 1 butterfly for mythical (demo)
+    common: { start: 1, end: 443 },        // 443 butterflies
+    uncommon: { start: 444, end: 743 },    // 300 butterflies
+    rare: { start: 744, end: 843 },        // 100 butterflies
+    "super-rare": { start: 844, end: 918 }, // 75 butterflies
+    epic: { start: 919, end: 963 },        // 45 butterflies
+    legendary: { start: 964, end: 988 },   // 25 butterflies
+    mythical: { start: 989, end: 1000 }    // 12 butterflies
   };
 
   const range = butterflyRanges[rarity];

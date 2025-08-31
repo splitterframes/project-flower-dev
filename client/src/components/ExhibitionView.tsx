@@ -381,7 +381,14 @@ export const ExhibitionView: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {userButterflies.map((butterfly) => (
+                {userButterflies
+                  .filter((butterfly) => {
+                    // Filter out butterflies that are already in this frame
+                    if (!selectedSlot) return true;
+                    const butterfliesInFrame = exhibitionButterflies.filter(eb => eb.frameId === selectedSlot.frameId);
+                    return !butterfliesInFrame.some(eb => eb.butterflyId === butterfly.butterflyId);
+                  })
+                  .map((butterfly) => (
                   <Card
                     key={butterfly.id}
                     className="bg-slate-800 border-slate-600 cursor-pointer hover:bg-slate-700 transition-colors"

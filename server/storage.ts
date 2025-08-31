@@ -988,6 +988,18 @@ export class MemStorage implements IStorage {
       return { success: false, message: "Butterfly not available" };
     }
 
+    // Check if butterfly already exists in this frame (prevent duplicates)
+    const duplicateInFrame = Array.from(this.exhibitionButterflies.values())
+      .find(eb => eb.frameId === frameId && eb.butterflyId === userButterfly.butterflyId);
+    
+    if (duplicateInFrame) {
+      return { success: false, message: "Dieser Schmetterling ist bereits in diesem Rahmen ausgestellt" };
+    }
+    
+    if (!userButterfly || userButterfly.quantity < 1) {
+      return { success: false, message: "Butterfly not available" };
+    }
+
     // Remove butterfly from inventory
     if (userButterfly.quantity > 1) {
       userButterfly.quantity -= 1;
