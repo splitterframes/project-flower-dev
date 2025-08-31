@@ -84,6 +84,7 @@ export interface IStorage {
   getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]>;
   placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }>;
   removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }>;
+  sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }>;
   processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }>;
 }
 
@@ -1049,6 +1050,74 @@ export class MemStorage implements IStorage {
 
     console.log(`🦋 Removed ${exhibitionButterfly.butterflyName} from exhibition back to inventory`);
     return { success: true };
+  }
+
+  // Get butterfly sell price based on rarity
+  getButterflysellPrice(rarity: string): number {
+    const prices = {
+      'common': 50,
+      'uncommon': 100,
+      'rare': 200,
+      'super-rare': 400,
+      'epic': 600,
+      'legendary': 800,
+      'mythical': 1000
+    };
+    return prices[rarity as keyof typeof prices] || 50;
+  }
+
+  // Check if butterfly can be sold (72 hours = 259200000 ms after placement)
+  canSellButterfly(placedAt: Date): boolean {
+    const now = new Date();
+    const timeSincePlacement = now.getTime() - placedAt.getTime();
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000; // 72 hours in milliseconds
+    return timeSincePlacement >= SEVENTY_TWO_HOURS;
+  }
+
+  // Get time remaining until butterfly can be sold
+  getTimeUntilSellable(placedAt: Date): number {
+    const now = new Date();
+    const timeSincePlacement = now.getTime() - placedAt.getTime();
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+    const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
+    return Math.max(0, remaining);
+  }
+
+  async sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    // Find the exhibition butterfly
+    const exhibitionButterfly = this.exhibitionButterflies.get(exhibitionButterflyId);
+    
+    if (!exhibitionButterfly) {
+      return { success: false, message: "Schmetterling nicht gefunden" };
+    }
+
+    // Check ownership
+    if (exhibitionButterfly.userId !== userId) {
+      return { success: false, message: "Dieser Schmetterling gehört dir nicht" };
+    }
+
+    // Check if 72 hours have passed
+    if (!this.canSellButterfly(exhibitionButterfly.placedAt)) {
+      const timeRemaining = this.getTimeUntilSellable(exhibitionButterfly.placedAt);
+      const hoursRemaining = Math.ceil(timeRemaining / (60 * 60 * 1000));
+      return { success: false, message: `Du kannst diesen Schmetterling in ${hoursRemaining} Stunden verkaufen` };
+    }
+
+    // Calculate sell price
+    const creditsEarned = this.getButterflysellPrice(exhibitionButterfly.butterflyRarity);
+
+    // Remove butterfly from exhibition
+    this.exhibitionButterflies.delete(exhibitionButterflyId);
+
+    // Add credits to user
+    const user = this.users.get(userId);
+    if (user) {
+      user.credits += creditsEarned;
+      this.users.set(userId, user);
+    }
+
+    console.log(`💰 Sold ${exhibitionButterfly.butterflyName} for ${creditsEarned} credits`);
+    return { success: true, creditsEarned };
   }
 
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {

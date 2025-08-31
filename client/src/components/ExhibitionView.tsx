@@ -5,73 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
+import { ButterflyDetailModal } from "./ButterflyDetailModal";
 import { RarityImage } from "./RarityImage";
 import { Trophy, Plus, DollarSign, Clock, Star, Info } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly } from "@shared/schema";
 
-interface ButterflyDetailDialogProps {
-  butterfly: ExhibitionButterfly | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const ButterflyDetailDialog: React.FC<ButterflyDetailDialogProps> = ({ butterfly, isOpen, onClose }) => {
-  if (!butterfly) return null;
-
-  const getHourlyRate = (rarity: string): number => {
-    switch (rarity) {
-      case 'common': return 1;
-      case 'uncommon': return 3;
-      case 'rare': return 8;
-      case 'super-rare': return 15;
-      case 'epic': return 25;
-      case 'legendary': return 50;
-      case 'mythical': return 100;
-      default: return 1;
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900 border-slate-600 text-white max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold">
-            {butterfly.butterflyName}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col items-center space-y-6">
-          {/* Large butterfly image */}
-          <div className="w-96 h-96 rounded-lg overflow-hidden border-4" 
-               style={{ borderColor: getRarityColor(butterfly.butterflyRarity as RarityTier) }}>
-            <img
-              src={butterfly.butterflyImageUrl}
-              alt={butterfly.butterflyName}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {/* Butterfly details */}
-          <div className="text-center space-y-3">
-            <div className={`text-lg font-semibold ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`}>
-              {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-            </div>
-            
-            <div className="flex items-center justify-center space-x-2 text-green-400">
-              <DollarSign className="h-5 w-5" />
-              <span className="text-lg font-bold">{getHourlyRate(butterfly.butterflyRarity)} Cr/Std</span>
-            </div>
-            
-            <div className="flex items-center justify-center space-x-2 text-slate-400">
-              <Clock className="h-4 w-4" />
-              <span>Platziert: {new Date(butterfly.placedAt).toLocaleDateString('de-DE')}</span>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 export const ExhibitionView: React.FC = () => {
   const { user } = useAuth();
@@ -407,11 +346,22 @@ export const ExhibitionView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Butterfly Detail Dialog */}
-      <ButterflyDetailDialog
-        butterfly={selectedButterfly}
+      {/* Butterfly Detail Modal */}
+      <ButterflyDetailModal
+        butterfly={selectedButterfly ? {
+          id: selectedButterfly.id,
+          butterflyName: selectedButterfly.butterflyName,
+          butterflyRarity: selectedButterfly.butterflyRarity,
+          butterflyImageUrl: selectedButterfly.butterflyImageUrl,
+          placedAt: selectedButterfly.placedAt,
+          userId: selectedButterfly.userId
+        } : null}
         isOpen={showButterflyDialog}
         onClose={() => setShowButterflyDialog(false)}
+        onSold={() => {
+          fetchExhibitionData();
+          fetchUserButterflies();
+        }}
       />
 
       {/* Butterfly Inventory Dialog */}

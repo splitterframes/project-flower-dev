@@ -478,6 +478,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/exhibition/sell-butterfly", async (req, res) => {
+    try {
+      const { userId, exhibitionButterflyId } = req.body;
+      
+      if (!userId || !exhibitionButterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.sellExhibitionButterfly(userId, exhibitionButterflyId);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Butterfly sold successfully', 
+          success: true,
+          creditsEarned: result.creditsEarned 
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Failed to sell butterfly' });
+      }
+    } catch (error) {
+      console.error('Failed to sell exhibition butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/exhibition/process-income", async (req, res) => {
     try {
       const { userId } = req.body;
