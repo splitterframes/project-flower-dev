@@ -28,7 +28,7 @@ export const ExhibitionView: React.FC = () => {
     if (user) {
       fetchExhibitionData();
       fetchUserButterflies();
-      processPassiveIncome(); // Automatically claim passive income when viewing exhibition
+      // No need to manually process passive income anymore - it's automatic
     }
   }, [user]);
 
@@ -124,6 +124,22 @@ export const ExhibitionView: React.FC = () => {
     return Math.round(500 * Math.pow(1.2, frameCount - 1));
   };
 
+  const getFrameHourlyIncome = (frameId: number): number => {
+    const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frameId);
+    return frameButterflies.reduce((total, butterfly) => {
+      switch (butterfly.butterflyRarity) {
+        case 'common': return total + 1;
+        case 'uncommon': return total + 3;
+        case 'rare': return total + 8;
+        case 'super-rare': return total + 15;
+        case 'epic': return total + 25;
+        case 'legendary': return total + 50;
+        case 'mythical': return total + 100;
+        default: return total + 1;
+      }
+    }, 0);
+  };
+
   const getTotalHourlyIncome = (): number => {
     return exhibitionButterflies.reduce((total, butterfly) => {
       switch (butterfly.butterflyRarity) {
@@ -189,7 +205,7 @@ export const ExhibitionView: React.FC = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-amber-100 text-center flex items-center justify-center">
             <Trophy className="h-5 w-5 mr-2 text-amber-300" />
-            Rahmen #{frame.frameNumber}
+            Rahmen #{frame.frameNumber} ({getFrameHourlyIncome(frame.id)} cr/h)
           </CardTitle>
         </CardHeader>
         <CardContent>

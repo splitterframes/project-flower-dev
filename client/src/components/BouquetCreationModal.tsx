@@ -150,18 +150,31 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                   </div>
                   <span className="text-lg font-semibold text-orange-300">Kosten: 30 Credits</span>
                 </div>
-                <div className="flex items-center">
-                  <span className="text-lg mr-3">Verfügbare Credits:</span>
-                  <Badge 
-                    variant={credits >= 30 ? "default" : "destructive"} 
-                    className={`text-lg px-4 py-2 font-bold ${
-                      credits >= 30 
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
-                        : 'bg-gradient-to-r from-red-600 to-rose-600 text-white animate-pulse'
-                    }`}
-                  >
-                    {credits}
-                  </Badge>
+                <div className="flex items-center space-x-6">
+                  {/* Average rarity display */}
+                  {selectedFlowers.some(f => f !== null) && (
+                    <div className="flex items-center space-x-2">
+                      <Star className={`h-5 w-5 ${getRarityColor(calculateAverageRarity())} animate-pulse`} />
+                      <span className="text-sm font-semibold">Durchschnitt:</span>
+                      <Badge className={`${getRarityColor(calculateAverageRarity())} text-sm font-bold px-3 py-1`}>
+                        {getRarityDisplayName(calculateAverageRarity())}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center">
+                    <span className="text-lg mr-3">Verfügbare Credits:</span>
+                    <Badge 
+                      variant={credits >= 30 ? "default" : "destructive"} 
+                      className={`text-lg px-4 py-2 font-bold ${
+                        credits >= 30 
+                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                          : 'bg-gradient-to-r from-red-600 to-rose-600 text-white animate-pulse'
+                      }`}
+                    >
+                      {credits}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
@@ -228,23 +241,6 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
               ))}
             </div>
 
-            {/* Preview average rarity - Enhanced */}
-            {selectedFlowers.some(f => f !== null) && (
-              <div className="text-center">
-                <div className="relative inline-block">
-                  <div className={`absolute inset-0 bg-gradient-to-r ${getRarityColor(calculateAverageRarity()).replace('text-', 'from-')} to-transparent rounded-lg blur-md opacity-30`}></div>
-                  <div className="relative bg-slate-800/80 p-4 rounded-lg border border-slate-600">
-                    <div className="flex items-center justify-center space-x-3">
-                      <Star className={`h-6 w-6 ${getRarityColor(calculateAverageRarity())} animate-pulse`} />
-                      <span className="text-lg font-semibold">Durchschnittliche Seltenheit:</span>
-                      <Badge className={`${getRarityColor(calculateAverageRarity())} text-lg font-bold px-4 py-2 animate-pulse`}>
-                        {getRarityDisplayName(calculateAverageRarity())}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Name Input - Enhanced */}
