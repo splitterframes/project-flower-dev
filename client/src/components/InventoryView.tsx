@@ -350,19 +350,32 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Butterflies */}
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Bug className="h-5 w-5 mr-2 text-yellow-400" />
-              Schmetterlinge ({myButterflies.length})
+        {/* Enhanced Butterflies */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-yellow-500/30 shadow-2xl">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <CardTitle className="text-white flex items-center relative z-10">
+              <div className="relative">
+                <Bug className="h-8 w-8 mr-3 text-yellow-400 animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 mr-3 text-yellow-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                Schmetterlinge 🦋 ({myButterflies.length})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {myButterflies.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400">Noch keine Schmetterlinge gefangen</p>
-                <p className="text-slate-500 text-sm mt-2">Schmetterlinge werden von deinen Blumen angezogen</p>
+              <div className="text-center py-12 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-lg"></div>
+                <div className="relative z-10">
+                  <div className="relative mb-6">
+                    <Bug className="h-16 w-16 text-yellow-400 mx-auto animate-bounce" />
+                    <div className="absolute inset-0 h-16 w-16 mx-auto text-yellow-400 animate-ping opacity-20"></div>
+                  </div>
+                  <p className="text-slate-300 text-xl mb-3">🦋 Noch keine Schmetterlinge gefangen</p>
+                  <p className="text-slate-400 text-lg">Schmetterlinge werden von deinen Blumen angezogen</p>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
