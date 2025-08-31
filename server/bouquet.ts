@@ -83,7 +83,7 @@ export function calculateAverageRarity(rarity1: RarityTier, rarity2: RarityTier,
 }
 
 // Generate random butterfly based on bouquet rarity
-export function generateRandomButterfly(rarity: RarityTier): ButterflyData {
+export async function generateRandomButterfly(rarity: RarityTier): Promise<ButterflyData> {
   // Butterfly ID ranges based on rarity (from replit.md)
   const butterflyRanges = {
     common: { start: 1, end: 443 },
@@ -98,11 +98,9 @@ export function generateRandomButterfly(rarity: RarityTier): ButterflyData {
   const range = butterflyRanges[rarity];
   const butterflyId = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
   
-  // Generate Latin-sounding name
-  const prefixes = ["Lepido", "Papilio", "Macro", "Micro", "Helio", "Chryso", "Morpho", "Caligo", "Ithomia", "Parides"];
-  const suffixes = ["pteryx", "morpha", "glossa", "soma", "phanes", "chrome", "melos", "nympha", "thalassa", "aureus"];
-  const name = prefixes[Math.floor(Math.random() * prefixes.length)] + " " + 
-               suffixes[Math.floor(Math.random() * suffixes.length)];
+  // Generate consistent Latin name using butterflyId as seed
+  const { generateLatinButterflyName } = await import('../shared/rarity');
+  const name = generateLatinButterflyName(butterflyId);
 
   return {
     id: butterflyId,

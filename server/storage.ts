@@ -914,7 +914,7 @@ export class MemStorage implements IStorage {
     }
 
     // Generate new butterfly
-    const butterflyData = generateRandomButterfly(bouquetRarity);
+    const butterflyData = await generateRandomButterfly(bouquetRarity);
     
     // Create field butterfly
     const fieldButterfly: FieldButterfly = {

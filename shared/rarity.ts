@@ -216,7 +216,7 @@ export function generateRandomFlower(rarity: RarityTier): { id: number; name: st
   
   return {
     id: flowerId,
-    name: generateLatinFlowerName(),
+    name: generateLatinFlowerName(flowerId), // Use flowerId as seed for consistent naming
     imageUrl: `/Blumen/${flowerId}.jpg`
   };
 }
@@ -235,15 +235,26 @@ export function generateRandomButterfly(rarity: RarityTier): { id: number; name:
   
   return {
     id: butterflyId,
-    name: generateLatinButterflyName(),
+    name: generateLatinButterflyName(butterflyId), // Use butterflyId as seed for consistent naming
     imageUrl: `/Schmetterlinge/${butterflyId.toString().padStart(3, '0')}.jpg`
   };
 }
 
 /**
- * Generate Latin-sounding flower names (2 words)
+ * Create a seeded random number generator for consistent results
  */
-export function generateLatinFlowerName(): string {
+function createSeededRandom(seed: number) {
+  return function() {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  };
+}
+
+/**
+ * Generate Latin-sounding flower names (2 words)
+ * @param seed - Optional seed for consistent naming based on ID
+ */
+export function generateLatinFlowerName(seed?: number): string {
   const prefixes = [
     'Rosa', 'Flos', 'Petala', 'Corona', 'Stella', 'Luna', 'Aurora', 'Viola', 'Iris', 'Bella',
     'Magna', 'Alba', 'Rubra', 'Purpura', 'Aurea', 'Celeste', 'Divina', 'Mystica', 'Splendida', 'Elegans'
@@ -255,16 +266,25 @@ export function generateLatinFlowerName(): string {
     'crystallinus', 'argenteus', 'aureus', 'diamanteus'
   ];
   
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  
-  return `${prefix} ${suffix}`;
+  if (seed !== undefined) {
+    // Use seeded random for consistent names
+    const seededRandom = createSeededRandom(seed * 31);
+    const prefix = prefixes[Math.floor(seededRandom() * prefixes.length)];
+    const suffix = suffixes[Math.floor(seededRandom() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  } else {
+    // Fallback to regular random for backwards compatibility
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  }
 }
 
 /**
  * Generate Latin-sounding butterfly names (2 words)
+ * @param seed - Optional seed for consistent naming based on ID
  */
-export function generateLatinButterflyName(): string {
+export function generateLatinButterflyName(seed?: number): string {
   const prefixes = [
     'Papilio', 'Lepidoptera', 'Morpho', 'Vanessa', 'Pieris', 'Monarch', 'Danaus', 'Heliconius', 'Nymphalis', 'Lycaena',
     'Colias', 'Pontia', 'Anthocharis', 'Gonepteryx', 'Callophrys', 'Celastrina', 'Cupido', 'Plebejus', 'Polyommatus', 'Aricia'
@@ -276,10 +296,18 @@ export function generateLatinButterflyName(): string {
     'crystallinus', 'argenteus', 'aureus', 'diamanteus', 'volans', 'gracilis', 'delicatus', 'aereus'
   ];
   
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  
-  return `${prefix} ${suffix}`;
+  if (seed !== undefined) {
+    // Use seeded random for consistent names
+    const seededRandom = createSeededRandom(seed * 37); // Different multiplier for butterflies
+    const prefix = prefixes[Math.floor(seededRandom() * prefixes.length)];
+    const suffix = suffixes[Math.floor(seededRandom() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  } else {
+    // Fallback to regular random for backwards compatibility
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  }
 }
 
 /**

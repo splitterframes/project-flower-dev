@@ -212,24 +212,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const flowerId = parseInt(req.params.id);
       const { generateLatinFlowerName, getFlowerRarityById } = await import('../shared/rarity');
       
-      // Generate consistent Latin name based on flowerId
-      // Using flowerId as seed for consistent naming
-      const randomSeed = flowerId * 31; // Simple seed generation
-      const tempRandom = Math.random;
-      Math.random = () => {
-        const x = Math.sin(randomSeed) * 10000;
-        return x - Math.floor(x);
-      };
-      
       const flower = {
         id: flowerId,
-        name: generateLatinFlowerName(),
+        name: generateLatinFlowerName(flowerId), // Use flowerId as seed for consistent naming
         rarity: getFlowerRarityById(flowerId),
         imageUrl: `/Blumen/${flowerId}.jpg`
       };
-      
-      // Restore original Math.random
-      Math.random = tempRandom;
       
       res.json(flower);
     } catch (error) {
