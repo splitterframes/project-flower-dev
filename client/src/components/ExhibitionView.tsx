@@ -28,6 +28,7 @@ export const ExhibitionView: React.FC = () => {
     if (user) {
       fetchExhibitionData();
       fetchUserButterflies();
+      processPassiveIncome(); // Automatically claim passive income when viewing exhibition
     }
   }, [user]);
 
@@ -60,6 +61,34 @@ export const ExhibitionView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch user butterflies:', error);
+    }
+  };
+
+  const processPassiveIncome = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch('/api/exhibition/process-income', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.creditsEarned && data.creditsEarned > 0) {
+          // Update credits in store
+          const currentUser = await fetch(`/api/user/${user.id}/credits`);
+          if (currentUser.ok) {
+            const creditsData = await currentUser.json();
+            setCredits(creditsData.credits);
+          }
+          
+          // Show notification about earned credits
+          console.log(`💰 ${data.creditsEarned} Credits aus der Ausstellung erhalten!`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process passive income:', error);
     }
   };
 

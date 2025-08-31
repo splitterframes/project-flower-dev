@@ -83,54 +83,70 @@ export function calculateAverageRarity(rarity1: RarityTier, rarity2: RarityTier,
 }
 
 
-// Generate all available butterfly IDs from 0-819 (816 total images)
+// Generate all available butterfly IDs from 0-960 (960 total images)
 function generateAvailableButterflyIds(): number[] {
   const ids: number[] = [];
-  for (let i = 0; i <= 819; i++) {
+  for (let i = 0; i <= 960; i++) {
     ids.push(i);
   }
   return ids;
 }
 
 const AVAILABLE_BUTTERFLY_IDS = generateAvailableButterflyIds();
-const TOTAL_BUTTERFLIES = AVAILABLE_BUTTERFLY_IDS.length - 1; // Exclude 0 as fallback
+const TOTAL_BUTTERFLIES = AVAILABLE_BUTTERFLY_IDS.length - 1; // Exclude 0 as fallback (960 butterflies)
 
 // Get proper filename for butterfly ID
 function getButterflyImageFilename(id: number): string {
   return `${id}.jpg`;
 }
 
-// Rarity distribution for 819 available butterflies (based on replit.md distribution)
+// Rarity distribution for 960 available butterflies
 const RARITY_DISTRIBUTION = {
-  common: Math.floor(TOTAL_BUTTERFLIES * 0.443),      // ~362 butterflies (44.3%)
-  uncommon: Math.floor(TOTAL_BUTTERFLIES * 0.30),     // ~246 butterflies (30%)
-  rare: Math.floor(TOTAL_BUTTERFLIES * 0.122),        // ~100 butterflies (12.2%)
-  'super-rare': Math.floor(TOTAL_BUTTERFLIES * 0.092), // ~75 butterflies (9.2%)
-  epic: Math.floor(TOTAL_BUTTERFLIES * 0.055),        // ~45 butterflies (5.5%)
-  legendary: Math.floor(TOTAL_BUTTERFLIES * 0.031),   // ~25 butterflies (3.1%)
-  mythical: Math.floor(TOTAL_BUTTERFLIES * 0.015)     // ~12 butterflies (1.5%)
+  common: Math.floor(TOTAL_BUTTERFLIES * 0.443),      // ~425 butterflies (44.3%)
+  uncommon: Math.floor(TOTAL_BUTTERFLIES * 0.30),     // ~288 butterflies (30%)
+  rare: Math.floor(TOTAL_BUTTERFLIES * 0.122),        // ~117 butterflies (12.2%)
+  'super-rare': Math.floor(TOTAL_BUTTERFLIES * 0.078), // ~75 butterflies (7.8%)
+  epic: Math.floor(TOTAL_BUTTERFLIES * 0.047),        // ~45 butterflies (4.7%)
+  legendary: Math.floor(TOTAL_BUTTERFLIES * 0.026),   // ~25 butterflies (2.6%)
+  mythical: Math.floor(TOTAL_BUTTERFLIES * 0.013)     // ~12 butterflies (1.3%)
 };
 
 // Ensure we use all butterflies by adjusting the common tier
 const totalAssigned = Object.values(RARITY_DISTRIBUTION).reduce((sum, count) => sum + count, 0);
 RARITY_DISTRIBUTION.common += (TOTAL_BUTTERFLIES - totalAssigned);
 
-// Create rarity assignments for each butterfly ID
+// Create randomized rarity assignments for each butterfly ID
 const BUTTERFLY_RARITY_MAP = new Map<number, RarityTier>();
-let currentIndex = 0;
 
-// Assign rarities to available IDs (excluding 0 which is fallback)
+// Get usable IDs (excluding 0 which is fallback)
 const usableIds = AVAILABLE_BUTTERFLY_IDS.filter(id => id > 0);
 
-// Assign each rarity tier to butterfly IDs
+// Create a shuffled array of rarity assignments
+const rarityAssignments: RarityTier[] = [];
 for (const [rarity, count] of Object.entries(RARITY_DISTRIBUTION) as [RarityTier, number][]) {
-  for (let i = 0; i < count && currentIndex < usableIds.length; i++) {
-    BUTTERFLY_RARITY_MAP.set(usableIds[currentIndex], rarity);
-    currentIndex++;
+  for (let i = 0; i < count; i++) {
+    rarityAssignments.push(rarity);
   }
 }
 
-console.log(`🦋 Initialized butterfly system with ${BUTTERFLY_RARITY_MAP.size} butterflies across ${Object.keys(RARITY_DISTRIBUTION).length} rarity tiers`);
+// Fisher-Yates shuffle algorithm for true randomness
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+const shuffledRarities = shuffleArray(rarityAssignments);
+
+// Assign shuffled rarities to butterfly IDs
+for (let i = 0; i < usableIds.length && i < shuffledRarities.length; i++) {
+  BUTTERFLY_RARITY_MAP.set(usableIds[i], shuffledRarities[i]);
+}
+
+console.log(`🦋 Initialized butterfly system with ${BUTTERFLY_RARITY_MAP.size} butterflies across ${Object.keys(RARITY_DISTRIBUTION).length} rarity tiers (RANDOMIZED!)`);
 
 // Generate random butterfly based on bouquet rarity using pre-assigned rarities
 export async function generateRandomButterfly(rarity: RarityTier): Promise<ButterflyData> {
