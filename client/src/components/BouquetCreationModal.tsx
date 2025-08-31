@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RarityImage } from "./RarityImage";
-import { Sparkles, Heart, X, Coins } from "lucide-react";
+import { Sparkles, Heart, X, Coins, Crown, Star } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier, getRarityTierIndex } from "@shared/rarity";
 import type { UserFlower } from "@shared/schema";
 
@@ -116,72 +116,110 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center text-white">
-            <Heart className="h-5 w-5 mr-2 text-pink-400" />
-            Bouquet erstellen
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-2 border-pink-500/30 text-white max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl">
+        <DialogHeader className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-t-lg -mx-6 -my-2"></div>
+          <DialogTitle className="flex items-center text-white text-2xl font-bold relative z-10">
+            <div className="relative">
+              <Heart className="h-7 w-7 mr-3 text-pink-400 animate-pulse" />
+              <div className="absolute inset-0 h-7 w-7 mr-3 text-pink-400 animate-ping opacity-20"></div>
+            </div>
+            <span className="bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">
+              Bouquet erstellen
+            </span>
           </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white"
+            className="absolute right-4 top-4 text-slate-400 hover:text-white hover:bg-red-500/20 transition-all duration-200 z-10"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Cost and Credits */}
-          <div className="flex items-center justify-between bg-slate-900 p-3 rounded-lg">
-            <div className="flex items-center">
-              <Coins className="h-4 w-4 mr-2 text-orange-400" />
-              <span className="text-sm">Kosten: 30 Credits</span>
-            </div>
-            <div className="flex items-center">
-              <span className="text-sm">Verfügbare Credits: </span>
-              <Badge variant={credits >= 30 ? "default" : "destructive"} className="ml-2">
-                {credits}
-              </Badge>
+        <div className="space-y-8">
+          {/* Cost and Credits - Enhanced */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 rounded-xl blur-sm"></div>
+            <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-4 rounded-xl border border-orange-400/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="relative">
+                    <Coins className="h-6 w-6 mr-3 text-orange-400 animate-bounce" />
+                    <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>
+                  </div>
+                  <span className="text-lg font-semibold text-orange-300">Kosten: 30 Credits</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg mr-3">Verfügbare Credits:</span>
+                  <Badge 
+                    variant={credits >= 30 ? "default" : "destructive"} 
+                    className={`text-lg px-4 py-2 font-bold ${
+                      credits >= 30 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                        : 'bg-gradient-to-r from-red-600 to-rose-600 text-white animate-pulse'
+                    }`}
+                  >
+                    {credits}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Selected Flowers */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Ausgewählte Blumen (3 benötigt)</h3>
-            <div className="grid grid-cols-3 gap-4">
+          {/* Selected Flowers - Enhanced */}
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <Crown className="h-6 w-6 mr-3 text-yellow-400" />
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">
+                Ausgewählte Blumen (3 benötigt)
+              </h3>
+            </div>
+            <div className="grid grid-cols-3 gap-6">
               {selectedFlowers.map((flower, index) => (
-                <Card key={index} className="bg-slate-900 border-slate-700">
-                  <CardContent className="p-4 text-center">
+                <Card key={index} className="relative group transition-all duration-300 hover:scale-105">
+                  <div className={`absolute inset-0 rounded-lg ${
+                    flower 
+                      ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-400/40'
+                      : 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 border-2 border-slate-600/40 border-dashed'
+                  } transition-all duration-300`}></div>
+                  <CardContent className="relative p-6 text-center">
                     {flower ? (
-                      <div className="space-y-2">
-                        <RarityImage 
-                          src={flower.flowerImageUrl}
-                          alt={flower.flowerName}
-                          rarity={flower.flowerRarity as RarityTier}
-                          size="large"
-                          className="mx-auto"
-                        />
-                        <div className="text-xs text-slate-300 truncate">{flower.flowerName}</div>
-                        <Badge className={getRarityColor(flower.flowerRarity as RarityTier)}>
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <RarityImage 
+                            src={flower.flowerImageUrl}
+                            alt={flower.flowerName}
+                            rarity={flower.flowerRarity as RarityTier}
+                            size="large"
+                            className="mx-auto transform transition-transform duration-300 hover:scale-110"
+                          />
+                          <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
+                            ✓
+                          </div>
+                        </div>
+                        <div className="text-sm font-medium text-white truncate">{flower.flowerName}</div>
+                        <Badge className={`${getRarityColor(flower.flowerRarity as RarityTier)} text-sm font-bold px-3 py-1`}>
                           {getRarityDisplayName(flower.flowerRarity as RarityTier)}
                         </Badge>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => removeFlower(index)}
-                          className="text-red-400 border-red-400 hover:bg-red-400/10"
+                          className="text-red-400 border-red-400 hover:bg-red-500/20 hover:border-red-300 transition-all duration-200"
                         >
+                          <X className="h-4 w-4 mr-1" />
                           Entfernen
                         </Button>
                       </div>
                     ) : (
-                      <div className="py-8">
-                        <div className="w-16 h-16 mx-auto bg-slate-700 rounded-lg flex items-center justify-center mb-2">
-                          <Heart className="h-8 w-8 text-slate-500" />
+                      <div className="py-12">
+                        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gradient-to-br group-hover:from-slate-500 group-hover:to-slate-600 transition-all duration-300">
+                          <Heart className="h-10 w-10 text-slate-400 group-hover:text-pink-400 transition-colors duration-300" />
                         </div>
-                        <div className="text-slate-400 text-sm">Slot {index + 1}</div>
+                        <div className="text-slate-400 font-medium">Slot {index + 1}</div>
+                        <div className="text-xs text-slate-500 mt-1">Blume auswählen</div>
                       </div>
                     )}
                   </CardContent>
@@ -189,100 +227,156 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
               ))}
             </div>
 
-            {/* Preview average rarity */}
+            {/* Preview average rarity - Enhanced */}
             {selectedFlowers.some(f => f !== null) && (
               <div className="text-center">
-                <span className="text-sm text-slate-400">Durchschnittliche Seltenheit: </span>
-                <Badge className={getRarityColor(calculateAverageRarity())}>
-                  {getRarityDisplayName(calculateAverageRarity())}
-                </Badge>
+                <div className="relative inline-block">
+                  <div className={`absolute inset-0 bg-gradient-to-r ${getRarityColor(calculateAverageRarity()).replace('text-', 'from-')} to-transparent rounded-lg blur-md opacity-30`}></div>
+                  <div className="relative bg-slate-800/80 p-4 rounded-lg border border-slate-600">
+                    <div className="flex items-center justify-center space-x-3">
+                      <Star className={`h-6 w-6 ${getRarityColor(calculateAverageRarity())} animate-pulse`} />
+                      <span className="text-lg font-semibold">Durchschnittliche Seltenheit:</span>
+                      <Badge className={`${getRarityColor(calculateAverageRarity())} text-lg font-bold px-4 py-2 animate-pulse`}>
+                        {getRarityDisplayName(calculateAverageRarity())}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Name Input */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Bouquet Name</h3>
-            <div className="flex gap-2">
-              <Input
-                value={bouquetName}
-                onChange={(e) => setBouquetName(e.target.value)}
-                placeholder="Gib einen Namen ein oder lass ihn generieren..."
-                className="bg-slate-900 border-slate-700 text-white"
-                maxLength={50}
-              />
+          {/* Name Input - Enhanced */}
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <Sparkles className="h-6 w-6 mr-3 text-purple-400" />
+              <h3 className="text-xl font-bold">Bouquet Name</h3>
+            </div>
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Input
+                  value={bouquetName}
+                  onChange={(e) => setBouquetName(e.target.value)}
+                  placeholder="Gib einen Namen ein oder lass ihn generieren..."
+                  className="bg-slate-900/80 border-2 border-purple-500/30 text-white text-lg py-3 px-4 rounded-xl focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-200"
+                  maxLength={50}
+                />
+                {bouquetName && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+              </div>
               <Button
                 onClick={generateName}
                 disabled={isGeneratingName || selectedFlowers.every(f => f === null)}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 px-6 py-3 text-lg font-semibold transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                <Sparkles className="h-4 w-4" />
-                {isGeneratingName ? "..." : "Generieren"}
+                <Sparkles className={`h-5 w-5 mr-2 ${isGeneratingName ? 'animate-spin' : 'animate-pulse'}`} />
+                {isGeneratingName ? "Generiere..." : "Generieren"}
               </Button>
             </div>
           </div>
 
-          {/* Available Flowers */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Verfügbare Blumen</h3>
+          {/* Available Flowers - Enhanced */}
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <div className="relative">
+                <Heart className="h-6 w-6 mr-3 text-rose-400" />
+                <div className="absolute inset-0 h-6 w-6 mr-3 text-rose-400 animate-ping opacity-30"></div>
+              </div>
+              <h3 className="text-xl font-bold">Verfügbare Blumen</h3>
+              {availableFlowers.length > 0 && (
+                <Badge className="ml-3 bg-blue-600 text-white px-3 py-1">
+                  {availableFlowers.length} verfügbar
+                </Badge>
+              )}
+            </div>
             {availableFlowers.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                Du hast keine verfügbaren Blumen für ein Bouquet
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                  <Heart className="h-8 w-8 text-slate-500" />
+                </div>
+                <div className="text-slate-400 text-lg">Du hast keine verfügbaren Blumen für ein Bouquet</div>
+                <div className="text-slate-500 text-sm mt-2">Sammle mehr Blumen im Garten!</div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-64 overflow-y-auto">
-                {availableFlowers.map((flower) => (
-                  <Card 
-                    key={flower.id}
-                    className="bg-slate-900 border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors"
-                  >
-                    <CardContent className="p-3 text-center">
-                      <RarityImage 
-                        src={flower.flowerImageUrl}
-                        alt={flower.flowerName}
-                        rarity={flower.flowerRarity as RarityTier}
-                        size="medium"
-                        className="mx-auto mb-2"
-                      />
-                      <div className="text-xs text-slate-300 truncate mb-1">{flower.flowerName}</div>
-                      <Badge className={`${getRarityColor(flower.flowerRarity as RarityTier)} text-xs`}>
-                        {flower.quantity}x
-                      </Badge>
-                      
-                      {/* Selection buttons for each slot */}
-                      <div className="flex gap-1 mt-2">
-                        {[0, 1, 2].map(slotIndex => (
-                          <Button
-                            key={slotIndex}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => selectFlower(flower, slotIndex)}
-                            disabled={selectedFlowers[slotIndex] !== null}
-                            className="text-xs px-2 py-1 h-6"
-                          >
-                            {slotIndex + 1}
-                          </Button>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-80 overflow-y-auto">
+                  {availableFlowers
+                    .sort((a, b) => getRarityTierIndex(b.flowerRarity as RarityTier) - getRarityTierIndex(a.flowerRarity as RarityTier))
+                    .map((flower) => (
+                    <Card 
+                      key={flower.id}
+                      className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 cursor-pointer hover:border-pink-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg group"
+                    >
+                      <CardContent className="p-4 text-center">
+                        <div className="relative">
+                          <RarityImage 
+                            src={flower.flowerImageUrl}
+                            alt={flower.flowerName}
+                            rarity={flower.flowerRarity as RarityTier}
+                            size="medium"
+                            className="mx-auto mb-3 transition-transform duration-300 group-hover:scale-110"
+                          />
+                          <Badge className={`${getRarityColor(flower.flowerRarity as RarityTier)} text-xs font-bold px-2 py-1 absolute -top-2 -right-2`}>
+                            {flower.quantity}x
+                          </Badge>
+                        </div>
+                        <div className="text-xs font-medium text-white truncate mb-2">{flower.flowerName}</div>
+                        
+                        {/* Enhanced Selection buttons */}
+                        <div className="flex gap-1 justify-center">
+                          {[0, 1, 2].map(slotIndex => (
+                            <Button
+                              key={slotIndex}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => selectFlower(flower, slotIndex)}
+                              disabled={selectedFlowers[slotIndex] !== null}
+                              className={`text-xs px-3 py-2 h-8 font-bold transition-all duration-200 ${
+                                selectedFlowers[slotIndex] !== null 
+                                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
+                                  : 'border-pink-400/50 text-pink-300 hover:bg-pink-500/20 hover:border-pink-400 hover:scale-110'
+                              }`}
+                            >
+                              Slot {slotIndex + 1}
+                            </Button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Create Button */}
-          <Button
-            onClick={handleCreateBouquet}
-            disabled={!canCreate}
-            className="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-slate-600"
-          >
-            <Heart className="h-4 w-4 mr-2" />
-            {!canCreate 
-              ? (credits < 30 ? "Nicht genügend Credits" : "Wähle 3 Blumen aus")
-              : "Bouquet erstellen (30 Credits)"
-            }
-          </Button>
+          {/* Create Button - Enhanced */}
+          <div className="relative">
+            <div className={`absolute inset-0 rounded-2xl blur-lg opacity-50 ${
+              canCreate 
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 animate-pulse' 
+                : 'bg-gradient-to-r from-slate-600 to-slate-700'
+            }`}></div>
+            <Button
+              onClick={handleCreateBouquet}
+              disabled={!canCreate}
+              className={`relative w-full text-xl font-bold py-6 rounded-2xl transition-all duration-300 ${
+                canCreate 
+                  ? 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 hover:scale-105 shadow-lg' 
+                  : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center justify-center">
+                <Heart className={`h-6 w-6 mr-3 ${canCreate ? 'animate-pulse' : ''}`} />
+                {!canCreate 
+                  ? (credits < 30 ? "❌ Nicht genügend Credits" : "⚠️ Wähle 3 Blumen aus")
+                  : "🌸 Bouquet erstellen (30 Credits)"
+                }
+              </div>
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
