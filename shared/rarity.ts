@@ -297,3 +297,19 @@ export function getRarityTierIndex(rarity: RarityTier): number {
     default: return 0;
   }
 }
+
+/**
+ * Get flower rarity based on flower ID (maps to the same distribution as image ranges)
+ */
+export function getFlowerRarityById(flowerId: number): RarityTier {
+  if (flowerId >= 1 && flowerId <= 55) return 'common';
+  if (flowerId >= 56 && flowerId <= 100) return 'uncommon';
+  if (flowerId >= 101 && flowerId <= 135) return 'rare';
+  if (flowerId >= 136 && flowerId <= 160) return 'super-rare';
+  if (flowerId >= 161 && flowerId <= 180) return 'epic';
+  if (flowerId >= 181 && flowerId <= 195) return 'legendary';
+  if (flowerId >= 196 && flowerId <= 200) return 'mythical';
+  
+  // Fallback for IDs outside the normal range
+  return 'common';
+}
