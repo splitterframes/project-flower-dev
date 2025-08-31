@@ -1067,20 +1067,38 @@ export class MemStorage implements IStorage {
     return prices[rarity as keyof typeof prices] || 50;
   }
 
-  // Check if butterfly can be sold (72 hours = 259200000 ms after placement)
-  canSellButterfly(placedAt: Date): boolean {
+  // Check if butterfly can be sold (72 hours = 259200000 ms after placement, reduced by likes)
+  canSellButterfly(placedAt: Date, frameId: number): boolean {
     const now = new Date();
     const timeSincePlacement = now.getTime() - placedAt.getTime();
+    
+    // Count likes for this frame
+    const likesCount = Array.from(this.exhibitionFrameLikes.values())
+      .filter(like => like.frameId === frameId).length;
+    
+    // Reduce required time by 1 minute (60000 ms) per like
     const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000; // 72 hours in milliseconds
-    return timeSincePlacement >= SEVENTY_TWO_HOURS;
+    const ONE_MINUTE = 60 * 1000; // 1 minute in milliseconds
+    const requiredTime = SEVENTY_TWO_HOURS - (likesCount * ONE_MINUTE);
+    
+    return timeSincePlacement >= Math.max(0, requiredTime);
   }
 
-  // Get time remaining until butterfly can be sold
-  getTimeUntilSellable(placedAt: Date): number {
+  // Get time remaining until butterfly can be sold (reduced by likes)
+  getTimeUntilSellable(placedAt: Date, frameId: number): number {
     const now = new Date();
     const timeSincePlacement = now.getTime() - placedAt.getTime();
+    
+    // Count likes for this frame
+    const likesCount = Array.from(this.exhibitionFrameLikes.values())
+      .filter(like => like.frameId === frameId).length;
+    
+    // Reduce required time by 1 minute (60000 ms) per like
     const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
-    const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
+    const ONE_MINUTE = 60 * 1000;
+    const requiredTime = SEVENTY_TWO_HOURS - (likesCount * ONE_MINUTE);
+    
+    const remaining = requiredTime - timeSincePlacement;
     return Math.max(0, remaining);
   }
 
@@ -1097,11 +1115,17 @@ export class MemStorage implements IStorage {
       return { success: false, message: "Dieser Schmetterling gehört dir nicht" };
     }
 
-    // Check if 72 hours have passed
-    if (!this.canSellButterfly(exhibitionButterfly.placedAt)) {
-      const timeRemaining = this.getTimeUntilSellable(exhibitionButterfly.placedAt);
+    // Check if 72 hours have passed (reduced by likes)
+    if (!this.canSellButterfly(exhibitionButterfly.placedAt, exhibitionButterfly.frameId)) {
+      const timeRemaining = this.getTimeUntilSellable(exhibitionButterfly.placedAt, exhibitionButterfly.frameId);
       const hoursRemaining = Math.ceil(timeRemaining / (60 * 60 * 1000));
-      return { success: false, message: `Du kannst diesen Schmetterling in ${hoursRemaining} Stunden verkaufen` };
+      
+      // Count likes for better user feedback
+      const likesCount = Array.from(this.exhibitionFrameLikes.values())
+        .filter(like => like.frameId === exhibitionButterfly.frameId).length;
+      
+      const likesText = likesCount > 0 ? ` (${likesCount} Likes = ${likesCount} Min. weniger)` : '';
+      return { success: false, message: `Du kannst diesen Schmetterling in ${hoursRemaining} Stunden verkaufen${likesText}` };
     }
 
     // Calculate sell price
@@ -1276,6 +1300,14 @@ export class MemStorage implements IStorage {
     // Check if user is trying to like their own frame
     if (frameOwnerId === likerId) {
       return { success: false, message: 'Cannot like your own exhibition frame' };
+    }
+
+    // Check if frame has 6 butterflies (full frame)
+    const frameButterflies = Array.from(this.exhibitionButterflies.values())
+      .filter(butterfly => butterfly.frameId === frameId);
+    
+    if (frameButterflies.length < 6) {
+      return { success: false, message: 'Can only like frames with 6 butterflies' };
     }
 
     // Check if already liked

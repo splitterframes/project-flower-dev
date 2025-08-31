@@ -73,8 +73,15 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const handleLike = async (frameId: number) => {
     if (!user) return;
 
+    const frameButterflies = frames.get(frameId) || [];
     const frameLike = frameLikes.find(fl => fl.frameId === frameId);
     const isCurrentlyLiked = frameLike?.isLiked || false;
+
+    // Check if frame has 6 butterflies before allowing like
+    if (!isCurrentlyLiked && frameButterflies.length < 6) {
+      alert('Du kannst nur volle Rahmen mit 6 Schmetterlingen liken!');
+      return;
+    }
 
     try {
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
@@ -99,9 +106,14 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               }
             : fl
         ));
+      } else {
+        // Handle server error
+        const errorData = await response.json();
+        alert(errorData.message || 'Fehler beim Liken des Rahmens');
       }
     } catch (error) {
       console.error('Failed to toggle like:', error);
+      alert('Fehler beim Liken des Rahmens');
     }
   };
 
@@ -162,23 +174,46 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               const frameButterflies = frames.get(frameId) || [];
               const frameLike = frameLikes.find(fl => fl.frameId === frameId);
               
+              const isFullFrame = frameButterflies.length === 6;
+              const canBeLiked = isFullFrame || frameLike?.isLiked;
+              
               return (
                 <Card 
                   key={frameId}
-                  className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-2 border-slate-600 hover:border-orange-400/50 transition-all duration-300 shadow-xl"
+                  className={`bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-2 ${
+                    isFullFrame 
+                      ? 'border-green-500/50 hover:border-green-400/70' 
+                      : 'border-slate-600 hover:border-orange-400/50'
+                  } transition-all duration-300 shadow-xl`}
                 >
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
-                      <span>🖼️ Rahmen #{frameId}</span>
+                      <div className="flex items-center">
+                        <span>🖼️ Rahmen #{frameId}</span>
+                        {isFullFrame && (
+                          <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse">
+                            Vollständig
+                          </span>
+                        )}
+                        {!isFullFrame && (
+                          <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
+                            {frameButterflies.length}/6
+                          </span>
+                        )}
+                      </div>
                       <Button
                         onClick={() => handleLike(frameId)}
                         variant="outline"
                         size="sm"
+                        disabled={!canBeLiked}
                         className={`${
                           frameLike?.isLiked 
                             ? 'bg-pink-600 border-pink-500 text-white hover:bg-pink-700' 
-                            : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
+                            : canBeLiked
+                              ? 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
+                              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
                         } transition-all duration-300`}
+                        title={!canBeLiked ? 'Nur vollständige Rahmen (6 Schmetterlinge) können geliked werden' : ''}
                       >
                         <Heart 
                           className={`h-4 w-4 mr-2 ${
@@ -186,6 +221,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                           }`} 
                         />
                         {frameLike?.totalLikes || 0}
+                        {(frameLike?.totalLikes || 0) > 0 && isFullFrame && (
+                          <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
+                        )}
                       </Button>
                     </CardTitle>
                   </CardHeader>
