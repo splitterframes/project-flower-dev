@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -113,7 +113,7 @@ export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;
 // Bouquet system
 export const bouquets = pgTable("bouquets", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   rarity: text("rarity").notNull(), // Average rarity of the 3 flowers
   imageUrl: text("image_url").notNull().default("/Blumen/bouquet.jpg"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

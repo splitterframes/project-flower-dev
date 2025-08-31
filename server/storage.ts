@@ -516,6 +516,42 @@ export class MemStorage implements IStorage {
     }
   }
 
+  // Check if bouquet name already exists
+  async isBouquetNameTaken(name: string): Promise<boolean> {
+    return Array.from(this.bouquets.values()).some(bouquet => bouquet.name === name);
+  }
+
+  // Generate unique bouquet name using AI with retry logic
+  async generateUniqueBouquetName(rarity: RarityTier): Promise<string> {
+    const maxAttempts = 5;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const generatedName = await generateBouquetName(rarity);
+      
+      if (!(await this.isBouquetNameTaken(generatedName))) {
+        return generatedName;
+      }
+      
+      console.log(`🌹 Attempt ${attempt}: Bouquet name "${generatedName}" already exists, trying again...`);
+    }
+    
+    // If all AI attempts failed, create a fallback unique name
+    return await this.ensureUniqueName(`Seltene ${rarity} Kollektion`);
+  }
+
+  // Ensure name is unique by adding number suffix if needed
+  async ensureUniqueName(baseName: string): Promise<string> {
+    let candidateName = baseName;
+    let counter = 1;
+    
+    while (await this.isBouquetNameTaken(candidateName)) {
+      candidateName = `${baseName} ${counter}`;
+      counter++;
+    }
+    
+    return candidateName;
+  }
+
   // Bouquet methods implementation
   async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
     const user = this.users.get(userId);
@@ -548,14 +584,21 @@ export class MemStorage implements IStorage {
       flower3.flowerRarity as RarityTier
     );
 
-    // Generate or use provided name
+    // Generate or use provided name and check uniqueness
     let bouquetName: string;
     if (data.name) {
+      // Manual name provided - check if it's unique
+      if (await this.isBouquetNameTaken(data.name)) {
+        return { success: false, message: "Dieser Bouquet-Name existiert bereits. Bitte wählen Sie einen anderen Namen." };
+      }
       bouquetName = data.name;
     } else if (data.generateName) {
-      bouquetName = await generateBouquetName(averageRarity);
+      // Generate unique AI name
+      bouquetName = await this.generateUniqueBouquetName(averageRarity);
     } else {
-      bouquetName = `${flower1.flowerName} Bouquet`;
+      // Default fallback name - ensure uniqueness
+      let baseName = `${flower1.flowerName} Bouquet`;
+      bouquetName = await this.ensureUniqueName(baseName);
     }
 
     // Create bouquet

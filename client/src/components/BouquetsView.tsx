@@ -168,10 +168,20 @@ export const BouquetsView: React.FC = () => {
         setShowBouquetCreation(false);
       } else {
         const error = await response.json();
-        toast.error("Fehler beim Erstellen", {
-          description: error.message || 'Bouquet konnte nicht erstellt werden',
-          duration: 4000,
-        });
+        
+        // Show user-friendly error message for duplicate names and other errors
+        if (error.message && error.message.includes('existiert bereits')) {
+          toast.error("❌ Name bereits vergeben", {
+            description: error.message,
+            duration: 5000,
+            className: "border-l-4 border-l-red-500",
+          });
+        } else {
+          toast.error("Fehler beim Erstellen", {
+            description: error.message || 'Bouquet konnte nicht erstellt werden',
+            duration: 4000,
+          });
+        }
       }
     } catch (error) {
       console.error('Error creating bouquet:', error);
