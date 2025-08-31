@@ -816,8 +816,10 @@ export const GardenView: React.FC = () => {
                             className="mx-auto w-14 h-14"
                           />
                           {status && (
-                            <div className="text-xs text-green-400 mt-1">
-                              {status.remainingTime}
+                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-2 py-1 mt-2">
+                              <div className="text-base font-bold text-green-300 text-center animate-pulse">
+                                ⏱️ {status.remainingTime}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -859,8 +861,12 @@ export const GardenView: React.FC = () => {
                               <div className="text-center">
                                 <div className="font-bold text-sm">{field.bouquetName || `Bouquet #${field.bouquetId}`}</div>
                                 {bouquetStatus && (
-                                  <div className="text-xs text-pink-400">
-                                    {bouquetStatus.isExpired ? "Verwelkt - klicke zum Sammeln" : bouquetStatus.remainingTime}
+                                  <div className={`text-sm font-semibold ${
+                                    bouquetStatus.isExpired 
+                                      ? 'text-orange-300 animate-bounce' 
+                                      : 'text-pink-300'
+                                  }`}>
+                                    {bouquetStatus.isExpired ? "🥀 Verwelkt - klicke zum Sammeln" : `💐 ${bouquetStatus.remainingTime}`}
                                   </div>
                                 )}
                               </div>
@@ -868,8 +874,10 @@ export const GardenView: React.FC = () => {
                           </Tooltip>
                         </TooltipProvider>
                         {bouquetStatus && !bouquetStatus.isExpired && (
-                          <div className="text-xs text-pink-400 mt-1">
-                            {bouquetStatus.remainingTime}
+                          <div className="bg-pink-500/20 border border-pink-400 rounded-lg px-2 py-1 mt-2">
+                            <div className="text-base font-bold text-pink-300 text-center animate-pulse">
+                              💐 {bouquetStatus.remainingTime}
+                            </div>
                           </div>
                         )}
                       </div>
