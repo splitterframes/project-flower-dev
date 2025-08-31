@@ -193,7 +193,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                   } transition-all duration-300`}></div>
                   <CardContent className="relative p-6 text-center">
                     {flower ? (
-                      <div className="space-y-3">
+                      <div className="space-y-3" style={{ minHeight: '240px' }}>
                         <div className="relative">
                           <RarityImage 
                             src={flower.flowerImageUrl}
