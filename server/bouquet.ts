@@ -143,17 +143,23 @@ export function shouldSpawnButterfly(rarity: RarityTier): boolean {
 // Get seed drop when bouquet wilts
 export function getBouquetSeedDrop(rarity: RarityTier): { rarity: RarityTier; quantity: number } {
   const quantity = Math.floor(Math.random() * 4) + 1; // 1-4 seeds
+  const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical"];
+  const currentIndex = getRarityTierIndex(rarity);
   
-  // 70% chance same rarity, 30% chance one tier lower
-  const shouldDowngrade = Math.random() < 0.3;
+  const roll = Math.random();
   
-  if (shouldDowngrade) {
-    const rarityIndex = getRarityTierIndex(rarity);
-    const downgradedIndex = Math.max(0, rarityIndex - 1);
-    const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical"];
-    const downgradedRarity = rarities[downgradedIndex];
+  // 15% chance for higher rarity (if possible)
+  if (roll < 0.15 && currentIndex < rarities.length - 1) {
+    const upgradedRarity = rarities[currentIndex + 1];
+    return { rarity: upgradedRarity, quantity };
+  }
+  
+  // 30% chance for lower rarity (if possible)  
+  if (roll >= 0.15 && roll < 0.45 && currentIndex > 0) {
+    const downgradedRarity = rarities[currentIndex - 1];
     return { rarity: downgradedRarity, quantity };
   }
   
+  // 55% chance for same rarity (also fallback for edge cases)
   return { rarity, quantity };
 }
