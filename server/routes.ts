@@ -618,13 +618,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getRarityDistribution } = await import('./bouquet');
       const distribution = getRarityDistribution();
       
-      let total = 0;
+      let total = Object.values(distribution).reduce((sum, count) => sum + count, 0);
       const formattedDistribution = Object.entries(distribution).map(([rarity, count]) => {
-        total += count;
         return {
           rarity,
           count,
-          percentage: ((count / 81) * 100).toFixed(1)
+          percentage: ((count / total) * 100).toFixed(1)
         };
       });
       
