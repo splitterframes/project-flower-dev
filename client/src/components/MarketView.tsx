@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
-import { getRarityColor, getRarityBorder, type RarityTier } from "@shared/rarity";
+import { getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Store,
   TrendingUp,
@@ -41,6 +41,19 @@ export const MarketView: React.FC = () => {
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
   const [isLoading, setIsLoading] = useState(false);
+  
+  const getBorderColor = (rarity: RarityTier): string => {
+    switch (rarity) {
+      case 'common': return '#fbbf24';      // yellow-400
+      case 'uncommon': return '#4ade80';    // green-400  
+      case 'rare': return '#3b82f6';        // blue-400
+      case 'super-rare': return '#06b6d4';  // cyan-400
+      case 'epic': return '#a855f7';        // purple-400
+      case 'legendary': return '#f97316';   // orange-400
+      case 'mythical': return '#ef4444';    // red-400
+      default: return '#9ca3af';            // gray-400
+    }
+  };
   
   // Sell form state
   const [sellForm, setSellForm] = useState({
@@ -239,7 +252,8 @@ export const MarketView: React.FC = () => {
                 {marketListings.map((listing) => (
                   <div
                     key={listing.id}
-                    className={`bg-slate-900 rounded-lg p-4 border-2 ${getRarityBorder(listing.seedRarity as RarityTier)}`}
+                    className="bg-slate-900 rounded-lg p-4 border-2"
+                    style={{ borderColor: getBorderColor(listing.seedRarity as RarityTier) }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-bold text-white">{listing.seedName}</h4>
