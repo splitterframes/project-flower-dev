@@ -135,14 +135,6 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
               Bouquet erstellen
             </span>
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white hover:bg-red-500/20 transition-all duration-200 z-10"
-          >
-            <X className="h-5 w-5" />
-          </Button>
         </DialogHeader>
 
         <div className="space-y-8">

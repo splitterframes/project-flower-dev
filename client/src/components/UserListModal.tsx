@@ -71,14 +71,6 @@ export const UserListModal: React.FC<UserListModalProps> = ({
               🌐 Alle Mariposa-Spieler
             </span>
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <div className="space-y-6">
