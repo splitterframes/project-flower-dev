@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { Layout } from "./components/Layout";
+import { Toaster } from "./components/ui/sonner";
 import { useAudio } from "./lib/stores/useAudio";
 import "@fontsource/inter";
 
@@ -24,7 +25,12 @@ function App() {
     setSuccessSound(successSfx);
   }, [setBackgroundMusic, setHitSound, setSuccessSound]);
 
-  return <Layout />;
+  return (
+    <>
+      <Layout />
+      <Toaster />
+    </>
+  );
 }
 
 export default App;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { SeedSelectionModal } from "./SeedSelectionModal";
@@ -455,6 +456,19 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log(`💧 ${data.message}`);
+        
+        // Show beautiful toast with seed information
+        if (data.seedDrop) {
+          const { rarity, quantity } = data.seedDrop;
+          const rarityName = getRarityDisplayName(rarity as RarityTier);
+          
+          toast.success("Verwelktes Bouquet gesammelt!", {
+            description: `Du hast ${quantity}x ${rarityName} Samen erhalten! 🌱`,
+            duration: 4000,
+            className: "border-l-4 " + getRarityColor(rarity as RarityTier).replace('text-', 'border-l-'),
+          });
+        }
+        
         // Refresh all garden data
         await fetchPlacedBouquets();
         await fetchUserSeeds();
