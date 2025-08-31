@@ -287,65 +287,121 @@ export const ExhibitionView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
-          <Trophy className="h-8 w-8 mr-3 text-amber-400" />
-          Schmetterlingsausstellung
-        </h1>
-        <p className="text-slate-400">Stelle deine schönsten Schmetterlinge aus und verdiene passives Einkommen</p>
-      </div>
-
-      {/* Income Stats */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-green-400">{getTotalHourlyIncome()} Cr/Std</div>
-              <div className="text-slate-400 text-sm">Stündliches Einkommen</div>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Enhanced Exhibition Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl blur-xl"></div>
+        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-purple-500/30 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <Trophy className="h-12 w-12 mr-4 text-amber-400 animate-pulse" />
+              <div className="absolute inset-0 h-12 w-12 mr-4 text-amber-400 animate-ping opacity-20"></div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-400">{exhibitionButterflies.length}</div>
-              <div className="text-slate-400 text-sm">Ausgestellte Schmetterlinge</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-amber-400">{frames.length}</div>
-              <div className="text-slate-400 text-sm">Rahmen im Besitz</div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-300 via-indigo-300 to-blue-300 bg-clip-text text-transparent">
+                Schmetterlingsausstellung 🦋
+              </h1>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-slate-300 text-xl">Stelle deine schönsten Schmetterlinge aus und verdiene passives Einkommen</p>
+        </div>
+      </div>
+
+      {/* Enhanced Income Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border-2 border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-green-300">
+                Stündliches Einkommen
+              </CardTitle>
+              <div className="relative">
+                <DollarSign className="h-8 w-8 text-green-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-green-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-green-400 mb-2">{getTotalHourlyIncome()} Cr/Std</div>
+            <div className="text-slate-400 text-sm">💰 Passives Einkommen</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border-2 border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-blue-300">
+                Ausgestellte Schmetterlinge
+              </CardTitle>
+              <div className="relative">
+                <Star className="h-8 w-8 text-blue-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-blue-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-blue-400 mb-2">{exhibitionButterflies.length}</div>
+            <div className="text-slate-400 text-sm">🦋 Aktive Exponate</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-amber-800/40 to-orange-800/40 border-2 border-amber-500/30 hover:border-amber-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-amber-300">
+                Rahmen im Besitz
+              </CardTitle>
+              <div className="relative">
+                <Trophy className="h-8 w-8 text-amber-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-amber-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-amber-400 mb-2">{frames.length}</div>
+            <div className="text-slate-400 text-sm">🖼️ Ausstellungsrahmen</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Frames */}
       <div className="space-y-6">
         {frames.map((frame, index) => renderFrame(frame, index))}
         
-        {/* Purchase new frame button */}
-        <Card className="bg-slate-800 border-slate-700 border-dashed">
+        {/* Enhanced Purchase New Frame Button */}
+        <Card className="bg-gradient-to-br from-purple-800/40 to-indigo-800/40 border-2 border-purple-500/30 border-dashed hover:border-purple-400/50 transition-all duration-300 hover:scale-105 shadow-xl">
           <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <Trophy className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">
-                {frames.length === 0 ? 'Erster Rahmen kostenlos!' : `Neuer Rahmen - ${getFrameCost()} Credits`}
-              </h3>
-              <p className="text-slate-400 mb-4">
-                {frames.length === 0 
-                  ? 'Beginne deine Ausstellung mit einem kostenlosen Rahmen'
-                  : 'Erweitere deine Ausstellung mit einem weiteren Rahmen'
-                }
-              </p>
-              <Button 
-                onClick={purchaseFrame}
-                disabled={isLoading || (frames.length > 0 && credits < getFrameCost())}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {frames.length === 0 ? 'Kostenlosen Rahmen holen' : `Rahmen kaufen (${getFrameCost()} Cr)`}
-              </Button>
-              {frames.length > 0 && credits < getFrameCost() && (
-                <p className="text-red-400 text-sm mt-2">Nicht genügend Credits</p>
-              )}
+            <div className="text-center py-8 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg"></div>
+              <div className="relative z-10">
+                <div className="relative mb-6">
+                  <Trophy className="h-16 w-16 text-amber-400 mx-auto animate-bounce" />
+                  <div className="absolute inset-0 h-16 w-16 mx-auto text-amber-400 animate-ping opacity-30"></div>
+                </div>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent mb-3">
+                  {frames.length === 0 ? '🎆 Erster Rahmen kostenlos!' : `🖼️ Neuer Rahmen - ${getFrameCost()} Credits`}
+                </h3>
+                <p className="text-slate-300 mb-6 text-lg">
+                  {frames.length === 0 
+                    ? 'Beginne deine Ausstellung mit einem kostenlosen Rahmen'
+                    : 'Erweitere deine Ausstellung mit einem weiteren Rahmen'
+                  }
+                </p>
+                <Button 
+                  onClick={purchaseFrame}
+                  disabled={isLoading || (frames.length > 0 && credits < getFrameCost())}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl text-lg transition-all duration-300 hover:scale-110 shadow-lg"
+                >
+                  <Plus className="h-5 w-5 mr-3" />
+                  {frames.length === 0 ? '🎁 Kostenlosen Rahmen holen' : `💰 Rahmen kaufen (${getFrameCost()} Cr)`}
+                </Button>
+                {frames.length > 0 && credits < getFrameCost() && (
+                  <p className="text-red-400 text-lg mt-4 font-semibold">⚠️ Nicht genügend Credits</p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -576,66 +576,111 @@ export const GardenView: React.FC = () => {
 
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Garden Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
-          <Flower className="h-8 w-8 mr-3 text-pink-400" />
-          Mariposa Garten
-        </h1>
-        <p className="text-slate-400">Züchte wunderschöne Blumen für deine Schmetterlinge</p>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Enhanced Garden Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl"></div>
+        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-green-500/30 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <Flower className="h-12 w-12 mr-4 text-green-400 animate-pulse" />
+              <div className="absolute inset-0 h-12 w-12 mr-4 text-green-400 animate-ping opacity-20"></div>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-green-300 via-emerald-300 to-teal-300 bg-clip-text text-transparent">
+                Mariposa Garten 🌱
+              </h1>
+            </div>
+          </div>
+          <p className="text-slate-300 text-xl">Züchte wunderschöne Blumen für deine Schmetterlinge</p>
+        </div>
       </div>
 
-      {/* Garden Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">
-              Freigeschaltete Felder
-            </CardTitle>
-            <Shovel className="h-4 w-4 text-green-400" />
+      {/* Enhanced Garden Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border-2 border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-green-300">
+                Freigeschaltete Felder
+              </CardTitle>
+              <div className="relative">
+                <Shovel className="h-8 w-8 text-green-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-green-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">
+            <div className="text-4xl font-bold text-green-400 mb-2">
               {gardenFields.filter(f => f.isUnlocked).length}/50
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">
-              Gepflanzte Blumen
-            </CardTitle>
-            <Flower className="h-4 w-4 text-pink-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-pink-400">
-              {gardenFields.filter(f => f.hasPlant).length}
+            <div className="w-full bg-slate-700 rounded-full h-2">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300" style={{width: `${(gardenFields.filter(f => f.isUnlocked).length / 50) * 100}%`}}></div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">
-              Credits
-            </CardTitle>
-            <Coins className="h-4 w-4 text-orange-400" />
+        <Card className="bg-gradient-to-br from-pink-800/40 to-rose-800/40 border-2 border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-pink-300">
+                Gepflanzte Blumen
+              </CardTitle>
+              <div className="relative">
+                <Flower className="h-8 w-8 text-pink-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-pink-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-400">{credits} Cr</div>
+            <div className="text-4xl font-bold text-pink-400 mb-2">
+              {gardenFields.filter(f => f.hasPlant).length}
+            </div>
+            <div className="text-slate-400 text-sm">🌸 Aktive Blumen</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border-2 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+              <CardTitle className="text-lg font-bold text-orange-300">
+                Credits
+              </CardTitle>
+              <div className="relative">
+                <Coins className="h-8 w-8 text-orange-400 group-hover:animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 text-orange-400 animate-ping opacity-20"></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-orange-400 mb-2">{credits} Cr</div>
+            <div className="text-slate-400 text-sm">💰 Verfügbares Geld</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Garden Grid */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center">
-            <Flower className="h-5 w-5 mr-2 text-pink-400" />
-            Garten Felder
+      {/* Enhanced Garden Grid */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-green-500/30 shadow-2xl">
+        <CardHeader className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
+          <CardTitle className="text-white flex items-center relative z-10">
+            <div className="relative">
+              <Sprout className="h-8 w-8 mr-3 text-green-400 animate-pulse" />
+              <div className="absolute inset-0 h-8 w-8 mr-3 text-green-400 animate-ping opacity-30"></div>
+            </div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+              Garten Felder 🌿
+            </span>
           </CardTitle>
+          <div className="text-slate-400 mt-2 relative z-10">
+            <p className="flex items-center">
+              <span className="mr-4">📋 Links-klick: Samen pflanzen</span>
+              <span>🌈 Rechts-klick: Bouquet platzieren</span>
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-10 gap-2">

@@ -223,24 +223,40 @@ export const InventoryView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Inventory Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
-          <Package className="h-8 w-8 mr-3 text-blue-400" />
-          Inventar
-        </h1>
-        <p className="text-slate-400">Verwalte deine Blumen, Schmetterlinge und Materialien</p>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Enhanced Inventory Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl blur-xl"></div>
+        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-indigo-500/30 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <Package className="h-12 w-12 mr-4 text-indigo-400 animate-pulse" />
+              <div className="absolute inset-0 h-12 w-12 mr-4 text-indigo-400 animate-ping opacity-20"></div>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                Inventar 🎒
+              </h1>
+            </div>
+          </div>
+          <p className="text-slate-300 text-xl">Verwalte deine Blumen, Schmetterlinge und Materialien</p>
+        </div>
       </div>
 
       {/* Inventory Categories */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Seeds */}
-        <Card className="bg-slate-800 border-slate-700 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Sprout className="h-5 w-5 mr-2 text-green-400" />
-              Samen
+        {/* Enhanced Seeds */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-green-500/30 shadow-2xl lg:col-span-2">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <CardTitle className="text-white flex items-center relative z-10">
+              <div className="relative">
+                <Sprout className="h-8 w-8 mr-3 text-green-400 animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 mr-3 text-green-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                Samen 🌱
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -281,12 +297,18 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Flowers */}
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Flower className="h-5 w-5 mr-2 text-pink-400" />
-              Blumen
+        {/* Enhanced Flowers */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-pink-500/30 shadow-2xl">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <CardTitle className="text-white flex items-center relative z-10">
+              <div className="relative">
+                <Flower className="h-8 w-8 mr-3 text-pink-400 animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 mr-3 text-pink-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-pink-300 to-rose-300 bg-clip-text text-transparent">
+                Blumen 🌸
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
