@@ -35,6 +35,18 @@
         "createdAt": "2025-09-01T17:48:40.079Z",
         "updatedAt": "2025-09-01T17:48:40.140Z"
       }
+    ],
+    [
+      25,
+      {
+        "id": 25,
+        "username": "Testuser",
+        "password": "test123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T18:32:43.515Z",
+        "updatedAt": "2025-09-01T18:32:43.515Z"
+      }
     ]
   ],
   "seeds": [
@@ -181,6 +193,26 @@
         "quantity": 3,
         "createdAt": "2025-09-01T17:48:40.151Z"
       }
+    ],
+    [
+      40,
+      {
+        "id": 40,
+        "userId": 25,
+        "seedId": 1,
+        "quantity": 9,
+        "createdAt": "2025-09-01T18:32:43.579Z"
+      }
+    ],
+    [
+      41,
+      {
+        "id": 41,
+        "userId": 25,
+        "seedId": 2,
+        "quantity": 4,
+        "createdAt": "2025-09-01T18:32:43.579Z"
+      }
     ]
   ],
   "marketListings": [
@@ -284,6 +316,34 @@
         "flowerImageUrl": "/Blumen/23.jpg",
         "quantity": 1,
         "createdAt": "2025-09-01T20:53:19.161Z"
+      }
+    ],
+    [
+      9,
+      {
+        "id": 9,
+        "userId": 25,
+        "flowerId": 1,
+        "flowerName": "Rubra divinus",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/1.jpg",
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-01T22:34:55.223Z"
+      }
+    ],
+    [
+      10,
+      {
+        "id": 10,
+        "userId": 25,
+        "flowerId": 88,
+        "flowerName": "Flos imperialis",
+        "flowerRarity": "uncommon",
+        "flowerImageUrl": "/Blumen/88.jpg",
+        "rarity": 2,
+        "quantity": 1,
+        "createdAt": "2025-09-01T22:36:08.035Z"
       }
     ]
   ],
@@ -473,18 +533,18 @@
     "currentSeedId": 8,
     "currentUserSeedId": 5,
     "currentListingId": 2,
-    "currentFieldId": 10,
+    "currentFieldId": 12,
     "currentBouquetId": 2,
     "currentUserBouquetId": 2,
     "currentRecipeId": 2,
     "currentPlacedBouquetId": 2,
     "currentButterflyId": 3,
     "currentFieldButterflyId": 5,
-    "currentFlowerId": 9,
+    "currentFlowerId": 11,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 3,
     "currentPassiveIncomeId": 6,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T22:32:49.346Z"
+  "savedAt": "2025-09-01T22:36:57.095Z"
 }
