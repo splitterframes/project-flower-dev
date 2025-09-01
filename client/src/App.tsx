@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuthStore } from './stores/auth';
 import Dashboard from './components/Dashboard';
 import AuthModal from './components/AuthModal';
-import './App.css';
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
