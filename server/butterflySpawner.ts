@@ -83,11 +83,11 @@ export class ButterflySpawner {
             const existingButterflies = await storage.getFieldButterflies(user.id);
             const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === placedBouquet.bouquetId).length;
             
-            // Each bouquet can spawn 2-4 butterflies over 21 minutes
-            const maxSpawns = this.getBouquetMaxSpawns((placedBouquet as any).bouquetRarity as RarityTier);
+            // 4-Slot System: Each bouquet has exactly 4 spawn opportunities (one per slot)
+            const currentSlot = (placedBouquet as any).currentSpawnSlot || 1;
             
-            if (butterflyCount >= maxSpawns) {
-              continue; // This bouquet has reached its spawn limit
+            if (currentSlot > 4) {
+              continue; // This bouquet has completed all 4 spawn slots
             }
             
             // Use the rarity stored in the placed bouquet
@@ -101,10 +101,14 @@ export class ButterflySpawner {
             
             if (result.success) {
               totalSpawns++;
-              console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (${butterflyCount + 1}/${maxSpawns})`);
+              console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (Slot ${currentSlot}/4)`);
               
-              // Set next spawn time for this bouquet (1-5 minutes from now)
-              await this.setNextSpawnTime(placedBouquet.id, currentTime);
+              // Advance to next spawn slot
+              await storage.updateBouquetNextSpawnTime(placedBouquet.id, currentSlot);
+            } else {
+              // Spawn failed due to probability check - still advance to next slot
+              console.log(`🎲 User ${user.id}: Spawn probability check failed for ${rarity} bouquet #${placedBouquet.bouquetId} (Slot ${currentSlot}/4)`);
+              await storage.updateBouquetNextSpawnTime(placedBouquet.id, currentSlot);
             }
           }
         } catch (error) {
@@ -123,21 +127,7 @@ export class ButterflySpawner {
     }
   }
   
-  // Set individual next spawn time for a bouquet (1-5 minutes from now)
-  private async setNextSpawnTime(placedBouquetId: number, fromTime: Date) {
-    try {
-      // Random spawn time between 1-5 minutes
-      const minMinutes = 1;
-      const maxMinutes = 5;
-      const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
-      const nextSpawnTime = new Date(fromTime.getTime() + randomMinutes * 60 * 1000);
-      
-      await storage.updateBouquetNextSpawnTime(placedBouquetId, nextSpawnTime);
-      console.log(`🦋 Next spawn for bouquet #${placedBouquetId} set to ${nextSpawnTime.toLocaleTimeString()} (in ${randomMinutes} minutes)`);
-    } catch (error) {
-      console.error(`🦋 Error setting next spawn time for bouquet ${placedBouquetId}:`, error);
-    }
-  }
+  // 4-Slot System: No longer needed as slots are managed by storage
 
   // Force a spawn check (for testing or manual triggers)
   async forceSpawnCheck() {
@@ -145,11 +135,7 @@ export class ButterflySpawner {
     await this.checkForButterflySpawns();
   }
 
-  // Determine max spawns (always random 2-4 butterflies regardless of rarity)
-  private getBouquetMaxSpawns(rarity: RarityTier): number {
-    // Random 2-4 butterflies per bouquet (independent of rarity)
-    return Math.floor(Math.random() * 3) + 2; // 2-4 butterflies
-  }
+  // 4-Slot System: Removed max spawns - now determined by slot completion
 
   getStatus() {
     return {

@@ -892,22 +892,22 @@ export class MemStorage implements IStorage {
     }
 
     // Create placed bouquet (expires in 21 minutes)
+    const placedAt = new Date();
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 21); // Standard 21 minutes for bouquet placement
     
-    // Set initial next spawn time (1-3 minutes from now for first spawn)
-    const nextSpawnAt = new Date();
-    const initialSpawnMinutes = Math.floor(Math.random() * 3) + 1; // 1-3 minutes
-    nextSpawnAt.setMinutes(nextSpawnAt.getMinutes() + initialSpawnMinutes);
+    // 4-Slot System: Set first spawn slot (0-5 minutes, random time within slot)
+    const nextSpawnAt = this.calculateSlotSpawnTime(placedAt, 1);
 
     const placedBouquet = {
       id: this.currentPlacedBouquetId++,
       userId,
       bouquetId: data.bouquetId,
       fieldIndex: data.fieldIndex,
-      placedAt: new Date(),
+      placedAt,
       expiresAt,
       nextSpawnAt,
+      currentSpawnSlot: 1, // Start with slot 1 (0-5 minutes)
       createdAt: new Date(),
       bouquetName: bouquet.name,
       bouquetRarity: bouquet.rarity
@@ -937,21 +937,47 @@ export class MemStorage implements IStorage {
         placedAt: pb.placedAt,
         expiresAt: pb.expiresAt,
         nextSpawnAt: (pb as any).nextSpawnAt,
+        currentSpawnSlot: (pb as any).currentSpawnSlot,
         createdAt: pb.createdAt,
         bouquetName: pb.bouquetName,
         bouquetRarity: pb.bouquetRarity
       } as any));
   }
 
-  // Update next spawn time for individual bouquet timing
-  async updateBouquetNextSpawnTime(placedBouquetId: number, nextSpawnTime: Date): Promise<void> {
+  // Calculate spawn time for a specific slot (1-4)
+  private calculateSlotSpawnTime(placedAt: Date, slot: number): Date {
+    const slotStart = (slot - 1) * 5; // Slot 1: 0min, Slot 2: 5min, etc.
+    const slotEnd = slot * 5; // Slot 1: 5min, Slot 2: 10min, etc.
+    
+    // Random time within the 5-minute slot
+    const randomMinutes = Math.random() * 5; // 0-5 minutes
+    const totalMinutes = slotStart + randomMinutes;
+    
+    const spawnTime = new Date(placedAt.getTime() + totalMinutes * 60 * 1000);
+    return spawnTime;
+  }
+
+  // Update to next spawn slot (1->2->3->4)
+  async updateBouquetNextSpawnTime(placedBouquetId: number, currentSlot: number): Promise<void> {
     const existingBouquet = this.placedBouquets.get(placedBouquetId);
     if (existingBouquet) {
-      const updatedBouquet = {
-        ...existingBouquet,
-        nextSpawnAt: nextSpawnTime
-      };
-      this.placedBouquets.set(placedBouquetId, updatedBouquet as any);
+      const nextSlot = currentSlot + 1;
+      
+      if (nextSlot <= 4) {
+        // Calculate next slot spawn time
+        const nextSpawnAt = this.calculateSlotSpawnTime(existingBouquet.placedAt, nextSlot);
+        
+        const updatedBouquet = {
+          ...existingBouquet,
+          nextSpawnAt,
+          currentSpawnSlot: nextSlot
+        };
+        this.placedBouquets.set(placedBouquetId, updatedBouquet as any);
+        console.log(`🦋 Bouquet #${placedBouquetId} advanced to slot ${nextSlot}/4, next spawn at ${nextSpawnAt.toLocaleTimeString()}`);
+      } else {
+        // All 4 slots completed, no more spawns
+        console.log(`🦋 Bouquet #${placedBouquetId} completed all 4 spawn slots`);
+      }
     }
   }
 
