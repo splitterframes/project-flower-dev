@@ -446,9 +446,12 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    if (!this.db) {
+      throw new Error('Database not available');
+    }
+
+    const result = await this.db.select().from(schema.users).where(eq(schema.users.username, username)).limit(1);
+    return result[0] || undefined;
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
@@ -606,65 +609,52 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
+    if (!this.db) {
+      throw new Error('Database not available');
+    }
+
     const now = new Date();
-    const user: User = { 
-      ...insertUser, 
-      id, 
+    
+    // Insert directly into PostgreSQL
+    const [user] = await this.db.insert(schema.users).values({
+      username: insertUser.username,
+      password: insertUser.password,
       credits: 1000,
       lastPassiveIncomeAt: null,
       createdAt: now,
       updatedAt: now
-    };
-    
-    // Store in memory
-    this.users.set(id, user);
+    }).returning();
 
-    // Store in database for persistence across deployments
-    if (this.db) {
-      try {
-        await this.db.insert(schema.users).values({
-          id: user.id,
-          username: user.username,
-          password: user.password,
-          credits: user.credits,
-          lastPassiveIncomeAt: user.lastPassiveIncomeAt,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        });
-        console.log(`💾 User "${user.username}" saved to database`);
-      } catch (error) {
-        console.error('💾 Failed to save user to database:', error);
-        // Continue with memory-only storage as fallback
-      }
-    }
+    console.log(`🌱 New user ${user.username} created with 5 common + 3 rare seeds`);
 
-    // Give new users some starter seeds
-    this.giveStarterSeeds(id);
+    // Give new users starter seeds - save to PostgreSQL
+    await this.giveStarterSeeds(user.id);
     
     return user;
   }
 
-  private giveStarterSeeds(userId: number) {
+  private async giveStarterSeeds(userId: number) {
+    if (!this.db) {
+      throw new Error('Database not available');
+    }
+
     // Give new users some common seeds to start with
     const starterSeeds = [
-      { seedId: 1, quantity: 5 }, // 5 Sonnenblume seeds
-      { seedId: 3, quantity: 3 }, // 3 Tulpe seeds
+      { seedId: 1, quantity: 5 }, // 5 Common seeds
+      { seedId: 3, quantity: 3 }, // 3 Rare seeds
     ];
 
     for (const starter of starterSeeds) {
       const seed = this.seeds.get(starter.seedId);
       if (seed) {
-        const userSeed = {
-          id: this.currentUserSeedId++,
+        // Insert directly into PostgreSQL
+        await this.db.insert(schema.userSeeds).values({
           userId,
           seedId: starter.seedId,
           quantity: starter.quantity,
-          createdAt: new Date(),
-          seedName: seed.name,
-          seedRarity: seed.rarity
-        };
-        this.userSeeds.set(userSeed.id, userSeed);
+          createdAt: new Date()
+        });
+        console.log(`🌱 Gave user ${userId}: ${starter.quantity}x ${seed.name} (${seed.rarity})`);
       }
     }
   }
