@@ -583,6 +583,25 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, user);
 
+    // CRITICAL: Save new user to PostgreSQL too!
+    try {
+      if (process.env.DATABASE_URL) {
+        const sql = neon(process.env.DATABASE_URL);
+        const db = drizzle(sql);
+        await db.insert(users).values({
+          username: user.username,
+          password: user.password,
+          credits: user.credits,
+          lastPassiveIncomeAt: user.lastPassiveIncomeAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        });
+        console.log(`💾 Created new user "${user.username}" in PostgreSQL (ID: ${user.id})`);
+      }
+    } catch (error) {
+      console.error('💾 Error creating user in PostgreSQL:', error);
+    }
+
     // Give new users some starter seeds
     this.giveStarterSeeds(id);
     
@@ -843,7 +862,6 @@ export class MemStorage implements IStorage {
             flowerRarity: newFlower.flowerRarity,
             flowerImageUrl: newFlower.flowerImageUrl,
             quantity: newFlower.quantity,
-            rarity: this.getRarityInteger(newFlower.flowerRarity), // Convert rarity string to integer
             createdAt: newFlower.createdAt
           });
           console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
