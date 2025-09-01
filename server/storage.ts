@@ -39,6 +39,8 @@ import {
 } from "@shared/schema";
 import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -121,6 +123,8 @@ export class MemStorage implements IStorage {
   private currentExhibitionButterflyId: number;
   private currentPassiveIncomeId: number;
   private currentFrameLikeId: number;
+  private saveFilePath = path.join(process.cwd(), 'game-data.json');
+  private autoSaveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.users = new Map();
@@ -159,6 +163,120 @@ export class MemStorage implements IStorage {
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
     // this.createDemoMarketListings(); // Demo handlers removed
+    
+    // Load saved data if exists
+    this.loadData();
+    
+    // Auto-save every 30 seconds
+    this.autoSaveInterval = setInterval(() => {
+      this.saveData();
+    }, 30000);
+  }
+
+  // Data persistence methods
+  private saveData(): void {
+    try {
+      const data = {
+        users: Array.from(this.users.entries()),
+        seeds: Array.from(this.seeds.entries()),
+        userSeeds: Array.from(this.userSeeds.entries()),
+        marketListings: Array.from(this.marketListings.entries()),
+        plantedFields: Array.from(this.plantedFields.entries()),
+        userFlowers: Array.from(this.userFlowers.entries()),
+        bouquets: Array.from(this.bouquets.entries()),
+        userBouquets: Array.from(this.userBouquets.entries()),
+        bouquetRecipes: Array.from(this.bouquetRecipes.entries()),
+        placedBouquets: Array.from(this.placedBouquets.entries()),
+        userButterflies: Array.from(this.userButterflies.entries()),
+        fieldButterflies: Array.from(this.fieldButterflies.entries()),
+        exhibitionFrames: Array.from(this.exhibitionFrames.entries()),
+        exhibitionButterflies: Array.from(this.exhibitionButterflies.entries()),
+        passiveIncomeLog: Array.from(this.passiveIncomeLog.entries()),
+        exhibitionFrameLikes: Array.from(this.exhibitionFrameLikes.entries()),
+        counters: {
+          currentId: this.currentId,
+          currentSeedId: this.currentSeedId,
+          currentUserSeedId: this.currentUserSeedId,
+          currentListingId: this.currentListingId,
+          currentFieldId: this.currentFieldId,
+          currentBouquetId: this.currentBouquetId,
+          currentUserBouquetId: this.currentUserBouquetId,
+          currentRecipeId: this.currentRecipeId,
+          currentPlacedBouquetId: this.currentPlacedBouquetId,
+          currentButterflyId: this.currentButterflyId,
+          currentFieldButterflyId: this.currentFieldButterflyId,
+          currentFlowerId: this.currentFlowerId,
+          currentExhibitionFrameId: this.currentExhibitionFrameId,
+          currentExhibitionButterflyId: this.currentExhibitionButterflyId,
+          currentPassiveIncomeId: this.currentPassiveIncomeId,
+          currentFrameLikeId: this.currentFrameLikeId
+        },
+        savedAt: new Date().toISOString()
+      };
+      
+      fs.writeFileSync(this.saveFilePath, JSON.stringify(data, null, 2));
+      console.log('💾 Game data saved successfully');
+    } catch (error) {
+      console.error('💾 Failed to save game data:', error);
+    }
+  }
+
+  private loadData(): void {
+    try {
+      if (fs.existsSync(this.saveFilePath)) {
+        const data = JSON.parse(fs.readFileSync(this.saveFilePath, 'utf8'));
+        
+        // Restore all maps
+        this.users = new Map(data.users || []);
+        this.seeds = new Map(data.seeds || []);
+        this.userSeeds = new Map(data.userSeeds || []);
+        this.marketListings = new Map(data.marketListings || []);
+        this.plantedFields = new Map(data.plantedFields || []);
+        this.userFlowers = new Map(data.userFlowers || []);
+        this.bouquets = new Map(data.bouquets || []);
+        this.userBouquets = new Map(data.userBouquets || []);
+        this.bouquetRecipes = new Map(data.bouquetRecipes || []);
+        this.placedBouquets = new Map(data.placedBouquets || []);
+        this.userButterflies = new Map(data.userButterflies || []);
+        this.fieldButterflies = new Map(data.fieldButterflies || []);
+        this.exhibitionFrames = new Map(data.exhibitionFrames || []);
+        this.exhibitionButterflies = new Map(data.exhibitionButterflies || []);
+        this.passiveIncomeLog = new Map(data.passiveIncomeLog || []);
+        this.exhibitionFrameLikes = new Map(data.exhibitionFrameLikes || []);
+        
+        // Restore counters
+        if (data.counters) {
+          this.currentId = data.counters.currentId || 1;
+          this.currentSeedId = data.counters.currentSeedId || 8;
+          this.currentUserSeedId = data.counters.currentUserSeedId || 1;
+          this.currentListingId = data.counters.currentListingId || 1;
+          this.currentFieldId = data.counters.currentFieldId || 1;
+          this.currentBouquetId = data.counters.currentBouquetId || 1;
+          this.currentUserBouquetId = data.counters.currentUserBouquetId || 1;
+          this.currentRecipeId = data.counters.currentRecipeId || 1;
+          this.currentPlacedBouquetId = data.counters.currentPlacedBouquetId || 1;
+          this.currentButterflyId = data.counters.currentButterflyId || 1;
+          this.currentFieldButterflyId = data.counters.currentFieldButterflyId || 1;
+          this.currentFlowerId = data.counters.currentFlowerId || 1;
+          this.currentExhibitionFrameId = data.counters.currentExhibitionFrameId || 1;
+          this.currentExhibitionButterflyId = data.counters.currentExhibitionButterflyId || 1;
+          this.currentPassiveIncomeId = data.counters.currentPassiveIncomeId || 1;
+          this.currentFrameLikeId = data.counters.currentFrameLikeId || 1;
+        }
+        
+        console.log('💾 Game data loaded successfully from', data.savedAt || 'unknown time');
+        console.log(`💾 Loaded ${this.users.size} users, ${this.userSeeds.size} user seeds, ${this.userFlowers.size} flowers, ${this.userButterflies.size} butterflies`);
+      } else {
+        console.log('💾 No save file found, starting fresh');
+      }
+    } catch (error) {
+      console.error('💾 Failed to load game data:', error);
+    }
+  }
+
+  // Manual save trigger for important operations
+  public forceSave(): void {
+    this.saveData();
   }
 
   private initializeSampleSeeds() {
