@@ -16,8 +16,7 @@ export default function GardenView() {
   const { user } = useAuthStore();
   const { plantedFields, seeds, unlockedFields, nextUnlockCost, plantSeed, harvestFlower, unlockField } = useGameStore();
   
-  // Debug log
-  console.log('🔍 GardenView - unlockedFields:', unlockedFields);
+  // Remove debug log to stop re-rendering
 
   // Timer for growth countdown
   useEffect(() => {
@@ -55,7 +54,14 @@ export default function GardenView() {
       (row + 1) * 10 + col, // below  
       row * 10 + (col - 1), // left
       row * 10 + (col + 1), // right
-    ].filter(idx => idx >= 0 && idx < 50); // Valid field range
+    ].filter(idx => {
+      if (idx < 0 || idx >= 50) return false;
+      const adjRow = Math.floor(idx / 10);
+      const adjCol = idx % 10;
+      // Prevent wrap-around: check if adjacent is actually next to current
+      return (adjRow === row && Math.abs(adjCol - col) === 1) || // same row, adjacent column
+             (adjCol === col && Math.abs(adjRow - row) === 1);   // same column, adjacent row
+    });
     
     return adjacentIndices.some(idx => isFieldUnlocked(idx));
   };
@@ -231,7 +237,17 @@ export default function GardenView() {
             {/* Seed/Flower image */}
             <div className="mb-1">
               {isReady ? (
-                <div className="text-xl animate-pulse">🌸</div>
+                // Show actual flower image based on what was harvested
+                <img
+                  src={`/Blumen/${field.flowerImageId || '1'}.jpg`}
+                  alt="Ready flower"
+                  className="w-8 h-8 mx-auto rounded animate-pulse border"
+                  style={{ borderColor: rarity.color }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+                  }}
+                />
               ) : (
                 <img
                   src="/Blumen/0.jpg"
@@ -243,6 +259,7 @@ export default function GardenView() {
                   }}
                 />
               )}
+              <div className="text-xl hidden animate-pulse">🌸</div>
               <div className="text-sm hidden">🌱</div>
             </div>
             

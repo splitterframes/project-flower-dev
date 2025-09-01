@@ -75,17 +75,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         loading: false,
       });
 
-      console.log('🦋 RAW API Response - unlockedData:', unlockedData);
-      console.log('🦋 Game data loaded:', {
-        seeds: seedsData.seeds?.length || 0,
-        fields: fieldsData.fields?.length || 0,
-        flowers: flowersData.flowers?.length || 0,
-        butterflies: butterfliesData.butterflies?.length || 0,
-        unlockedFields: unlockedData.unlockedFields?.length || 0,
-        nextUnlockCost: costData.cost || 1000,
-      });
-      
-      console.log('🔓 Unlocked fields:', unlockedData.unlockedFields?.map((f: any) => f.fieldIndex));
+      // Data loaded successfully - debug logs removed to prevent re-rendering
     } catch (error) {
       console.error('❌ Error fetching game data:', error);
       set({ loading: false });
