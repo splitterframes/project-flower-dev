@@ -81,7 +81,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         flowers: flowersData.flowers?.length || 0,
         butterflies: butterfliesData.butterflies?.length || 0,
         unlockedFields: unlockedData.unlockedFields?.length || 0,
+        nextUnlockCost: costData.cost || 1000,
       });
+      
+      console.log('🔓 Unlocked fields:', unlockedData.unlockedFields?.map(f => f.fieldIndex));
     } catch (error) {
       console.error('❌ Error fetching game data:', error);
       set({ loading: false });
