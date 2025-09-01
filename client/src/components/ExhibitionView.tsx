@@ -228,14 +228,14 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-6 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-3 rounded grid grid-cols-3 grid-rows-2 gap-2 h-[280px]">
+            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[360px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 
                 return (
                   <div 
                     key={slotIndex}
-                    className="aspect-square bg-white border border-slate-300 rounded flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                    className="aspect-square bg-white border border-slate-300 rounded flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow min-h-0"
                   >
                     {butterfly ? (
                       <ButterflyHoverPreview
@@ -374,7 +374,7 @@ export const ExhibitionView: React.FC = () => {
       {frames.length > 0 && (
         <div className="space-y-6">
           {/* Navigation Controls */}
-          <div className="flex items-center justify-center space-x-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border border-slate-600">
+          <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
             <Button
               onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
               disabled={currentFrameIndex === 0}
@@ -385,8 +385,8 @@ export const ExhibitionView: React.FC = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             
-            <div className="text-2xl font-bold text-white bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-              Rahmen #{frames[currentFrameIndex]?.frameNumber || 1} / {frames.length}
+            <div className="text-lg font-semibold text-slate-300">
+              #{frames[currentFrameIndex]?.frameNumber || 1} / {frames.length}
             </div>
             
             <Button

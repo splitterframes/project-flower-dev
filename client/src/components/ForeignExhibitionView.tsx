@@ -186,7 +186,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {sortedFrameIds.length > 0 ? (
           <div className="space-y-6">
             {/* Navigation Controls */}
-            <div className="flex items-center justify-center space-x-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border border-slate-600">
+            <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
               <Button
                 onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
                 disabled={currentFrameIndex === 0}
@@ -197,8 +197,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               
-              <div className="text-2xl font-bold text-white bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                Rahmen #{sortedFrameIds[currentFrameIndex] || 1} / {sortedFrameIds.length}
+              <div className="text-lg font-semibold text-slate-300">
+                #{sortedFrameIds[currentFrameIndex] || 1} / {sortedFrameIds.length}
               </div>
               
               <Button
@@ -273,14 +273,14 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="grid grid-cols-3 grid-rows-2 gap-2 h-[280px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-3 border border-slate-700">
+                    <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[360px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
                       {[0, 1, 2, 3, 4, 5].map(slotIndex => {
                         const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                         
                         return (
                           <div
                             key={slotIndex}
-                            className="aspect-square border border-dashed border-slate-600 rounded flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300"
+                            className="aspect-square border border-dashed border-slate-600 rounded flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300 min-h-0"
                           >
                             {butterfly ? (
                               <div 
