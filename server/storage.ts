@@ -1187,42 +1187,68 @@ export class MemStorage implements IStorage {
 
   // Collect butterfly from field (move to inventory)
   async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
-    // Find butterfly on this field
-    const fieldButterfly = Array.from(this.fieldButterflies.values())
-      .find(fb => fb.userId === userId && fb.fieldIndex === fieldIndex);
-    
-    if (!fieldButterfly) {
+    try {
+      // Find butterfly on this field (Memory)
+      const fieldButterfly = Array.from(this.fieldButterflies.values())
+        .find(fb => fb.userId === userId && fb.fieldIndex === fieldIndex);
+      
+      if (!fieldButterfly) {
+        return { success: false };
+      }
+      
+      // Remove from field (Memory AND Database)
+      this.fieldButterflies.delete(fieldButterfly.id);
+      if (this.db) {
+        await this.db.delete(schema.fieldButterflies)
+          .where(eq(schema.fieldButterflies.id, fieldButterfly.id));
+      }
+      
+      // Add to user inventory (Memory AND Database)
+      const existingButterfly = Array.from(this.userButterflies.values())
+        .find(b => b.userId === userId && b.butterflyId === fieldButterfly.butterflyId);
+      
+      if (existingButterfly) {
+        // Increase quantity (Memory AND Database)
+        existingButterfly.quantity += 1;
+        this.userButterflies.set(existingButterfly.id, existingButterfly);
+        if (this.db) {
+          await this.db.update(schema.userButterflies)
+            .set({ quantity: existingButterfly.quantity })
+            .where(eq(schema.userButterflies.id, existingButterfly.id));
+        }
+        console.log(`🦋 Collected butterfly: +1 ${fieldButterfly.butterflyName} (total: ${existingButterfly.quantity})`);
+        return { success: true, butterfly: existingButterfly };
+      } else {
+        // Create new butterfly in inventory (Memory AND Database)
+        const newButterfly: UserButterfly = {
+          id: this.currentButterflyId++,
+          userId,
+          butterflyId: fieldButterfly.butterflyId,
+          butterflyName: fieldButterfly.butterflyName,
+          butterflyRarity: fieldButterfly.butterflyRarity,
+          butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+          quantity: 1,
+          createdAt: new Date()
+        };
+        this.userButterflies.set(newButterfly.id, newButterfly);
+        if (this.db) {
+          await this.db.insert(schema.userButterflies).values({
+            id: newButterfly.id,
+            userId: newButterfly.userId,
+            butterflyId: newButterfly.butterflyId,
+            butterflyName: newButterfly.butterflyName,
+            butterflyRarity: newButterfly.butterflyRarity,
+            butterflyImageUrl: newButterfly.butterflyImageUrl,
+            quantity: newButterfly.quantity,
+            createdAt: newButterfly.createdAt
+          });
+        }
+        console.log(`🦋 Collected new butterfly: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
+        return { success: true, butterfly: newButterfly };
+      }
+    } catch (error) {
+      console.error('❌ Error collecting butterfly:', error);
       return { success: false };
-    }
-    
-    // Remove from field
-    this.fieldButterflies.delete(fieldButterfly.id);
-    
-    // Add to user inventory
-    const existingButterfly = Array.from(this.userButterflies.values())
-      .find(b => b.userId === userId && b.butterflyId === fieldButterfly.butterflyId);
-    
-    if (existingButterfly) {
-      // Increase quantity
-      existingButterfly.quantity += 1;
-      this.userButterflies.set(existingButterfly.id, existingButterfly);
-      console.log(`🦋 Collected butterfly: +1 ${fieldButterfly.butterflyName} (total: ${existingButterfly.quantity})`);
-      return { success: true, butterfly: existingButterfly };
-    } else {
-      // Create new butterfly in inventory
-      const newButterfly: UserButterfly = {
-        id: this.currentButterflyId++,
-        userId,
-        butterflyId: fieldButterfly.butterflyId,
-        butterflyName: fieldButterfly.butterflyName,
-        butterflyRarity: fieldButterfly.butterflyRarity,
-        butterflyImageUrl: fieldButterfly.butterflyImageUrl,
-        quantity: 1,
-        createdAt: new Date()
-      };
-      this.userButterflies.set(newButterfly.id, newButterfly);
-      console.log(`🦋 Collected new butterfly: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
-      return { success: true, butterfly: newButterfly };
     }
   }
 
@@ -1277,66 +1303,90 @@ export class MemStorage implements IStorage {
   }
 
   async placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
-    // Check if frame belongs to user
-    const frame = this.exhibitionFrames.get(frameId);
-    if (!frame || frame.userId !== userId) {
-      return { success: false, message: "Frame not found" };
-    }
+    try {
+      // Check if frame belongs to user
+      const frame = this.exhibitionFrames.get(frameId);
+      if (!frame || frame.userId !== userId) {
+        return { success: false, message: "Frame not found" };
+      }
 
-    // Check if slot is already occupied
-    const existingButterfly = Array.from(this.exhibitionButterflies.values())
-      .find(eb => eb.frameId === frameId && eb.slotIndex === slotIndex);
-    
-    if (existingButterfly) {
-      return { success: false, message: "Slot already occupied" };
-    }
+      // Check if slot is already occupied
+      const existingButterfly = Array.from(this.exhibitionButterflies.values())
+        .find(eb => eb.frameId === frameId && eb.slotIndex === slotIndex);
+      
+      if (existingButterfly) {
+        return { success: false, message: "Slot already occupied" };
+      }
 
-    // Check if user has this butterfly
-    const userButterfly = Array.from(this.userButterflies.values())
-      .find(ub => ub.userId === userId && ub.id === butterflyId);
-    
-    if (!userButterfly || userButterfly.quantity < 1) {
-      return { success: false, message: "Butterfly not available" };
-    }
+      // Check if user has this butterfly (by butterflyId/species)
+      const userButterfly = Array.from(this.userButterflies.values())
+        .find(ub => ub.userId === userId && ub.butterflyId === butterflyId);
+      
+      if (!userButterfly || userButterfly.quantity < 1) {
+        return { success: false, message: "Butterfly not found in inventory" };
+      }
 
-    // Check if butterfly already exists in this frame (prevent duplicates)
-    const duplicateInFrame = Array.from(this.exhibitionButterflies.values())
-      .find(eb => eb.frameId === frameId && eb.butterflyId === userButterfly.butterflyId);
-    
-    if (duplicateInFrame) {
-      return { success: false, message: "Dieser Schmetterling ist bereits in diesem Rahmen ausgestellt" };
-    }
-    
-    if (!userButterfly || userButterfly.quantity < 1) {
-      return { success: false, message: "Butterfly not available" };
-    }
+      // Check if butterfly already exists in this frame (prevent duplicates)
+      const duplicateInFrame = Array.from(this.exhibitionButterflies.values())
+        .find(eb => eb.frameId === frameId && eb.butterflyId === userButterfly.butterflyId);
+      
+      if (duplicateInFrame) {
+        return { success: false, message: "Dieser Schmetterling ist bereits in diesem Rahmen ausgestellt" };
+      }
 
-    // Remove butterfly from inventory
-    if (userButterfly.quantity > 1) {
-      userButterfly.quantity -= 1;
-      this.userButterflies.set(userButterfly.id, userButterfly);
-    } else {
-      this.userButterflies.delete(userButterfly.id);
+      // Remove butterfly from inventory (Memory AND Database)
+      if (userButterfly.quantity > 1) {
+        userButterfly.quantity -= 1;
+        this.userButterflies.set(userButterfly.id, userButterfly);
+        if (this.db) {
+          await this.db.update(schema.userButterflies)
+            .set({ quantity: userButterfly.quantity })
+            .where(eq(schema.userButterflies.id, userButterfly.id));
+        }
+      } else {
+        this.userButterflies.delete(userButterfly.id);
+        if (this.db) {
+          await this.db.delete(schema.userButterflies)
+            .where(eq(schema.userButterflies.id, userButterfly.id));
+        }
+      }
+
+      // Place butterfly in exhibition (Memory AND Database)
+      const exhibitionButterfly: ExhibitionButterfly = {
+        id: this.currentExhibitionButterflyId++,
+        userId,
+        frameId,
+        slotIndex,
+        butterflyId: userButterfly.butterflyId,
+        butterflyName: userButterfly.butterflyName,
+        butterflyRarity: userButterfly.butterflyRarity,
+        butterflyImageUrl: userButterfly.butterflyImageUrl,
+        placedAt: new Date(),
+        createdAt: new Date()
+      };
+
+      this.exhibitionButterflies.set(exhibitionButterfly.id, exhibitionButterfly);
+      if (this.db) {
+        await this.db.insert(schema.exhibitionButterflies).values({
+          id: exhibitionButterfly.id,
+          userId: exhibitionButterfly.userId,
+          frameId: exhibitionButterfly.frameId,
+          slotIndex: exhibitionButterfly.slotIndex,
+          butterflyId: exhibitionButterfly.butterflyId,
+          butterflyName: exhibitionButterfly.butterflyName,
+          butterflyRarity: exhibitionButterfly.butterflyRarity,
+          butterflyImageUrl: exhibitionButterfly.butterflyImageUrl,
+          placedAt: exhibitionButterfly.placedAt,
+          createdAt: exhibitionButterfly.createdAt
+        });
+      }
+      console.log(`🦋 Placed ${userButterfly.butterflyName} in exhibition frame ${frameId}, slot ${slotIndex}`);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error placing exhibition butterfly:', error);
+      return { success: false, message: "Database error" };
     }
-
-    // Place butterfly in exhibition
-    const exhibitionButterfly: ExhibitionButterfly = {
-      id: this.currentExhibitionButterflyId++,
-      userId,
-      frameId,
-      slotIndex,
-      butterflyId: userButterfly.butterflyId,
-      butterflyName: userButterfly.butterflyName,
-      butterflyRarity: userButterfly.butterflyRarity,
-      butterflyImageUrl: userButterfly.butterflyImageUrl,
-      placedAt: new Date(),
-      createdAt: new Date()
-    };
-
-    this.exhibitionButterflies.set(exhibitionButterfly.id, exhibitionButterfly);
-    console.log(`🦋 Placed ${userButterfly.butterflyName} in exhibition frame ${frameId}, slot ${slotIndex}`);
-    
-    return { success: true };
   }
 
   async removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
