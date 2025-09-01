@@ -84,7 +84,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         nextUnlockCost: costData.cost || 1000,
       });
       
-      console.log('🔓 Unlocked fields:', unlockedData.unlockedFields?.map(f => f.fieldIndex));
+      console.log('🔓 Unlocked fields:', unlockedData.unlockedFields?.map((f: any) => f.fieldIndex));
     } catch (error) {
       console.error('❌ Error fetching game data:', error);
       set({ loading: false });
