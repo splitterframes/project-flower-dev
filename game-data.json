@@ -300,6 +300,21 @@
         "spawnedAt": "2025-09-01T19:46:46.161Z",
         "createdAt": "2025-09-01T19:46:46.161Z"
       }
+    ],
+    [
+      4,
+      {
+        "id": 4,
+        "userId": 2,
+        "fieldIndex": 3,
+        "butterflyId": 510,
+        "butterflyName": "Vanessa volans",
+        "butterflyRarity": "common",
+        "butterflyImageUrl": "/Schmetterlinge/510.jpg",
+        "bouquetId": 1,
+        "spawnedAt": "2025-09-01T19:51:46.162Z",
+        "createdAt": "2025-09-01T19:51:46.162Z"
+      }
     ]
   ],
   "exhibitionFrames": [
@@ -344,12 +359,12 @@
     "currentRecipeId": 2,
     "currentPlacedBouquetId": 2,
     "currentButterflyId": 2,
-    "currentFieldButterflyId": 4,
+    "currentFieldButterflyId": 5,
     "currentFlowerId": 5,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 2,
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T19:50:16.042Z"
+  "savedAt": "2025-09-01T19:59:46.053Z"
 }

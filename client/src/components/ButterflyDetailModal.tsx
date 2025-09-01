@@ -22,13 +22,15 @@ interface ButterflyDetailModalProps {
   onClose: () => void;
   butterfly: ButterflyDetailProps | null;
   onSold: () => void;
+  readOnly?: boolean; // For viewing other users' butterflies without selling options
 }
 
 export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   isOpen,
   onClose,
   butterfly,
-  onSold
+  onSold,
+  readOnly = false
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [canSell, setCanSell] = useState<boolean>(false);
@@ -203,66 +205,70 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
               </CardContent>
             </Card>
 
-            {/* Countdown Timer */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="relative">
-                    <Timer className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
-                    {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+            {/* Countdown Timer - Only show for own butterflies */}
+            {!readOnly && (
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="relative">
+                      <Timer className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
+                      {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                    </div>
+                    <span className="text-lg font-semibold">
+                      {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
+                    </span>
                   </div>
-                  <span className="text-lg font-semibold">
-                    {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
-                  </span>
-                </div>
 
-                <div className={`text-3xl font-bold mb-4 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
-                  {formatTimeRemaining(timeRemaining)}
-                </div>
-
-                <div className="text-sm text-slate-400">
-                  {canSell 
-                    ? "Dieser Schmetterling kann jetzt verkauft werden!"
-                    : "Schmetterlinge können nach 72 Stunden verkauft werden"
-                  }
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sell Price & Button */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <Coins className="h-6 w-6 mr-3 text-yellow-400" />
-                    <span className="text-lg font-semibold">Verkaufspreis:</span>
+                  <div className={`text-3xl font-bold mb-4 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                    {formatTimeRemaining(timeRemaining)}
                   </div>
-                  <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
-                    {sellPrice} Credits
-                  </Badge>
-                </div>
 
-                <Button
-                  onClick={handleSell}
-                  disabled={!canSell || isSelling}
-                  className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
-                    canSell 
-                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
-                      : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-center">
-                    <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
-                    {isSelling 
-                      ? "Verkaufe..." 
-                      : canSell 
-                        ? `💰 Für ${sellPrice} Credits verkaufen`
-                        : "🕐 Noch nicht verkaufbar"
+                  <div className="text-sm text-slate-400">
+                    {canSell 
+                      ? "Dieser Schmetterling kann jetzt verkauft werden!"
+                      : "Schmetterlinge können nach 72 Stunden verkauft werden"
                     }
                   </div>
-                </Button>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Sell Price & Button - Only show for own butterflies */}
+            {!readOnly && (
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Coins className="h-6 w-6 mr-3 text-yellow-400" />
+                      <span className="text-lg font-semibold">Verkaufspreis:</span>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
+                      {sellPrice} Credits
+                    </Badge>
+                  </div>
+
+                  <Button
+                    onClick={handleSell}
+                    disabled={!canSell || isSelling}
+                    className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
+                      canSell 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
+                        : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
+                      {isSelling 
+                        ? "Verkaufe..." 
+                        : canSell 
+                          ? `💰 Für ${sellPrice} Credits verkaufen`
+                          : "🕐 Noch nicht verkaufbar"
+                      }
+                    </div>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Exit Button */}
             <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
 import { RarityImage } from './RarityImage';
+import { ButterflyDetailModal } from './ButterflyDetailModal';
 import { ArrowLeft, Heart, Bug } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
@@ -40,6 +41,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
+  const [showButterflyModal, setShowButterflyModal] = useState(false);
 
   useEffect(() => {
     loadForeignExhibition();
@@ -242,7 +245,13 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             className="aspect-square border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300"
                           >
                             {butterfly ? (
-                              <div className="relative w-full h-full group">
+                              <div 
+                                className="relative w-full h-full group cursor-pointer"
+                                onClick={() => {
+                                  setSelectedButterfly(butterfly);
+                                  setShowButterflyModal(true);
+                                }}
+                              >
                                 <RarityImage
                                   src={butterfly.butterflyImageUrl}
                                   alt={butterfly.butterflyName}
@@ -255,6 +264,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                                     <div className="font-bold">{butterfly.butterflyName}</div>
                                     <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
                                       {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                                    </div>
+                                    <div className="mt-2 text-green-300 font-semibold">
+                                      Klicken für Details
                                     </div>
                                   </div>
                                 </div>
@@ -295,6 +307,25 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
           </Card>
         )}
       </div>
+
+      {/* Butterfly Detail Modal for viewing other users' butterflies */}
+      <ButterflyDetailModal
+        isOpen={showButterflyModal}
+        onClose={() => {
+          setShowButterflyModal(false);
+          setSelectedButterfly(null);
+        }}
+        butterfly={selectedButterfly ? {
+          id: selectedButterfly.id,
+          butterflyName: selectedButterfly.butterflyName,
+          butterflyRarity: selectedButterfly.butterflyRarity,
+          butterflyImageUrl: selectedButterfly.butterflyImageUrl,
+          placedAt: selectedButterfly.placedAt,
+          userId: selectedButterfly.userId
+        } : null}
+        onSold={() => {}} // Not used in read-only mode
+        readOnly={true} // This will hide selling options
+      />
     </div>
   );
 };
