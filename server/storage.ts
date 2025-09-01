@@ -604,8 +604,30 @@ export class MemStorage implements IStorage {
   }
 
   async getUserSeeds(userId: number): Promise<any[]> {
-    return Array.from(this.userSeeds.values())
-      .filter(userSeed => userSeed.userId === userId && userSeed.quantity > 0);
+    if (!this.db) {
+      throw new Error('Database not available');
+    }
+
+    const result = await this.db
+      .select({
+        id: schema.userSeeds.id,
+        userId: schema.userSeeds.userId,
+        seedId: schema.userSeeds.seedId,
+        quantity: schema.userSeeds.quantity,
+        seedName: schema.seeds.name,
+        seedRarity: schema.seeds.rarity,
+        seedPrice: schema.seeds.price,
+        seedDescription: schema.seeds.description,
+        seedImageUrl: schema.seeds.imageUrl
+      })
+      .from(schema.userSeeds)
+      .leftJoin(schema.seeds, eq(schema.userSeeds.seedId, schema.seeds.id))
+      .where(and(
+        eq(schema.userSeeds.userId, userId),
+        gt(schema.userSeeds.quantity, 0)
+      ));
+
+    return result;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
