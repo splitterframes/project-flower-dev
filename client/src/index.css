@@ -2,220 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 24 95% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 24 95% 53%;
-    --radius: 0.5rem;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+/* Mariposa Custom Styles */
 
-  * {
-    @apply border-border;
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
 
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
+@keyframes bounce {
+  0%, 100% { 
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
-
-  /* Custom scrollbar styles */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-slate-900;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-md;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
+  50% { 
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
 
-#root {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  touch-action: none;
-}
-
-/* Game-specific styles */
-.game-ui {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.game-ui > * {
-  pointer-events: auto;
-}
-
-/* Animation utilities */
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 5px rgba(249, 115, 22, 0.5);
-  }
-  50% {
-    text-shadow: 0 0 20px rgba(249, 115, 22, 0.8), 0 0 30px rgba(249, 115, 22, 0.6);
-  }
-}
-
-.glow-orange {
-  animation: glow 2s ease-in-out infinite;
-}
-
-/* Custom button variants */
-.btn-game {
-  @apply bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200;
-}
-
-.btn-game:hover {
-  @apply transform scale-105;
-}
-
-/* Card hover effects */
-.card-hover {
-  @apply transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20;
-}
-
-.card-hover:hover {
-  @apply transform scale-[1.02] border-orange-500/50;
-}
-
-/* Glass effect utilities */
+/* Glassmorphism effects */
 .glass {
-  backdrop-filter: blur(10px);
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* Game status indicators */
-.status-ready {
-  @apply text-green-400;
+/* Rarity glow effects */
+.rarity-glow {
+  box-shadow: 0 0 20px rgba(128, 90, 213, 0.3);
 }
 
-.status-playing {
-  @apply text-orange-400;
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, transform, opacity, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.status-ended {
-  @apply text-red-400;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Layout fixes for fixed footer */
-.layout-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
-.layout-main {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 90, 213, 0.6);
+  border-radius: 4px;
 }
 
-.layout-footer {
-  flex-shrink: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 90, 213, 0.8);
 }
 
-/* Mobile responsive adjustments */
+/* Mobile optimizations */
 @media (max-width: 768px) {
-  .mobile-hidden {
-    display: none;
+  .grid-cols-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   
-  .mobile-stack {
-    @apply flex-col space-x-0 space-y-2;
-  }
-
-  /* Smaller countdown timers on mobile */
-  .countdown-mobile {
-    @apply text-xs px-1 py-0.5 mt-1;
-  }
-
-  /* Touch-friendly buttons */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Disable text selection on touch devices */
-  .no-select {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Mobile garden grid */
-  .garden-grid-mobile {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.25rem; /* 4px */
-  }
-
-  .garden-grid-desktop {
-    grid-template-columns: repeat(10, 1fr);
-    gap: 0.5rem; /* 8px */
-  }
-
-  /* Safe area support for modern phones */
-  .safe-area-bottom {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-
-  .safe-area-top {
-    padding-top: max(0.5rem, env(safe-area-inset-top));
+  .text-4xl {
+    font-size: 2.25rem;
   }
 }
