@@ -843,7 +843,7 @@ export class MemStorage implements IStorage {
             flowerRarity: newFlower.flowerRarity,
             flowerImageUrl: newFlower.flowerImageUrl,
             quantity: newFlower.quantity,
-            rarity: 1, // Keep old column for compatibility
+            rarity: this.getRarityInteger(newFlower.flowerRarity), // Convert rarity string to integer
             createdAt: newFlower.createdAt
           });
           console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
@@ -852,6 +852,20 @@ export class MemStorage implements IStorage {
         console.error('💾 Error adding flower to PostgreSQL:', error);
       }
     }
+  }
+
+  // Convert rarity string to integer for database compatibility
+  private getRarityInteger(rarityString: string): number {
+    const rarityMap: { [key: string]: number } = {
+      'common': 1,
+      'uncommon': 2,
+      'rare': 3,
+      'super-rare': 4,
+      'epic': 5,
+      'legendary': 6,
+      'mythical': 7
+    };
+    return rarityMap[rarityString.toLowerCase()] || 1; // Default to common if unknown
   }
 
   // Check if bouquet name already exists
