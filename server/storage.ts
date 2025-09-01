@@ -536,8 +536,38 @@ export class MemStorage implements IStorage {
   }
 
   async getUserSeeds(userId: number): Promise<any[]> {
-    return Array.from(this.userSeeds.values())
+    // First check memory cache
+    const memorySeeds = Array.from(this.userSeeds.values())
       .filter(userSeed => userSeed.userId === userId && userSeed.quantity > 0);
+    
+    // If found in memory, return those
+    if (memorySeeds.length > 0) {
+      return memorySeeds;
+    }
+
+    // If not found in memory, check PostgreSQL database
+    try {
+      if (process.env.DATABASE_URL) {
+        const sql = neon(process.env.DATABASE_URL);
+        const db = drizzle(sql);
+        const dbSeeds = await db.select().from(userSeeds).where(eq(userSeeds.userId, userId));
+        
+        // Load into memory cache and return
+        dbSeeds.forEach(seed => {
+          this.userSeeds.set(seed.id, seed as any);
+        });
+        
+        if (dbSeeds.length > 0) {
+          console.log(`💾 Loaded ${dbSeeds.length} seeds for user ${userId} from PostgreSQL`);
+        }
+        
+        return dbSeeds.filter(seed => seed.quantity > 0);
+      }
+    } catch (error) {
+      console.error('💾 Error loading user seeds from PostgreSQL:', error);
+    }
+
+    return [];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -646,8 +676,33 @@ export class MemStorage implements IStorage {
   }
 
   async getPlantedFields(userId: number): Promise<PlantedField[]> {
-    const fields = Array.from(this.plantedFields.values())
+    // First check memory cache
+    let fields = Array.from(this.plantedFields.values())
       .filter(field => field.userId === userId);
+    
+    // If not found in memory, check PostgreSQL database
+    if (fields.length === 0) {
+      try {
+        if (process.env.DATABASE_URL) {
+          const sql = neon(process.env.DATABASE_URL);
+          const db = drizzle(sql);
+          const dbFields = await db.select().from(plantedFields).where(eq(plantedFields.userId, userId));
+          
+          // Load into memory cache
+          dbFields.forEach(field => {
+            this.plantedFields.set(field.id, field as any);
+          });
+          
+          if (dbFields.length > 0) {
+            console.log(`💾 Loaded ${dbFields.length} planted fields for user ${userId} from PostgreSQL`);
+          }
+          
+          fields = dbFields as PlantedField[];
+        }
+      } catch (error) {
+        console.error('💾 Error loading planted fields from PostgreSQL:', error);
+      }
+    }
     
     // Check if any fields should be grown by now
     const currentTime = new Date();
@@ -705,8 +760,38 @@ export class MemStorage implements IStorage {
   }
 
   async getUserFlowers(userId: number): Promise<UserFlower[]> {
-    return Array.from(this.userFlowers.values())
+    // First check memory cache
+    const memoryFlowers = Array.from(this.userFlowers.values())
       .filter(flower => flower.userId === userId);
+    
+    // If found in memory, return those
+    if (memoryFlowers.length > 0) {
+      return memoryFlowers;
+    }
+
+    // If not found in memory, check PostgreSQL database
+    try {
+      if (process.env.DATABASE_URL) {
+        const sql = neon(process.env.DATABASE_URL);
+        const db = drizzle(sql);
+        const dbFlowers = await db.select().from(userFlowers).where(eq(userFlowers.userId, userId));
+        
+        // Load into memory cache and return
+        dbFlowers.forEach(flower => {
+          this.userFlowers.set(flower.id, flower as any);
+        });
+        
+        if (dbFlowers.length > 0) {
+          console.log(`💾 Loaded ${dbFlowers.length} flowers for user ${userId} from PostgreSQL`);
+        }
+        
+        return dbFlowers as UserFlower[];
+      }
+    } catch (error) {
+      console.error('💾 Error loading user flowers from PostgreSQL:', error);
+    }
+
+    return [];
   }
 
   async addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void> {
