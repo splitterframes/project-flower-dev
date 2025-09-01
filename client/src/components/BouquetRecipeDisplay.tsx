@@ -98,11 +98,27 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
   }
 
   return (
-    <div className="bg-slate-800 border-t border-slate-700 rounded-b-lg">
+    <div className="border-t border-slate-600 bg-slate-800/80">
       <div className="p-3">
-        <h4 className="text-white text-sm font-medium mb-3">Rezept-Zutaten:</h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-white text-sm font-medium">Zutaten</h4>
+          {onRecreate && (
+            <button
+              onClick={() => onRecreate(recipe.flowerId1, recipe.flowerId2, recipe.flowerId3)}
+              disabled={!canRecreate()}
+              className={`px-2 py-1 text-xs rounded ${
+                canRecreate() 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+              }`}
+              title={!canRecreate() ? 'Nicht genügend Blumen im Inventar' : 'Bouquet mit deinen Blumen neustecken'}
+            >
+              Nachstellen
+            </button>
+          )}
+        </div>
         
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="flex items-center justify-center gap-3">
           {ingredients.map((flower, index) => (
             <div key={index} className="text-center">
               <RarityImage 
@@ -112,25 +128,10 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
                 size="small"
                 className="w-8 h-8 mx-auto mb-1"
               />
-              <div className="text-xs text-slate-300 truncate">{flower.name}</div>
+              <div className="text-xs text-slate-300 truncate max-w-12">{flower.name.substring(0, 8)}</div>
             </div>
           ))}
         </div>
-
-        {onRecreate && (
-          <button
-            onClick={() => onRecreate(recipe.flowerId1, recipe.flowerId2, recipe.flowerId3)}
-            disabled={!canRecreate()}
-            className={`w-full px-3 py-1 text-white text-sm rounded transition-colors ${
-              canRecreate() 
-                ? 'bg-rose-600 hover:bg-rose-700' 
-                : 'bg-slate-600 cursor-not-allowed opacity-50'
-            }`}
-            title={!canRecreate() ? 'Nicht genügend Blumen im Inventar' : 'Bouquet mit deinen Blumen neustecken'}
-          >
-            Bouquet neustecken
-          </button>
-        )}
       </div>
     </div>
   );

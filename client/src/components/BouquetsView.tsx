@@ -248,19 +248,17 @@ export const BouquetsView: React.FC = () => {
 
       {/* My Bouquets Collection */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Enhanced Created Bouquets */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-purple-500/30 shadow-2xl">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <CardTitle className="text-white flex items-center relative z-10">
-              <div className="relative">
-                <Gift className="h-7 w-7 mr-3 text-yellow-400 animate-pulse" />
-                <div className="absolute inset-0 h-7 w-7 mr-3 text-yellow-400 animate-ping opacity-30"></div>
+        {/* Clean Bouquet Collection */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center">
+                <Gift className="h-5 w-5 mr-2 text-purple-400" />
+                <span className="text-lg font-semibold text-purple-300">
+                  Meine Rezepte
+                </span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-                Meine Bouquet Rezepte
-              </span>
-              <Badge className="ml-4 bg-purple-600 text-white px-3 py-1 font-semibold">
+              <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
                 {myBouquets.length}
               </Badge>
             </CardTitle>
@@ -272,62 +270,66 @@ export const BouquetsView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-80 overflow-y-auto">
                 {myBouquets.map((bouquet) => (
                   <div
                     key={bouquet.id}
-                    className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border-2 border-pink-400/30 hover:border-pink-400/50 transition-all duration-300 hover:scale-105 shadow-lg group"
+                    className="bg-slate-900 rounded-lg border border-purple-400/30"
                   >
-                    <div>
+                    {/* Bouquet Header */}
+                    <div className="p-3">
                       <div className="flex items-center space-x-3">
                         <RarityImage 
                           src="/Blumen/Bouquet.jpg"
                           alt="Bouquet"
                           rarity={(bouquet.bouquetRarity || "common") as RarityTier}
                           size="medium"
-                          className="w-12 h-12"
+                          className="w-10 h-10 flex-shrink-0"
                         />
-                        <div className="flex-1">
-                          <h4 className="font-bold text-white text-sm">{bouquet.bouquetName || `Bouquet #${bouquet.id}`}</h4>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-white text-sm truncate">
+                            {bouquet.bouquetName || `Bouquet #${bouquet.id}`}
+                          </h4>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-rose-400">Bouquet</span>
-                            <Badge className={`px-3 py-1 font-bold ${
-                              bouquet.quantity > 0 ? 'bg-green-500/20 text-green-400 border border-green-400/30' : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
-                            }`}>x{bouquet.quantity}</Badge>
+                            <span className="text-xs text-purple-400">Bouquet</span>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`px-2 py-0.5 text-xs ${
+                                bouquet.quantity > 0 
+                                  ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
+                                  : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
+                              }`}>
+                                x{bouquet.quantity}
+                              </Badge>
+                              <Button
+                                onClick={async () => {
+                                  const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
+                                  setExpandedBouquet(newExpanded);
+                                  if (newExpanded === bouquet.bouquetId) {
+                                    await fetchBouquetRecipes();
+                                  }
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-purple-300 hover:text-purple-200 hover:bg-purple-500/10"
+                              >
+                                {expandedBouquet === bouquet.bouquetId ? 'Ausblenden' : 'Rezept'}
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="mt-2">
-                        <Button
-                          onClick={async () => {
-                            const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
-                            setExpandedBouquet(newExpanded);
-                            // Refresh recipes when showing recipe
-                            if (newExpanded === bouquet.bouquetId) {
-                              await fetchBouquetRecipes();
-                            }
-                          }}
-                          variant="outline"
-                          className="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-400/40 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400/60 transition-all duration-200 group-hover:scale-105"
-                        >
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          {expandedBouquet === bouquet.bouquetId ? 'Rezept verbergen' : 'Rezept zeigen'}
-                        </Button>
-                      </div>
                     </div>
 
+                    {/* Recipe Display */}
                     {expandedBouquet === bouquet.bouquetId && (
-                      <div className="mt-2">
-                        <BouquetRecipeDisplay 
-                          bouquetId={bouquet.bouquetId} 
-                          recipe={bouquetRecipes[bouquet.bouquetId]} 
-                          userFlowers={myFlowers}
-                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
-                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
-                          }
-                        />
-                      </div>
+                      <BouquetRecipeDisplay 
+                        bouquetId={bouquet.bouquetId} 
+                        recipe={bouquetRecipes[bouquet.bouquetId]} 
+                        userFlowers={myFlowers}
+                        onRecreate={(flowerId1, flowerId2, flowerId3) => 
+                          handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
+                        }
+                      />
                     )}
                   </div>
                 ))}
@@ -338,31 +340,27 @@ export const BouquetsView: React.FC = () => {
 
       </div>
 
-      {/* Enhanced Bouquet Creation Workshop */}
-      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-orange-500/30 shadow-2xl">
-        <CardHeader className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-t-lg -mx-6 -my-2"></div>
-          <CardTitle className="text-white flex items-center justify-between relative z-10">
+      {/* Clean Bouquet Workshop */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-orange-500/30 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white flex items-center justify-between">
             <div className="flex items-center">
-              <div className="relative">
-                <Palette className="h-7 w-7 mr-3 text-orange-400 animate-pulse" />
-                <div className="absolute inset-0 h-7 w-7 mr-3 text-orange-400 animate-ping opacity-30"></div>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
+              <Palette className="h-5 w-5 mr-2 text-orange-400" />
+              <span className="text-lg font-semibold text-orange-300">
                 Bouquet Werkstatt 🎨
               </span>
             </div>
             <Button
               onClick={() => setShowBouquetCreation(true)}
               disabled={myFlowers.length < 3}
-              className={`px-6 py-3 text-lg font-semibold rounded-xl transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg ${
                 myFlowers.length >= 3
-                  ? 'bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 hover:scale-105 shadow-lg'
-                  : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                  : 'bg-slate-600 text-slate-300 cursor-not-allowed'
               }`}
             >
-              <Plus className="h-5 w-5 mr-2" />
-              {myFlowers.length >= 3 ? 'Bouquet erstellen' : 'Sammle mehr Blumen'}
+              <Plus className="h-4 w-4 mr-1" />
+              {myFlowers.length >= 3 ? 'Erstellen' : 'Mehr Blumen'}
             </Button>
           </CardTitle>
         </CardHeader>
