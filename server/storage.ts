@@ -43,6 +43,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
+import { eq } from 'drizzle-orm';
 import * as schema from '@shared/schema';
 
 export interface IStorage {
@@ -459,7 +460,25 @@ export class MemStorage implements IStorage {
       credits: Math.max(0, user.credits + amount),
       updatedAt: new Date()
     };
+    
+    // Update in memory
     this.users.set(id, updatedUser);
+    
+    // Update in database for persistence
+    if (this.db) {
+      try {
+        await this.db.update(schema.users)
+          .set({ 
+            credits: updatedUser.credits, 
+            updatedAt: updatedUser.updatedAt 
+          })
+          .where(eq(schema.users.id, id));
+      } catch (error) {
+        console.error('💾 Failed to update user credits in database:', error);
+        // Continue with memory-only update as fallback
+      }
+    }
+    
     return updatedUser;
   }
 
@@ -597,7 +616,28 @@ export class MemStorage implements IStorage {
       createdAt: now,
       updatedAt: now
     };
+    
+    // Store in memory
     this.users.set(id, user);
+
+    // Store in database for persistence across deployments
+    if (this.db) {
+      try {
+        await this.db.insert(schema.users).values({
+          id: user.id,
+          username: user.username,
+          password: user.password,
+          credits: user.credits,
+          lastPassiveIncomeAt: user.lastPassiveIncomeAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        });
+        console.log(`💾 User "${user.username}" saved to database`);
+      } catch (error) {
+        console.error('💾 Failed to save user to database:', error);
+        // Continue with memory-only storage as fallback
+      }
+    }
 
     // Give new users some starter seeds
     this.giveStarterSeeds(id);

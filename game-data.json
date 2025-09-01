@@ -11,6 +11,18 @@
         "createdAt": "2025-09-01T10:07:36.924Z",
         "updatedAt": "2025-09-01T10:07:36.924Z"
       }
+    ],
+    [
+      2,
+      {
+        "username": "TestUser",
+        "password": "test123",
+        "id": 2,
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T11:59:13.770Z",
+        "updatedAt": "2025-09-01T11:59:13.770Z"
+      }
     ]
   ],
   "seeds": [
@@ -123,6 +135,30 @@
         "seedName": "Rare Samen",
         "seedRarity": "rare"
       }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "userId": 2,
+        "seedId": 1,
+        "quantity": 5,
+        "createdAt": "2025-09-01T11:59:13.834Z",
+        "seedName": "Common Samen",
+        "seedRarity": "common"
+      }
+    ],
+    [
+      4,
+      {
+        "id": 4,
+        "userId": 2,
+        "seedId": 3,
+        "quantity": 3,
+        "createdAt": "2025-09-01T11:59:13.834Z",
+        "seedName": "Rare Samen",
+        "seedRarity": "rare"
+      }
     ]
   ],
   "marketListings": [],
@@ -156,9 +192,9 @@
   "passiveIncomeLog": [],
   "exhibitionFrameLikes": [],
   "counters": {
-    "currentId": 2,
+    "currentId": 3,
     "currentSeedId": 8,
-    "currentUserSeedId": 3,
+    "currentUserSeedId": 5,
     "currentListingId": 1,
     "currentFieldId": 2,
     "currentBouquetId": 1,
@@ -173,5 +209,5 @@
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T11:55:48.009Z"
+  "savedAt": "2025-09-01T11:59:19.585Z"
 }
