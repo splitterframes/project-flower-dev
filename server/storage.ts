@@ -1382,7 +1382,10 @@ export class MemStorage implements IStorage {
       // In a real app, this would track actual login/logout events
       const now = new Date();
       const lastActivity = user.updatedAt || user.createdAt;
-      const timeDiff = now.getTime() - lastActivity.getTime();
+      
+      // Ensure lastActivity is a Date object (fix for JSON serialization)
+      const lastActivityDate = lastActivity instanceof Date ? lastActivity : new Date(lastActivity);
+      const timeDiff = now.getTime() - lastActivityDate.getTime();
       const minutesDiff = Math.floor(timeDiff / (1000 * 60));
       
       // Consider user online if last activity was within 5 minutes
