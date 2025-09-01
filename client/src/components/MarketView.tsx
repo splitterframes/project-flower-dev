@@ -171,81 +171,55 @@ export const MarketView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Enhanced Market Header */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-2xl blur-xl"></div>
-        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-emerald-500/30 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <Store className="h-12 w-12 mr-4 text-emerald-400 animate-pulse" />
-              <div className="absolute inset-0 h-12 w-12 mr-4 text-emerald-400 animate-ping opacity-20"></div>
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                Samen Markt 🌱
-              </h1>
-            </div>
-          </div>
-          <p className="text-slate-300 text-xl">Handel mit anderen Spielern und finde seltene Samen</p>
-        </div>
+      {/* Compact Market Header */}
+      <div className="bg-slate-800/60 p-4 rounded-lg border border-emerald-500/30 text-center">
+        <h1 className="text-2xl font-bold text-emerald-300 mb-1">
+          Samen Markt 🌱
+        </h1>
+        <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
       </div>
 
-      {/* Enhanced Market Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border-2 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-orange-300">
-                Deine Credits
+      {/* Compact Market Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border border-orange-500/30 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-orange-300">
+                Credits
               </CardTitle>
-              <div className="relative">
-                <Coins className="h-8 w-8 text-orange-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-orange-400 animate-ping opacity-20"></div>
-              </div>
+              <Coins className="h-4 w-4 text-orange-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-orange-400 mb-2">{credits} Cr</div>
-            <div className="text-slate-400 text-sm">💰 Kaufkraft</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-orange-400">{credits} Cr</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border-2 border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-green-300">
-                Aktive Angebote
+        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-green-300">
+                Angebote
               </CardTitle>
-              <div className="relative">
-                <TrendingUp className="h-8 w-8 text-green-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-green-400 animate-ping opacity-20"></div>
-              </div>
+              <TrendingUp className="h-4 w-4 text-green-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-green-400 mb-2">{marketListings.length}</div>
-            <div className="text-slate-400 text-sm">📋 Verfügbare Deals</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-green-400">{marketListings.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border-2 border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-blue-300">
-                Deine Samen
+        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-blue-300">
+                Samen
               </CardTitle>
-              <div className="relative">
-                <Package className="h-8 w-8 text-blue-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-blue-400 animate-ping opacity-20"></div>
-              </div>
+              <Package className="h-4 w-4 text-blue-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-blue-400 mb-2">{mySeeds.length}</div>
-            <div className="text-slate-400 text-sm">🌱 Handelswaren</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-blue-400">{mySeeds.length}</div>
           </CardContent>
         </Card>
       </div>
