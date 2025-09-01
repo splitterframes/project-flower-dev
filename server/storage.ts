@@ -349,6 +349,7 @@ export class MemStorage implements IStorage {
     this.saveData();
   }
 
+
   private initializeSampleSeeds() {
     const sampleSeeds = [
       { id: 1, name: "Common Samen", rarity: "common", price: 10, description: "Ein gewöhnlicher Samen mit einfachen Eigenschaften", imageUrl: "/Blumen/0.jpg", createdAt: new Date() },
