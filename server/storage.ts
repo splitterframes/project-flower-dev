@@ -2147,21 +2147,36 @@ class PostgreSQLStorage implements IStorage {
   }
 
   async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
-    // For now, return success with some seeds as a placeholder
-    // This ensures the system works while we debug the complex queries
     const { getBouquetSeedDrop } = await import('./bouquet');
     
-    // Simple seed drop with common rarity
-    const seedDrop = getBouquetSeedDrop('common');
-    
-    // Add seeds to user inventory
-    await this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
-    console.log(`💧 Expired bouquet collected manually, dropped ${seedDrop.quantity}x ${seedDrop.rarity} seeds for user ${userId}`);
-    
-    return { 
-      success: true, 
-      seedDrop: seedDrop 
-    };
+    try {
+      // Delete the bouquet directly (similar to other working functions)
+      const result = await db.delete(schema.placedBouquets)
+        .where(and(
+          eq(schema.placedBouquets.userId, userId),
+          eq(schema.placedBouquets.fieldIndex, fieldIndex)
+        ))
+        .returning();
+
+      if (!result || result.length === 0) {
+        return { success: false };
+      }
+
+      // Simple seed drop with common rarity
+      const seedDrop = getBouquetSeedDrop('common');
+      
+      // Add seeds to user inventory
+      await this.addSeedToInventory(userId, seedDrop.rarity, seedDrop.quantity);
+      console.log(`💧 Expired bouquet collected manually, dropped ${seedDrop.quantity}x ${seedDrop.rarity} seeds for user ${userId}, bouquet deleted from database`);
+      
+      return { 
+        success: true, 
+        seedDrop: seedDrop 
+      };
+    } catch (error) {
+      console.error('Error collecting expired bouquet:', error);
+      return { success: false };
+    }
   }
 
   // Butterfly management methods

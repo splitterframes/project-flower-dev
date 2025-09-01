@@ -62,6 +62,17 @@ export class ButterflySpawner {
       for (const user of allUsers) {
         try {
           const placedBouquets = await storage.getPlacedBouquets(user.id);
+          
+          // First, auto-collect any expired bouquets
+          const expiredBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) <= currentTime);
+          for (const expiredBouquet of expiredBouquets) {
+            console.log(`💧 Auto-collecting expired bouquet for user ${user.id} on field ${expiredBouquet.fieldIndex}`);
+            const collectResult = await storage.collectExpiredBouquet(user.id, expiredBouquet.fieldIndex);
+            if (collectResult.success) {
+              console.log(`💧 Auto-collected: ${collectResult.seedDrop?.quantity}x ${collectResult.seedDrop?.rarity} seeds`);
+            }
+          }
+          
           const activeBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) > currentTime);
           
           if (activeBouquets.length === 0) {

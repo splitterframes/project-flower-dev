@@ -419,6 +419,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Exhibition routes
+  app.get("/api/user/:id/exhibition", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const frames = await storage.getExhibitionFrames(userId);
+      const butterflies = await storage.getExhibitionButterflies(userId);
+      res.json({ 
+        frames,
+        butterflies,
+        success: true 
+      });
+    } catch (error) {
+      console.error('Exhibition API error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/exhibition-frames", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
