@@ -4,7 +4,7 @@ import { storage } from './storage';
 const router = express.Router();
 
 // === DEBUG ENDPOINT ===
-router.get('/debug/garden/:userId', async (req, res) => {
+router.get('/debug-garden/:userId', async (req, res) => {
   const userId = parseInt(req.params.userId);
   const unlockedFields = await storage.getUnlockedFields(userId);
   const nextCost = await storage.getNextUnlockCost(userId);
