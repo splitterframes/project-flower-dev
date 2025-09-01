@@ -228,7 +228,7 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-6 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[360px]">
+            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[400px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 

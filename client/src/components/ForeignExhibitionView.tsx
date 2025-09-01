@@ -273,7 +273,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[360px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
+                    <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[400px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
                       {[0, 1, 2, 3, 4, 5].map(slotIndex => {
                         const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                         
