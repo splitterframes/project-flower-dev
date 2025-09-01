@@ -397,7 +397,7 @@ export const InventoryView: React.FC = () => {
         </Card>
 
         {/* Bouquets Section */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg lg:col-span-2">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
               <Gem className="h-5 w-5 mr-2 text-purple-400" />
