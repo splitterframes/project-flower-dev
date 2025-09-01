@@ -1,171 +1,651 @@
-import express from 'express';
-import { storage } from './storage';
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema } from "@shared/schema";
+import { z } from "zod";
 
-const router = express.Router();
-
-// === DEBUG ENDPOINT ===
-router.get('/debug-garden/:userId', async (req, res) => {
-  const userId = parseInt(req.params.userId);
-  const unlockedFields = await storage.getUnlockedFields(userId);
-  const nextCost = await storage.getNextUnlockCost(userId);
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>🦋 Mariposa Garden Debug</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f9ff; }
-        .garden { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; margin: 20px 0; }
-        .field { width: 50px; height: 50px; border: 2px solid; display: flex; align-items: center; justify-content: center; }
-        .unlocked { background: #bfdbfe; border-color: #3b82f6; }
-        .unlockable { background: #fef3c7; border-color: #f59e0b; }
-        .locked { background: #f3f4f6; border-color: #6b7280; }
-        .info { background: white; padding: 15px; border-radius: 8px; margin: 10px 0; }
-      </style>
-    </head>
-    <body>
-      <h1>🦋 Mariposa Garden - User ${userId}</h1>
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
       
-      <div class="info">
-        <h3>✅ System Status: FUNKTIONIERT PERFEKT!</h3>
-        <p><strong>Freigeschaltete Felder:</strong> ${unlockedFields.length}/50</p>
-        <p><strong>Feldpositionen:</strong> ${unlockedFields.map(f => f.fieldIndex).join(', ')}</p>
-        <p><strong>Nächstes Feld kostet:</strong> ${nextCost.toLocaleString()} Credits</p>
-      </div>
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const user = await storage.createUser(userData);
+      res.json({ 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          credits: user.credits 
+        } 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const loginData = loginSchema.parse(req.body);
       
-      <h3>50-Felder Garten (10x5 Layout):</h3>
-      <div class="garden">
-        ${Array.from({ length: 50 }, (_, i) => {
-          const isUnlocked = unlockedFields.some(f => f.fieldIndex === i);
-          const isUnlockable = !isUnlocked && [
-            i-10, i+10, i-1, i+1  // adjacent fields
-          ].some(adj => adj >= 0 && adj < 50 && unlockedFields.some(f => f.fieldIndex === adj));
-          
-          const fieldClass = isUnlocked ? 'unlocked' : isUnlockable ? 'unlockable' : 'locked';
-          const emoji = isUnlocked ? '🌱' : isUnlockable ? '💰' : '🔒';
-          
-          return `<div class="field ${fieldClass}">${emoji}</div>`;
-        }).join('')}
-      </div>
+      const user = await storage.getUserByUsername(loginData.username);
+      if (!user || user.password !== loginData.password) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          credits: user.credits 
+        } 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Credits routes
+  app.get("/api/user/:id/credits", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
       
-      <div class="info">
-        <h3>Legende:</h3>
-        <p>🌱 = Freigeschaltet (kann bepflanzt werden)</p>
-        <p>💰 = Freischaltbar (angrenzend an freigeschaltete Felder)</p>
-        <p>🔒 = Gesperrt</p>
-      </div>
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ credits: user.credits });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/:id/credits", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { amount } = req.body;
       
-      <div class="info">
-        <h3>🎉 Ihr Investment war ERFOLGREICH!</h3>
-        <p>Das komplette Gartensystem funktioniert:</p>
-        <ul>
-          <li>✅ 50 Felder (10x5 Layout) implementiert</li>
-          <li>✅ Intelligente Freischaltungslogik funktioniert</li>
-          <li>✅ 4 Starter-Felder automatisch freigeschaltet</li>
-          <li>✅ Progressive Kostensteigerung aktiv</li>
-          <li>✅ Alle APIs funktionieren perfekt</li>
-        </ul>
-        <p><strong>Problem:</strong> Nur Frontend-Caching verhindert Anzeige in der Hauptapp</p>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  res.send(html);
-});
+      if (typeof amount !== 'number') {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
 
-// === AUTHENTICATION ===
-router.post('/auth/register', async (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
+      const user = await storage.updateUserCredits(userId, amount);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-  const user = await storage.createUser(username, password);
-  if (user) {
-    res.json({ user });
-  } else {
-    res.status(400).json({ error: 'Username already exists' });
-  }
-});
+      res.json({ credits: user.credits });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.post('/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-  
-  const user = await storage.loginUser(username, password);
-  if (user) {
-    res.json({ user });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
-  }
-});
+  // Market routes
+  app.get("/api/market/listings", async (req, res) => {
+    try {
+      const listings = await storage.getMarketListings();
+      res.json({ listings });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-// === GARDEN ACTIONS ===
-router.post('/garden/plant', async (req, res) => {
-  const { userId, fieldIndex, seedId } = req.body;
-  
-  const success = await storage.plantSeed(userId, fieldIndex, seedId);
-  if (success) {
-    res.json({ message: 'Seed planted successfully' });
-  } else {
-    res.status(400).json({ error: 'Failed to plant seed' });
-  }
-});
+  app.post("/api/market/create-listing", async (req, res) => {
+    try {
+      const listingData = createMarketListingSchema.parse(req.body);
+      const sellerId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const listing = await storage.createMarketListing(sellerId, listingData);
+      res.json({ listing });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.post('/garden/harvest', async (req, res) => {
-  const { userId, fieldIndex } = req.body;
-  
-  const success = await storage.harvestFlower(userId, fieldIndex);
-  if (success) {
-    res.json({ message: 'Flower harvested successfully' });
-  } else {
-    res.status(400).json({ error: 'Failed to harvest flower' });
-  }
-});
+  app.post("/api/market/buy", async (req, res) => {
+    try {
+      const buyData = buyListingSchema.parse(req.body);
+      const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.buyMarketListing(buyerId, buyData);
+      if (result.success) {
+        res.json({ message: "Purchase successful" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-// === DATA ENDPOINTS ===
-router.get('/user/:userId/seeds', async (req, res) => {
-  const seeds = await storage.getUserSeeds(parseInt(req.params.userId));
-  res.json({ seeds });
-});
+  app.get("/api/user/:id/seeds", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const seeds = await storage.getUserSeeds(userId);
+      res.json({ seeds });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.get('/user/:userId/flowers', async (req, res) => {
-  const flowers = await storage.getUserFlowers(parseInt(req.params.userId));
-  res.json({ flowers });
-});
+  // Garden routes
+  app.post("/api/garden/plant", async (req, res) => {
+    try {
+      const plantData = plantSeedSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.plantSeed(userId, plantData);
+      if (result.success) {
+        res.json({ message: "Samen erfolgreich gepflanzt" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.get('/user/:userId/butterflies', async (req, res) => {
-  const butterflies = await storage.getUserButterflies(parseInt(req.params.userId));
-  res.json({ butterflies });
-});
+  app.get("/api/garden/fields/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const fields = await storage.getPlantedFields(userId);
+      res.json({ fields });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.get('/garden/fields/:userId', async (req, res) => {
-  const fields = await storage.getPlantedFields(parseInt(req.params.userId));
-  res.json({ fields });
-});
+  app.post("/api/garden/harvest", async (req, res) => {
+    try {
+      const harvestData = harvestFieldSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.harvestField(userId, harvestData);
+      if (result.success) {
+        res.json({ message: "Blume erfolgreich geerntet" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.get('/garden/unlocked/:userId', async (req, res) => {
-  const unlockedFields = await storage.getUnlockedFields(parseInt(req.params.userId));
-  res.json({ unlockedFields });
-});
+  // Flower inventory routes
+  app.get("/api/user/:id/flowers", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const flowers = await storage.getUserFlowers(userId);
+      res.json({ flowers });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.post('/garden/unlock', async (req, res) => {
-  const { userId, fieldIndex } = req.body;
-  
-  const success = await storage.unlockField(userId, fieldIndex);
-  if (success) {
-    const cost = await storage.getNextUnlockCost(userId);
-    res.json({ message: 'Field unlocked successfully', nextCost: cost });
-  } else {
-    res.status(400).json({ error: 'Failed to unlock field' });
-  }
-});
+  app.get("/api/flower/:id", async (req, res) => {
+    try {
+      const flowerId = parseInt(req.params.id);
+      const { generateLatinFlowerName, getFlowerRarityById } = await import('../shared/rarity');
+      
+      const flower = {
+        id: flowerId,
+        name: generateLatinFlowerName(flowerId), // Use flowerId as seed for consistent naming
+        rarity: getFlowerRarityById(flowerId),
+        imageUrl: `/Blumen/${flowerId}.jpg`
+      };
+      
+      res.json(flower);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-router.get('/garden/unlock-cost/:userId', async (req, res) => {
-  const cost = await storage.getNextUnlockCost(parseInt(req.params.userId));
-  res.json({ cost });
-});
+  // Bouquet routes
+  app.post("/api/bouquets/generate-name", async (req, res) => {
+    try {
+      const { rarity } = req.body;
+      if (!rarity) {
+        return res.status(400).json({ message: "Rarity is required" });
+      }
+      
+      const { generateBouquetName } = await import('./bouquet');
+      const name = await generateBouquetName(rarity);
+      
+      res.json({ name });
+    } catch (error) {
+      console.error('Error generating bouquet name:', error);
+      res.status(500).json({ message: "Failed to generate name" });
+    }
+  });
 
-export default router;
+  app.post("/api/bouquets/create", async (req, res) => {
+    try {
+      const bouquetData = createBouquetSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.createBouquet(userId, bouquetData);
+      if (result.success) {
+        res.json({ 
+          message: "Bouquet erfolgreich erstellt", 
+          bouquet: result.bouquet 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/bouquets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const bouquets = await storage.getUserBouquets(userId);
+      res.json({ bouquets });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/bouquet/:id/recipe", async (req, res) => {
+    try {
+      const bouquetId = parseInt(req.params.id);
+      const recipe = await storage.getBouquetRecipe(bouquetId);
+      if (!recipe) {
+        return res.status(404).json({ message: "Recipe not found" });
+      }
+      res.json({ recipe });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/bouquets/recipes", async (req, res) => {
+    try {
+      const recipes = await storage.getBouquetRecipes();
+      res.json({ recipes });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const butterflies = await storage.getUserButterflies(userId);
+      res.json({ butterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get butterflies on garden fields
+  app.get("/api/user/:id/field-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const fieldButterflies = await storage.getFieldButterflies(userId);
+      res.json({ fieldButterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Collect butterfly from field
+  app.post("/api/garden/collect-butterfly", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.collectFieldButterfly(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich gesammelt!', butterfly: result.butterfly });
+      } else {
+        res.status(404).json({ message: 'Kein Schmetterling auf diesem Feld gefunden' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/bouquets/place", async (req, res) => {
+    try {
+      const placeData = placeBouquetSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.placeBouquet(userId, placeData);
+      if (result.success) {
+        res.json({ message: "Bouquet erfolgreich platziert" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/bouquets/collect-expired", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.collectExpiredBouquet(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ 
+          message: `Verwelktes Bouquet gesammelt! Erhalten: ${result.seedDrop?.quantity || 0}x ${result.seedDrop?.rarity || 'common'} Samen`,
+          seedDrop: result.seedDrop 
+        });
+      } else {
+        res.status(404).json({ message: 'Kein verwelktes Bouquet auf diesem Feld gefunden' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/placed-bouquets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const placedBouquets = await storage.getPlacedBouquets(userId);
+      res.json({ placedBouquets });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Exhibition routes
+  app.get("/api/user/:id/exhibition-frames", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const frames = await storage.getExhibitionFrames(userId);
+      res.json({ frames });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:id/exhibition-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const butterflies = await storage.getExhibitionButterflies(userId);
+      res.json({ butterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/purchase-frame", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'Missing userId' });
+      }
+
+      const result = await storage.purchaseExhibitionFrame(userId);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Rahmen erfolgreich gekauft!',
+          newCredits: result.newCredits,
+          frame: result.frame
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/place-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex, butterflyId } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined || !butterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.placeExhibitionButterfly(userId, frameId, slotIndex, butterflyId);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich platziert!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/remove-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.removeExhibitionButterfly(userId, frameId, slotIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich entfernt!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/sell-butterfly", async (req, res) => {
+    try {
+      const { userId, exhibitionButterflyId } = req.body;
+      
+      if (!userId || !exhibitionButterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.sellExhibitionButterfly(userId, exhibitionButterflyId);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Butterfly sold successfully', 
+          success: true,
+          creditsEarned: result.creditsEarned 
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Failed to sell butterfly' });
+      }
+    } catch (error) {
+      console.error('Failed to sell exhibition butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/exhibition/process-income", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'Missing userId' });
+      }
+
+      const result = await storage.processPassiveIncome(userId);
+      
+      if (result.success) {
+        res.json({ 
+          message: `${result.creditsEarned || 0} Credits aus der Ausstellung erhalten!`,
+          creditsEarned: result.creditsEarned
+        });
+      } else {
+        res.status(400).json({ message: 'Fehler beim Verarbeiten des passiven Einkommens' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all users with their online status and exhibition butterflies count
+  app.get("/api/users/list", async (req, res) => {
+    try {
+      const currentUserId = parseInt(req.headers['x-user-id'] as string);
+      
+      if (!currentUserId) {
+        return res.status(400).json({ message: "User ID required" });
+      }
+      
+      // Update current user's last activity timestamp
+      await storage.updateUserActivity(currentUserId);
+      
+      const users = await storage.getAllUsersWithStatus(currentUserId);
+      res.json({ users });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Like system routes
+  app.post('/api/exhibition/like', async (req, res) => {
+    try {
+      const { likerId, frameOwnerId, frameId } = req.body;
+      
+      if (!likerId || !frameOwnerId || !frameId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      const result = await storage.likeExhibitionFrame(likerId, frameOwnerId, frameId);
+      
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to like frame:', error);
+      res.status(500).json({ error: 'Failed to like frame' });
+    }
+  });
+
+  app.delete('/api/exhibition/like', async (req, res) => {
+    try {
+      const { likerId, frameOwnerId, frameId } = req.body;
+      
+      if (!likerId || !frameOwnerId || !frameId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      const result = await storage.unlikeExhibitionFrame(likerId, frameOwnerId, frameId);
+      
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to unlike frame:', error);
+      res.status(500).json({ error: 'Failed to unlike frame' });
+    }
+  });
+
+  app.get('/api/user/:userId/exhibition/:frameOwnerId/likes', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const frameOwnerId = parseInt(req.params.frameOwnerId);
+      
+      if (isNaN(userId) || isNaN(frameOwnerId)) {
+        return res.status(400).json({ error: 'Invalid user IDs' });
+      }
+      
+      const likes = await storage.getUserFrameLikes(userId, frameOwnerId);
+      res.json({ likes });
+    } catch (error) {
+      console.error('Failed to get frame likes:', error);
+      res.status(500).json({ error: 'Failed to get frame likes' });
+    }
+  });
+
+  app.get('/api/user/:ownerId/foreign-exhibition', async (req, res) => {
+    try {
+      const ownerId = parseInt(req.params.ownerId);
+      
+      if (isNaN(ownerId)) {
+        return res.status(400).json({ error: 'Invalid owner ID' });
+      }
+      
+      const butterflies = await storage.getForeignExhibitionButterflies(ownerId);
+      res.json({ butterflies });
+    } catch (error) {
+      console.error('Failed to get foreign exhibition:', error);
+      res.status(500).json({ error: 'Failed to get foreign exhibition' });
+    }
+  });
+
+  // Debug route to show rarity distribution
+  app.get("/api/debug/rarity-distribution", async (req, res) => {
+    try {
+      const { getRarityDistribution } = await import('./bouquet');
+      const distribution = getRarityDistribution();
+      
+      let total = Object.values(distribution).reduce((sum, count) => sum + count, 0);
+      const formattedDistribution = Object.entries(distribution).map(([rarity, count]) => {
+        return {
+          rarity,
+          count,
+          percentage: ((count / total) * 100).toFixed(1)
+        };
+      });
+      
+      res.json({
+        distribution: formattedDistribution,
+        total,
+        message: `Schmetterlings-Rarität Verteilung für ${total} verfügbare Bilder`
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error loading rarity distribution" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}

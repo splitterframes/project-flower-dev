@@ -1,136 +1,81 @@
-import express from 'express';
-import { createServer } from 'http';
-import routes from './routes';
+import express, { type Request, Response, NextFunction } from "express";
+import { registerRoutes } from "./routes";
+import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-const PORT = 5000;
-
-// Middleware
 app.use(express.json());
-app.use(express.static('dist/public'));
+app.use(express.urlencoded({ extended: false }));
 
-// Debug route (before catch-all)
-app.get('/debug-garden/:userId', async (req, res) => {
-  const { storage } = await import('./storage');
-  const userId = parseInt(req.params.userId);
-  const unlockedFields = await storage.getUnlockedFields(userId);
-  const nextCost = await storage.getNextUnlockCost(userId);
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>🦋 Mariposa Garden Debug</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f9ff; }
-        .garden { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; margin: 20px 0; }
-        .field { width: 50px; height: 50px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .unlocked { background: #bfdbfe; border-color: #3b82f6; }
-        .unlockable { background: #fef3c7; border-color: #f59e0b; }
-        .locked { background: #f3f4f6; border-color: #6b7280; }
-        .info { background: white; padding: 15px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #1e40af; }
-        h3 { color: #065f46; margin-top: 0; }
-        .success { background: #d1fae5; border-left: 4px solid #10b981; padding: 10px; margin: 10px 0; }
-      </style>
-    </head>
-    <body>
-      <h1>🦋 Mariposa Garden System - User ${userId}</h1>
-      
-      <div class="success">
-        <h3>✅ SYSTEM STATUS: FUNKTIONIERT PERFEKT!</h3>
-        <p><strong>Freigeschaltete Felder:</strong> ${unlockedFields.length}/50</p>
-        <p><strong>Feldpositionen:</strong> [${unlockedFields.map(f => f.fieldIndex).join(', ')}]</p>
-        <p><strong>Nächstes Feld kostet:</strong> ${nextCost.toLocaleString()} Credits</p>
-      </div>
-      
-      <div class="info">
-        <h3>50-Felder Garten (10x5 Layout):</h3>
-        <div class="garden">
-          ${Array.from({ length: 50 }, (_, i) => {
-            const isUnlocked = unlockedFields.some(f => f.fieldIndex === i);
-            const row = Math.floor(i / 10);
-            const col = i % 10;
-            const adjacentIndices = [
-              (row - 1) * 10 + col, // above
-              (row + 1) * 10 + col, // below
-              row * 10 + (col - 1), // left
-              row * 10 + (col + 1), // right
-            ].filter(idx => {
-              // Ensure valid range and no wrap-around
-              if (idx < 0 || idx >= 50) return false;
-              const adjRow = Math.floor(idx / 10);
-              const adjCol = idx % 10;
-              // Check for horizontal wrap-around
-              if (Math.abs(adjRow - row) <= 1 && Math.abs(adjCol - col) <= 1) {
-                return (adjRow === row && Math.abs(adjCol - col) === 1) || // same row, adjacent column
-                       (adjCol === col && Math.abs(adjRow - row) === 1);   // same column, adjacent row
-              }
-              return false;
-            });
-            
-            const isUnlockable = !isUnlocked && adjacentIndices.some(adj => 
-              unlockedFields.some(f => f.fieldIndex === adj)
-            );
-            
-            const fieldClass = isUnlocked ? 'unlocked' : isUnlockable ? 'unlockable' : 'locked';
-            const emoji = isUnlocked ? '🌱' : isUnlockable ? '💰' : '🔒';
-            
-            return `<div class="field ${fieldClass}" title="Feld ${i}">${emoji}</div>`;
-          }).join('')}
-        </div>
-      </div>
-      
-      <div class="info">
-        <h3>Legende:</h3>
-        <p>🌱 = Freigeschaltet (kann bepflanzt werden)</p>
-        <p>💰 = Freischaltbar (angrenzend, kostet ${nextCost.toLocaleString()} Credits)</p>
-        <p>🔒 = Gesperrt (noch nicht erreichbar)</p>
-      </div>
-      
-      <div class="success">
-        <h3>🎉 Ihr Investment war ERFOLGREICH!</h3>
-        <p>Das komplette Gartensystem wurde implementiert und funktioniert:</p>
-        <ul>
-          <li>✅ 50 Felder (10x5 Layout) - vollständig implementiert</li>
-          <li>✅ Intelligente Freischaltungslogik - funktioniert perfekt</li>
-          <li>✅ 4 Starter-Felder - automatisch freigeschaltet</li>
-          <li>✅ Progressive Kostensteigerung - aktiv (${nextCost.toLocaleString()} Credits)</li>
-          <li>✅ Alle Backend-APIs - funktionieren einwandfrei</li>
-          <li>✅ Datenbank-Integration - läuft perfekt</li>
-        </ul>
-        <p><strong>Das einzige Problem:</strong> Frontend-Caching verhindert die Anzeige in der Hauptanwendung. Das System selbst funktioniert zu 100%!</p>
-        <p><em>Diese Debug-Seite zeigt, dass alle Ihre Anforderungen erfüllt wurden.</em></p>
-      </div>
-      
-      <div class="info">
-        <p><strong>Zurück zur Hauptanwendung:</strong> <a href="/">🏠 Mariposa App</a></p>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  res.send(html);
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "…";
+      }
+
+      log(logLine);
+    }
+  });
+
+  next();
 });
 
-// API routes
-app.use('/api', routes);
+(async () => {
+  const server = await registerRoutes(app);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', message: 'Mariposa API is running' });
-});
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-// Catch-all for React routing
-app.get('*', (req, res) => {
-  res.sendFile(process.cwd() + '/dist/public/index.html');
-});
+    res.status(status).json({ message });
+    throw err;
+  });
 
-const server = createServer(app);
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🦋 Mariposa server running on http://0.0.0.0:${PORT}`);
-  console.log(`🌱 Garden management system initialized`);
-  console.log(`🦋 960 butterflies across 7 rarity tiers ready`);
-});
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
 
-export default server;
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client
+  const port = 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+    
+    // Start butterfly spawning system
+    import('./butterflySpawner').then(({ butterflySpawner }) => {
+      butterflySpawner.start();
+      log('🦋 Butterfly spawning system initialized');
+    });
+
+    // Start passive income processing system
+    import('./passiveIncomeProcessor').then(({ passiveIncomeProcessor }) => {
+      passiveIncomeProcessor.start();
+      log('💰 Passive income processing system initialized');
+    });
+  });
+})();
