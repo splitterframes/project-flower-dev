@@ -1,0 +1,160 @@
+2025-09-01 16:03:00.12
+ec13b8af
+User
+internalPosition: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+internalQuery: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+where: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+schema: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+table: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+column: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+dataType: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+constraint: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+file: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+line: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+routine: undefined,
+2025-09-01 16:03:00.12
+ec13b8af
+User
+sourceError: undefined
+2025-09-01 16:03:00.12
+ec13b8af
+User
+}
+2025-09-01 16:03:07.06
+ec13b8af
+User
+2:03:07 PM [express] POST /api/auth/login 500 in 141ms :: {"message":"Internal server error"}
+2025-09-01 16:03:59.12
+ec13b8af
+User
+💰 Processing passive income for all users...
+2025-09-01 16:03:59.72
+ec13b8af
+User
+💰 Error in passive income processing: NeonDbError: The requested endpoint could not be found, or you don't have access to it. Please check the provided ID and try again.
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at async NeonHttpPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-http/session.js:40:20)
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at async PostgreSQLStorage.getAllUsers (file:///home/runner/workspace/dist/index.js:1074:24)
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at async PostgreSQLStorage.getAllUsersWithStatus (file:///home/runner/workspace/dist/index.js:1078:24)
+2025-09-01 16:03:59.72
+ec13b8af
+User
+at async PassiveIncomeProcessor.processAllUsersPassiveIncome (file:///home/runner/workspace/dist/index.js:1246:28) {
+2025-09-01 16:03:59.72
+ec13b8af
+User
+severity: '',
+2025-09-01 16:03:59.72
+ec13b8af
+User
+code: '',
+2025-09-01 16:03:59.72
+ec13b8af
+User
+detail: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+hint: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+position: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+internalPosition: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+internalQuery: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+where: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+schema: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+table: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+column: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+dataType: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+constraint: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+file: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+line: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+routine: undefined,
+2025-09-01 16:03:59.72
+ec13b8af
+User
+sourceError: undefined
+2025-09-01 16:03:59.72
+ec13b8af
+User
+}
