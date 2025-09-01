@@ -18,8 +18,8 @@
         "username": "www",
         "password": "1",
         "id": 2,
-        "credits": 970,
-        "lastPassiveIncomeAt": "2025-09-01T19:36:54.003Z",
+        "credits": 971,
+        "lastPassiveIncomeAt": "2025-09-01T20:06:54.003Z",
         "createdAt": "2025-09-01T19:32:26.759Z",
         "updatedAt": "2025-09-01T20:01:40.990Z"
       }
@@ -331,7 +331,20 @@
       }
     ]
   ],
-  "passiveIncomeLog": [],
+  "passiveIncomeLog": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 2,
+        "amount": 1,
+        "sourceType": "exhibition",
+        "sourceDetails": "2 butterflies, 2cr/h",
+        "earnedAt": "2025-09-01T20:07:38.837Z",
+        "createdAt": "2025-09-01T20:07:38.837Z"
+      }
+    ]
+  ],
   "exhibitionFrameLikes": [],
   "counters": {
     "currentId": 3,
@@ -348,8 +361,8 @@
     "currentFlowerId": 5,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 3,
-    "currentPassiveIncomeId": 1,
+    "currentPassiveIncomeId": 2,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T20:03:38.702Z"
+  "savedAt": "2025-09-01T20:10:19.200Z"
 }

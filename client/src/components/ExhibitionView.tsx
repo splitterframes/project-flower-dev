@@ -7,7 +7,7 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { ButterflyDetailModal } from "./ButterflyDetailModal";
 import { RarityImage } from "./RarityImage";
-import { Trophy, Plus, DollarSign, Clock, Star, Info } from "lucide-react";
+import { Trophy, Plus, DollarSign, Clock, Star, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly } from "@shared/schema";
 
@@ -23,6 +23,7 @@ export const ExhibitionView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{frameId: number, slotIndex: number} | null>(null);
   const [showInventoryDialog, setShowInventoryDialog] = useState(false);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -31,6 +32,13 @@ export const ExhibitionView: React.FC = () => {
       // No need to manually process passive income anymore - it's automatic
     }
   }, [user]);
+
+  // Reset frame index when frames change
+  useEffect(() => {
+    if (currentFrameIndex >= frames.length && frames.length > 0) {
+      setCurrentFrameIndex(frames.length - 1);
+    }
+  }, [frames.length, currentFrameIndex]);
 
   const fetchExhibitionData = async () => {
     if (!user) return;
@@ -220,7 +228,7 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-6 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-4 min-h-[500px]">
+            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-4 h-[400px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 
@@ -362,11 +370,43 @@ export const ExhibitionView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Frames */}
+      {/* Frame Navigation */}
+      {frames.length > 0 && (
+        <div className="space-y-6">
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-center space-x-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border border-slate-600">
+            <Button
+              onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+              disabled={currentFrameIndex === 0}
+              variant="outline"
+              size="sm"
+              className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            
+            <div className="text-2xl font-bold text-white bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+              Rahmen #{frames[currentFrameIndex]?.frameNumber || 1} / {frames.length}
+            </div>
+            
+            <Button
+              onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}
+              disabled={currentFrameIndex >= frames.length - 1}
+              variant="outline"
+              size="sm"
+              className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Current Frame */}
+          {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
+        </div>
+      )}
+      
+      {/* Enhanced Purchase New Frame Button */}
       <div className="space-y-6">
-        {frames.map((frame, index) => renderFrame(frame, index))}
-        
-        {/* Enhanced Purchase New Frame Button */}
         <Card className="bg-gradient-to-br from-purple-800/40 to-indigo-800/40 border-2 border-purple-500/30 border-dashed hover:border-purple-400/50 transition-all duration-300 hover:scale-105 shadow-xl">
           <CardContent className="pt-6">
             <div className="text-center py-8 relative">

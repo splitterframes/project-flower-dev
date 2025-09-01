@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
 import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
-import { ArrowLeft, Heart, Bug } from 'lucide-react';
+import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
 interface ExhibitionButterfly {
@@ -43,11 +43,19 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
   useEffect(() => {
     loadForeignExhibition();
     loadFrameLikes();
   }, [ownerId]);
+
+  // Reset frame index when frames change
+  useEffect(() => {
+    if (currentFrameIndex >= sortedFrameIds.length && sortedFrameIds.length > 0) {
+      setCurrentFrameIndex(sortedFrameIds.length - 1);
+    }
+  }, [sortedFrameIds.length, currentFrameIndex]);
 
   const loadForeignExhibition = async () => {
     try {
@@ -173,10 +181,39 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
           </div>
         </div>
 
-        {/* Exhibition Frames */}
+        {/* Frame Navigation */}
         {sortedFrameIds.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {sortedFrameIds.map(frameId => {
+          <div className="space-y-6">
+            {/* Navigation Controls */}
+            <div className="flex items-center justify-center space-x-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border border-slate-600">
+              <Button
+                onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                disabled={currentFrameIndex === 0}
+                variant="outline"
+                size="sm"
+                className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              
+              <div className="text-2xl font-bold text-white bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                Rahmen #{sortedFrameIds[currentFrameIndex] || 1} / {sortedFrameIds.length}
+              </div>
+              
+              <Button
+                onClick={() => setCurrentFrameIndex(Math.min(sortedFrameIds.length - 1, currentFrameIndex + 1))}
+                disabled={currentFrameIndex >= sortedFrameIds.length - 1}
+                variant="outline"
+                size="sm"
+                className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Current Frame */}
+            {sortedFrameIds[currentFrameIndex] && (() => {
+              const frameId = sortedFrameIds[currentFrameIndex];
               const frameButterflies = frames.get(frameId) || [];
               const frameLike = frameLikes.find(fl => fl.frameId === frameId);
               
@@ -190,7 +227,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     isFullFrame 
                       ? 'border-green-500/50 hover:border-green-400/70' 
                       : 'border-slate-600 hover:border-orange-400/50'
-                  } transition-all duration-300 shadow-xl`}
+                  } transition-all duration-300 shadow-xl max-w-4xl mx-auto`}
                 >
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
@@ -235,7 +272,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="grid grid-cols-3 grid-rows-2 gap-4 aspect-[3/2] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
+                    <div className="grid grid-cols-3 grid-rows-2 gap-4 h-[400px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
                       {[0, 1, 2, 3, 4, 5].map(slotIndex => {
                         const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                         
@@ -291,7 +328,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   </CardContent>
                 </Card>
               );
-            })}
+            })()}
           </div>
         ) : (
           <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600">
