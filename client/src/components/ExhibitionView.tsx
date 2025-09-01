@@ -392,42 +392,30 @@ export const ExhibitionView: React.FC = () => {
         </div>
       )}
       
-      {/* Enhanced Purchase New Frame Button */}
-      <div className="space-y-6">
-        <Card className="bg-gradient-to-br from-purple-800/40 to-indigo-800/40 border-2 border-purple-500/30 border-dashed hover:border-purple-400/50 transition-all duration-300 hover:scale-105 shadow-xl">
-          <CardContent className="pt-6">
-            <div className="text-center py-8 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg"></div>
-              <div className="relative z-10">
-                <div className="relative mb-6">
-                  <Trophy className="h-16 w-16 text-amber-400 mx-auto animate-bounce" />
-                  <div className="absolute inset-0 h-16 w-16 mx-auto text-amber-400 animate-ping opacity-30"></div>
-                </div>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent mb-3">
-                  {frames.length === 0 ? '🎆 Erster Rahmen kostenlos!' : `🖼️ Neuer Rahmen - ${getFrameCost()} Credits`}
-                </h3>
-                <p className="text-slate-300 mb-6 text-lg">
-                  {frames.length === 0 
-                    ? 'Beginne deine Ausstellung mit einem kostenlosen Rahmen'
-                    : 'Erweitere deine Ausstellung mit einem weiteren Rahmen'
-                  }
-                </p>
-                <Button 
-                  onClick={purchaseFrame}
-                  disabled={isLoading || (frames.length > 0 && credits < getFrameCost())}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl text-lg transition-all duration-300 hover:scale-110 shadow-lg"
-                >
-                  <Plus className="h-5 w-5 mr-3" />
-                  {frames.length === 0 ? '🎁 Kostenlosen Rahmen holen' : `💰 Rahmen kaufen (${getFrameCost()} Cr)`}
-                </Button>
-                {frames.length > 0 && credits < getFrameCost() && (
-                  <p className="text-red-400 text-lg mt-4 font-semibold">⚠️ Nicht genügend Credits</p>
-                )}
-              </div>
+      {/* Compact Purchase New Frame Button */}
+      <Card className="bg-gradient-to-br from-purple-800/40 to-indigo-800/40 border border-purple-500/30 border-dashed shadow-lg">
+        <CardContent className="p-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-3 mb-3">
+              <Trophy className="h-6 w-6 text-amber-400" />
+              <h3 className="text-lg font-semibold text-white">
+                {frames.length === 0 ? 'Erster Rahmen kostenlos!' : `Neuer Rahmen - ${getFrameCost()} Cr`}
+              </h3>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Button 
+              onClick={purchaseFrame}
+              disabled={isLoading || (frames.length > 0 && credits < getFrameCost())}
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {frames.length === 0 ? 'Kostenlosen Rahmen holen' : `Rahmen kaufen (${getFrameCost()} Cr)`}
+            </Button>
+            {frames.length > 0 && credits < getFrameCost() && (
+              <p className="text-red-400 text-sm mt-2">⚠️ Nicht genügend Credits</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Butterfly Detail Modal */}
       <ButterflyDetailModal
