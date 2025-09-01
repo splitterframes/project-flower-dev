@@ -239,7 +239,7 @@ export default function GardenView() {
               {isReady ? (
                 // Show actual flower image based on what was harvested
                 <img
-                  src={`/Blumen/${field.flowerImageId || '1'}.jpg`}
+                  src={`/Blumen/${field.seedId || '1'}.jpg`}
                   alt="Ready flower"
                   className="w-8 h-8 mx-auto rounded animate-pulse border"
                   style={{ borderColor: rarity.color }}
