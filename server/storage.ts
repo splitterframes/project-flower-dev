@@ -1720,8 +1720,37 @@ class PostgreSQLStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
-    return result[0];
+    // Create user with default credits (1000)
+    const result = await db.insert(users).values({
+      ...user,
+      credits: 1000
+    }).returning();
+    const newUser = result[0];
+
+    // Add start seeds to inventory: 5 common + 3 rare
+    try {
+      // Get seed IDs for common and rare seeds
+      const commonSeeds = await db.select().from(seeds).where(eq(seeds.rarity, 'common')).limit(1);
+      const rareSeeds = await db.select().from(seeds).where(eq(seeds.rarity, 'rare')).limit(1);
+
+      const startSeeds = [
+        { seedId: commonSeeds[0]?.id || 1, rarity: 'common', quantity: 5 },
+        { seedId: rareSeeds[0]?.id || 2, rarity: 'rare', quantity: 3 }
+      ];
+
+      for (const seedInfo of startSeeds) {
+        await db.insert(userSeeds).values({
+          userId: newUser.id,
+          seedId: seedInfo.seedId,
+          quantity: seedInfo.quantity
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Error adding start seeds for user ${newUser.username}:`, error);
+    }
+
+    console.log(`🌱 New user ${newUser.username} created with 5 common + 3 rare seeds`);
+    return newUser;
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
