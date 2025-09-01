@@ -81,6 +81,7 @@ export const GardenView: React.FC = () => {
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
   const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
   const [collectedBouquets, setCollectedBouquets] = useState<Set<number>>(new Set());
+  const [touchStart, setTouchStart] = useState<{fieldIndex: number, timer: NodeJS.Timeout} | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -681,14 +682,14 @@ export const GardenView: React.FC = () => {
             </span>
           </CardTitle>
           <div className="text-slate-400 mt-2 relative z-10">
-            <p className="flex items-center">
-              <span className="mr-4">📋 Links-klick: Samen pflanzen</span>
-              <span>🌈 Rechts-klick: Bouquet platzieren</span>
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0">
+              <span className="mr-0 sm:mr-4 text-sm">📋 <span className="hidden sm:inline">Links-klick</span><span className="sm:hidden">Tippen</span>: Samen pflanzen</span>
+              <span className="text-sm">🌈 <span className="hidden sm:inline">Rechts-klick</span><span className="sm:hidden">Lang drücken</span>: Bouquet platzieren</span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-10 gap-2">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
             {gardenFields.map((field) => {
               // Check if field is adjacent to any unlocked field
               const isNextToUnlock = !field.isUnlocked && (() => {
@@ -714,18 +715,20 @@ export const GardenView: React.FC = () => {
                 <div
                   key={field.id}
                   className={`
-                    aspect-square border-2 rounded-lg relative flex items-center justify-center cursor-pointer transition-all
+                    aspect-square border-2 rounded-lg relative flex items-center justify-center cursor-pointer transition-all touch-target
                     ${field.isUnlocked 
-                      ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40' 
+                      ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40 active:bg-green-900/60' 
                       : isNextToUnlock 
-                        ? 'border-orange-500 bg-slate-700 hover:bg-slate-600' 
+                        ? 'border-orange-500 bg-slate-700 hover:bg-slate-600 active:bg-slate-500' 
                         : 'border-slate-600 bg-slate-800 opacity-50'
                     }
                   `}
                   style={{
                     backgroundImage: field.isUnlocked ? 'url("/Landschaft/gras.png")' : 'none',
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
+                    minHeight: '44px',
+                    minWidth: '44px'
                   }}
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
@@ -745,6 +748,37 @@ export const GardenView: React.FC = () => {
                     e.preventDefault(); // Prevent default context menu
                     if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly) {
                       openBouquetSelection(field.id - 1);
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    // Clear any existing touch timer
+                    if (touchStart) {
+                      clearTimeout(touchStart.timer);
+                    }
+                    
+                    // Set up long press detection
+                    if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly) {
+                      const timer = setTimeout(() => {
+                        // Long press detected - open bouquet selection
+                        openBouquetSelection(field.id - 1);
+                        setTouchStart(null);
+                      }, 500); // 500ms long press
+                      
+                      setTouchStart({ fieldIndex: field.id - 1, timer });
+                    }
+                  }}
+                  onTouchEnd={() => {
+                    // Clear long press timer on touch end
+                    if (touchStart) {
+                      clearTimeout(touchStart.timer);
+                      setTouchStart(null);
+                    }
+                  }}
+                  onTouchCancel={() => {
+                    // Clear long press timer on touch cancel
+                    if (touchStart) {
+                      clearTimeout(touchStart.timer);
+                      setTouchStart(null);
                     }
                   }}
                 >
@@ -821,8 +855,8 @@ export const GardenView: React.FC = () => {
                             className="mx-auto w-14 h-14"
                           />
                           {status && (
-                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-2 py-1 mt-2">
-                              <div className="text-base font-bold text-green-300 text-center animate-pulse">
+                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-2 py-1 mt-2 md:block">
+                              <div className="text-xs md:text-base font-bold text-green-300 text-center animate-pulse countdown-mobile md:countdown-desktop">
                                 ⏱️ {status.remainingTime}
                               </div>
                             </div>

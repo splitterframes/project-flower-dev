@@ -43,6 +43,9 @@
     width: 100vw;
     height: 100vh;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Custom scrollbar styles */
@@ -161,6 +164,7 @@ canvas {
 
 .layout-footer {
   flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 /* Mobile responsive adjustments */
@@ -171,5 +175,47 @@ canvas {
   
   .mobile-stack {
     @apply flex-col space-x-0 space-y-2;
+  }
+
+  /* Smaller countdown timers on mobile */
+  .countdown-mobile {
+    @apply text-xs px-1 py-0.5 mt-1;
+  }
+
+  /* Touch-friendly buttons */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Disable text selection on touch devices */
+  .no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Mobile garden grid */
+  .garden-grid-mobile {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem; /* 4px */
+  }
+
+  .garden-grid-desktop {
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem; /* 8px */
+  }
+
+  /* Safe area support for modern phones */
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
   }
 }

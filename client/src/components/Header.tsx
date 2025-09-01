@@ -116,19 +116,19 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
   };
 
   return (
-    <header className="bg-slate-900 border-b border-slate-700 px-6 py-4">
+    <header className="bg-slate-900 border-b border-slate-700 px-2 sm:px-6 py-2 sm:py-4 safe-area-top">
       <div className="flex items-center justify-between">
         {/* Logo/Title */}
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-white">Mariposa</h1>
+        <div className="flex items-center">
+          <h1 className="text-lg sm:text-2xl font-bold text-white">Mariposa</h1>
         </div>
 
         {/* Right side - User info or Login button */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-4">
           {user ? (
             <>
-              {/* Inventory Icons */}
-              <div className="flex items-center space-x-3">
+              {/* Inventory Icons - Hidden on very small screens */}
+              <div className="hidden md:flex items-center space-x-3">
                 <div className="flex items-center space-x-1 text-slate-300">
                   <Sprout className="h-4 w-4 text-yellow-400" />
                   <span className="text-sm font-medium">{inventoryCounts.seeds}</span>
@@ -149,27 +149,27 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
 
               {/* Passive Income Display */}
               {passiveIncome > 0 && (
-                <div className="flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border border-green-500">
+                <div className="hidden sm:flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border border-green-500">
                   <TrendingUp className="h-4 w-4 text-green-400" />
                   <span className="text-green-400 font-semibold">+{passiveIncome} Cr/h</span>
                 </div>
               )}
 
-              {/* Credits Display */}
-              <div className="flex items-center space-x-2 bg-slate-800 px-4 py-2 rounded-lg border border-orange-500">
-                <Coins className="h-5 w-5 text-orange-400" />
-                <span className="text-orange-400 font-semibold">{credits} Cr</span>
+              {/* Credits Display - Always visible but smaller on mobile */}
+              <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border border-orange-500">
+                <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />
+                <span className="text-orange-400 font-semibold text-sm sm:text-base">{credits} Cr</span>
               </div>
               
-              {/* User List Button */}
+              {/* User List Button - Smaller on mobile */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowUserList(true)}
-                className="border-cyan-500 text-cyan-300 hover:bg-cyan-800 hover:text-white"
+                className="border-cyan-500 text-cyan-300 hover:bg-cyan-800 hover:text-white px-2 sm:px-3"
               >
-                <Users className="h-4 w-4 mr-2" />
-                👥 User
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">👥 User</span>
               </Button>
               
               {/* User Info */}

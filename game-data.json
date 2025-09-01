@@ -1,5 +1,18 @@
 {
-  "users": [],
+  "users": [
+    [
+      1,
+      {
+        "username": "Hans",
+        "password": "123",
+        "id": 1,
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T10:07:36.924Z",
+        "updatedAt": "2025-09-01T10:07:36.924Z"
+      }
+    ]
+  ],
   "seeds": [
     [
       1,
@@ -86,9 +99,51 @@
       }
     ]
   ],
-  "userSeeds": [],
+  "userSeeds": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 1,
+        "seedId": 1,
+        "quantity": 4,
+        "createdAt": "2025-09-01T10:07:36.924Z",
+        "seedName": "Common Samen",
+        "seedRarity": "common"
+      }
+    ],
+    [
+      2,
+      {
+        "id": 2,
+        "userId": 1,
+        "seedId": 3,
+        "quantity": 3,
+        "createdAt": "2025-09-01T10:07:36.924Z",
+        "seedName": "Rare Samen",
+        "seedRarity": "rare"
+      }
+    ]
+  ],
   "marketListings": [],
-  "plantedFields": [],
+  "plantedFields": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 1,
+        "fieldIndex": 0,
+        "seedId": 1,
+        "seedRarity": "common",
+        "plantedAt": "2025-09-01T10:07:43.499Z",
+        "isGrown": true,
+        "flowerId": 3,
+        "flowerName": "Corona radiatus",
+        "flowerImageUrl": "/Blumen/3.jpg",
+        "createdAt": "2025-09-01T10:07:43.499Z"
+      }
+    ]
+  ],
   "userFlowers": [],
   "bouquets": [],
   "userBouquets": [],
@@ -101,11 +156,11 @@
   "passiveIncomeLog": [],
   "exhibitionFrameLikes": [],
   "counters": {
-    "currentId": 1,
+    "currentId": 2,
     "currentSeedId": 8,
-    "currentUserSeedId": 1,
+    "currentUserSeedId": 3,
     "currentListingId": 1,
-    "currentFieldId": 1,
+    "currentFieldId": 2,
     "currentBouquetId": 1,
     "currentUserBouquetId": 1,
     "currentRecipeId": 1,
@@ -118,5 +173,5 @@
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T06:46:40.186Z"
+  "savedAt": "2025-09-01T10:13:59.090Z"
 }
