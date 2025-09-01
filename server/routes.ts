@@ -152,6 +152,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/seeds/shop", async (req, res) => {
+    try {
+      const shopSeeds = [
+        { id: 1, name: "Common Samen", rarity: "common", price: 10, description: "Ein gewöhnlicher Samen mit einfachen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 2, name: "Uncommon Samen", rarity: "uncommon", price: 25, description: "Ein ungewöhnlicher Samen mit besonderen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 3, name: "Rare Samen", rarity: "rare", price: 50, description: "Ein seltener Samen mit wertvollen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 4, name: "Super-rare Samen", rarity: "super-rare", price: 100, description: "Ein super-seltener Samen mit außergewöhnlichen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 5, name: "Epic Samen", rarity: "epic", price: 200, description: "Ein epischer Samen mit mächtigen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 6, name: "Legendary Samen", rarity: "legendary", price: 400, description: "Ein legendärer Samen mit mythischen Eigenschaften", imageUrl: "/Blumen/0.jpg" },
+        { id: 7, name: "Mythical Samen", rarity: "mythical", price: 800, description: "Ein mythischer Samen mit göttlichen Eigenschaften", imageUrl: "/Blumen/0.jpg" }
+      ];
+      res.json({ seeds: shopSeeds });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/seeds", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
