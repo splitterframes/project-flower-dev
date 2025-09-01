@@ -226,23 +226,88 @@ export class MemStorage implements IStorage {
       if (fs.existsSync(this.saveFilePath)) {
         const data = JSON.parse(fs.readFileSync(this.saveFilePath, 'utf8'));
         
-        // Restore all maps
-        this.users = new Map(data.users || []);
-        this.seeds = new Map(data.seeds || []);
+        // Restore all maps with date conversion
+        this.users = new Map((data.users || []).map(([key, user]: [any, any]) => [
+          key, 
+          {
+            ...user,
+            createdAt: new Date(user.createdAt),
+            updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined
+          }
+        ]));
+        this.seeds = new Map((data.seeds || []).map(([key, seed]: [any, any]) => [
+          key,
+          {
+            ...seed,
+            createdAt: new Date(seed.createdAt)
+          }
+        ]));
         this.userSeeds = new Map(data.userSeeds || []);
-        this.marketListings = new Map(data.marketListings || []);
-        this.plantedFields = new Map(data.plantedFields || []);
+        this.marketListings = new Map((data.marketListings || []).map(([key, listing]: [any, any]) => [
+          key,
+          {
+            ...listing,
+            createdAt: new Date(listing.createdAt),
+            updatedAt: listing.updatedAt ? new Date(listing.updatedAt) : undefined
+          }
+        ]));
+        this.plantedFields = new Map((data.plantedFields || []).map(([key, field]: [any, any]) => [
+          key,
+          {
+            ...field,
+            plantedAt: new Date(field.plantedAt),
+            createdAt: new Date(field.createdAt)
+          }
+        ]));
         this.userFlowers = new Map(data.userFlowers || []);
-        this.bouquets = new Map(data.bouquets || []);
+        this.bouquets = new Map((data.bouquets || []).map(([key, bouquet]: [any, any]) => [
+          key,
+          {
+            ...bouquet,
+            createdAt: new Date(bouquet.createdAt)
+          }
+        ]));
         this.userBouquets = new Map(data.userBouquets || []);
         this.bouquetRecipes = new Map(data.bouquetRecipes || []);
-        this.placedBouquets = new Map(data.placedBouquets || []);
+        this.placedBouquets = new Map((data.placedBouquets || []).map(([key, bouquet]: [any, any]) => [
+          key,
+          {
+            ...bouquet,
+            placedAt: new Date(bouquet.placedAt),
+            expiresAt: new Date(bouquet.expiresAt)
+          }
+        ]));
         this.userButterflies = new Map(data.userButterflies || []);
-        this.fieldButterflies = new Map(data.fieldButterflies || []);
+        this.fieldButterflies = new Map((data.fieldButterflies || []).map(([key, butterfly]: [any, any]) => [
+          key,
+          {
+            ...butterfly,
+            spawnedAt: new Date(butterfly.spawnedAt),
+            expiresAt: new Date(butterfly.expiresAt)
+          }
+        ]));
         this.exhibitionFrames = new Map(data.exhibitionFrames || []);
-        this.exhibitionButterflies = new Map(data.exhibitionButterflies || []);
-        this.passiveIncomeLog = new Map(data.passiveIncomeLog || []);
-        this.exhibitionFrameLikes = new Map(data.exhibitionFrameLikes || []);
+        this.exhibitionButterflies = new Map((data.exhibitionButterflies || []).map(([key, butterfly]: [any, any]) => [
+          key,
+          {
+            ...butterfly,
+            addedAt: new Date(butterfly.addedAt)
+          }
+        ]));
+        this.passiveIncomeLog = new Map((data.passiveIncomeLog || []).map(([key, log]: [any, any]) => [
+          key,
+          {
+            ...log,
+            processedAt: new Date(log.processedAt)
+          }
+        ]));
+        this.exhibitionFrameLikes = new Map((data.exhibitionFrameLikes || []).map(([key, like]: [any, any]) => [
+          key,
+          {
+            ...like,
+            createdAt: new Date(like.createdAt)
+          }
+        ]));
         
         // Restore counters
         if (data.counters) {

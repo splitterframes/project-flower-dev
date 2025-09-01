@@ -1,0 +1,72 @@
+2025-09-01 12:54:30.59
+bf80a402
+User
+💰 Error in passive income processing: TypeError: lastActivity.getTime is not a function
+2025-09-01 12:54:30.59
+bf80a402
+User
+at MemStorage.getAllUsersWithStatus (file:///home/runner/workspace/dist/index.js:1593:57)
+2025-09-01 12:54:30.59
+bf80a402
+User
+at PassiveIncomeProcessor.processAllUsersPassiveIncome (file:///home/runner/workspace/dist/index.js:1827:42)
+2025-09-01 12:54:30.59
+bf80a402
+User
+at Timeout._onTimeout (file:///home/runner/workspace/dist/index.js:1809:16)
+2025-09-01 12:54:30.59
+bf80a402
+User
+at listOnTimeout (node:internal/timers:581:17)
+2025-09-01 12:54:30.59
+bf80a402
+User
+at process.processTimers (node:internal/timers:519:7)
+2025-09-01 12:55:20.00
+bf80a402
+User
+💰 Error in passive income processing: TypeError: lastActivity.getTime is not a function
+2025-09-01 12:55:20.00
+bf80a402
+User
+at MemStorage.getAllUsersWithStatus (file:///home/runner/workspace/dist/index.js:1593:57)
+2025-09-01 12:55:20.00
+bf80a402
+User
+at PassiveIncomeProcessor.processAllUsersPassiveIncome (file:///home/runner/workspace/dist/index.js:1827:42)
+2025-09-01 12:55:20.00
+bf80a402
+User
+at Timeout._onTimeout (file:///home/runner/workspace/dist/index.js:1809:16)
+2025-09-01 12:55:20.00
+bf80a402
+User
+at listOnTimeout (node:internal/timers:581:17)
+2025-09-01 12:55:20.00
+bf80a402
+User
+at process.processTimers (node:internal/timers:519:7)
+2025-09-01 12:55:30.59
+bf80a402
+User
+💰 Error in passive income processing: TypeError: lastActivity.getTime is not a function
+2025-09-01 12:55:30.59
+bf80a402
+User
+at MemStorage.getAllUsersWithStatus (file:///home/runner/workspace/dist/index.js:1593:57)
+2025-09-01 12:55:30.59
+bf80a402
+User
+at PassiveIncomeProcessor.processAllUsersPassiveIncome (file:///home/runner/workspace/dist/index.js:1827:42)
+2025-09-01 12:55:30.59
+bf80a402
+User
+at Timeout._onTimeout (file:///home/runner/workspace/dist/index.js:1809:16)
+2025-09-01 12:55:30.59
+bf80a402
+User
+at listOnTimeout (node:internal/timers:581:17)
+2025-09-01 12:55:30.59
+bf80a402
+User
+at process.processTimers (node:internal/timers:519:7)
