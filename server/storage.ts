@@ -1977,6 +1977,20 @@ class PostgreSQLStorage implements IStorage {
     return users.map(user => ({ ...user, isOnline: false }));
   }
 
+  async getFieldButterflies(userId: number): Promise<FieldButterfly[]> {
+    const result = await db.select().from(fieldButterflies).where(eq(fieldButterflies.userId, userId));
+    return result;
+  }
+
+  async updateUserActivity(userId: number): Promise<void> {
+    // Update user's last activity timestamp
+    try {
+      await db.update(users).set({ updatedAt: new Date() }).where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error updating user activity:', error);
+    }
+  }
+
   async saveData(): Promise<void> {
     // No-op for PostgreSQL - data is automatically persisted
     console.log('💾 PostgreSQL data automatically persisted');
