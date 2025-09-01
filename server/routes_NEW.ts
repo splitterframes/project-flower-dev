@@ -12,7 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
  */
 
 // === USER ROUTES ===
-app.post('/api/register', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -25,9 +25,11 @@ app.post('/api/register', async (req, res) => {
     if (result.success) {
       console.log(`🎯 NEW API: User registered: ${username}`);
       res.json({ 
-        message: 'User registered successfully', 
-        userId: result.user!.id,
-        credits: result.user!.credits
+        user: {
+          id: result.user!.id,
+          username: result.user!.username,
+          credits: result.user!.credits
+        }
       });
     } else {
       res.status(400).json({ message: result.message || 'Registration failed' });
@@ -38,7 +40,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -51,10 +53,11 @@ app.post('/api/login', async (req, res) => {
     if (result.success) {
       console.log(`🎯 NEW API: User logged in: ${username}`);
       res.json({ 
-        message: 'Login successful', 
-        userId: result.user!.id,
-        credits: result.user!.credits,
-        username: result.user!.username
+        user: {
+          id: result.user!.id,
+          username: result.user!.username,
+          credits: result.user!.credits
+        }
       });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
