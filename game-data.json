@@ -18,8 +18,8 @@
         "username": "www",
         "password": "1",
         "id": 2,
-        "credits": 972,
-        "lastPassiveIncomeAt": "2025-09-01T20:36:54.003Z",
+        "credits": 973,
+        "lastPassiveIncomeAt": "2025-09-01T21:06:54.003Z",
         "createdAt": "2025-09-01T19:32:26.759Z",
         "updatedAt": "2025-09-01T20:01:40.990Z"
       }
@@ -196,70 +196,6 @@
         "flowerImageUrl": "/Blumen/3.jpg",
         "createdAt": "2025-09-01T10:07:43.499Z"
       }
-    ],
-    [
-      6,
-      {
-        "id": 6,
-        "userId": 2,
-        "fieldIndex": 0,
-        "seedId": 3,
-        "seedRarity": "rare",
-        "plantedAt": "2025-09-01T20:33:48.532Z",
-        "isGrown": false,
-        "flowerId": 129,
-        "flowerName": "Aurora diamanteus",
-        "flowerImageUrl": "/Blumen/129.jpg",
-        "createdAt": "2025-09-01T20:33:48.532Z"
-      }
-    ],
-    [
-      7,
-      {
-        "id": 7,
-        "userId": 2,
-        "fieldIndex": 1,
-        "seedId": 1,
-        "seedRarity": "common",
-        "plantedAt": "2025-09-01T20:33:49.957Z",
-        "isGrown": false,
-        "flowerId": 22,
-        "flowerName": "Viola splendidus",
-        "flowerImageUrl": "/Blumen/22.jpg",
-        "createdAt": "2025-09-01T20:33:49.957Z"
-      }
-    ],
-    [
-      8,
-      {
-        "id": 8,
-        "userId": 2,
-        "fieldIndex": 11,
-        "seedId": 1,
-        "seedRarity": "common",
-        "plantedAt": "2025-09-01T20:33:51.278Z",
-        "isGrown": false,
-        "flowerId": 32,
-        "flowerName": "Splendida elegantia",
-        "flowerImageUrl": "/Blumen/32.jpg",
-        "createdAt": "2025-09-01T20:33:51.278Z"
-      }
-    ],
-    [
-      9,
-      {
-        "id": 9,
-        "userId": 2,
-        "fieldIndex": 10,
-        "seedId": 1,
-        "seedRarity": "common",
-        "plantedAt": "2025-09-01T20:33:52.670Z",
-        "isGrown": false,
-        "flowerId": 23,
-        "flowerName": "Rubra mirabilis",
-        "flowerImageUrl": "/Blumen/23.jpg",
-        "createdAt": "2025-09-01T20:33:52.670Z"
-      }
     ]
   ],
   "userFlowers": [
@@ -274,6 +210,58 @@
         "flowerImageUrl": "/Blumen/114.jpg",
         "quantity": 1,
         "createdAt": "2025-09-01T19:38:33.173Z"
+      }
+    ],
+    [
+      5,
+      {
+        "id": 5,
+        "userId": 2,
+        "flowerId": 22,
+        "flowerName": "Viola splendidus",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/22.jpg",
+        "quantity": 1,
+        "createdAt": "2025-09-01T20:53:16.824Z"
+      }
+    ],
+    [
+      6,
+      {
+        "id": 6,
+        "userId": 2,
+        "flowerId": 129,
+        "flowerName": "Aurora diamanteus",
+        "flowerRarity": "rare",
+        "flowerImageUrl": "/Blumen/129.jpg",
+        "quantity": 1,
+        "createdAt": "2025-09-01T20:53:17.713Z"
+      }
+    ],
+    [
+      7,
+      {
+        "id": 7,
+        "userId": 2,
+        "flowerId": 32,
+        "flowerName": "Splendida elegantia",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/32.jpg",
+        "quantity": 1,
+        "createdAt": "2025-09-01T20:53:18.584Z"
+      }
+    ],
+    [
+      8,
+      {
+        "id": 8,
+        "userId": 2,
+        "flowerId": 23,
+        "flowerName": "Rubra mirabilis",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/23.jpg",
+        "quantity": 1,
+        "createdAt": "2025-09-01T20:53:19.161Z"
       }
     ]
   ],
@@ -419,6 +407,18 @@
         "earnedAt": "2025-09-01T20:37:16.151Z",
         "createdAt": "2025-09-01T20:37:16.151Z"
       }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "userId": 2,
+        "amount": 1,
+        "sourceType": "exhibition",
+        "sourceDetails": "2 butterflies, 2cr/h",
+        "earnedAt": "2025-09-01T21:07:16.169Z",
+        "createdAt": "2025-09-01T21:07:16.169Z"
+      }
     ]
   ],
   "exhibitionFrameLikes": [],
@@ -434,11 +434,11 @@
     "currentPlacedBouquetId": 2,
     "currentButterflyId": 3,
     "currentFieldButterflyId": 5,
-    "currentFlowerId": 5,
+    "currentFlowerId": 9,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 3,
-    "currentPassiveIncomeId": 3,
+    "currentPassiveIncomeId": 4,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T20:48:16.032Z"
+  "savedAt": "2025-09-01T21:13:25.733Z"
 }

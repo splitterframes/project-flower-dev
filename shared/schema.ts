@@ -147,6 +147,7 @@ export const placedBouquets = pgTable("placed_bouquets", {
   fieldIndex: integer("field_index").notNull(),
   placedAt: timestamp("placed_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(), // 21 minutes after placement
+  nextSpawnAt: timestamp("next_spawn_at").notNull(), // Individual spawn timing per bouquet
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

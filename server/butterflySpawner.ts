@@ -2,9 +2,10 @@ import { storage } from './storage';
 import type { RarityTier } from '@shared/rarity';
 
 /**
- * Butterfly Spawning System
- * - Checks active bouquets every 1-5 minutes
- * - Spawns butterflies based on bouquet rarity
+ * Individual Butterfly Spawning System
+ * - Checks bouquets every 60 seconds for individual spawn times
+ * - Each bouquet has its own nextSpawnAt timestamp
+ * - Spawns butterflies based on bouquet rarity and individual timing
  * - Automatically manages expired bouquets
  */
 export class ButterflySpawner {
@@ -23,18 +24,18 @@ export class ButterflySpawner {
     // Run immediately once, then start interval
     this.checkForButterflySpawns();
     
-    // Fixed 5-minute interval (300000ms)
-    const SPAWN_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    // Individual timing checks every 60 seconds
+    const CHECK_INTERVAL = 60 * 1000; // 1 minute
     
     const scheduleNext = () => {
       if (!this.isRunning) return;
       
-      console.log(`🦋 Next butterfly check in 5:00 minutes`);
+      console.log(`🦋 Next butterfly check in 1:00 minute`);
       
       this.intervalId = setTimeout(() => {
         this.checkForButterflySpawns();
         scheduleNext(); // Schedule the next check
-      }, SPAWN_INTERVAL);
+      }, CHECK_INTERVAL);
     };
 
     scheduleNext();
@@ -51,10 +52,11 @@ export class ButterflySpawner {
 
   private async checkForButterflySpawns() {
     try {
-      console.log('🦋 Checking for butterfly spawns...');
+      console.log('🦋 Checking individual bouquet spawn times...');
       
       const currentTime = new Date();
       let totalSpawns = 0;
+      let totalChecked = 0;
       
       // Get all users with active bouquets  
       const allUsers = await storage.getAllUsersWithStatus();
@@ -68,15 +70,20 @@ export class ButterflySpawner {
             continue; // Skip this user, no active bouquets
           }
           
-          console.log(`🦋 User ${user.id}: Found ${activeBouquets.length} active bouquets`);
-          
           for (const placedBouquet of activeBouquets) {
+            totalChecked++;
+            
+            // Check if this bouquet is ready to spawn (individual timing)
+            const nextSpawnTime = new Date((placedBouquet as any).nextSpawnAt);
+            if (currentTime < nextSpawnTime) {
+              continue; // Not time yet for this bouquet
+            }
+            
             // Check how many butterflies already spawned for this bouquet
             const existingButterflies = await storage.getFieldButterflies(user.id);
             const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === placedBouquet.bouquetId).length;
             
-            // Each bouquet can spawn 1-4 butterflies over 21 minutes (every 5 minutes)
-            // So after 4 spawns (20 minutes), stop spawning
+            // Each bouquet can spawn 2-4 butterflies over 21 minutes
             const maxSpawns = this.getBouquetMaxSpawns((placedBouquet as any).bouquetRarity as RarityTier);
             
             if (butterflyCount >= maxSpawns) {
@@ -95,6 +102,9 @@ export class ButterflySpawner {
             if (result.success) {
               totalSpawns++;
               console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (${butterflyCount + 1}/${maxSpawns})`);
+              
+              // Set next spawn time for this bouquet (1-5 minutes from now)
+              await this.setNextSpawnTime(placedBouquet.id, currentTime);
             }
           }
         } catch (error) {
@@ -103,19 +113,35 @@ export class ButterflySpawner {
       }
       
       if (totalSpawns > 0) {
-        console.log(`🦋 Spawn cycle complete: ${totalSpawns} butterflies spawned across all users`);
+        console.log(`🦋 Individual spawn cycle complete: ${totalSpawns} butterflies spawned from ${totalChecked} bouquets checked`);
       } else {
-        console.log('🦋 Spawn cycle complete: No butterflies spawned this time');
+        console.log(`🦋 Individual spawn cycle complete: No butterflies spawned (${totalChecked} bouquets checked)`);
       }
       
     } catch (error) {
-      console.error('🦋 Error in butterfly spawn check:', error);
+      console.error('🦋 Error in individual butterfly spawn check:', error);
+    }
+  }
+  
+  // Set individual next spawn time for a bouquet (1-5 minutes from now)
+  private async setNextSpawnTime(placedBouquetId: number, fromTime: Date) {
+    try {
+      // Random spawn time between 1-5 minutes
+      const minMinutes = 1;
+      const maxMinutes = 5;
+      const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
+      const nextSpawnTime = new Date(fromTime.getTime() + randomMinutes * 60 * 1000);
+      
+      await storage.updateBouquetNextSpawnTime(placedBouquetId, nextSpawnTime);
+      console.log(`🦋 Next spawn for bouquet #${placedBouquetId} set to ${nextSpawnTime.toLocaleTimeString()} (in ${randomMinutes} minutes)`);
+    } catch (error) {
+      console.error(`🦋 Error setting next spawn time for bouquet ${placedBouquetId}:`, error);
     }
   }
 
   // Force a spawn check (for testing or manual triggers)
   async forceSpawnCheck() {
-    console.log('🦋 Forcing butterfly spawn check...');
+    console.log('🦋 Forcing individual butterfly spawn check...');
     await this.checkForButterflySpawns();
   }
 

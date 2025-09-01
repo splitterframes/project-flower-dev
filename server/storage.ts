@@ -894,6 +894,11 @@ export class MemStorage implements IStorage {
     // Create placed bouquet (expires in 21 minutes)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 21); // Standard 21 minutes for bouquet placement
+    
+    // Set initial next spawn time (1-3 minutes from now for first spawn)
+    const nextSpawnAt = new Date();
+    const initialSpawnMinutes = Math.floor(Math.random() * 3) + 1; // 1-3 minutes
+    nextSpawnAt.setMinutes(nextSpawnAt.getMinutes() + initialSpawnMinutes);
 
     const placedBouquet = {
       id: this.currentPlacedBouquetId++,
@@ -902,6 +907,7 @@ export class MemStorage implements IStorage {
       fieldIndex: data.fieldIndex,
       placedAt: new Date(),
       expiresAt,
+      nextSpawnAt,
       createdAt: new Date(),
       bouquetName: bouquet.name,
       bouquetRarity: bouquet.rarity
@@ -930,10 +936,23 @@ export class MemStorage implements IStorage {
         fieldIndex: pb.fieldIndex,
         placedAt: pb.placedAt,
         expiresAt: pb.expiresAt,
+        nextSpawnAt: (pb as any).nextSpawnAt,
         createdAt: pb.createdAt,
         bouquetName: pb.bouquetName,
         bouquetRarity: pb.bouquetRarity
       } as any));
+  }
+
+  // Update next spawn time for individual bouquet timing
+  async updateBouquetNextSpawnTime(placedBouquetId: number, nextSpawnTime: Date): Promise<void> {
+    const existingBouquet = this.placedBouquets.get(placedBouquetId);
+    if (existingBouquet) {
+      const updatedBouquet = {
+        ...existingBouquet,
+        nextSpawnAt: nextSpawnTime
+      };
+      this.placedBouquets.set(placedBouquetId, updatedBouquet as any);
+    }
   }
 
   async getUserButterflies(userId: number): Promise<UserButterfly[]> {
