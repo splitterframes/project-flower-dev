@@ -74,4 +74,26 @@ router.get('/garden/fields/:userId', async (req, res) => {
   res.json({ fields });
 });
 
+router.get('/garden/unlocked/:userId', async (req, res) => {
+  const unlockedFields = await storage.getUnlockedFields(parseInt(req.params.userId));
+  res.json({ unlockedFields });
+});
+
+router.post('/garden/unlock', async (req, res) => {
+  const { userId, fieldIndex } = req.body;
+  
+  const success = await storage.unlockField(userId, fieldIndex);
+  if (success) {
+    const cost = await storage.getNextUnlockCost(userId);
+    res.json({ message: 'Field unlocked successfully', nextCost: cost });
+  } else {
+    res.status(400).json({ error: 'Failed to unlock field' });
+  }
+});
+
+router.get('/garden/unlock-cost/:userId', async (req, res) => {
+  const cost = await storage.getNextUnlockCost(parseInt(req.params.userId));
+  res.json({ cost });
+});
+
 export default router;

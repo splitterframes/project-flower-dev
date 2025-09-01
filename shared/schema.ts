@@ -22,11 +22,20 @@ export const userSeeds = pgTable('user_seeds', {
 export const plantedFields = pgTable('planted_fields', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
-  fieldIndex: integer('field_index').notNull(), // 0-24 for 25 garden fields
+  fieldIndex: integer('field_index').notNull(), // 0-49 for 50 garden fields
   seedId: integer('seed_id').notNull(),
   plantedAt: timestamp('planted_at').defaultNow().notNull(),
   harvestAt: timestamp('harvest_at').notNull(),
   isReady: boolean('is_ready').default(false).notNull(),
+});
+
+// === UNLOCKED FIELDS ===
+export const userUnlockedFields = pgTable('user_unlocked_fields', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  fieldIndex: integer('field_index').notNull(), // 0-49 for 50 garden fields
+  unlockedAt: timestamp('unlocked_at').defaultNow().notNull(),
+  unlockCost: integer('unlock_cost').notNull(),
 });
 
 // === USER FLOWERS ===

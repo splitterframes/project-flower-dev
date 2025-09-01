@@ -81,6 +81,14 @@ export interface ExhibitionFrame {
   placedAt?: string;
 }
 
+export interface UnlockedField {
+  id: number;
+  userId: number;
+  fieldIndex: number; // 0-49
+  unlockedAt: string;
+  unlockCost: number;
+}
+
 // === RARITY SYSTEM ===
 export const RARITY_CONFIG = {
   1: { name: 'Common', color: '#FFD700', weight: 45, growthTime: 75 }, // gelb/yellow

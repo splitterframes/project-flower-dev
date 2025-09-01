@@ -53,12 +53,112 @@ export class MariposaStorage {
       { userId, seedId: 1, quantity: 10 }, // 10 common seeds
       { userId, seedId: 2, quantity: 5 },  // 5 uncommon seeds
     ]);
+    
+    // Give starter unlocked fields (top-left 2x2)
+    await db.insert(schema.userUnlockedFields).values([
+      { userId, fieldIndex: 0, unlockCost: 0 },
+      { userId, fieldIndex: 1, unlockCost: 0 },
+      { userId, fieldIndex: 10, unlockCost: 0 },
+      { userId, fieldIndex: 11, unlockCost: 0 },
+    ]);
+    
     console.log(`🌱 Starter seeds given to user ${userId}`);
+    console.log(`🔓 Starter fields unlocked for user ${userId}`);
+  }
+
+  // === FIELD UNLOCKING ===
+  async getUnlockedFields(userId: number) {
+    return await db.select().from(schema.userUnlockedFields).where(eq(schema.userUnlockedFields.userId, userId));
+  }
+  
+  async getNextUnlockCost(userId: number): Promise<number> {
+    const unlockedFields = await this.getUnlockedFields(userId);
+    const unlockedCount = unlockedFields.filter(f => f.unlockCost > 0).length; // Exclude starter fields
+    return Math.floor(1000 * Math.pow(1.2, unlockedCount));
+  }
+  
+  async isFieldUnlockable(userId: number, fieldIndex: number): Promise<boolean> {
+    // Check if field is already unlocked
+    const existing = await db.select()
+      .from(schema.userUnlockedFields)
+      .where(and(eq(schema.userUnlockedFields.userId, userId), eq(schema.userUnlockedFields.fieldIndex, fieldIndex)))
+      .limit(1);
+    
+    if (existing.length > 0) return false;
+    
+    // Get all unlocked fields
+    const unlockedFields = await this.getUnlockedFields(userId);
+    const unlockedIndices = new Set(unlockedFields.map(f => f.fieldIndex));
+    
+    // Check if field is adjacent to any unlocked field (10x5 grid)
+    const row = Math.floor(fieldIndex / 10);
+    const col = fieldIndex % 10;
+    const adjacentIndices = [
+      (row - 1) * 10 + col, // above
+      (row + 1) * 10 + col, // below
+      row * 10 + (col - 1), // left
+      row * 10 + (col + 1), // right
+    ].filter(idx => idx >= 0 && idx < 50); // Valid field range
+    
+    return adjacentIndices.some(idx => unlockedIndices.has(idx));
+  }
+  
+  async unlockField(userId: number, fieldIndex: number): Promise<boolean> {
+    try {
+      // Check if field can be unlocked
+      const canUnlock = await this.isFieldUnlockable(userId, fieldIndex);
+      if (!canUnlock) {
+        console.log(`❌ Field ${fieldIndex} cannot be unlocked by user ${userId}`);
+        return false;
+      }
+      
+      // Get unlock cost
+      const cost = await this.getNextUnlockCost(userId);
+      
+      // Check if user has enough credits
+      const [user] = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
+        .limit(1);
+      
+      if (!user || user.credits < cost) {
+        console.log(`❌ User ${userId} doesn't have enough credits (${user?.credits} < ${cost})`);
+        return false;
+      }
+      
+      // Deduct credits and unlock field
+      await db.update(schema.users)
+        .set({ credits: user.credits - cost })
+        .where(eq(schema.users.id, userId));
+      
+      await db.insert(schema.userUnlockedFields).values({
+        userId,
+        fieldIndex,
+        unlockCost: cost
+      });
+      
+      console.log(`🔓 Field ${fieldIndex} unlocked by user ${userId} for ${cost} credits`);
+      return true;
+    } catch (error) {
+      console.error('❌ Error unlocking field:', error);
+      return false;
+    }
   }
 
   // === GARDEN SYSTEM ===
   async plantSeed(userId: number, fieldIndex: number, seedId: number): Promise<boolean> {
     try {
+      // Check if field is unlocked
+      const unlockedField = await db.select()
+        .from(schema.userUnlockedFields)
+        .where(and(eq(schema.userUnlockedFields.userId, userId), eq(schema.userUnlockedFields.fieldIndex, fieldIndex)))
+        .limit(1);
+      
+      if (unlockedField.length === 0) {
+        console.log(`❌ Field ${fieldIndex} is not unlocked for user ${userId}`);
+        return false;
+      }
+      
       // Check if field is empty
       const existingField = await db.select()
         .from(schema.plantedFields)
