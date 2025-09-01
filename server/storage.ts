@@ -803,6 +803,20 @@ export class MemStorage implements IStorage {
       // Increase quantity
       existingFlower.quantity += 1;
       this.userFlowers.set(existingFlower.id, existingFlower);
+      
+      // CRITICAL: Update PostgreSQL too!
+      try {
+        if (process.env.DATABASE_URL) {
+          const sql = neon(process.env.DATABASE_URL);
+          const db = drizzle(sql);
+          await db.update(userFlowers)
+            .set({ quantity: existingFlower.quantity })
+            .where(eq(userFlowers.id, existingFlower.id));
+          console.log(`💾 Updated flower quantity for user ${userId} in PostgreSQL`);
+        }
+      } catch (error) {
+        console.error('💾 Error updating flower in PostgreSQL:', error);
+      }
     } else {
       // Add new flower
       const newFlower: UserFlower = {
@@ -816,6 +830,27 @@ export class MemStorage implements IStorage {
         createdAt: new Date()
       };
       this.userFlowers.set(newFlower.id, newFlower);
+      
+      // CRITICAL: Save to PostgreSQL too!
+      try {
+        if (process.env.DATABASE_URL) {
+          const sql = neon(process.env.DATABASE_URL);
+          const db = drizzle(sql);
+          await db.insert(userFlowers).values({
+            userId: newFlower.userId,
+            flowerId: newFlower.flowerId,
+            flowerName: newFlower.flowerName,
+            flowerRarity: newFlower.flowerRarity,
+            flowerImageUrl: newFlower.flowerImageUrl,
+            quantity: newFlower.quantity,
+            rarity: 1, // Keep old column for compatibility
+            createdAt: newFlower.createdAt
+          });
+          console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
+        }
+      } catch (error) {
+        console.error('💾 Error adding flower to PostgreSQL:', error);
+      }
     }
   }
 
@@ -1108,6 +1143,20 @@ export class MemStorage implements IStorage {
       // Add to existing quantity
       existingSeed.quantity += quantity;
       this.userSeeds.set(existingSeed.id, existingSeed);
+      
+      // CRITICAL: Update PostgreSQL too!
+      try {
+        if (process.env.DATABASE_URL) {
+          const sql = neon(process.env.DATABASE_URL);
+          const db = drizzle(sql);
+          await db.update(userSeeds)
+            .set({ quantity: existingSeed.quantity })
+            .where(eq(userSeeds.id, existingSeed.id));
+          console.log(`💾 Updated seed quantity for user ${userId} in PostgreSQL`);
+        }
+      } catch (error) {
+        console.error('💾 Error updating seed in PostgreSQL:', error);
+      }
     } else {
       // Create new seed inventory entry
       const newUserSeed = {
@@ -1120,6 +1169,23 @@ export class MemStorage implements IStorage {
         seedRarity: rarity
       };
       this.userSeeds.set(newUserSeed.id, newUserSeed);
+      
+      // CRITICAL: Save to PostgreSQL too!
+      try {
+        if (process.env.DATABASE_URL) {
+          const sql = neon(process.env.DATABASE_URL);
+          const db = drizzle(sql);
+          await db.insert(userSeeds).values({
+            userId: newUserSeed.userId,
+            seedId: newUserSeed.seedId,
+            quantity: newUserSeed.quantity,
+            createdAt: newUserSeed.createdAt
+          });
+          console.log(`💾 Added new seed for user ${userId} to PostgreSQL`);
+        }
+      } catch (error) {
+        console.error('💾 Error adding seed to PostgreSQL:', error);
+      }
     }
   }
 
