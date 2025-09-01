@@ -93,11 +93,12 @@ export const userFlowers = pgTable("user_flowers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   flowerId: integer("flower_id").notNull(),
-  flowerName: text("flower_name").notNull(),
-  flowerRarity: text("flower_rarity").notNull(),
-  flowerImageUrl: text("flower_image_url").notNull(),
+  rarity: integer("rarity").notNull(), // Integer rarity for constraint compliance
   quantity: integer("quantity").notNull().default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  flowerName: text("flower_name"), // Nullable as per PostgreSQL
+  flowerRarity: text("flower_rarity"), // Nullable as per PostgreSQL
+  flowerImageUrl: text("flower_image_url"), // Nullable as per PostgreSQL
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

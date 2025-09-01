@@ -845,6 +845,7 @@ export class MemStorage implements IStorage {
         flowerName,
         flowerRarity,
         flowerImageUrl,
+        rarity: this.getRarityInteger(flowerRarity || 'common'), // Add required rarity field
         quantity: 1,
         createdAt: new Date()
       };
@@ -862,7 +863,7 @@ export class MemStorage implements IStorage {
             flowerRarity: newFlower.flowerRarity,
             flowerImageUrl: newFlower.flowerImageUrl,
             quantity: newFlower.quantity,
-            rarity: this.getRarityInteger(newFlower.flowerRarity),
+            rarity: this.getRarityInteger(newFlower.flowerRarity || 'common'),
             createdAt: newFlower.createdAt
           });
           console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
