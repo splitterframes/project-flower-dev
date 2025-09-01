@@ -41,6 +41,9 @@ import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/ra
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import * as fs from 'fs';
 import * as path from 'path';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
+import * as schema from '@shared/schema';
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -125,6 +128,7 @@ export class MemStorage implements IStorage {
   private currentFrameLikeId: number;
   private saveFilePath = path.join(process.cwd(), 'game-data.json');
   private autoSaveInterval: NodeJS.Timeout | null = null;
+  private db: any; // Drizzle database connection
 
   constructor() {
     this.users = new Map();
@@ -160,17 +164,92 @@ export class MemStorage implements IStorage {
     this.currentPassiveIncomeId = 1;
     this.currentFrameLikeId = 1;
     
+    // Initialize database connection
+    if (process.env.DATABASE_URL) {
+      const sql = neon(process.env.DATABASE_URL);
+      this.db = drizzle(sql, { schema });
+    }
+    
     // Initialize with some sample seeds and demo market listings
     this.initializeSampleSeeds();
     // this.createDemoMarketListings(); // Demo handlers removed
     
     // Load saved data if exists
-    this.loadData();
+    // Prioritize database over JSON file - database is persistent across deployments
+    this.loadFromDatabase().then(() => {
+      console.log('💾 Database loading completed, falling back to JSON if needed');
+      this.loadData();
+    }).catch((error) => {
+      console.error('💾 Database loading failed, using JSON fallback:', error);
+      this.loadData();
+    });
     
     // Auto-save every 30 seconds
     this.autoSaveInterval = setInterval(() => {
       this.saveData();
     }, 30000);
+  }
+
+  // Database loading method
+  private async loadFromDatabase(): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database connection not available');
+    }
+
+    try {
+      console.log('💾 Loading data from PostgreSQL database...');
+      
+      // Load users
+      const dbUsers = await this.db.select().from(schema.users);
+      dbUsers.forEach((user: any) => {
+        this.users.set(user.id, {
+          id: user.id,
+          username: user.username,
+          password: user.password,
+          credits: user.credits,
+          lastPassiveIncomeAt: user.lastPassiveIncomeAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        });
+        this.currentId = Math.max(this.currentId, user.id + 1);
+      });
+
+      // Load seeds
+      const dbSeeds = await this.db.select().from(schema.seeds);
+      dbSeeds.forEach((seed: any) => {
+        this.seeds.set(seed.id, {
+          id: seed.id,
+          name: seed.name,
+          rarity: seed.rarity,
+          price: seed.price,
+          description: seed.description,
+          imageUrl: seed.imageUrl,
+          createdAt: seed.createdAt
+        });
+        this.currentSeedId = Math.max(this.currentSeedId, seed.id + 1);
+      });
+
+      // Load user seeds
+      const dbUserSeeds = await this.db.select().from(schema.userSeeds);
+      dbUserSeeds.forEach((userSeed: any) => {
+        const seed = this.seeds.get(userSeed.seedId);
+        this.userSeeds.set(userSeed.id, {
+          id: userSeed.id,
+          userId: userSeed.userId,
+          seedId: userSeed.seedId,
+          quantity: userSeed.quantity,
+          createdAt: userSeed.createdAt,
+          seedName: seed?.name || 'Unknown',
+          seedRarity: seed?.rarity || 'common'
+        });
+        this.currentUserSeedId = Math.max(this.currentUserSeedId, userSeed.id + 1);
+      });
+
+      console.log(`💾 Loaded from database: ${this.users.size} users, ${this.userSeeds.size} user seeds, ${this.seeds.size} seeds`);
+    } catch (error) {
+      console.error('💾 Failed to load from database:', error);
+      throw error;
+    }
   }
 
   // Data persistence methods
