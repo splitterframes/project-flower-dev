@@ -1772,7 +1772,23 @@ class PostgreSQLStorage implements IStorage {
   }
 
   async getUserSeeds(userId: number): Promise<any[]> {
-    return [];
+    const result = await db
+      .select({
+        id: userSeeds.id,
+        userId: userSeeds.userId,
+        seedId: userSeeds.seedId,
+        quantity: userSeeds.quantity,
+        seedName: seeds.name,
+        seedRarity: seeds.rarity,
+        seedPrice: seeds.price,
+        seedDescription: seeds.description,
+        seedImageUrl: seeds.imageUrl
+      })
+      .from(userSeeds)
+      .leftJoin(seeds, eq(userSeeds.seedId, seeds.id))
+      .where(eq(userSeeds.userId, userId));
+    
+    return result;
   }
 
   // Garden methods
