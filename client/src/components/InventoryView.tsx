@@ -235,19 +235,15 @@ export const InventoryView: React.FC = () => {
         <p className="text-slate-400 text-sm">Verwalte deine Blumen und Schmetterlinge</p>
       </div>
 
-      {/* Inventory Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Enhanced Seeds */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-green-500/30 shadow-2xl lg:col-span-2">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <CardTitle className="text-white flex items-center relative z-10">
-              <div className="relative">
-                <Sprout className="h-8 w-8 mr-3 text-green-400 animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 mr-3 text-green-400 animate-ping opacity-30"></div>
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
-                Samen 🌱
+      {/* Organized Inventory Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Seeds Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-green-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Sprout className="h-5 w-5 mr-2 text-green-400" />
+              <span className="text-lg font-semibold text-green-300">
+                Samen 🌱 ({mySeeds.length})
               </span>
             </CardTitle>
           </CardHeader>
@@ -289,17 +285,13 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Enhanced Flowers */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-pink-500/30 shadow-2xl">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <CardTitle className="text-white flex items-center relative z-10">
-              <div className="relative">
-                <Flower className="h-8 w-8 mr-3 text-pink-400 animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 mr-3 text-pink-400 animate-ping opacity-30"></div>
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-pink-300 to-rose-300 bg-clip-text text-transparent">
-                Blumen 🌸
+        {/* Flowers Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-pink-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Flower className="h-5 w-5 mr-2 text-pink-400" />
+              <span className="text-lg font-semibold text-pink-300">
+                Blumen 🌸 ({myFlowers.length})
               </span>
             </CardTitle>
           </CardHeader>
@@ -342,16 +334,12 @@ export const InventoryView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Enhanced Butterflies */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-yellow-500/30 shadow-2xl">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <CardTitle className="text-white flex items-center relative z-10">
-              <div className="relative">
-                <Bug className="h-8 w-8 mr-3 text-yellow-400 animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 mr-3 text-yellow-400 animate-ping opacity-30"></div>
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+        {/* Butterflies Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-yellow-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Bug className="h-5 w-5 mr-2 text-yellow-400" />
+              <span className="text-lg font-semibold text-yellow-300">
                 Schmetterlinge 🦋 ({myButterflies.length})
               </span>
             </CardTitle>
@@ -398,6 +386,55 @@ export const InventoryView: React.FC = () => {
                             {getRarityLabel(butterfly.butterflyRarity as RarityTier)}
                           </span>
                           <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bouquets Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Gem className="h-5 w-5 mr-2 text-purple-400" />
+              <span className="text-lg font-semibold text-purple-300">
+                Bouquets 💐 ({myBouquets.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myBouquets.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">Noch keine Bouquets erstellt</p>
+                <p className="text-slate-500 text-sm mt-2">Erstelle Bouquets im Bouquet-Bereich</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {myBouquets.map((bouquet) => (
+                  <div
+                    key={bouquet.id}
+                    className="bg-slate-900 rounded-lg p-3 border-2"
+                    style={{ borderColor: getBorderColor((bouquet.bouquetRarity || "common") as RarityTier) }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <RarityImage 
+                        src="/Blumen/Bouquet.jpg"
+                        alt="Bouquet"
+                        rarity={(bouquet.bouquetRarity || "common") as RarityTier}
+                        size="medium"
+                        className="w-12 h-12"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white text-sm">{bouquet.bouquetName}</h4>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-xs ${getRarityColor((bouquet.bouquetRarity || "common") as RarityTier)}`}>
+                            {getRarityDisplayName((bouquet.bouquetRarity || "common") as RarityTier)}
+                          </span>
+                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
                         </div>
                       </div>
                     </div>
