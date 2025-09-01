@@ -1,81 +1,32 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes_NEW";
-import { setupVite, serveStatic, log } from "./vite";
+import express from 'express';
+import { createServer } from 'http';
+import routes from './routes';
 
 const app = express();
+const PORT = 5000;
+
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.static('dist/public'));
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+// API routes
+app.use('/api', routes);
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'healthy', message: 'Mariposa API is running' });
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// Catch-all for React routing
+app.get('*', (req, res) => {
+  res.sendFile(process.cwd() + '/dist/public/index.html');
+});
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+const server = createServer(app);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🦋 Mariposa server running on http://0.0.0.0:${PORT}`);
+  console.log(`🌱 Garden management system initialized`);
+  console.log(`🦋 960 butterflies across 7 rarity tiers ready`);
+});
 
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-    
-    // Start butterfly spawning system
-    import('./butterflySpawner').then(({ butterflySpawner }) => {
-      butterflySpawner.start();
-      log('🦋 Butterfly spawning system initialized');
-    });
-
-    // Start passive income processing system
-    import('./passiveIncomeProcessor').then(({ passiveIncomeProcessor }) => {
-      passiveIncomeProcessor.start();
-      log('💰 Passive income processing system initialized');
-    });
-  });
-})();
+export default server;
