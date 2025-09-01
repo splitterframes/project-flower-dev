@@ -478,6 +478,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get butterfly sell status (countdown info with like reduction)
+  app.get("/api/exhibition/butterfly/:id/sell-status", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const exhibitionButterflyId = parseInt(req.params.id);
+
+      // Get all exhibition butterflies for this user
+      const userExhibitionButterflies = await storage.getExhibitionButterflies(userId);
+      const exhibitionButterfly = userExhibitionButterflies.find(b => b.id === exhibitionButterflyId);
+      
+      if (!exhibitionButterfly) {
+        return res.status(404).json({ error: "Schmetterling nicht gefunden" });
+      }
+
+      const canSell = storage.canSellButterfly(exhibitionButterfly.placedAt, exhibitionButterfly.frameId);
+      const timeRemaining = storage.getTimeUntilSellable(exhibitionButterfly.placedAt, exhibitionButterfly.frameId);
+      
+      // Get likes count using getUserFrameLikes and find our specific frame
+      const allFrameLikes = await storage.getUserFrameLikes(userId, exhibitionButterfly.userId);
+      const frameWithLikes = allFrameLikes.find(f => f.frameId === exhibitionButterfly.frameId);
+      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+
+      res.json({
+        canSell,
+        timeRemainingMs: timeRemaining,
+        likesCount,
+        frameId: exhibitionButterfly.frameId
+      });
+    } catch (error) {
+      console.error('Failed to get butterfly sell status:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/exhibition/sell-butterfly", async (req, res) => {
     try {
       const { userId, exhibitionButterflyId } = req.body;

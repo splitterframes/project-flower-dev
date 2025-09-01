@@ -36,34 +36,65 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   const [canSell, setCanSell] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
 
-  // Calculate countdown every second
+  // Calculate countdown every second (using server data with like reduction)
   useEffect(() => {
-    if (!butterfly) return;
+    if (!butterfly || readOnly) return;
 
-    const calculateTimeRemaining = () => {
-      const placedTime = new Date(butterfly.placedAt).getTime();
-      const now = new Date().getTime();
-      const timeSincePlacement = now - placedTime;
-      const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000; // 72 hours in milliseconds
-      const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
-      
-      if (remaining <= 0) {
-        setCanSell(true);
-        setTimeRemaining(0);
-      } else {
-        setCanSell(false);
-        setTimeRemaining(remaining);
+    const fetchSellStatus = async () => {
+      try {
+        const response = await fetch(`/api/exhibition/butterfly/${butterfly.id}/sell-status`, {
+          headers: { 
+            'X-User-Id': butterfly.userId.toString()
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setCanSell(data.canSell);
+          setTimeRemaining(data.timeRemainingMs);
+        } else {
+          // Fallback to local calculation
+          const placedTime = new Date(butterfly.placedAt).getTime();
+          const now = new Date().getTime();
+          const timeSincePlacement = now - placedTime;
+          const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+          const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
+          
+          if (remaining <= 0) {
+            setCanSell(true);
+            setTimeRemaining(0);
+          } else {
+            setCanSell(false);
+            setTimeRemaining(remaining);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch sell status:', error);
+        // Fallback to local calculation
+        const placedTime = new Date(butterfly.placedAt).getTime();
+        const now = new Date().getTime();
+        const timeSincePlacement = now - placedTime;
+        const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+        const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
+        
+        if (remaining <= 0) {
+          setCanSell(true);
+          setTimeRemaining(0);
+        } else {
+          setCanSell(false);
+          setTimeRemaining(remaining);
+        }
       }
     };
 
-    // Calculate immediately
-    calculateTimeRemaining();
+    // Fetch immediately
+    fetchSellStatus();
 
     // Update every second
-    const interval = setInterval(calculateTimeRemaining, 1000);
+    const interval = setInterval(fetchSellStatus, 1000);
 
     return () => clearInterval(interval);
-  }, [butterfly]);
+  }, [butterfly, readOnly]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     if (milliseconds <= 0) return "Verkaufbar!";
