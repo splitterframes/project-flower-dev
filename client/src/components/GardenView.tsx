@@ -977,17 +977,16 @@ export const GardenView: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Instructions */}
+      {/* Compact Instructions */}
       <Card className="bg-slate-800 border-slate-700">
-        <CardContent className="pt-6">
-          <div className="text-center text-slate-400">
-            <p className="mb-2">🌱 Linksklick auf ein freies Feld um einen Samen zu pflanzen</p>
-            <p className="mb-2">💐 Rechtsklick auf ein freies Feld um ein Bouquet zu platzieren</p>
-            <p className="mb-2">⏰ Hover über wachsende Pflanzen um die Restzeit zu sehen</p>
-            <p className="mb-2">🌸 Klicke auf gewachsene Blumen um sie zu ernten</p>
-            <p className="mb-2">🦋 Klicke auf Schmetterlinge um sie zu sammeln</p>
-            <p className="mb-2">🔓 Klicke auf ein gesperrtes Feld um es freizuschalten</p>
-            <p>💰 Jedes weitere Feld kostet 20% mehr als das vorherige</p>
+        <CardContent className="p-3">
+          <div className="text-center text-slate-400 text-xs space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs">
+              <span>🌱 Linksklick: Samen pflanzen</span>
+              <span>💐 Rechtsklick: Bouquet platzieren</span>
+              <span>🌸 Gewachsene Blumen ernten</span>
+              <span>🦋 Schmetterlinge sammeln</span>
+            </div>
           </div>
         </CardContent>
       </Card>
