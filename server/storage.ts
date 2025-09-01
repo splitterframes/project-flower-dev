@@ -43,7 +43,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { eq } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import * as schema from '@shared/schema';
 
 export interface IStorage {
@@ -1802,7 +1802,78 @@ class PostgreSQLStorage implements IStorage {
 
   // Garden methods
   async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
-    return { success: false, message: 'Not implemented yet' };
+    // Get user from database
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) {
+      return { success: false, message: "Nutzer nicht gefunden" };
+    }
+
+    // Get seed from static seeds array
+    const seedsArray = [
+      { id: 1, name: "Common Samen", rarity: "common" },
+      { id: 2, name: "Uncommon Samen", rarity: "uncommon" },
+      { id: 3, name: "Rare Samen", rarity: "rare" },
+      { id: 4, name: "Super-rare Samen", rarity: "super-rare" },
+      { id: 5, name: "Epic Samen", rarity: "epic" },
+      { id: 6, name: "Legendary Samen", rarity: "legendary" },
+      { id: 7, name: "Mythical Samen", rarity: "mythical" }
+    ];
+    const seed = seedsArray.find(s => s.id === data.seedId);
+    if (!seed) {
+      return { success: false, message: "Samen nicht gefunden" };
+    }
+
+    // Get user seed from database
+    const [userSeed] = await db.select().from(userSeeds)
+      .where(and(
+        eq(userSeeds.id, data.userSeedId),
+        eq(userSeeds.userId, userId),
+        eq(userSeeds.seedId, data.seedId)
+      )).limit(1);
+      
+    if (!userSeed) {
+      return { success: false, message: "Ungültiger Samen im Inventar" };
+    }
+
+    if (userSeed.quantity < 1) {
+      return { success: false, message: "Nicht genügend Samen verfügbar" };
+    }
+
+    // Check if field is already planted
+    const [existingField] = await db.select().from(plantedFields)
+      .where(and(
+        eq(plantedFields.userId, userId),
+        eq(plantedFields.fieldIndex, data.fieldIndex)
+      )).limit(1);
+
+    if (existingField) {
+      return { success: false, message: "Dieses Feld ist bereits bepflanzt" };
+    }
+
+    // Generate random flower for this seed rarity
+    const randomFlower = generateRandomFlower(seed.rarity as RarityTier);
+    
+    // Create planted field in database
+    await db.insert(plantedFields).values({
+      userId,
+      fieldIndex: data.fieldIndex,
+      seedId: data.seedId,
+      seedRarity: seed.rarity,
+      plantedAt: new Date(),
+      isGrown: false,
+      flowerId: randomFlower?.id || null,
+      flowerName: randomFlower?.name || null,
+      flowerImageUrl: randomFlower?.imageUrl || null,
+      createdAt: new Date()
+    });
+
+    // Reduce user seed quantity
+    await db.update(userSeeds)
+      .set({ quantity: userSeed.quantity - 1 })
+      .where(eq(userSeeds.id, data.userSeedId));
+
+    console.log(`🌱 User ${userId} planted ${seed.name} on field ${data.fieldIndex}`);
+    return { success: true };
   }
 
   async getPlantedFields(userId: number): Promise<PlantedField[]> {
@@ -1811,7 +1882,49 @@ class PostgreSQLStorage implements IStorage {
   }
 
   async harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }> {
-    return { success: false, message: 'Not implemented yet' };
+    // Get planted field from database
+    const [plantedField] = await db.select().from(plantedFields)
+      .where(and(
+        eq(plantedFields.userId, userId),
+        eq(plantedFields.fieldIndex, data.fieldIndex)
+      )).limit(1);
+
+    if (!plantedField) {
+      return { success: false, message: "Kein Feld zum Ernten gefunden" };
+    }
+
+    // Check if field should be grown by now
+    if (!plantedField.isGrown) {
+      const currentTime = new Date();
+      const growthTime = getGrowthTime(plantedField.seedRarity as RarityTier);
+      const elapsedSeconds = (currentTime.getTime() - plantedField.plantedAt.getTime()) / 1000;
+      
+      if (elapsedSeconds >= growthTime) {
+        // Update field to grown in database
+        await db.update(plantedFields)
+          .set({ isGrown: true })
+          .where(eq(plantedFields.id, plantedField.id));
+      } else {
+        return { success: false, message: "Die Blume ist noch nicht gewachsen" };
+      }
+    }
+
+    // Add flower to user inventory
+    await db.insert(userFlowers).values({
+      userId,
+      flowerId: plantedField.flowerId!,
+      flowerName: plantedField.flowerName!,
+      flowerRarity: plantedField.seedRarity,
+      flowerImageUrl: plantedField.flowerImageUrl!,
+      quantity: 1
+    });
+
+    // Remove planted field from database
+    await db.delete(plantedFields)
+      .where(eq(plantedFields.id, plantedField.id));
+
+    console.log(`🌺 User ${userId} harvested ${plantedField.flowerName} from field ${data.fieldIndex}`);
+    return { success: true };
   }
 
   // Flower inventory methods
