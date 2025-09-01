@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RARITY_CONFIG } from '../types';
+import { RARITY_CONFIG } from '@shared/rarity';
 
 export default function MarketView() {
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');

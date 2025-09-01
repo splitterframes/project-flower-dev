@@ -1,5 +1,5 @@
 import { useGameStore } from '../stores/game';
-import { RARITY_CONFIG } from '../types';
+import { RARITY_CONFIG } from '@shared/rarity';
 
 export default function InventoryView() {
   const { seeds, flowers, butterflies } = useGameStore();
@@ -81,7 +81,7 @@ export default function InventoryView() {
                   onError={(e) => {
                     // Fallback to emoji if image doesn't load
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling!.style.display = 'flex';
+                    (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
                   }}
                 />
                 <div className="w-full h-full items-center justify-center text-2xl hidden">
@@ -144,7 +144,7 @@ export default function InventoryView() {
                   onError={(e) => {
                     // Fallback to emoji if image doesn't load
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling!.style.display = 'flex';
+                    (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
                   }}
                 />
                 <div className="w-full h-full items-center justify-center text-2xl hidden">

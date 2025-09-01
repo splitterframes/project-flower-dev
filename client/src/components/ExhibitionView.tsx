@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RARITY_CONFIG } from '../types';
+import { RARITY_CONFIG } from '@shared/rarity';
 
 export default function ExhibitionView() {
   const [selectedFrame, setSelectedFrame] = useState<number | null>(null);
@@ -7,8 +7,8 @@ export default function ExhibitionView() {
   // Placeholder exhibition frames (25 frames like garden)
   const exhibitionFrames = Array.from({ length: 25 }, (_, i) => ({
     frameIndex: i,
-    butterflyId: null,
-    rarity: null,
+    butterflyId: null as number | null,
+    rarity: null as number | null,
   }));
 
   const handleFrameClick = (frameIndex: number) => {
@@ -35,6 +35,7 @@ export default function ExhibitionView() {
       );
     }
 
+    if (!frame.rarity || !frame.butterflyId) return null;
     const rarity = RARITY_CONFIG[frame.rarity as keyof typeof RARITY_CONFIG];
 
     return (
@@ -46,12 +47,12 @@ export default function ExhibitionView() {
         {/* Butterfly image */}
         <div className="w-full h-full bg-gray-100 rounded">
           <img
-            src={`/Schmetterlinge/${frame.butterflyId.toString().padStart(3, '0')}.jpg`}
+            src={`/Schmetterlinge/${frame.butterflyId?.toString().padStart(3, '0')}.jpg`}
             alt={`Schmetterling ${frame.butterflyId}`}
             className="w-full h-full object-cover rounded"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling!.style.display = 'flex';
+              (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
             }}
           />
           <div className="w-full h-full items-center justify-center text-4xl hidden">

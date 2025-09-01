@@ -1,4 +1,5 @@
-import { Seed, RARITY_CONFIG } from '../types';
+import { Seed } from '../types';
+import { RARITY_CONFIG } from '@shared/rarity';
 
 interface SeedSelectionModalProps {
   isOpen: boolean;

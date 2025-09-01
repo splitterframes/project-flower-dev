@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useGameStore } from '../stores/game';
-import { RARITY_CONFIG, PlantedField } from '../types';
+import { PlantedField } from '../types';
+import { RARITY_CONFIG } from '@shared/rarity';
 import SeedSelectionModal from './SeedSelectionModal';
 
 export default function GardenView() {
