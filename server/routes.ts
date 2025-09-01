@@ -56,6 +56,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile route
+  app.get("/api/user/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error getting user profile:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Credits routes
   app.get("/api/user/:id/credits", async (req, res) => {
     try {
@@ -173,6 +188,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fields = await storage.getPlantedFields(userId);
       res.json({ fields });
     } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/garden/placed-bouquets", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const bouquets = await storage.getPlacedBouquets(userId);
+      res.json({ bouquets });
+    } catch (error) {
+      console.error("Error getting placed bouquets:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/garden/field-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const butterflies = await storage.getFieldButterflies(userId);
+      res.json({ butterflies });
+    } catch (error) {
+      console.error("Error getting field butterflies:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -540,6 +577,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('Failed to sell exhibition butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/exhibition/frames", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const frames = await storage.getExhibitionFrames(userId);
+      res.json({ frames });
+    } catch (error) {
+      console.error("Error getting exhibition frames:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
