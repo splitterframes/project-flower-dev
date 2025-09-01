@@ -2340,11 +2340,7 @@ class PostgreSQLStorage implements IStorage {
     return result;
   }
 
-  async getAllUsersWithStatus(): Promise<(User & { isOnline: boolean })[]> {
-    const users = await this.getAllUsers();
-    // For now, mark all users as offline since we need to implement session tracking
-    return users.map(user => ({ ...user, isOnline: false }));
-  }
+  // getAllUsersWithStatus is implemented below with proper excludeUserId parameter
 
   async getFieldButterflies(userId: number): Promise<FieldButterfly[]> {
     const result = await db.select().from(fieldButterflies).where(eq(fieldButterflies.userId, userId));
@@ -2358,6 +2354,68 @@ class PostgreSQLStorage implements IStorage {
     } catch (error) {
       console.error('Error updating user activity:', error);
     }
+  }
+
+  async getAllUsersWithStatus(excludeUserId?: number): Promise<Array<{
+    id: number;
+    username: string;
+    isOnline: boolean;
+    exhibitionButterflies: number;
+    lastSeen: string;
+    totalLikes: number;
+  }>> {
+    const allUsers = await db.select().from(users);
+    const userList = [];
+    
+    for (const user of allUsers) {
+      // Skip demo users and current user
+      if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
+      
+      // Get exhibition butterflies count (simplified to avoid recursion)
+      const butterflyResults = await db.select().from(exhibitionButterflies)
+        .where(eq(exhibitionButterflies.userId, user.id));
+      const butterflyCount = butterflyResults.length;
+      
+      // Determine online status based on recent activity
+      const now = new Date();
+      const lastActivityDate = user.updatedAt || user.createdAt;
+      const timeDiff = now.getTime() - lastActivityDate.getTime();
+      const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+      
+      // Consider user online if last activity was within 5 minutes
+      const isOnline = minutesDiff <= 5;
+      
+      let lastSeenText = '';
+      if (isOnline) {
+        lastSeenText = 'Online';
+      } else if (minutesDiff < 60) {
+        lastSeenText = `vor ${minutesDiff} Min.`;
+      } else {
+        const hoursDiff = Math.floor(minutesDiff / 60);
+        if (hoursDiff < 24) {
+          lastSeenText = `vor ${hoursDiff} Std.`;
+        } else {
+          const daysDiff = Math.floor(hoursDiff / 24);
+          lastSeenText = `vor ${daysDiff} Tag(en)`;
+        }
+      }
+      
+      userList.push({
+        id: user.id,
+        username: user.username,
+        isOnline,
+        exhibitionButterflies: butterflyCount,
+        lastSeen: lastSeenText,
+        totalLikes: 0 // Would need frame likes table for real implementation
+      });
+    }
+    
+    // Sort by online status (online first), then by username
+    return userList.sort((a, b) => {
+      if (a.isOnline && !b.isOnline) return -1;
+      if (!a.isOnline && b.isOnline) return 1;
+      return a.username.localeCompare(b.username);
+    });
   }
 
   async saveData(): Promise<void> {
