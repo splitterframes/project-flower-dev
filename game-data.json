@@ -11,6 +11,18 @@
         "createdAt": "2025-09-01T10:07:36.924Z",
         "updatedAt": "2025-09-01T10:07:36.924Z"
       }
+    ],
+    [
+      2,
+      {
+        "username": "www",
+        "password": "1",
+        "id": 2,
+        "credits": 970,
+        "lastPassiveIncomeAt": "2025-09-01T19:36:54.003Z",
+        "createdAt": "2025-09-01T19:32:26.759Z",
+        "updatedAt": "2025-09-01T19:38:10.419Z"
+      }
     ]
   ],
   "seeds": [
@@ -123,9 +135,51 @@
         "seedName": "Rare Samen",
         "seedRarity": "rare"
       }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "userId": 2,
+        "seedId": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-01T19:32:26.759Z",
+        "seedName": "Common Samen",
+        "seedRarity": "common"
+      }
+    ],
+    [
+      4,
+      {
+        "id": 4,
+        "userId": 2,
+        "seedId": 3,
+        "quantity": 2,
+        "createdAt": "2025-09-01T19:32:26.759Z",
+        "seedName": "Rare Samen",
+        "seedRarity": "rare"
+      }
     ]
   ],
-  "marketListings": [],
+  "marketListings": [
+    [
+      1,
+      {
+        "id": 1,
+        "sellerId": 2,
+        "seedId": 1,
+        "quantity": 1,
+        "pricePerUnit": 10,
+        "totalPrice": 10,
+        "isActive": true,
+        "createdAt": "2025-09-01T19:39:01.825Z",
+        "updatedAt": "2025-09-01T19:39:01.825Z",
+        "sellerUsername": "www",
+        "seedName": "Common Samen",
+        "seedRarity": "common"
+      }
+    ]
+  ],
   "plantedFields": [
     [
       1,
@@ -144,34 +198,127 @@
       }
     ]
   ],
-  "userFlowers": [],
-  "bouquets": [],
-  "userBouquets": [],
-  "bouquetRecipes": [],
-  "placedBouquets": [],
+  "userFlowers": [
+    [
+      4,
+      {
+        "id": 4,
+        "userId": 2,
+        "flowerId": 114,
+        "flowerName": "Petala crystallinus",
+        "flowerRarity": "rare",
+        "flowerImageUrl": "/Blumen/114.jpg",
+        "quantity": 1,
+        "createdAt": "2025-09-01T19:38:33.173Z"
+      }
+    ]
+  ],
+  "bouquets": [
+    [
+      1,
+      {
+        "id": 1,
+        "name": "Bescheidene Blüte",
+        "rarity": "common",
+        "imageUrl": "/Blumen/Bouquet.jpg",
+        "createdAt": "2025-09-01T19:34:00.948Z"
+      }
+    ]
+  ],
+  "userBouquets": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 2,
+        "bouquetId": 1,
+        "quantity": 0,
+        "createdAt": "2025-09-01T19:34:00.948Z",
+        "bouquetName": "Bescheidene Blüte",
+        "bouquetRarity": "common",
+        "bouquetImageUrl": "/Blumen/Bouquet.jpg"
+      }
+    ]
+  ],
+  "bouquetRecipes": [
+    [
+      1,
+      {
+        "id": 1,
+        "bouquetId": 1,
+        "flowerId1": 16,
+        "flowerId2": 53,
+        "flowerId3": 1,
+        "createdAt": "2025-09-01T19:34:00.948Z"
+      }
+    ]
+  ],
+  "placedBouquets": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 2,
+        "bouquetId": 1,
+        "fieldIndex": 0,
+        "placedAt": "2025-09-01T19:34:06.404Z",
+        "expiresAt": "2025-09-01T19:55:06.404Z",
+        "createdAt": "2025-09-01T19:34:06.404Z",
+        "bouquetName": "Bescheidene Blüte",
+        "bouquetRarity": "common"
+      }
+    ]
+  ],
   "userButterflies": [],
   "fieldButterflies": [],
-  "exhibitionFrames": [],
-  "exhibitionButterflies": [],
+  "exhibitionFrames": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 2,
+        "frameNumber": 1,
+        "purchasedAt": "2025-09-01T19:32:37.859Z",
+        "createdAt": "2025-09-01T19:32:37.859Z"
+      }
+    ]
+  ],
+  "exhibitionButterflies": [
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 2,
+        "frameId": 1,
+        "slotIndex": 0,
+        "butterflyId": 644,
+        "butterflyName": "Colias aureus",
+        "butterflyRarity": "common",
+        "butterflyImageUrl": "/Schmetterlinge/644.jpg",
+        "placedAt": "2025-09-01T19:36:13.229Z",
+        "createdAt": "2025-09-01T19:36:13.229Z"
+      }
+    ]
+  ],
   "passiveIncomeLog": [],
   "exhibitionFrameLikes": [],
   "counters": {
-    "currentId": 2,
+    "currentId": 3,
     "currentSeedId": 8,
-    "currentUserSeedId": 3,
-    "currentListingId": 1,
-    "currentFieldId": 2,
-    "currentBouquetId": 1,
-    "currentUserBouquetId": 1,
-    "currentRecipeId": 1,
-    "currentPlacedBouquetId": 1,
-    "currentButterflyId": 1,
-    "currentFieldButterflyId": 1,
-    "currentFlowerId": 1,
-    "currentExhibitionFrameId": 1,
-    "currentExhibitionButterflyId": 1,
+    "currentUserSeedId": 5,
+    "currentListingId": 2,
+    "currentFieldId": 6,
+    "currentBouquetId": 2,
+    "currentUserBouquetId": 2,
+    "currentRecipeId": 2,
+    "currentPlacedBouquetId": 2,
+    "currentButterflyId": 2,
+    "currentFieldButterflyId": 2,
+    "currentFlowerId": 5,
+    "currentExhibitionFrameId": 2,
+    "currentExhibitionButterflyId": 2,
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T19:31:23.863Z"
+  "savedAt": "2025-09-01T19:40:23.871Z"
 }
