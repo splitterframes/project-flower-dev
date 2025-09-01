@@ -56,7 +56,18 @@ app.get('/debug-garden/:userId', async (req, res) => {
               (row + 1) * 10 + col, // below
               row * 10 + (col - 1), // left
               row * 10 + (col + 1), // right
-            ].filter(idx => idx >= 0 && idx < 50);
+            ].filter(idx => {
+              // Ensure valid range and no wrap-around
+              if (idx < 0 || idx >= 50) return false;
+              const adjRow = Math.floor(idx / 10);
+              const adjCol = idx % 10;
+              // Check for horizontal wrap-around
+              if (Math.abs(adjRow - row) <= 1 && Math.abs(adjCol - col) <= 1) {
+                return (adjRow === row && Math.abs(adjCol - col) === 1) || // same row, adjacent column
+                       (adjCol === col && Math.abs(adjRow - row) === 1);   // same column, adjacent row
+              }
+              return false;
+            });
             
             const isUnlockable = !isUnlocked && adjacentIndices.some(adj => 
               unlockedFields.some(f => f.fieldIndex === adj)
