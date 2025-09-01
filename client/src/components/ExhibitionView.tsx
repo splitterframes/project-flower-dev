@@ -228,14 +228,14 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-6 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-4 h-[400px]">
+            <div className="bg-slate-100 p-3 rounded grid grid-cols-3 grid-rows-2 gap-2 h-[280px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 
                 return (
                   <div 
                     key={slotIndex}
-                    className="aspect-square bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                    className="aspect-square bg-white border border-slate-300 rounded flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                   >
                     {butterfly ? (
                       <ButterflyHoverPreview
@@ -251,8 +251,8 @@ export const ExhibitionView: React.FC = () => {
                             src={butterfly.butterflyImageUrl}
                             alt={butterfly.butterflyName}
                             rarity={butterfly.butterflyRarity as RarityTier}
-                            size="large"
-                            className="w-full h-full object-cover rounded transition-transform group-hover:scale-105"
+                            size="medium"
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
                             <Info className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -401,7 +401,9 @@ export const ExhibitionView: React.FC = () => {
           </div>
 
           {/* Current Frame */}
-          {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
+          <div className="max-w-2xl mx-auto">
+            {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
+          </div>
         </div>
       )}
       

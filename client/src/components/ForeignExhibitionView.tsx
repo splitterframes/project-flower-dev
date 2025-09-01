@@ -50,12 +50,6 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     loadFrameLikes();
   }, [ownerId]);
 
-  // Reset frame index when frames change
-  useEffect(() => {
-    if (currentFrameIndex >= sortedFrameIds.length && sortedFrameIds.length > 0) {
-      setCurrentFrameIndex(sortedFrameIds.length - 1);
-    }
-  }, [sortedFrameIds.length, currentFrameIndex]);
 
   const loadForeignExhibition = async () => {
     try {
@@ -140,6 +134,13 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   });
 
   const sortedFrameIds = Array.from(frames.keys()).sort((a, b) => a - b);
+
+  // Reset frame index when frames change
+  useEffect(() => {
+    if (currentFrameIndex >= sortedFrameIds.length && sortedFrameIds.length > 0) {
+      setCurrentFrameIndex(sortedFrameIds.length - 1);
+    }
+  }, [sortedFrameIds.length, currentFrameIndex]);
 
   if (loading) {
     return (
@@ -227,7 +228,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     isFullFrame 
                       ? 'border-green-500/50 hover:border-green-400/70' 
                       : 'border-slate-600 hover:border-orange-400/50'
-                  } transition-all duration-300 shadow-xl max-w-4xl mx-auto`}
+                  } transition-all duration-300 shadow-xl max-w-2xl mx-auto`}
                 >
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
@@ -272,14 +273,14 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="grid grid-cols-3 grid-rows-2 gap-4 h-[400px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
+                    <div className="grid grid-cols-3 grid-rows-2 gap-2 h-[280px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-3 border border-slate-700">
                       {[0, 1, 2, 3, 4, 5].map(slotIndex => {
                         const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                         
                         return (
                           <div
                             key={slotIndex}
-                            className="aspect-square border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300"
+                            className="aspect-square border border-dashed border-slate-600 rounded flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300"
                           >
                             {butterfly ? (
                               <div 
@@ -293,8 +294,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                                   src={butterfly.butterflyImageUrl}
                                   alt={butterfly.butterflyName}
                                   rarity={butterfly.butterflyRarity as RarityTier}
-                                  size="large"
-                                  className="w-full h-full object-cover rounded"
+                                  size="medium"
+                                  className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
                                   <div className="text-center text-white text-xs">
