@@ -310,62 +310,47 @@ export const ExhibitionView: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Income Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border-2 border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-green-300">
-                Stündliches Einkommen
+      {/* Compact Income Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-green-300">
+                Einkommen
               </CardTitle>
-              <div className="relative">
-                <DollarSign className="h-8 w-8 text-green-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-green-400 animate-ping opacity-20"></div>
-              </div>
+              <DollarSign className="h-4 w-4 text-green-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-green-400 mb-2">{getTotalHourlyIncome()} Cr/Std</div>
-            <div className="text-slate-400 text-sm">💰 Passives Einkommen</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-green-400">{getTotalHourlyIncome()} Cr/h</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border-2 border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-blue-300">
-                Ausgestellte Schmetterlinge
+        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-blue-300">
+                Schmetterlinge
               </CardTitle>
-              <div className="relative">
-                <Star className="h-8 w-8 text-blue-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-blue-400 animate-ping opacity-20"></div>
-              </div>
+              <Star className="h-4 w-4 text-blue-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-blue-400 mb-2">{exhibitionButterflies.length}</div>
-            <div className="text-slate-400 text-sm">🦋 Aktive Exponate</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-blue-400">{exhibitionButterflies.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-800/40 to-orange-800/40 border-2 border-amber-500/30 hover:border-amber-400/50 transition-all duration-300 hover:scale-105 shadow-xl group">
-          <CardHeader className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-t-lg -mx-6 -my-2"></div>
-            <div className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-              <CardTitle className="text-lg font-bold text-amber-300">
-                Rahmen im Besitz
+        <Card className="bg-gradient-to-br from-amber-800/40 to-orange-800/40 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-300 shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold text-amber-300">
+                Rahmen
               </CardTitle>
-              <div className="relative">
-                <Trophy className="h-8 w-8 text-amber-400 group-hover:animate-pulse" />
-                <div className="absolute inset-0 h-8 w-8 text-amber-400 animate-ping opacity-20"></div>
-              </div>
+              <Trophy className="h-4 w-4 text-amber-400" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-amber-400 mb-2">{frames.length}</div>
-            <div className="text-slate-400 text-sm">🖼️ Ausstellungsrahmen</div>
+          <CardContent className="pt-0 pb-3">
+            <div className="text-2xl font-bold text-amber-400">{frames.length}</div>
           </CardContent>
         </Card>
       </div>
