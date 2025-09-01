@@ -2126,11 +2126,86 @@ class PostgreSQLStorage implements IStorage {
 
   // Butterfly management methods
   async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
-    return { success: false };
+    const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
+    
+    // Check if butterfly should spawn based on rarity
+    if (!shouldSpawnButterfly(bouquetRarity)) {
+      return { success: false };
+    }
+
+    // Find an available field (not occupied by plants or other butterflies)
+    const occupiedFields = new Set<number>();
+    
+    // Add planted fields
+    const plantedFields = await db.select().from(schema.plantedFields).where(eq(schema.plantedFields.userId, userId));
+    plantedFields.forEach(pf => occupiedFields.add(pf.fieldIndex));
+    
+    // Add fields with butterflies  
+    const fieldButterflies = await db.select().from(schema.fieldButterflies).where(eq(schema.fieldButterflies.userId, userId));
+    fieldButterflies.forEach(fb => occupiedFields.add(fb.fieldIndex));
+    
+    // Add fields with placed bouquets
+    const placedBouquets = await db.select().from(schema.placedBouquets).where(eq(schema.placedBouquets.userId, userId));
+    placedBouquets.forEach(pb => occupiedFields.add(pb.fieldIndex));
+    
+    // Find first available field (0-49)
+    let availableField = -1;
+    for (let i = 0; i < 50; i++) {
+      if (!occupiedFields.has(i)) {
+        availableField = i;
+        break;
+      }
+    }
+    
+    if (availableField === -1) {
+      console.log(`🦋 No available fields for butterfly spawn (user ${userId})`);
+      return { success: false };
+    }
+
+    // Generate new butterfly
+    const butterflyData = await generateRandomButterfly(bouquetRarity);
+    
+    // Create field butterfly in database
+    const [fieldButterfly] = await db.insert(schema.fieldButterflies).values({
+      userId,
+      fieldIndex: availableField,
+      butterflyId: butterflyData.id,
+      butterflyName: butterflyData.name,
+      butterflyRarity: bouquetRarity,
+      butterflyImageUrl: butterflyData.imageUrl,
+      bouquetId,
+      spawnedAt: new Date(),
+      createdAt: new Date()
+    }).returning();
+    
+    console.log(`🦋 Butterfly spawned on field ${availableField}: ${butterflyData.name} (${bouquetRarity})`);
+    return { success: true, fieldButterfly, fieldIndex: availableField };
   }
 
   async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
-    return { success: false };
+    // Find butterfly on this field
+    const [fieldButterfly] = await db.select().from(schema.fieldButterflies)
+      .where(and(eq(schema.fieldButterflies.userId, userId), eq(schema.fieldButterflies.fieldIndex, fieldIndex)));
+    
+    if (!fieldButterfly) {
+      return { success: false };
+    }
+
+    // Create user butterfly in inventory
+    const [userButterfly] = await db.insert(schema.userButterflies).values({
+      userId,
+      butterflyId: fieldButterfly.butterflyId,
+      butterflyName: fieldButterfly.butterflyName,
+      butterflyRarity: fieldButterfly.butterflyRarity,
+      butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+      createdAt: new Date()
+    }).returning();
+
+    // Remove from field
+    await db.delete(schema.fieldButterflies).where(eq(schema.fieldButterflies.id, fieldButterfly.id));
+    
+    console.log(`🦋 Butterfly collected from field ${fieldIndex}: ${fieldButterfly.butterflyName}`);
+    return { success: true, butterfly: userButterfly };
   }
 
   // Exhibition methods
