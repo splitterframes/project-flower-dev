@@ -7,7 +7,7 @@
         "password": "123",
         "id": 1,
         "credits": 1000,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-01T10:07:36.924Z",
         "createdAt": "2025-09-01T10:07:36.924Z",
         "updatedAt": "2025-09-01T10:07:36.924Z"
       }
@@ -285,6 +285,21 @@
         "spawnedAt": "2025-09-01T19:40:54.004Z",
         "createdAt": "2025-09-01T19:40:54.004Z"
       }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "userId": 2,
+        "fieldIndex": 2,
+        "butterflyId": 59,
+        "butterflyName": "Pontia perfectus",
+        "butterflyRarity": "common",
+        "butterflyImageUrl": "/Schmetterlinge/59.jpg",
+        "bouquetId": 1,
+        "spawnedAt": "2025-09-01T19:46:46.161Z",
+        "createdAt": "2025-09-01T19:46:46.161Z"
+      }
     ]
   ],
   "exhibitionFrames": [
@@ -329,12 +344,12 @@
     "currentRecipeId": 2,
     "currentPlacedBouquetId": 2,
     "currentButterflyId": 2,
-    "currentFieldButterflyId": 3,
+    "currentFieldButterflyId": 4,
     "currentFlowerId": 5,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 2,
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T19:46:23.879Z"
+  "savedAt": "2025-09-01T19:50:16.042Z"
 }
