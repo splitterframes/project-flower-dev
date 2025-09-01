@@ -75,6 +75,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         loading: false,
       });
 
+      console.log('🦋 RAW API Response - unlockedData:', unlockedData);
       console.log('🦋 Game data loaded:', {
         seeds: seedsData.seeds?.length || 0,
         fields: fieldsData.fields?.length || 0,

@@ -15,6 +15,9 @@ export default function GardenView() {
   
   const { user } = useAuthStore();
   const { plantedFields, seeds, unlockedFields, nextUnlockCost, plantSeed, harvestFlower, unlockField } = useGameStore();
+  
+  // Debug log
+  console.log('🔍 GardenView - unlockedFields:', unlockedFields);
 
   // Timer for growth countdown
   useEffect(() => {
