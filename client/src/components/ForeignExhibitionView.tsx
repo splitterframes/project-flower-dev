@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
 import { RarityImage } from './RarityImage';
-import { ArrowLeft, Heart, Bug } from 'lucide-react';
+import { ButterflyDetailModal } from './ButterflyDetailModal';
+import { ArrowLeft, Heart, Bug, Info } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
 interface ExhibitionButterfly {
@@ -40,6 +41,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
+  const [showButterflyDialog, setShowButterflyDialog] = useState(false);
 
   useEffect(() => {
     loadForeignExhibition();
@@ -118,6 +121,22 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       console.error('Failed to toggle like:', error);
       alert('Fehler beim Liken des Rahmens');
     }
+  };
+
+  const handleButterflyClick = (butterfly: ExhibitionButterfly) => {
+    setSelectedButterfly(butterfly);
+    setShowButterflyDialog(true);
+  };
+
+  const handleButterflyModalClose = () => {
+    setShowButterflyDialog(false);
+    setSelectedButterfly(null);
+  };
+
+  const handleButterflySold = () => {
+    // Refresh the exhibition data after selling
+    loadForeignExhibition();
+    handleButterflyModalClose();
   };
 
   // Group butterflies by frame
@@ -242,18 +261,22 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             className="aspect-square border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300"
                           >
                             {butterfly ? (
-                              <div className="relative w-full h-full group">
+                              <div 
+                                className="relative w-full h-full group cursor-pointer"
+                                onClick={() => handleButterflyClick(butterfly)}
+                              >
                                 <RarityImage
                                   src={butterfly.butterflyImageUrl}
                                   alt={butterfly.butterflyName}
                                   rarity={butterfly.butterflyRarity as RarityTier}
                                   size="large"
-                                  className="w-full h-full object-cover rounded"
+                                  className="w-full h-full object-cover rounded transition-transform group-hover:scale-105"
                                 />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
-                                  <div className="text-center text-white text-xs">
-                                    <div className="font-bold">{butterfly.butterflyName}</div>
-                                    <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
+                                  <div className="text-center text-white">
+                                    <Info className="h-6 w-6 mx-auto mb-1" />
+                                    <div className="text-xs font-bold">{butterfly.butterflyName}</div>
+                                    <div className={`text-xs ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`}>
                                       {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
                                     </div>
                                   </div>
@@ -295,6 +318,21 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
           </Card>
         )}
       </div>
+      
+      {/* Butterfly Detail Modal */}
+      <ButterflyDetailModal
+        isOpen={showButterflyDialog}
+        onClose={handleButterflyModalClose}
+        butterfly={selectedButterfly ? {
+          id: selectedButterfly.id,
+          butterflyName: selectedButterfly.butterflyName,
+          butterflyRarity: selectedButterfly.butterflyRarity,
+          butterflyImageUrl: selectedButterfly.butterflyImageUrl,
+          placedAt: selectedButterfly.placedAt,
+          userId: selectedButterfly.userId
+        } : null}
+        onSold={handleButterflySold}
+      />
     </div>
   );
 };
