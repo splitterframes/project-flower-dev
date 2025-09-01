@@ -1203,46 +1203,70 @@ export class MemStorage implements IStorage {
           .where(eq(schema.fieldButterflies.id, fieldButterfly.id));
       }
       
-      // Add to user inventory (Memory AND Database)
-      const existingButterfly = Array.from(this.userButterflies.values())
-        .find(b => b.userId === userId && b.butterflyId === fieldButterfly.butterflyId);
+      // Add to user inventory (Check Database first, then Memory)
+      let existingButterfly = null;
+      if (this.db) {
+        console.log(`🔍 Searching for existing butterfly: userId=${userId}, butterflyId=${fieldButterfly.butterflyId}`);
+        const dbExisting = await this.db.select().from(schema.userButterflies)
+          .where(and(
+            eq(schema.userButterflies.userId, userId),
+            eq(schema.userButterflies.butterflyId, fieldButterfly.butterflyId)
+          ))
+          .limit(1);
+        console.log(`🔍 Database search result:`, dbExisting);
+        existingButterfly = dbExisting[0] || null;
+      }
+      // Fallback to memory if no database
+      if (!existingButterfly) {
+        existingButterfly = Array.from(this.userButterflies.values())
+          .find(b => b.userId === userId && b.butterflyId === fieldButterfly.butterflyId);
+        console.log(`🔍 Memory search result:`, existingButterfly ? `Found ${existingButterfly.butterflyName}` : 'Not found');
+      }
       
       if (existingButterfly) {
-        // Increase quantity (Memory AND Database)
-        existingButterfly.quantity += 1;
-        this.userButterflies.set(existingButterfly.id, existingButterfly);
+        // Increase quantity (Database AND Memory)
+        const newQuantity = existingButterfly.quantity + 1;
         if (this.db) {
-          await this.db.update(schema.userButterflies)
-            .set({ quantity: existingButterfly.quantity })
-            .where(eq(schema.userButterflies.id, existingButterfly.id));
+          const [updated] = await this.db.update(schema.userButterflies)
+            .set({ quantity: newQuantity })
+            .where(eq(schema.userButterflies.id, existingButterfly.id))
+            .returning();
+          existingButterfly = updated;
+        } else {
+          existingButterfly.quantity = newQuantity;
         }
+        // Update memory
+        this.userButterflies.set(existingButterfly.id, existingButterfly);
         console.log(`🦋 Collected butterfly: +1 ${fieldButterfly.butterflyName} (total: ${existingButterfly.quantity})`);
         return { success: true, butterfly: existingButterfly };
       } else {
-        // Create new butterfly in inventory (Memory AND Database)
-        const newButterfly: UserButterfly = {
-          id: this.currentButterflyId++,
-          userId,
-          butterflyId: fieldButterfly.butterflyId,
-          butterflyName: fieldButterfly.butterflyName,
-          butterflyRarity: fieldButterfly.butterflyRarity,
-          butterflyImageUrl: fieldButterfly.butterflyImageUrl,
-          quantity: 1,
-          createdAt: new Date()
-        };
-        this.userButterflies.set(newButterfly.id, newButterfly);
+        // Create new butterfly in inventory (Database first, then Memory)
+        let newButterfly: UserButterfly;
         if (this.db) {
-          await this.db.insert(schema.userButterflies).values({
-            id: newButterfly.id,
-            userId: newButterfly.userId,
-            butterflyId: newButterfly.butterflyId,
-            butterflyName: newButterfly.butterflyName,
-            butterflyRarity: newButterfly.butterflyRarity,
-            butterflyImageUrl: newButterfly.butterflyImageUrl,
-            quantity: newButterfly.quantity,
-            createdAt: newButterfly.createdAt
-          });
+          const [inserted] = await this.db.insert(schema.userButterflies).values({
+            userId,
+            butterflyId: fieldButterfly.butterflyId,
+            butterflyName: fieldButterfly.butterflyName,
+            butterflyRarity: fieldButterfly.butterflyRarity,
+            butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+            quantity: 1,
+            createdAt: new Date()
+          }).returning();
+          newButterfly = inserted;
+        } else {
+          newButterfly = {
+            id: this.currentButterflyId++,
+            userId,
+            butterflyId: fieldButterfly.butterflyId,
+            butterflyName: fieldButterfly.butterflyName,
+            butterflyRarity: fieldButterfly.butterflyRarity,
+            butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+            quantity: 1,
+            createdAt: new Date()
+          };
         }
+        // Update memory
+        this.userButterflies.set(newButterfly.id, newButterfly);
         console.log(`🦋 Collected new butterfly: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
         return { success: true, butterfly: newButterfly };
       }
@@ -2442,15 +2466,41 @@ class PostgreSQLStorage implements IStorage {
       return { success: false };
     }
 
-    // Create user butterfly in inventory
-    const [userButterfly] = await db.insert(schema.userButterflies).values({
-      userId,
-      butterflyId: fieldButterfly.butterflyId,
-      butterflyName: fieldButterfly.butterflyName,
-      butterflyRarity: fieldButterfly.butterflyRarity,
-      butterflyImageUrl: fieldButterfly.butterflyImageUrl,
-      createdAt: new Date()
-    }).returning();
+    // Check if user already has this butterfly species
+    console.log(`🔍 PostgreSQL: Checking for existing butterfly userId=${userId}, butterflyId=${fieldButterfly.butterflyId}`);
+    const [existingButterfly] = await db.select().from(schema.userButterflies)
+      .where(and(
+        eq(schema.userButterflies.userId, userId),
+        eq(schema.userButterflies.butterflyId, fieldButterfly.butterflyId)
+      ))
+      .limit(1);
+
+    let userButterfly: UserButterfly;
+    
+    if (existingButterfly) {
+      // Update quantity of existing butterfly
+      console.log(`🔍 PostgreSQL: Found existing, updating quantity from ${existingButterfly.quantity} to ${existingButterfly.quantity + 1}`);
+      const [updated] = await db.update(schema.userButterflies)
+        .set({ quantity: existingButterfly.quantity + 1 })
+        .where(eq(schema.userButterflies.id, existingButterfly.id))
+        .returning();
+      userButterfly = updated;
+      console.log(`🦋 Butterfly quantity updated: +1 ${fieldButterfly.butterflyName} (total: ${userButterfly.quantity})`);
+    } else {
+      // Create new butterfly in inventory
+      console.log(`🔍 PostgreSQL: Creating new butterfly entry`);
+      const [inserted] = await db.insert(schema.userButterflies).values({
+        userId,
+        butterflyId: fieldButterfly.butterflyId,
+        butterflyName: fieldButterfly.butterflyName,
+        butterflyRarity: fieldButterfly.butterflyRarity,
+        butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+        quantity: 1,
+        createdAt: new Date()
+      }).returning();
+      userButterfly = inserted;
+      console.log(`🦋 New butterfly collected: ${fieldButterfly.butterflyName} (${fieldButterfly.butterflyRarity})`);
+    }
 
     // Remove from field
     await db.delete(schema.fieldButterflies).where(eq(schema.fieldButterflies.id, fieldButterfly.id));
@@ -2527,9 +2577,15 @@ class PostgreSQLStorage implements IStorage {
         butterflyImageUrl: butterfly.butterflyImageUrl
       });
 
-      // Remove from user inventory
-      await db.delete(userButterflies)
-        .where(eq(userButterflies.id, butterfly.id));
+      // Remove from user inventory (decrease quantity or delete if quantity = 1)
+      if (butterfly.quantity > 1) {
+        await db.update(userButterflies)
+          .set({ quantity: butterfly.quantity - 1 })
+          .where(eq(userButterflies.id, butterfly.id));
+      } else {
+        await db.delete(userButterflies)
+          .where(eq(userButterflies.id, butterfly.id));
+      }
 
       return { success: true };
     } catch (error) {
