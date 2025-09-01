@@ -37,6 +37,9 @@ import {
   type CreateBouquetRequest,
   type PlaceBouquetRequest
 } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import * as fs from 'fs';
@@ -372,9 +375,33 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
+    // First check memory cache
+    const memoryUser = Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
+    if (memoryUser) {
+      return memoryUser;
+    }
+
+    // If not found in memory, check PostgreSQL database
+    try {
+      if (process.env.DATABASE_URL) {
+        const sql = neon(process.env.DATABASE_URL);
+        const db = drizzle(sql);
+        const dbUsers = await db.select().from(users).where(eq(users.username, username));
+        if (dbUsers.length > 0) {
+          const dbUser = dbUsers[0] as User;
+          // Add to memory cache for future requests
+          this.users.set(dbUser.id, dbUser);
+          console.log(`💾 Loaded user ${username} from PostgreSQL into memory cache`);
+          return dbUser;
+        }
+      }
+    } catch (error) {
+      console.error('💾 Error checking PostgreSQL for user:', error);
+    }
+
+    return undefined;
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
