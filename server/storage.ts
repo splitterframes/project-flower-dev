@@ -233,7 +233,8 @@ export class MemStorage implements IStorage {
           {
             ...user,
             createdAt: new Date(user.createdAt),
-            updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(user.createdAt)
+            updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(user.createdAt),
+            lastPassiveIncomeAt: user.lastPassiveIncomeAt ? new Date(user.lastPassiveIncomeAt) : new Date(user.createdAt)
           }
         ]);
         this.users = new Map(userEntries);

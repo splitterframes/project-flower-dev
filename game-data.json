@@ -270,7 +270,23 @@
     ]
   ],
   "userButterflies": [],
-  "fieldButterflies": [],
+  "fieldButterflies": [
+    [
+      2,
+      {
+        "id": 2,
+        "userId": 2,
+        "fieldIndex": 1,
+        "butterflyId": 360,
+        "butterflyName": "Monarch celestis",
+        "butterflyRarity": "common",
+        "butterflyImageUrl": "/Schmetterlinge/360.jpg",
+        "bouquetId": 1,
+        "spawnedAt": "2025-09-01T19:40:54.004Z",
+        "createdAt": "2025-09-01T19:40:54.004Z"
+      }
+    ]
+  ],
   "exhibitionFrames": [
     [
       1,
@@ -313,12 +329,12 @@
     "currentRecipeId": 2,
     "currentPlacedBouquetId": 2,
     "currentButterflyId": 2,
-    "currentFieldButterflyId": 2,
+    "currentFieldButterflyId": 3,
     "currentFlowerId": 5,
     "currentExhibitionFrameId": 2,
     "currentExhibitionButterflyId": 2,
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T19:40:23.871Z"
+  "savedAt": "2025-09-01T19:46:23.879Z"
 }
