@@ -1769,15 +1769,161 @@ class PostgreSQLStorage implements IStorage {
 
   // Market methods - Stub implementations for now
   async getMarketListings(): Promise<any[]> {
-    return [];
+    try {
+      const result = await db
+        .select({
+          id: marketListings.id,
+          sellerId: marketListings.sellerId,
+          seedId: marketListings.seedId,
+          quantity: marketListings.quantity,
+          pricePerUnit: marketListings.pricePerUnit,
+          totalPrice: marketListings.totalPrice,
+          isActive: marketListings.isActive,
+          createdAt: marketListings.createdAt,
+          updatedAt: marketListings.updatedAt,
+          sellerUsername: users.username,
+          seedName: seeds.name,
+          seedRarity: seeds.rarity
+        })
+        .from(marketListings)
+        .leftJoin(users, eq(marketListings.sellerId, users.id))
+        .leftJoin(seeds, eq(marketListings.seedId, seeds.id))
+        .where(eq(marketListings.isActive, true));
+      
+      return result;
+    } catch (error) {
+      console.error('🚨 Error getting market listings:', error);
+      console.error('🚨 Error details:', (error as Error).message);
+      return [];
+    }
   }
 
   async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
-    return null;
+    try {
+      // Get seller and seed info
+      const [seller] = await db.select().from(users).where(eq(users.id, sellerId)).limit(1);
+      const [seed] = await db.select().from(seeds).where(eq(seeds.id, data.seedId)).limit(1);
+      
+      if (!seller || !seed) {
+        throw new Error("Seller or seed not found");
+      }
+
+      // Check user has enough seeds
+      const [userSeed] = await db.select().from(userSeeds)
+        .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId)))
+        .limit(1);
+      
+      if (!userSeed || userSeed.quantity < data.quantity) {
+        throw new Error("Nicht genügend Samen verfügbar");
+      }
+
+      // Create market listing
+      const [listing] = await db.insert(marketListings).values({
+        sellerId,
+        seedId: data.seedId,
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.quantity * data.pricePerUnit,
+        isActive: true
+      }).returning();
+
+      // Reduce seller's seed quantity
+      await db.update(userSeeds)
+        .set({ quantity: userSeed.quantity - data.quantity })
+        .where(eq(userSeeds.id, userSeed.id));
+
+      // Return listing with additional info
+      return {
+        ...listing,
+        sellerUsername: seller.username,
+        seedName: seed.name,
+        seedRarity: seed.rarity
+      };
+    } catch (error) {
+      console.error('Error creating market listing:', error);
+      return null;
+    }
   }
 
   async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
-    return { success: false, message: 'Not implemented yet' };
+    try {
+      // Get buyer and listing info
+      const [buyer] = await db.select().from(users).where(eq(users.id, buyerId)).limit(1);
+      const [listing] = await db.select().from(marketListings).where(and(
+        eq(marketListings.id, data.listingId),
+        eq(marketListings.isActive, true)
+      )).limit(1);
+
+      if (!buyer || !listing) {
+        return { success: false, message: "Angebot nicht verfügbar" };
+      }
+
+      if (listing.sellerId === buyerId) {
+        return { success: false, message: "Du kannst deine eigenen Angebote nicht kaufen" };
+      }
+
+      const requestedQuantity = data.quantity;
+      if (requestedQuantity > listing.quantity) {
+        return { success: false, message: "Nicht genügend Menge verfügbar" };
+      }
+
+      const totalCost = requestedQuantity * listing.pricePerUnit;
+      if (buyer.credits < totalCost) {
+        return { success: false, message: "Nicht genügend Credits" };
+      }
+
+      // Execute transaction
+      // 1. Deduct credits from buyer
+      await db.update(users)
+        .set({ credits: buyer.credits - totalCost })
+        .where(eq(users.id, buyerId));
+
+      // 2. Add credits to seller  
+      const [seller] = await db.select().from(users).where(eq(users.id, listing.sellerId)).limit(1);
+      await db.update(users)
+        .set({ credits: (seller?.credits || 0) + totalCost })
+        .where(eq(users.id, listing.sellerId));
+
+      // 3. Add seeds to buyer inventory - Check if buyer already has this seed type
+      const existingBuyerSeed = await db.select().from(userSeeds)
+        .where(and(eq(userSeeds.userId, buyerId), eq(userSeeds.seedId, listing.seedId)))
+        .limit(1);
+        
+      if (existingBuyerSeed.length > 0) {
+        // Update existing seed quantity
+        await db.update(userSeeds)
+          .set({ quantity: existingBuyerSeed[0].quantity + requestedQuantity })
+          .where(eq(userSeeds.id, existingBuyerSeed[0].id));
+      } else {
+        // Create new seed entry
+        await db.insert(userSeeds).values({
+          userId: buyerId,
+          seedId: listing.seedId,
+          quantity: requestedQuantity
+        });
+      }
+
+      // 4. Update or remove listing
+      if (requestedQuantity === listing.quantity) {
+        // Mark listing as inactive
+        await db.update(marketListings)
+          .set({ isActive: false })
+          .where(eq(marketListings.id, data.listingId));
+      } else {
+        // Reduce listing quantity
+        await db.update(marketListings)
+          .set({ 
+            quantity: listing.quantity - requestedQuantity,
+            totalPrice: (listing.quantity - requestedQuantity) * listing.pricePerUnit
+          })
+          .where(eq(marketListings.id, data.listingId));
+      }
+
+      return { success: true, message: "Kauf erfolgreich abgeschlossen!" };
+    } catch (error) {
+      console.error('Error buying market listing:', error);
+      return { success: false, message: "Fehler beim Kauf" };
+    }
   }
 
   async getUserSeeds(userId: number): Promise<any[]> {
