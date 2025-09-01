@@ -1704,4 +1704,254 @@ interface ExhibitionFrameLike {
   createdAt: Date;
 }
 
-export const storage = new MemStorage();
+// Initialize database connection
+const sql = neon(process.env.DATABASE_URL || '');
+const db = drizzle(sql, { schema });
+
+class PostgreSQLStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
+    const result = await db.update(users).set({ credits: amount }).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+
+  // Market methods - Stub implementations for now
+  async getMarketListings(): Promise<any[]> {
+    return [];
+  }
+
+  async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
+    return null;
+  }
+
+  async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async getUserSeeds(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  // Garden methods
+  async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async getPlantedFields(userId: number): Promise<PlantedField[]> {
+    const result = await db.select().from(plantedFields).where(eq(plantedFields.userId, userId));
+    return result;
+  }
+
+  async harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  // Flower inventory methods
+  async getUserFlowers(userId: number): Promise<UserFlower[]> {
+    const result = await db.select().from(userFlowers).where(eq(userFlowers.userId, userId));
+    return result;
+  }
+
+  async addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void> {
+    await db.insert(userFlowers).values({
+      userId,
+      flowerId,
+      flowerName,
+      flowerRarity,
+      flowerImageUrl,
+      quantity: 1
+    });
+  }
+
+  // Bouquet methods - Stub implementations
+  async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async getUserBouquets(userId: number): Promise<UserBouquet[]> {
+    const result = await db.select().from(userBouquets).where(eq(userBouquets.userId, userId));
+    return result;
+  }
+
+  async getBouquetRecipes(): Promise<BouquetRecipe[]> {
+    const result = await db.select().from(bouquetRecipes);
+    return result;
+  }
+
+  async getBouquetRecipe(bouquetId: number): Promise<BouquetRecipe | null> {
+    const result = await db.select().from(bouquetRecipes).where(eq(bouquetRecipes.bouquetId, bouquetId)).limit(1);
+    return result[0] || null;
+  }
+
+  async placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
+    const result = await db.select().from(placedBouquets).where(eq(placedBouquets.userId, userId));
+    return result;
+  }
+
+  async getUserButterflies(userId: number): Promise<UserButterfly[]> {
+    const result = await db.select().from(userButterflies).where(eq(userButterflies.userId, userId));
+    return result;
+  }
+
+  // Seed management methods
+  async addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void> {
+    // Stub implementation
+  }
+
+  async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
+    return { success: false };
+  }
+
+  // Butterfly management methods
+  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+    return { success: false };
+  }
+
+  async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    return { success: false };
+  }
+
+  // Exhibition methods
+  async getExhibitionFrames(userId: number): Promise<ExhibitionFrame[]> {
+    const result = await db.select().from(exhibitionFrames).where(eq(exhibitionFrames.userId, userId));
+    return result;
+  }
+
+  async purchaseExhibitionFrame(userId: number): Promise<{ success: boolean; message?: string; newCredits?: number; frame?: ExhibitionFrame }> {
+    try {
+      // Check user credits
+      const user = await this.getUser(userId);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      const framePrice = 100;
+      if (user.credits < framePrice) {
+        return { success: false, message: 'Not enough credits' };
+      }
+
+      // Get current frame count
+      const frames = await this.getExhibitionFrames(userId);
+      const nextFrameNumber = frames.length + 1;
+
+      // Create frame and deduct credits in transaction
+      const [newFrame] = await db.insert(exhibitionFrames).values({
+        userId,
+        frameNumber: nextFrameNumber
+      }).returning();
+
+      const updatedUser = await this.updateUserCredits(userId, user.credits - framePrice);
+
+      return { 
+        success: true, 
+        newCredits: updatedUser?.credits,
+        frame: newFrame
+      };
+    } catch (error) {
+      return { success: false, message: 'Database error' };
+    }
+  }
+
+  async getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]> {
+    const result = await db.select().from(exhibitionButterflies).where(eq(exhibitionButterflies.userId, userId));
+    return result;
+  }
+
+  async placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Get butterfly from user inventory
+      const userButterfliesResult = await db.select().from(userButterflies)
+        .where(eq(userButterflies.userId, userId));
+      
+      const butterfly = userButterfliesResult.find(b => b.butterflyId === butterflyId);
+      if (!butterfly) {
+        return { success: false, message: 'Butterfly not found in inventory' };
+      }
+
+      // Place butterfly in exhibition
+      await db.insert(exhibitionButterflies).values({
+        userId,
+        frameId,
+        slotIndex,
+        butterflyId: butterfly.butterflyId,
+        butterflyName: butterfly.butterflyName,
+        butterflyRarity: butterfly.butterflyRarity,
+        butterflyImageUrl: butterfly.butterflyImageUrl
+      });
+
+      // Remove from user inventory
+      await db.delete(userButterflies)
+        .where(eq(userButterflies.id, butterfly.id));
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: 'Database error' };
+    }
+  }
+
+  async removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
+    return { success: false, creditsEarned: 0 };
+  }
+
+  // Stub methods for missing interface methods
+  async likeExhibitionFrame(likerId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async unlikeExhibitionFrame(likerId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Not implemented yet' };
+  }
+
+  async getUserFrameLikes(userId: number, frameOwnerId: number): Promise<Array<{ frameId: number; isLiked: boolean; totalLikes: number }>> {
+    return [];
+  }
+
+  async getForeignExhibitionButterflies(ownerId: number): Promise<ExhibitionButterfly[]> {
+    const result = await db.select().from(exhibitionButterflies).where(eq(exhibitionButterflies.userId, ownerId));
+    return result;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const result = await db.select().from(users);
+    return result;
+  }
+
+  async getAllUsersWithStatus(): Promise<(User & { isOnline: boolean })[]> {
+    const users = await this.getAllUsers();
+    // For now, mark all users as offline since we need to implement session tracking
+    return users.map(user => ({ ...user, isOnline: false }));
+  }
+
+  async saveData(): Promise<void> {
+    // No-op for PostgreSQL - data is automatically persisted
+    console.log('💾 PostgreSQL data automatically persisted');
+  }
+}
+
+export const storage = new PostgreSQLStorage();
