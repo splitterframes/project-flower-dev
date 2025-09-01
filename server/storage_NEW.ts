@@ -319,7 +319,19 @@ Return only the name, no explanation.`;
     }
   }
   async getUserFlowers(userId: number): Promise<UserFlower[]> { return []; }
-  async getPlantedFields(userId: number): Promise<PlantedField[]> { return []; }
+  async getPlantedFields(userId: number): Promise<PlantedField[]> {
+    try {
+      const fields = await db.select().from(schema.plantedFields)
+        .where(eq(schema.plantedFields.userId, userId))
+        .orderBy(asc(schema.plantedFields.fieldIndex));
+
+      console.log(`🌱 NEW: Getting planted fields for user ${userId} - found ${fields.length}`);
+      return fields;
+    } catch (error) {
+      console.error('❌ NEW Error getting planted fields:', error);
+      return [];
+    }
+  }
   async getFieldButterflies(userId: number): Promise<FieldButterfly[]> {
     try {
       const fieldButterflies = await db.select().from(schema.fieldButterflies)
@@ -333,7 +345,19 @@ Return only the name, no explanation.`;
       return [];
     }
   }
-  async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> { return []; }
+  async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
+    try {
+      const bouquets = await db.select().from(schema.placedBouquets)
+        .where(eq(schema.placedBouquets.userId, userId))
+        .orderBy(asc(schema.placedBouquets.fieldIndex));
+
+      console.log(`🌺 NEW: Getting placed bouquets for user ${userId} - found ${bouquets.length}`);
+      return bouquets;
+    } catch (error) {
+      console.error('❌ NEW Error getting placed bouquets:', error);
+      return [];
+    }
+  }
   async getUserBouquets(userId: number): Promise<UserBouquet[]> { return []; }
   async getExhibitionFrames(userId: number): Promise<ExhibitionFrame[]> { return []; }
   async getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]> { return []; }

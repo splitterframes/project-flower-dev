@@ -176,7 +176,7 @@ app.get('/api/garden/field-butterflies', async (req, res) => {
   res.json({ butterflies });
 });
 
-app.get('/api/garden/bouquets', async (req, res) => {
+app.get('/api/garden/placed-bouquets', async (req, res) => {
   const userId = parseInt(req.headers['x-user-id'] as string);
   const bouquets = await storage.getPlacedBouquets(userId);
   res.json({ bouquets });
