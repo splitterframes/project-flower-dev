@@ -622,10 +622,7 @@ export class MemStorage implements IStorage {
       })
       .from(schema.userSeeds)
       .leftJoin(schema.seeds, eq(schema.userSeeds.seedId, schema.seeds.id))
-      .where(and(
-        eq(schema.userSeeds.userId, userId),
-        gt(schema.userSeeds.quantity, 0)
-      ));
+      .where(eq(schema.userSeeds.userId, userId));
 
     return result;
   }
