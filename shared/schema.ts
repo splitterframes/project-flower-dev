@@ -145,8 +145,6 @@ export const placedBouquets = pgTable("placed_bouquets", {
   userId: integer("user_id").notNull().references(() => users.id),
   bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
   fieldIndex: integer("field_index").notNull(),
-  bouquetName: text("bouquet_name").notNull(),
-  bouquetRarity: text("bouquet_rarity").notNull(),
   placedAt: timestamp("placed_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(), // 21 minutes after placement
   createdAt: timestamp("created_at").notNull().defaultNow(),

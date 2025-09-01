@@ -196,6 +196,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/garden/collect-expired-bouquet", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.collectExpiredBouquet(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Samen erfolgreich gesammelt!', 
+          seedDrop: result.seedDrop 
+        });
+      } else {
+        res.status(404).json({ message: 'Kein abgelaufenes Bouquet auf diesem Feld gefunden' });
+      }
+    } catch (error) {
+      console.error('Error collecting expired bouquet:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Flower inventory routes
   app.get("/api/user/:id/flowers", async (req, res) => {
     try {
