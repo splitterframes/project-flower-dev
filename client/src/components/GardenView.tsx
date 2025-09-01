@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/auth';
 import { useGameStore } from '../stores/game';
 import { PlantedField } from '../types';
 import { RARITY_CONFIG } from '@shared/rarity';
-import SeedSelectionModal from './SeedSelectionModal';
+import SeedSelectionModal from './SeedSelectionModal.tsx';
 
 // Field states
 type FieldState = 'locked' | 'unlockable' | 'empty' | 'planted' | 'ready';
