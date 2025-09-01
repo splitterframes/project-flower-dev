@@ -291,23 +291,12 @@ export const ExhibitionView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Enhanced Exhibition Header */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl blur-xl"></div>
-        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-purple-500/30 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <Trophy className="h-12 w-12 mr-4 text-amber-400 animate-pulse" />
-              <div className="absolute inset-0 h-12 w-12 mr-4 text-amber-400 animate-ping opacity-20"></div>
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-300 via-indigo-300 to-blue-300 bg-clip-text text-transparent">
-                Schmetterlingsausstellung 🦋
-              </h1>
-            </div>
-          </div>
-          <p className="text-slate-300 text-xl">Stelle deine schönsten Schmetterlinge aus und verdiene passives Einkommen</p>
-        </div>
+      {/* Compact Exhibition Header */}
+      <div className="bg-slate-800/60 p-4 rounded-lg border border-purple-500/30 text-center">
+        <h1 className="text-2xl font-bold text-purple-300 mb-1">
+          Schmetterlingsausstellung 🦋
+        </h1>
+        <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
       </div>
 
       {/* Compact Income Stats */}

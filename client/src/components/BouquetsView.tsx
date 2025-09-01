@@ -222,43 +222,26 @@ export const BouquetsView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Enhanced Bouquets Header */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-rose-500/10 rounded-2xl blur-xl"></div>
-        <div className="relative bg-gradient-to-r from-slate-800/80 to-slate-900/80 p-8 rounded-2xl border border-pink-500/30 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <Heart className="h-12 w-12 mr-4 text-pink-400 animate-pulse" />
-              <div className="absolute inset-0 h-12 w-12 mr-4 text-pink-400 animate-ping opacity-20"></div>
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-300 via-purple-300 to-rose-300 bg-clip-text text-transparent">
-                Bouquet Kollektion
-              </h1>
-            </div>
+      {/* Compact Bouquets Header */}
+      <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
+        <div className="text-center mb-3">
+          <h1 className="text-2xl font-bold text-pink-300 mb-1">
+            Bouquet Kollektion
+          </h1>
+          <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+        </div>
+        
+        {/* Compact Stats */}
+        <div className="flex justify-center gap-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <Flower2 className="h-4 w-4 text-blue-400" />
+            <span className="text-white font-semibold">{myFlowers.length}</span>
+            <span className="text-slate-400">Blumen</span>
           </div>
-          <p className="text-slate-300 text-xl">Erstelle wunderschöne Blumensträuße aus deinen Blumen 🌸</p>
-          
-          {/* Stats Bar */}
-          <div className="flex justify-center gap-8 mt-8">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-400/30">
-                <Flower2 className="h-6 w-6 text-blue-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white">{myFlowers.length}</div>
-                <div className="text-slate-400">Verfügbare Blumen</div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-pink-500/20 rounded-lg border border-pink-400/30">
-                <Gift className="h-6 w-6 text-pink-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white">{myBouquets.length}</div>
-                <div className="text-slate-400">Bouquet Rezepte</div>
-              </div>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Gift className="h-4 w-4 text-pink-400" />
+            <span className="text-white font-semibold">{myBouquets.length}</span>
+            <span className="text-slate-400">Rezepte</span>
           </div>
         </div>
       </div>
