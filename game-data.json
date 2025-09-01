@@ -43,7 +43,7 @@
         "username": "Testuser",
         "password": "test123",
         "credits": 1000,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-01T18:32:43.515Z",
         "createdAt": "2025-09-01T18:32:43.515Z",
         "updatedAt": "2025-09-01T18:32:43.515Z"
       }
@@ -558,5 +558,5 @@
     "currentPassiveIncomeId": 7,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-01T22:39:57.101Z"
+  "savedAt": "2025-09-01T22:40:54.850Z"
 }
