@@ -227,20 +227,89 @@ export class MemStorage implements IStorage {
         const data = JSON.parse(fs.readFileSync(this.saveFilePath, 'utf8'));
         
         // Restore all maps
-        this.users = new Map(data.users || []);
-        this.seeds = new Map(data.seeds || []);
-        this.userSeeds = new Map(data.userSeeds || []);
+        // Convert date strings back to Date objects
+        const userEntries = (data.users || []).map(([key, user]: [number, any]) => [
+          key,
+          {
+            ...user,
+            createdAt: new Date(user.createdAt),
+            updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(user.createdAt)
+          }
+        ]);
+        this.users = new Map(userEntries);
+        // Convert date strings for seeds
+        const seedEntries = (data.seeds || []).map(([key, seed]: [number, any]) => [
+          key,
+          {
+            ...seed,
+            createdAt: new Date(seed.createdAt)
+          }
+        ]);
+        this.seeds = new Map(seedEntries);
+        // Convert date strings for user seeds
+        const userSeedEntries = (data.userSeeds || []).map(([key, userSeed]: [number, any]) => [
+          key,
+          {
+            ...userSeed,
+            createdAt: new Date(userSeed.createdAt)
+          }
+        ]);
+        this.userSeeds = new Map(userSeedEntries);
         this.marketListings = new Map(data.marketListings || []);
-        this.plantedFields = new Map(data.plantedFields || []);
+        // Convert date strings for planted fields
+        const plantedFieldEntries = (data.plantedFields || []).map(([key, field]: [number, any]) => [
+          key,
+          {
+            ...field,
+            plantedAt: new Date(field.plantedAt),
+            createdAt: new Date(field.createdAt)
+          }
+        ]);
+        this.plantedFields = new Map(plantedFieldEntries);
         this.userFlowers = new Map(data.userFlowers || []);
         this.bouquets = new Map(data.bouquets || []);
         this.userBouquets = new Map(data.userBouquets || []);
         this.bouquetRecipes = new Map(data.bouquetRecipes || []);
-        this.placedBouquets = new Map(data.placedBouquets || []);
-        this.userButterflies = new Map(data.userButterflies || []);
-        this.fieldButterflies = new Map(data.fieldButterflies || []);
+        // Convert date strings for placed bouquets
+        const placedBouquetEntries = (data.placedBouquets || []).map(([key, bouquet]: [number, any]) => [
+          key,
+          {
+            ...bouquet,
+            placedAt: new Date(bouquet.placedAt),
+            expiresAt: new Date(bouquet.expiresAt),
+            createdAt: new Date(bouquet.createdAt)
+          }
+        ]);
+        this.placedBouquets = new Map(placedBouquetEntries);
+        // Convert date strings for user butterflies
+        const userButterflyEntries = (data.userButterflies || []).map(([key, butterfly]: [number, any]) => [
+          key,
+          {
+            ...butterfly,
+            collectedAt: butterfly.collectedAt ? new Date(butterfly.collectedAt) : undefined,
+            sellsAt: butterfly.sellsAt ? new Date(butterfly.sellsAt) : undefined
+          }
+        ]);
+        this.userButterflies = new Map(userButterflyEntries);
+        // Convert date strings for field butterflies
+        const fieldButterflyEntries = (data.fieldButterflies || []).map(([key, butterfly]: [number, any]) => [
+          key,
+          {
+            ...butterfly,
+            spawnedAt: new Date(butterfly.spawnedAt)
+          }
+        ]);
+        this.fieldButterflies = new Map(fieldButterflyEntries);
         this.exhibitionFrames = new Map(data.exhibitionFrames || []);
-        this.exhibitionButterflies = new Map(data.exhibitionButterflies || []);
+        // Convert date strings for exhibition butterflies
+        const exhibitionButterflyEntries = (data.exhibitionButterflies || []).map(([key, butterfly]: [number, any]) => [
+          key,
+          {
+            ...butterfly,
+            placedAt: new Date(butterfly.placedAt)
+          }
+        ]);
+        this.exhibitionButterflies = new Map(exhibitionButterflyEntries);
         this.passiveIncomeLog = new Map(data.passiveIncomeLog || []);
         this.exhibitionFrameLikes = new Map(data.exhibitionFrameLikes || []);
         
