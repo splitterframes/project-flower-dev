@@ -37,7 +37,7 @@ import {
   type CreateBouquetRequest,
   type PlaceBouquetRequest
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
@@ -383,7 +383,7 @@ export class MemStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     // First check memory cache
     const memoryUser = Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.username.toLowerCase() === username.toLowerCase(),
     );
     if (memoryUser) {
       return memoryUser;
@@ -394,7 +394,7 @@ export class MemStorage implements IStorage {
       if (process.env.DATABASE_URL) {
         const sql = neon(process.env.DATABASE_URL);
         const db = drizzle(sql);
-        const dbUsers = await this.db.select().from(users).where(eq(users.username, username));
+        const dbUsers = await this.db.select().from(users).where(ilike(users.username, username));
         if (dbUsers.length > 0) {
           const dbUser = dbUsers[0] as User;
           // Add to memory cache for future requests
