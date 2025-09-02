@@ -1149,6 +1149,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🗑️ ADMIN: Reset all user data and start fresh
+  app.get("/api/admin/reset-all-data", async (req, res) => {
+    try {
+      console.log('🗑️ ADMIN: Resetting all user data...');
+      
+      // Get database instance
+      if ('db' in storage) {
+        const db = (storage as any).db;
+        
+        // Delete all user-related data in correct order (foreign keys)
+        await db.delete((storage as any).exhibitionVipButterflies);
+        await db.delete((storage as any).exhibitionButterflies);
+        await db.delete((storage as any).fieldButterflies);
+        await db.delete((storage as any).userButterflies);
+        await db.delete((storage as any).userVipButterflies);
+        await db.delete((storage as any).placedBouquets);
+        await db.delete((storage as any).userBouquets);
+        await db.delete((storage as any).userFlowers);
+        await db.delete((storage as any).plantedFields);
+        await db.delete((storage as any).userSeeds);
+        await db.delete((storage as any).marketListings);
+        await db.delete((storage as any).passiveIncomeLog);
+        await db.delete((storage as any).challengeDonations);
+        await db.delete((storage as any).challengeRewards);
+        await db.delete((storage as any).exhibitionFrameLikes);
+        await db.delete((storage as any).users);
+        
+        console.log('✅ All user data deleted successfully');
+        
+        res.json({
+          success: true,
+          message: "🎉 All data reset! You can now register a fresh account and passive income will work perfectly!",
+          instructions: "Go to your app and register again - everything will work normally now!"
+        });
+      } else {
+        throw new Error('Database not accessible');
+      }
+    } catch (error) {
+      console.error('Reset error:', error);
+      res.status(500).json({
+        success: false,
+        message: "❌ Error resetting data",
+        error: error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
