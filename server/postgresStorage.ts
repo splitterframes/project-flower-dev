@@ -108,10 +108,11 @@ export class PostgresStorage implements IStorage {
     
     console.log(`💾 Created new user "${user.username}" in PostgreSQL (ID: ${newUser.id})`);
     
-    // Give starter seeds to new user (3 common seeds)
+    // Give starter seeds to new user (5 common + 3 rare seeds)
     try {
-      await this.addSeedToInventory(newUser.id, 'common' as RarityTier, 3);
-      console.log(`🌱 Gave 3 starter seeds to new user ${newUser.username}`);
+      await this.addSeedToInventory(newUser.id, 'common' as RarityTier, 5);
+      await this.addSeedToInventory(newUser.id, 'rare' as RarityTier, 3);
+      console.log(`🌱 Gave starter seeds to new user ${newUser.username}: 5 Common + 3 Rare`);
     } catch (error) {
       console.error(`Failed to give starter seeds to user ${newUser.id}:`, error);
     }
