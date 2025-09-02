@@ -40,7 +40,7 @@ import {
   type CreateBouquetRequest,
   type PlaceBouquetRequest
 } from "@shared/schema";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
@@ -958,7 +958,7 @@ export class PostgresStorage implements IStorage {
       const randomSeed = availableSeeds[Math.floor(Math.random() * availableSeeds.length)];
 
       // Add seeds to user inventory
-      await this.addSeedToInventory(userId, randomSeed.id, seedQuantity);
+      await this.addSeedToInventoryById(userId, randomSeed.id, seedQuantity);
 
       // Remove the expired bouquet
       await this.db
