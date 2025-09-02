@@ -1063,11 +1063,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user before fix
       const userBefore = await storage.getUser(userId);
+      console.log(`🔧 Fixing passive income for user ${userId}, before:`, userBefore?.lastPassiveIncomeAt);
       
-      // Reset last_passive_income_at to NULL for the user
-      await storage.db.update(storage.users).set({ 
-        lastPassiveIncomeAt: null 
-      }).where(storage.eq(storage.users.id, userId));
+      // Create a method to fix the user's passive income time
+      if ('fixPassiveIncomeTime' in storage) {
+        await (storage as any).fixPassiveIncomeTime(userId);
+      } else {
+        // Fallback: direct SQL update via storage
+        throw new Error('fixPassiveIncomeTime method not implemented');
+      }
       
       res.json({ 
         success: true, 

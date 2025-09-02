@@ -2135,6 +2135,21 @@ export class PostgresStorage implements IStorage {
       });
     }
   }
+
+  /**
+   * 🔧 ADMIN: Fix passive income time bug for a user
+   * Resets lastPassiveIncomeAt to NULL, allowing the system to use current time
+   */
+  async fixPassiveIncomeTime(userId: number): Promise<void> {
+    console.log(`🔧 Fixing passive income time for user ${userId}`);
+    
+    await this.db
+      .update(users)
+      .set({ lastPassiveIncomeAt: null })
+      .where(eq(users.id, userId));
+      
+    console.log(`✅ Passive income time fixed for user ${userId}`);
+  }
 }
 
 export const postgresStorage = new PostgresStorage();
