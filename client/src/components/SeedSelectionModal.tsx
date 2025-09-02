@@ -55,7 +55,7 @@ export const SeedSelectionModal: React.FC<SeedSelectionModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {seeds.length === 0 ? (
+          {seeds.filter(seed => seed.quantity > 0).length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-red-400/30">
                 <Sprout className="h-12 w-12 text-red-400" />
@@ -81,7 +81,7 @@ export const SeedSelectionModal: React.FC<SeedSelectionModalProps> = ({
                       <span className="text-lg font-semibold text-green-300">Verfügbare Samen:</span>
                     </div>
                     <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white text-lg px-4 py-2 font-bold">
-                      {seeds.length} Arten
+                      {seeds.filter(seed => seed.quantity > 0).length} Arten
                     </Badge>
                   </div>
                 </div>
@@ -91,6 +91,7 @@ export const SeedSelectionModal: React.FC<SeedSelectionModalProps> = ({
               <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                   {seeds
+                    .filter(seed => seed.quantity > 0)
                     .sort((a, b) => {
                       const rarityOrder = { common: 0, uncommon: 1, rare: 2, "super-rare": 3, epic: 4, legendary: 5, mythical: 6 };
                       return (rarityOrder[b.seedRarity as keyof typeof rarityOrder] || 0) - (rarityOrder[a.seedRarity as keyof typeof rarityOrder] || 0);
