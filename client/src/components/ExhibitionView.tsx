@@ -450,7 +450,7 @@ export const ExhibitionView: React.FC = () => {
                   <Card
                     key={butterfly.id}
                     className="bg-slate-800 border-slate-600 cursor-pointer hover:bg-slate-700 transition-colors"
-                    onClick={() => placeButterflyInSlot(butterfly.id)}
+                    onClick={() => placeButterflyInSlot(butterfly.butterflyId)}
                   >
                     <CardContent className="p-4">
                       <ButterflyHoverPreview
