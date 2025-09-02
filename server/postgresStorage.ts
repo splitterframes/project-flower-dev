@@ -1422,9 +1422,11 @@ export class PostgresStorage implements IStorage {
   }
 
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
-    // Get all exhibition butterflies for this user
-    const butterflies = await this.getExhibitionButterflies(userId);
-    if (butterflies.length === 0) {
+    // Get all exhibition butterflies (normal + VIP) for this user
+    const normalButterflies = await this.getExhibitionButterflies(userId);
+    const vipButterflies = await this.getExhibitionVipButterflies(userId);
+    
+    if (normalButterflies.length === 0 && vipButterflies.length === 0) {
       return { success: true, creditsEarned: 0 };
     }
     
@@ -1435,7 +1437,7 @@ export class PostgresStorage implements IStorage {
     }
     
     const now = new Date();
-    const lastIncomeTime = user.lastPassiveIncomeAt || new Date(now.getTime() - 60 * 60 * 1000); // Default to 1 hour ago
+    const lastIncomeTime = user.lastPassiveIncomeAt || new Date(now.getTime() - 60 * 1000); // Default to 1 minute ago
     const minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
     
     // Don't process if less than 1 minute has passed
@@ -1443,49 +1445,52 @@ export class PostgresStorage implements IStorage {
       return { success: true, creditsEarned: 0 };
     }
     
-    let totalCredits = 0;
+    // Calculate total hourly income from ALL butterflies
+    let totalHourlyIncome = 0;
+    const rarityIncomePerHour = { 
+      common: 1, uncommon: 2, rare: 5, 'super-rare': 10, 
+      epic: 20, legendary: 50, mythical: 100, vip: 60  // VIP = 60 credits/hour!
+    };
     
-    for (const butterfly of butterflies) {
-      // Calculate passive income based on rarity (per hour)
-      const rarityIncomePerHour = { common: 1, uncommon: 2, rare: 5, 'super-rare': 10, epic: 20, legendary: 50, mythical: 100 };
+    // Add income from normal butterflies
+    for (const butterfly of normalButterflies) {
       const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
-      
-      // Calculate how many minutes are needed per credit
-      const minutesPerCredit = 60 / incomePerHour; // z.B. 12cr/h = 5min pro Credit
-      
-      // Calculate how many whole credits can be awarded
-      const earnedCredits = Math.floor(minutesElapsed / minutesPerCredit);
-      totalCredits += earnedCredits;
-      
-      // Log passive income
-      await this.db.insert(passiveIncomeLog).values({
-        userId,
-        amount: incomePerHour,
-        sourceType: 'exhibition',
-        sourceDetails: `Frame ${butterfly.frameId}, Slot ${butterfly.slotIndex}: ${butterfly.butterflyName}`
-      });
+      totalHourlyIncome += incomePerHour;
     }
     
+    // Add income from VIP butterflies
+    for (const vipButterfly of vipButterflies) {
+      totalHourlyIncome += 60; // VIP = 60 credits/hour
+    }
+    
+    if (totalHourlyIncome === 0) {
+      return { success: true, creditsEarned: 0 };
+    }
+    
+    // Calculate how many credits can be awarded based on total hourly income
+    const minutesPerCredit = 60 / totalHourlyIncome;
+    const totalCredits = Math.floor(minutesElapsed / minutesPerCredit);
+    
     if (totalCredits > 0) {
-      // Update user credits and last passive income time
+      // Update user credits
       await this.updateUserCredits(userId, user.credits + totalCredits);
       
-      // Calculate the actual time to subtract based on credits awarded
-      // This preserves fractional time for the next calculation
-      let totalMinutesConsumed = 0;
-      for (const butterfly of butterflies) {
-        const rarityIncomePerHour = { common: 1, uncommon: 2, rare: 5, 'super-rare': 10, epic: 20, legendary: 50, mythical: 100 };
-        const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
-        const minutesPerCredit = 60 / incomePerHour;
-        const earnedCredits = Math.floor(minutesElapsed / minutesPerCredit);
-        totalMinutesConsumed += earnedCredits * minutesPerCredit;
-      }
+      // Log passive income (single log entry for all butterflies)
+      await this.db.insert(passiveIncomeLog).values({
+        userId,
+        amount: totalCredits,
+        sourceType: 'exhibition',
+        sourceDetails: `${normalButterflies.length + vipButterflies.length} butterflies, ${totalHourlyIncome}cr/h`
+      });
       
-      // Only update time by the amount that was actually "consumed" for credits
-      const newLastIncomeTime = new Date(lastIncomeTime.getTime() + totalMinutesConsumed * 60 * 1000);
+      // Update timestamp by the exact time consumed for the awarded credits
+      const minutesConsumed = totalCredits * minutesPerCredit;
+      const newLastIncomeTime = new Date(lastIncomeTime.getTime() + minutesConsumed * 60 * 1000);
       await this.db.update(users)
         .set({ lastPassiveIncomeAt: newLastIncomeTime })
         .where(eq(users.id, userId));
+      
+      console.log(`💰 User ${userId} earned ${totalCredits} credits from exhibition (${totalHourlyIncome}cr/h, ${minutesPerCredit.toFixed(1)}min/cr)`);
     }
     
     return { success: true, creditsEarned: totalCredits };
