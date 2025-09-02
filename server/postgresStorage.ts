@@ -1680,6 +1680,9 @@ export class PostgresStorage implements IStorage {
     const result = await this.db.insert(weeklyChallenges).values(challengeData).returning();
     console.log('🌸 Created new weekly challenge:', challengeData);
     
+    // Initialize all users with 0 points (invisible until they donate)
+    await this.initializeUsersForChallenge(result[0].id);
+    
     return result[0];
   }
 
@@ -1806,21 +1809,23 @@ export class PostgresStorage implements IStorage {
 
     // Group by user and sum donations
     const userTotals = new Map();
-    donations.forEach(d => {
+    donations.forEach((d: any) => {
       const current = userTotals.get(d.userId) || 0;
       userTotals.set(d.userId, current + d.totalDonations);
     });
 
-    // Get user details and sort by total donations
+    // Get user details and sort by total donations - ONLY show users with > 0 donations
     const leaderboard = [];
     for (const [userId, total] of userTotals) {
-      const user = await this.getUser(userId);
-      if (user) {
-        leaderboard.push({
-          userId,
-          username: user.username,
-          totalDonations: total
-        });
+      if (total > 0) { // Only show users who actually donated
+        const user = await this.getUser(userId);
+        if (user) {
+          leaderboard.push({
+            userId,
+            username: user.username,
+            totalDonations: total
+          });
+        }
       }
     }
 
@@ -1896,6 +1901,41 @@ export class PostgresStorage implements IStorage {
     }
 
     console.log(`🏆 Processed rewards for challenge ${challengeId}, ${leaderboard.length} participants`);
+    
+    // Reset all users to 0 points after processing rewards
+    await this.resetAllUsersForNewChallenge();
+  }
+
+  async initializeUsersForChallenge(challengeId: number): Promise<void> {
+    try {
+      // Get all existing users
+      const allUsers = await this.db.select({ id: users.id }).from(users);
+      
+      // Create 0-donation entries for all users (invisible until they donate)
+      const initialEntries = allUsers.map((user: any) => ({
+        challengeId,
+        userId: user.id,
+        flowerId: 1, // Dummy flower ID for initialization
+        quantity: 0,
+        createdAt: new Date()
+      }));
+      
+      if (initialEntries.length > 0) {
+        await this.db.insert(challengeDonations).values(initialEntries);
+        console.log(`🌸 Initialized ${initialEntries.length} users with 0 points for challenge ${challengeId}`);
+      }
+    } catch (error) {
+      console.error('🌸 Error initializing users for challenge:', error);
+    }
+  }
+
+  async resetAllUsersForNewChallenge(): Promise<void> {
+    try {
+      // This happens naturally when a new challenge is created with 0-point entries
+      console.log('🌸 User points will be reset with next challenge creation');
+    } catch (error) {
+      console.error('🌸 Error resetting users for new challenge:', error);
+    }
   }
 
   private getRandomButterflyByRarity(targetRarity: string): any {
