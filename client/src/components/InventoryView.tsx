@@ -402,19 +402,19 @@ export const InventoryView: React.FC = () => {
             <CardTitle className="text-white flex items-center">
               <Gem className="h-5 w-5 mr-2 text-purple-400" />
               <span className="text-lg font-semibold text-purple-300">
-                Bouquets 💐 ({myBouquets.length})
+                Bouquets 💐 ({myBouquets.filter(b => b.quantity > 0).length})
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {myBouquets.length === 0 ? (
+            {myBouquets.filter(b => b.quantity > 0).length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-slate-400">Noch keine Bouquets erstellt</p>
                 <p className="text-slate-500 text-sm mt-2">Erstelle Bouquets im Bouquet-Bereich</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {myBouquets.map((bouquet) => (
+                {myBouquets.filter(b => b.quantity > 0).map((bouquet) => (
                   <div
                     key={bouquet.id}
                     className="bg-slate-900 rounded-lg p-3 border-2"

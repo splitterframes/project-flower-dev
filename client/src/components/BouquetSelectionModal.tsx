@@ -88,10 +88,10 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
           {/* Enhanced Bouquet Selection */}
           <div className="space-y-4">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent flex items-center">
-              💐 Wähle ein Bouquet ({userBouquets.length} verfügbar)
+              💐 Wähle ein Bouquet ({userBouquets.filter(b => b.quantity > 0).length} verfügbar)
             </h3>
             
-            {userBouquets.length === 0 ? (
+            {userBouquets.filter(b => b.quantity > 0).length === 0 ? (
               <div className="text-center py-12 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-lg"></div>
                 <div className="relative z-10">
@@ -105,7 +105,7 @@ export const BouquetSelectionModal: React.FC<BouquetSelectionModalProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                {userBouquets.map((bouquet) => (
+                {userBouquets.filter(b => b.quantity > 0).map((bouquet) => (
                   <Card 
                     key={bouquet.id} 
                     className={`cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg ${
