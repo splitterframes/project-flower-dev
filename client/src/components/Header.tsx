@@ -100,25 +100,38 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     if (!user) return;
     
     try {
+      // Fetch normal butterflies
       const butterfliesRes = await fetch(`/api/user/${user.id}/exhibition-butterflies`);
+      // Fetch VIP butterflies
+      const vipButterfliesRes = await fetch(`/api/user/${user.id}/exhibition-vip-butterflies`);
+      
+      let hourlyIncome = 0;
+      
+      // Calculate income from normal butterflies
       if (butterfliesRes.ok) {
         const butterfliesData = await butterfliesRes.json();
-        
-        const hourlyIncome = (butterfliesData.butterflies || []).reduce((total: number, butterfly: any) => {
+        hourlyIncome += (butterfliesData.butterflies || []).reduce((total: number, butterfly: any) => {
           switch (butterfly.butterflyRarity) {
             case 'common': return total + 1;
-            case 'uncommon': return total + 3;
-            case 'rare': return total + 8;
-            case 'super-rare': return total + 15;
-            case 'epic': return total + 25;
+            case 'uncommon': return total + 2;
+            case 'rare': return total + 5;
+            case 'super-rare': return total + 10;
+            case 'epic': return total + 20;
             case 'legendary': return total + 50;
             case 'mythical': return total + 100;
             default: return total + 1;
           }
         }, 0);
-        
-        setPassiveIncome(hourlyIncome);
       }
+      
+      // Calculate income from VIP butterflies (60 credits/hour each)
+      if (vipButterfliesRes.ok) {
+        const vipButterfliesData = await vipButterfliesRes.json();
+        const vipCount = (vipButterfliesData.vipButterflies || []).length;
+        hourlyIncome += vipCount * 60; // Each VIP = 60 credits/hour
+      }
+      
+      setPassiveIncome(hourlyIncome);
     } catch (error) {
       console.error('Failed to fetch passive income:', error);
     }

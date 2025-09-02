@@ -181,34 +181,47 @@ export const ExhibitionView: React.FC = () => {
   };
 
   const getFrameHourlyIncome = (frameId: number): number => {
+    // Income from normal butterflies in this frame
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frameId);
-    return frameButterflies.reduce((total, butterfly) => {
+    const normalIncome = frameButterflies.reduce((total, butterfly) => {
       switch (butterfly.butterflyRarity) {
         case 'common': return total + 1;
-        case 'uncommon': return total + 3;
-        case 'rare': return total + 8;
-        case 'super-rare': return total + 15;
-        case 'epic': return total + 25;
+        case 'uncommon': return total + 2;
+        case 'rare': return total + 5;
+        case 'super-rare': return total + 10;
+        case 'epic': return total + 20;
         case 'legendary': return total + 50;
         case 'mythical': return total + 100;
         default: return total + 1;
       }
     }, 0);
+    
+    // Income from VIP butterflies in this frame
+    const frameVipButterflies = exhibitionVipButterflies.filter(b => b.frameId === frameId);
+    const vipIncome = frameVipButterflies.length * 60;
+    
+    return normalIncome + vipIncome;
   };
 
   const getTotalHourlyIncome = (): number => {
-    return exhibitionButterflies.reduce((total, butterfly) => {
+    // Calculate income from normal butterflies
+    const normalIncome = exhibitionButterflies.reduce((total, butterfly) => {
       switch (butterfly.butterflyRarity) {
         case 'common': return total + 1;
-        case 'uncommon': return total + 3;
-        case 'rare': return total + 8;
-        case 'super-rare': return total + 15;
-        case 'epic': return total + 25;
+        case 'uncommon': return total + 2;
+        case 'rare': return total + 5;
+        case 'super-rare': return total + 10;
+        case 'epic': return total + 20;
         case 'legendary': return total + 50;
         case 'mythical': return total + 100;
         default: return total + 1;
       }
     }, 0);
+    
+    // Add income from VIP butterflies (60 credits/hour each)
+    const vipIncome = exhibitionVipButterflies.length * 60;
+    
+    return normalIncome + vipIncome;
   };
 
   const handleButterflyClick = (butterfly: ExhibitionButterfly) => {
