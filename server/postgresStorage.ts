@@ -496,8 +496,22 @@ export class PostgresStorage implements IStorage {
       const rarity3 = flower3.flowerRarity as RarityTier;
       const avgRarity = calculateAverageRarity(rarity1, rarity2, rarity3);
 
-      // Create unique bouquet name
-      const bouquetName = data.name || `Bouquet-${Date.now()}`;
+      // Generate or use provided name and check uniqueness
+      let bouquetName: string;
+      if (data.name) {
+        // Manual name provided - check if it's unique
+        if (await this.isBouquetNameTaken(data.name)) {
+          return { success: false, message: "Dieser Bouquet-Name existiert bereits. Bitte wählen Sie einen anderen Namen." };
+        }
+        bouquetName = data.name;
+      } else if (data.generateName) {
+        // Generate unique AI name
+        bouquetName = await this.generateUniqueBouquetName(avgRarity);
+      } else {
+        // Default fallback name - ensure uniqueness
+        let baseName = `${flower1.flowerName} Bouquet`;
+        bouquetName = await this.ensureUniqueName(baseName);
+      }
 
       // Create bouquet
       const newBouquet = await this.db.insert(bouquets).values({
@@ -1157,6 +1171,48 @@ export class PostgresStorage implements IStorage {
       console.error('Failed to collect expired bouquet:', error);
       return { success: false };
     }
+  }
+
+  // Bouquet name uniqueness methods
+  async isBouquetNameTaken(name: string): Promise<boolean> {
+    const existing = await this.db
+      .select()
+      .from(bouquets)
+      .where(eq(bouquets.name, name))
+      .limit(1);
+    return existing.length > 0;
+  }
+
+  // Generate unique bouquet name using AI with retry logic
+  async generateUniqueBouquetName(rarity: RarityTier): Promise<string> {
+    const { generateBouquetName } = await import('./bouquet');
+    const maxAttempts = 5;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const generatedName = await generateBouquetName(rarity);
+      
+      if (!(await this.isBouquetNameTaken(generatedName))) {
+        return generatedName;
+      }
+      
+      console.log(`🌹 Attempt ${attempt}: Bouquet name "${generatedName}" already exists, trying again...`);
+    }
+    
+    // If all AI attempts failed, create a fallback unique name
+    return await this.ensureUniqueName(`Seltene ${rarity} Kollektion`);
+  }
+
+  // Ensure name is unique by adding number suffix if needed
+  async ensureUniqueName(baseName: string): Promise<string> {
+    let candidateName = baseName;
+    let counter = 1;
+    
+    while (await this.isBouquetNameTaken(candidateName)) {
+      candidateName = `${baseName} ${counter}`;
+      counter++;
+    }
+    
+    return candidateName;
   }
 
   // Helper method to determine seed quantity based on bouquet rarity
