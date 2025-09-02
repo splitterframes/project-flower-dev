@@ -407,7 +407,125 @@ export class MemStorage implements IStorage {
         }
       }
 
-      console.log(`🔄 PostgreSQL sync complete: ${this.users.size} users, ${this.userSeeds.size} seeds, ${this.userFlowers.size} flowers`);
+      // Sync all bouquets
+      const dbBouquets = await this.db.select().from(bouquets);
+      for (const bouquet of dbBouquets) {
+        if (!this.bouquets.has(bouquet.id)) {
+          this.bouquets.set(bouquet.id, bouquet as Bouquet);
+        }
+      }
+
+      // Sync all bouquet recipes
+      const dbBouquetRecipes = await this.db.select().from(bouquetRecipes);
+      for (const recipe of dbBouquetRecipes) {
+        if (!this.bouquetRecipes.has(recipe.id)) {
+          this.bouquetRecipes.set(recipe.id, recipe as BouquetRecipe);
+        }
+      }
+
+      // Sync all placed bouquets
+      const dbPlacedBouquets = await this.db.select().from(placedBouquets);
+      for (const placedBouquet of dbPlacedBouquets) {
+        if (!this.placedBouquets.has(placedBouquet.id)) {
+          this.placedBouquets.set(placedBouquet.id, {
+            ...placedBouquet,
+            bouquetName: `Bouquet #${placedBouquet.bouquetId}`,
+            bouquetRarity: 'common'
+          } as PlacedBouquet & { bouquetName: string; bouquetRarity: string });
+        }
+      }
+
+      // Sync all user butterflies (with actual DB columns)
+      try {
+        const sql = neon(process.env.DATABASE_URL);
+        const rawUserButterflies = await sql`SELECT * FROM user_butterflies`;
+        for (const butterfly of rawUserButterflies) {
+          if (!this.userButterflies.has(butterfly.id)) {
+            this.userButterflies.set(butterfly.id, {
+              id: butterfly.id,
+              userId: butterfly.user_id,
+              butterflyId: butterfly.butterfly_id,
+              rarity: butterfly.rarity,
+              quantity: butterfly.quantity,
+              collectedAt: butterfly.collected_at,
+              // Add missing fields with defaults
+              butterflyName: `Butterfly #${butterfly.butterfly_id}`,
+              butterflyRarity: butterfly.rarity,
+              butterflyImageUrl: `/Schmetterlinge/${String(butterfly.butterfly_id).padStart(3, '0')}.jpg`
+            } as UserButterfly);
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ No user butterflies to sync:', error.message);
+      }
+
+      // Sync all field butterflies (with actual DB columns)
+      try {
+        const sql = neon(process.env.DATABASE_URL);
+        const rawFieldButterflies = await sql`SELECT * FROM field_butterflies`;
+        for (const butterfly of rawFieldButterflies) {
+          if (!this.fieldButterflies.has(butterfly.id)) {
+            this.fieldButterflies.set(butterfly.id, {
+              id: butterfly.id,
+              userId: butterfly.user_id,
+              fieldIndex: butterfly.field_index,
+              butterflyId: butterfly.butterfly_id,
+              rarity: butterfly.rarity,
+              spawnedAt: butterfly.spawned_at,
+              despawnAt: butterfly.despawn_at,
+              // Add missing fields with defaults
+              butterflyName: `Butterfly #${butterfly.butterfly_id}`,
+              butterflyRarity: butterfly.rarity,
+              butterflyImageUrl: `/Schmetterlinge/${String(butterfly.butterfly_id).padStart(3, '0')}.jpg`,
+              bouquetId: 1 // Default bouquet
+            } as FieldButterfly);
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ No field butterflies to sync:', error.message);
+      }
+
+      // Sync all exhibition frames
+      const dbExhibitionFrames = await this.db.select().from(exhibitionFrames);
+      for (const frame of dbExhibitionFrames) {
+        if (!this.exhibitionFrames.has(frame.id)) {
+          this.exhibitionFrames.set(frame.id, frame as ExhibitionFrame);
+        }
+      }
+
+      // Sync all exhibition butterflies
+      const dbExhibitionButterflies = await this.db.select().from(exhibitionButterflies);
+      for (const butterfly of dbExhibitionButterflies) {
+        if (!this.exhibitionButterflies.has(butterfly.id)) {
+          this.exhibitionButterflies.set(butterfly.id, butterfly as ExhibitionButterfly);
+        }
+      }
+
+      // Sync all market listings
+      const dbMarketListings = await this.db.select().from(marketListings);
+      for (const listing of dbMarketListings) {
+        if (!this.marketListings.has(listing.id)) {
+          this.marketListings.set(listing.id, listing as MarketListing);
+        }
+      }
+
+      // Sync all planted fields
+      const dbPlantedFields = await this.db.select().from(plantedFields);
+      for (const field of dbPlantedFields) {
+        if (!this.plantedFields.has(field.id)) {
+          this.plantedFields.set(field.id, field as PlantedField);
+        }
+      }
+
+      // Sync all passive income logs
+      const dbPassiveIncome = await this.db.select().from(passiveIncomeLog);
+      for (const income of dbPassiveIncome) {
+        if (!this.passiveIncomeLog.has(income.id)) {
+          this.passiveIncomeLog.set(income.id, income as PassiveIncomeLog);
+        }
+      }
+
+      console.log(`🔄 COMPLETE PostgreSQL sync: ${this.users.size} users, ${this.userSeeds.size} seeds, ${this.userFlowers.size} flowers, ${this.bouquets.size} bouquets, ${this.userBouquets.size} user bouquets, ${this.exhibitionFrames.size} exhibitions`);
       
     } catch (error) {
       console.error('❌ Failed to sync from PostgreSQL:', error);
