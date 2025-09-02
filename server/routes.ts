@@ -691,6 +691,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== WEEKLY CHALLENGE SYSTEM ==========
+  
+  // Get current active weekly challenge
+  app.get("/api/weekly-challenge/current", async (req, res) => {
+    try {
+      const currentChallenge = await storage.getCurrentWeeklyChallenge();
+      
+      if (!currentChallenge) {
+        return res.status(404).json({ message: "No active weekly challenge" });
+      }
+
+      // Check if challenge period is valid (Sunday 18:00 - Monday 0:00 is inactive)
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sunday
+      const hour = now.getHours();
+      
+      const isInactiveTime = (dayOfWeek === 0 && hour >= 18) || 
+                            (dayOfWeek === 1 && hour === 0 && now.getMinutes() === 0);
+
+      res.json({
+        challenge: currentChallenge,
+        isActive: !isInactiveTime
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error loading weekly challenge" });
+    }
+  });
+
+  // Create new weekly challenge (for Monday 0:00)
+  app.post("/api/weekly-challenge/create", async (req, res) => {
+    try {
+      const challenge = await storage.createWeeklyChallenge();
+      res.json({ challenge });
+    } catch (error) {
+      res.status(500).json({ message: "Error creating weekly challenge" });
+    }
+  });
+
+  // Donate flowers to weekly challenge
+  app.post("/api/weekly-challenge/donate", async (req, res) => {
+    try {
+      const { donateChallengeFlowerSchema } = await import("@shared/schema");
+      const donationData = donateChallengeFlowerSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.donateFlowerToChallenge(userId, donationData);
+      
+      if (result.success) {
+        res.json({ 
+          message: result.message,
+          seedsReceived: result.seedsReceived 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error processing donation" });
+    }
+  });
+
+  // Get challenge leaderboard
+  app.get("/api/weekly-challenge/:challengeId/leaderboard", async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.challengeId);
+      const leaderboard = await storage.getChallengeLeaderboard(challengeId);
+      
+      res.json({ leaderboard });
+    } catch (error) {
+      res.status(500).json({ message: "Error loading leaderboard" });
+    }
+  });
+
+  // Process challenge rewards (for Sunday 18:00)
+  app.post("/api/weekly-challenge/:challengeId/process-rewards", async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.challengeId);
+      await storage.processChallengeRewards(challengeId);
+      
+      res.json({ message: "Rewards processed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error processing rewards" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

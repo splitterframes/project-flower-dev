@@ -5,20 +5,20 @@ import {
   marketListings,
   plantedFields,
   userFlowers,
-  flowers,
   bouquets,
   userBouquets,
   bouquetRecipes,
   placedBouquets,
   userButterflies,
-  butterflies,
   fieldButterflies,
   exhibitionFrames,
   exhibitionButterflies,
   passiveIncomeLog,
   exhibitionFrameLikes,
+  weeklyChallenges,
+  challengeDonations,
+  challengeRewards,
   type User, 
-  type InsertUser, 
   type Seed, 
   type UserSeed, 
   type MarketListing,
@@ -38,7 +38,11 @@ import {
   type ExhibitionButterfly,
   type PassiveIncomeLog,
   type CreateBouquetRequest,
-  type PlaceBouquetRequest
+  type PlaceBouquetRequest,
+  type WeeklyChallenge,
+  type ChallengeDonation,
+  type ChallengeReward,
+  type DonateChallengeFlowerRequest
 } from "@shared/schema";
 import { eq, ilike, and, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -1460,6 +1464,249 @@ export class PostgresStorage implements IStorage {
         currentSpawnSlot: nextSlot 
       })
       .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)));
+  }
+
+  // ========== WEEKLY CHALLENGE SYSTEM ==========
+
+  async getCurrentWeeklyChallenge(): Promise<WeeklyChallenge | null> {
+    const now = new Date();
+    
+    const challenge = await this.db
+      .select()
+      .from(weeklyChallenges)
+      .where(and(
+        eq(weeklyChallenges.isActive, true),
+        lt(weeklyChallenges.startTime, now)
+      ))
+      .limit(1);
+
+    return challenge[0] || null;
+  }
+
+  async createWeeklyChallenge(): Promise<WeeklyChallenge> {
+    // Get current Monday 0:00
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(monday.getDate() - (monday.getDay() === 0 ? 6 : monday.getDay() - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    // Sunday 18:00 
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(18, 0, 0, 0);
+
+    // Generate week number (YYYY-WW format)
+    const year = monday.getFullYear();
+    const firstDayOfYear = new Date(year, 0, 1);
+    const pastDaysOfYear = (monday.getTime() - firstDayOfYear.getTime()) / 86400000;
+    const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+
+    // Generate 6 random flowers: 2 uncommon, 2 rare, 2 super-rare
+    const flowerIds = {
+      uncommon1: this.getRandomFlowerByRarity("uncommon"),
+      uncommon2: this.getRandomFlowerByRarity("uncommon"), 
+      rare1: this.getRandomFlowerByRarity("rare"),
+      rare2: this.getRandomFlowerByRarity("rare"),
+      superrare1: this.getRandomFlowerByRarity("super-rare"),
+      superrare2: this.getRandomFlowerByRarity("super-rare")
+    };
+
+    const challengeData = {
+      weekNumber: parseInt(`${year}${weekNumber.toString().padStart(2, '0')}`),
+      year,
+      startTime: monday,
+      endTime: sunday,
+      isActive: true,
+      flowerId1: flowerIds.uncommon1,
+      flowerId2: flowerIds.uncommon2,
+      flowerId3: flowerIds.rare1,
+      flowerId4: flowerIds.rare2,
+      flowerId5: flowerIds.superrare1,
+      flowerId6: flowerIds.superrare2
+    };
+
+    const result = await this.db.insert(weeklyChallenges).values(challengeData).returning();
+    console.log('🌸 Created new weekly challenge:', challengeData);
+    
+    return result[0];
+  }
+
+  private getRandomFlowerByRarity(targetRarity: string): number {
+    // Based on rarity distribution from replit.md:
+    // Uncommon: 56-100, Rare: 101-135, Super-rare: 136-160
+    const ranges = {
+      "uncommon": { min: 56, max: 100 },
+      "rare": { min: 101, max: 135 }, 
+      "super-rare": { min: 136, max: 160 }
+    };
+    
+    const range = ranges[targetRarity as keyof typeof ranges];
+    if (!range) return 1; // fallback
+    
+    return Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+  }
+
+  async donateFlowerToChallenge(userId: number, donation: DonateChallengeFlowerRequest): Promise<{ success: boolean; message?: string; seedsReceived?: number }> {
+    // Check if user has enough flowers
+    const userFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(
+        eq(userFlowers.userId, userId),
+        eq(userFlowers.flowerId, donation.flowerId)
+      ))
+      .limit(1);
+
+    if (!userFlower[0] || userFlower[0].quantity < donation.quantity) {
+      return { success: false, message: "Nicht genügend Blumen vorhanden" };
+    }
+
+    // Deduct flowers from user
+    const newQuantity = userFlower[0].quantity - donation.quantity;
+    if (newQuantity === 0) {
+      await this.db
+        .delete(userFlowers)
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, donation.flowerId)
+        ));
+    } else {
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: newQuantity })
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, donation.flowerId)
+        ));
+    }
+
+    // Record donation
+    await this.db.insert(challengeDonations).values({
+      challengeId: donation.challengeId,
+      userId,
+      flowerId: donation.flowerId,
+      quantity: donation.quantity
+    });
+
+    // Give seeds (50% chance for 1 rarity tier lower)
+    let seedsReceived = 0;
+    for (let i = 0; i < donation.quantity; i++) {
+      if (Math.random() < 0.5) {
+        const lowerRaritySeed = this.getLowerRaritySeed(userFlower[0].flowerRarity || "common");
+        await this.giveUserSeed(userId, lowerRaritySeed, 1);
+        seedsReceived++;
+      }
+    }
+
+    console.log(`🌸 User ${userId} donated ${donation.quantity}x flower ${donation.flowerId}, received ${seedsReceived} seeds`);
+    
+    return { 
+      success: true, 
+      message: `${donation.quantity} Blumen gespendet!`,
+      seedsReceived 
+    };
+  }
+
+  private getLowerRaritySeed(currentRarity: string): number {
+    // Get one tier lower rarity seed
+    const rarityMap = {
+      "mythical": 4, // super-rare seed
+      "legendary": 4, // super-rare seed  
+      "epic": 3, // rare seed
+      "super-rare": 2, // uncommon seed
+      "rare": 1, // common seed
+      "uncommon": 1, // common seed
+      "common": 1 // stay common
+    };
+    
+    return rarityMap[currentRarity as keyof typeof rarityMap] || 1;
+  }
+
+  async getChallengeLeaderboard(challengeId: number): Promise<any[]> {
+    const donations = await this.db
+      .select({
+        userId: challengeDonations.userId,
+        totalDonations: challengeDonations.quantity
+      })
+      .from(challengeDonations)
+      .where(eq(challengeDonations.challengeId, challengeId));
+
+    // Group by user and sum donations
+    const userTotals = new Map();
+    donations.forEach(d => {
+      const current = userTotals.get(d.userId) || 0;
+      userTotals.set(d.userId, current + d.totalDonations);
+    });
+
+    // Get user details and sort by total donations
+    const leaderboard = [];
+    for (const [userId, total] of userTotals) {
+      const user = await this.getUser(userId);
+      if (user) {
+        leaderboard.push({
+          userId,
+          username: user.username,
+          totalDonations: total
+        });
+      }
+    }
+
+    return leaderboard.sort((a, b) => b.totalDonations - a.totalDonations);
+  }
+
+  async processChallengeRewards(challengeId: number): Promise<void> {
+    const leaderboard = await this.getChallengeLeaderboard(challengeId);
+    
+    for (let rank = 1; rank <= Math.min(10, leaderboard.length); rank++) {
+      const user = leaderboard[rank - 1];
+      let butterfly;
+      let isAnimated = false;
+      let passiveIncome = 0;
+
+      if (rank === 1) {
+        // Animated butterfly with passive income
+        butterfly = generateRandomButterfly();
+        isAnimated = true;
+        passiveIncome = 60; // 60cr/h
+      } else if (rank === 2) {
+        butterfly = this.getRandomButterflyByRarity("epic");
+      } else if (rank === 3) {
+        butterfly = this.getRandomButterflyByRarity("super-rare");
+      } else {
+        butterfly = this.getRandomButterflyByRarity("rare");
+      }
+
+      // Add butterfly to user's collection
+      await this.db.insert(userButterflies).values({
+        userId: user.userId,
+        butterflyId: butterfly.id,
+        butterflyName: butterfly.name,
+        butterflyRarity: butterfly.rarity,
+        butterflyImageUrl: butterfly.imageUrl,
+        isAnimated,
+        passiveIncome
+      });
+
+      // Record reward
+      await this.db.insert(challengeRewards).values({
+        challengeId,
+        userId: user.userId,
+        rank,
+        totalDonations: user.totalDonations,
+        butterflyId: butterfly.id,
+        butterflyName: butterfly.name,
+        butterflyRarity: butterfly.rarity,
+        butterflyImageUrl: butterfly.imageUrl,
+        isAnimated,
+        passiveIncome
+      });
+    }
+
+    console.log(`🏆 Processed rewards for challenge ${challengeId}, ${leaderboard.length} participants`);
+  }
+
+  private getRandomButterflyByRarity(targetRarity: string): any {
+    return generateRandomButterfly(targetRarity as RarityTier);
   }
 }
 

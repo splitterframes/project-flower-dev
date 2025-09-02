@@ -63,9 +63,6 @@ export const buyListingSchema = z.object({
   quantity: z.number().min(1),
 });
 
-export type CreateMarketListingRequest = z.infer<typeof createMarketListingSchema>;
-export type BuyListingRequest = z.infer<typeof buyListingSchema>;
-
 // Garden field schema
 export const plantedFields = pgTable("planted_fields", {
   id: serial("id").primaryKey(),
@@ -104,17 +101,6 @@ export const userFlowers = pgTable("user_flowers", {
   flowerImageUrl: text("flower_image_url"), // Nullable as per PostgreSQL
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type LoginRequest = z.infer<typeof loginSchema>;
-export type Seed = typeof seeds.$inferSelect;
-export type UserSeed = typeof userSeeds.$inferSelect;
-export type MarketListing = typeof marketListings.$inferSelect;
-export type CreateMarketListingRequest = z.infer<typeof createMarketListingSchema>;
-export type BuyListingRequest = z.infer<typeof buyListingSchema>;
-export type PlantedField = typeof plantedFields.$inferSelect;
-export type PlantSeedRequest = z.infer<typeof plantSeedSchema>;
-export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;
 // Bouquet system
 export const bouquets = pgTable("bouquets", {
   id: serial("id").primaryKey(),
@@ -241,6 +227,66 @@ export const placeBouquetSchema = z.object({
   fieldIndex: z.number().min(0).max(49),
 });
 
+// Weekly Challenge System
+export const weeklyChallenges = pgTable("weekly_challenges", {
+  id: serial("id").primaryKey(),
+  weekNumber: integer("week_number").notNull().unique(), // YYYY-WW format
+  year: integer("year").notNull(),
+  startTime: timestamp("start_time").notNull(), // Monday 00:00
+  endTime: timestamp("end_time").notNull(),   // Sunday 18:00
+  isActive: boolean("is_active").notNull().default(true),
+  // Required flowers (6 total: 2 uncommon, 2 rare, 2 super-rare)
+  flowerId1: integer("flower_id_1").notNull(), // uncommon
+  flowerId2: integer("flower_id_2").notNull(), // uncommon  
+  flowerId3: integer("flower_id_3").notNull(), // rare
+  flowerId4: integer("flower_id_4").notNull(), // rare
+  flowerId5: integer("flower_id_5").notNull(), // super-rare
+  flowerId6: integer("flower_id_6").notNull(), // super-rare
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const challengeDonations = pgTable("challenge_donations", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => weeklyChallenges.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  flowerId: integer("flower_id").notNull(),
+  quantity: integer("quantity").notNull(),
+  donatedAt: timestamp("donated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const challengeRewards = pgTable("challenge_rewards", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => weeklyChallenges.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  rank: integer("rank").notNull(), // 1-10
+  totalDonations: integer("total_donations").notNull(),
+  butterflyId: integer("butterfly_id").notNull(),
+  butterflyName: text("butterfly_name").notNull(),
+  butterflyRarity: text("butterfly_rarity").notNull(),
+  butterflyImageUrl: text("butterfly_image_url").notNull(),
+  isAnimated: boolean("is_animated").notNull().default(false), // true for rank 1
+  passiveIncome: integer("passive_income").notNull().default(0), // 60 for animated
+  rewardedAt: timestamp("rewarded_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const donateChallengeFlowerSchema = z.object({
+  challengeId: z.number().min(1),
+  flowerId: z.number().min(1),
+  quantity: z.number().min(1).max(999),
+});
+
+// All type exports
+export type User = typeof users.$inferSelect;
+export type Seed = typeof seeds.$inferSelect;
+export type UserSeed = typeof userSeeds.$inferSelect;
+export type MarketListing = typeof marketListings.$inferSelect;
+export type CreateMarketListingRequest = z.infer<typeof createMarketListingSchema>;
+export type BuyListingRequest = z.infer<typeof buyListingSchema>;
+export type PlantedField = typeof plantedFields.$inferSelect;
+export type PlantSeedRequest = z.infer<typeof plantSeedSchema>;
+export type HarvestFieldRequest = z.infer<typeof harvestFieldSchema>;
 export type UserFlower = typeof userFlowers.$inferSelect;
 export type Bouquet = typeof bouquets.$inferSelect;
 export type BouquetRecipe = typeof bouquetRecipes.$inferSelect;
@@ -253,3 +299,7 @@ export type ExhibitionButterfly = typeof exhibitionButterflies.$inferSelect;
 export type PassiveIncomeLog = typeof passiveIncomeLog.$inferSelect;
 export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
 export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;
+export type WeeklyChallenge = typeof weeklyChallenges.$inferSelect;
+export type ChallengeDonation = typeof challengeDonations.$inferSelect;
+export type ChallengeReward = typeof challengeRewards.$inferSelect;
+export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
