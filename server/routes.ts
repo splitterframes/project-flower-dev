@@ -337,6 +337,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bouquetData = createBouquetSchema.parse(req.body);
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
+      // SOS-System: Check if user needs emergency credits for bouquet creation
+      const user = await storage.getUser(userId);
+      if (user && user.credits <= 0) {
+        console.log(`🆘 SOS Check: User ${userId} has ${user.credits} credits, checking for available flowers...`);
+        
+        // Check if user has the required flowers for the bouquet
+        const userFlowers = await storage.getUserFlowers(userId);
+        const flower1 = userFlowers.find(f => f.flowerId === bouquetData.flowerId1);
+        const flower2 = userFlowers.find(f => f.flowerId === bouquetData.flowerId2);
+        const flower3 = userFlowers.find(f => f.flowerId === bouquetData.flowerId3);
+        
+        if (flower1 && flower2 && flower3) {
+          console.log(`🆘 SOS Activated: User ${userId} has required flowers but no credits, granting 30 credits`);
+          await storage.updateUserCredits(userId, 30);
+          console.log(`🆘 SOS Complete: User ${userId} credits updated to 30`);
+        }
+      }
+      
       const result = await storage.createBouquet(userId, bouquetData);
       if (result.success) {
         res.json({ 
