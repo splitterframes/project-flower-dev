@@ -62,9 +62,16 @@ export const EmergencyDialog: React.FC<EmergencyDialogProps> = ({
       
       if (response.ok) {
         const data = await response.json();
-        alert(data.message || "Du hast 3 Notfall-Samen erhalten! 🌱");
+        
+        // Check if SOS was activated
+        if (data.sosActivated) {
+          alert(`🆘 ${data.message}`);
+        } else {
+          alert(data.message || "Du hast 3 Notfall-Samen erhalten! 🌱");
+        }
+        
         onSeedsReceived();
-        onClose();
+        onClose(); // Always close dialog on success
       } else {
         const error = await response.json();
         alert(error.message || "Fehler beim Empfangen der Notfall-Samen");
