@@ -1018,19 +1018,8 @@ export class PostgresStorage implements IStorage {
 
   // Additional exhibition methods (from routes usage)
   async canSellButterfly(userId: number, exhibitionButterflyId: number): Promise<boolean> {
-    const butterfly = await this.db
-      .select()
-      .from(exhibitionButterflies)
-      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
-    
-    if (butterfly.length === 0) return false;
-    
-    // Check if 72 hours have passed
-    const now = new Date();
-    const placedAt = new Date(butterfly[0].placedAt);
-    const hoursElapsed = (now.getTime() - placedAt.getTime()) / (1000 * 60 * 60);
-    
-    return hoursElapsed >= 72;
+    const timeRemaining = await this.getTimeUntilSellable(userId, exhibitionButterflyId);
+    return timeRemaining === 0;
   }
 
   async getTimeUntilSellable(userId: number, exhibitionButterflyId: number): Promise<number> {
@@ -1041,20 +1030,50 @@ export class PostgresStorage implements IStorage {
     
     if (butterfly.length === 0) return 0;
     
+    // Get likes count for this frame
+    const allFrameLikes = await this.getUserFrameLikes(userId);
+    const frameWithLikes = allFrameLikes.find(f => f.frameId === butterfly[0].frameId);
+    const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+    
     const now = new Date();
     const placedAt = new Date(butterfly[0].placedAt);
-    const hoursElapsed = (now.getTime() - placedAt.getTime()) / (1000 * 60 * 60);
+    const msElapsed = now.getTime() - placedAt.getTime();
     
-    return Math.max(0, 72 - hoursElapsed);
+    // Base time: 72 hours in milliseconds
+    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms
+    
+    // Likes reduction: 1 minute per like in milliseconds  
+    const likesReductionMs = likesCount * 60 * 1000;
+    
+    // Required time to sell = 72 hours - (likes * 1 minute)
+    const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
+    
+    // Time remaining = required time - elapsed time
+    const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
+    
+    console.log(`🕒 DEBUG Countdown: placed=${placedAt.toISOString()}, elapsed=${msElapsed}ms, required=${requiredTimeMs}ms, remaining=${remainingMs}ms, likes=${likesCount}`);
+    
+    return remainingMs;
   }
 
   async getUserFrameLikes(userId: number): Promise<any[]> {
-    const result = await this.db
+    // Simple approach: get all likes and group manually
+    const allLikes = await this.db
       .select()
       .from(exhibitionFrameLikes)
       .where(eq(exhibitionFrameLikes.frameOwnerId, userId));
     
-    return result;
+    // Group by frameId and count
+    const frameGroups = allLikes.reduce((groups: any, like: any) => {
+      const frameId = like.frameId;
+      if (!groups[frameId]) {
+        groups[frameId] = { frameId, totalLikes: 0 };
+      }
+      groups[frameId].totalLikes++;
+      return groups;
+    }, {});
+    
+    return Object.values(frameGroups);
   }
 
   async sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
