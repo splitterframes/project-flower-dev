@@ -1434,9 +1434,31 @@ export class PostgresStorage implements IStorage {
 
   // Bouquet timing methods for butterfly spawner
   async updateBouquetNextSpawnTime(userId: number, fieldIndex: number, nextSpawnAt: Date): Promise<void> {
+    // Get current spawn slot for this bouquet
+    const currentBouquet = await this.db
+      .select()
+      .from(placedBouquets)
+      .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)))
+      .limit(1);
+
+    if (currentBouquet.length === 0) return;
+
+    const currentSlot = (currentBouquet[0] as any).currentSpawnSlot || 1;
+    const nextSlot = currentSlot + 1;
+    
+    // Generate random spawn interval (1-5 minutes)
+    const { getRandomSpawnInterval } = await import('./bouquet');
+    const randomInterval = getRandomSpawnInterval();
+    const actualNextSpawnAt = new Date(Date.now() + randomInterval);
+
+    console.log(`🦋 Bouquet #${currentBouquet[0].bouquetId}: Advancing from slot ${currentSlot} to ${nextSlot} (${nextSlot > 4 ? 'COMPLETED' : 'Active'})`);
+    
     await this.db
       .update(placedBouquets)
-      .set({ nextSpawnAt })
+      .set({ 
+        nextSpawnAt: actualNextSpawnAt,
+        currentSpawnSlot: nextSlot 
+      })
       .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)));
   }
 }
