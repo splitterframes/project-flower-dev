@@ -14,6 +14,7 @@ import {
   exhibitionFrames,
   exhibitionButterflies,
   passiveIncomeLog,
+  exhibitionFrameLikes,
   type User, 
   type InsertUser, 
   type Seed, 
@@ -396,11 +397,26 @@ export class PostgresStorage implements IStorage {
 
   async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
     const result = await this.db
-      .select()
+      .select({
+        id: placedBouquets.id,
+        userId: placedBouquets.userId,
+        bouquetId: placedBouquets.bouquetId,
+        fieldIndex: placedBouquets.fieldIndex,
+        placedAt: placedBouquets.placedAt,
+        expiresAt: placedBouquets.expiresAt,
+        nextSpawnAt: placedBouquets.nextSpawnAt,
+        currentSpawnSlot: placedBouquets.currentSpawnSlot,
+        createdAt: placedBouquets.createdAt,
+        bouquetName: userBouquets.bouquetName,
+        bouquetRarity: userBouquets.bouquetRarity
+      })
       .from(placedBouquets)
+      .leftJoin(userBouquets, eq(placedBouquets.bouquetId, userBouquets.bouquetId))
       .where(eq(placedBouquets.userId, userId));
     
-    return result;
+    console.log(`💾 Retrieved placed bouquets for user ${userId}:`, result.map((r: any) => ({ fieldIndex: r.fieldIndex, rarity: r.bouquetRarity })));
+    
+    return result as any;
   }
 
   async getUserButterflies(userId: number): Promise<UserButterfly[]> {

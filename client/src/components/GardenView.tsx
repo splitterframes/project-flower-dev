@@ -194,6 +194,7 @@ export const GardenView: React.FC = () => {
           hasBouquet: true,
           bouquetId: placedBouquet.bouquetId,
           bouquetName: (placedBouquet as any).bouquetName || undefined,
+          bouquetRarity: (placedBouquet as any).bouquetRarity || "common",
           bouquetPlacedAt: new Date(placedBouquet.placedAt),
           bouquetExpiresAt: new Date(placedBouquet.expiresAt)
         };
@@ -203,6 +204,7 @@ export const GardenView: React.FC = () => {
           hasBouquet: false,
           bouquetId: undefined,
           bouquetName: undefined,
+          bouquetRarity: undefined,
           bouquetPlacedAt: undefined,
           bouquetExpiresAt: undefined
         };
