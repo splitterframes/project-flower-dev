@@ -5,11 +5,13 @@ import {
   marketListings,
   plantedFields,
   userFlowers,
+  flowers,
   bouquets,
   userBouquets,
   bouquetRecipes,
   placedBouquets,
   userButterflies,
+  butterflies,
   fieldButterflies,
   exhibitionFrames,
   exhibitionButterflies,
@@ -917,10 +919,15 @@ export class PostgresStorage implements IStorage {
   // Additional methods that may be needed
   async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
     try {
-      // Find expired bouquet on this field
+      // Find expired bouquet on this field with bouquet details
       const expiredBouquet = await this.db
-        .select()
+        .select({
+          id: placedBouquets.id,
+          bouquetId: placedBouquets.bouquetId,
+          bouquetRarity: bouquets.rarity
+        })
         .from(placedBouquets)
+        .leftJoin(bouquets, eq(placedBouquets.bouquetId, bouquets.id))
         .where(and(
           eq(placedBouquets.userId, userId), 
           eq(placedBouquets.fieldIndex, fieldIndex),
@@ -932,9 +939,11 @@ export class PostgresStorage implements IStorage {
         return { success: false };
       }
 
-      // Generate seed drop based on bouquet rarity (1-3 seeds)
-      const seedQuantity = Math.floor(Math.random() * 3) + 1; // 1-3 seeds
-      const seedRarity = getRandomRarity();
+      const bouquetRarity = expiredBouquet[0].bouquetRarity as RarityTier || 'common';
+
+      // Generate seed drop based on bouquet rarity (1-3 seeds, more for better bouquets)
+      const seedQuantity = this.getBouquetSeedQuantity(bouquetRarity);
+      const seedRarity = this.getBouquetInfluencedSeedRarity(bouquetRarity);
 
       // Get a random seed ID of this rarity
       const availableSeeds = await this.db
@@ -959,7 +968,7 @@ export class PostgresStorage implements IStorage {
           eq(placedBouquets.fieldIndex, fieldIndex)
         ));
 
-      console.log(`💧 Collected expired bouquet on field ${fieldIndex} for user ${userId}, got ${seedQuantity}x ${seedRarity} seeds`);
+      console.log(`💧 Collected expired ${bouquetRarity} bouquet on field ${fieldIndex} for user ${userId}, got ${seedQuantity}x ${seedRarity} seeds`);
 
       return { 
         success: true, 
@@ -972,6 +981,77 @@ export class PostgresStorage implements IStorage {
       console.error('Failed to collect expired bouquet:', error);
       return { success: false };
     }
+  }
+
+  // Helper method to determine seed quantity based on bouquet rarity
+  private getBouquetSeedQuantity(bouquetRarity: RarityTier): number {
+    const rarityMultipliers = {
+      'common': 1,
+      'uncommon': 1.2,
+      'rare': 1.4,
+      'super-rare': 1.6,
+      'epic': 1.8,
+      'legendary': 2.0,
+      'mythical': 2.5
+    };
+
+    const baseSeeds = Math.floor(Math.random() * 3) + 1; // 1-3 base seeds
+    const multiplier = rarityMultipliers[bouquetRarity] || 1;
+    
+    return Math.min(5, Math.floor(baseSeeds * multiplier)); // Max 5 seeds
+  }
+
+  // Helper method to get rarity-influenced seed drop based on bouquet quality
+  private getBouquetInfluencedSeedRarity(bouquetRarity: RarityTier): RarityTier {
+    // Create modified weights based on bouquet rarity
+    const baseWeights = {
+      'common': 45,
+      'uncommon': 30,
+      'rare': 15,
+      'super-rare': 7,
+      'epic': 2.5,
+      'legendary': 0.4,
+      'mythical': 0.1
+    };
+
+    // Boost better rarities based on bouquet quality
+    const rarityBoostFactors = {
+      'common': { 'rare': 1, 'super-rare': 1, 'epic': 1, 'legendary': 1, 'mythical': 1 },
+      'uncommon': { 'rare': 1.5, 'super-rare': 1.2, 'epic': 1.1, 'legendary': 1, 'mythical': 1 },
+      'rare': { 'rare': 2, 'super-rare': 1.8, 'epic': 1.5, 'legendary': 1.2, 'mythical': 1 },
+      'super-rare': { 'rare': 2.5, 'super-rare': 2.2, 'epic': 2, 'legendary': 1.5, 'mythical': 1.2 },
+      'epic': { 'rare': 3, 'super-rare': 2.8, 'epic': 2.5, 'legendary': 2, 'mythical': 1.5 },
+      'legendary': { 'rare': 4, 'super-rare': 3.5, 'epic': 3, 'legendary': 2.5, 'mythical': 2 },
+      'mythical': { 'rare': 5, 'super-rare': 4.5, 'epic': 4, 'legendary': 3.5, 'mythical': 3 }
+    };
+
+    const boostFactors = rarityBoostFactors[bouquetRarity] || rarityBoostFactors['common'];
+
+    // Apply boosts to weights
+    const modifiedWeights = {
+      'common': baseWeights.common * 0.8, // Slightly reduce common chance for all bouquets
+      'uncommon': baseWeights.uncommon * 0.9, // Slightly reduce uncommon chance
+      'rare': baseWeights.rare * (boostFactors['rare'] || 1),
+      'super-rare': baseWeights['super-rare'] * (boostFactors['super-rare'] || 1),
+      'epic': baseWeights.epic * (boostFactors['epic'] || 1),
+      'legendary': baseWeights.legendary * (boostFactors['legendary'] || 1),
+      'mythical': baseWeights.mythical * (boostFactors['mythical'] || 1)
+    };
+
+    // Calculate total weight
+    const totalWeight = Object.values(modifiedWeights).reduce((sum, weight) => sum + weight, 0);
+    const random = Math.random() * totalWeight;
+
+    // Select rarity based on modified weights
+    let currentWeight = 0;
+    for (const [rarity, weight] of Object.entries(modifiedWeights)) {
+      currentWeight += weight;
+      if (random <= currentWeight) {
+        return rarity as RarityTier;
+      }
+    }
+
+    return 'common'; // Fallback
   }
 
   async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
