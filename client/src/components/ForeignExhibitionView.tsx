@@ -104,16 +104,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       });
 
       if (response.ok) {
-        // Update local state optimistically
-        setFrameLikes(prev => prev.map(fl => 
-          fl.frameId === frameId 
-            ? { 
-                ...fl, 
-                isLiked: !isCurrentlyLiked,
-                totalLikes: isCurrentlyLiked ? fl.totalLikes - 1 : fl.totalLikes + 1
-              }
-            : fl
-        ));
+        // Reload frame likes data from server to ensure consistency
+        await loadFrameLikes();
       } else {
         // Handle server error
         const errorData = await response.json();

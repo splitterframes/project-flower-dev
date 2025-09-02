@@ -1076,6 +1076,38 @@ export class PostgresStorage implements IStorage {
     return Object.values(frameGroups);
   }
 
+  async getFrameLikesForUser(likerId: number, frameOwnerId: number): Promise<any[]> {
+    // Get all butterflies (frames) owned by frameOwnerId
+    const ownerButterflies = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(eq(exhibitionButterflies.userId, frameOwnerId));
+
+    // Get all likes for the frame owner's frames
+    const allLikes = await this.db
+      .select()
+      .from(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameOwnerId, frameOwnerId));
+    
+    // Get unique frame IDs
+    const uniqueFrameIds = [...new Set(ownerButterflies.map(b => b.frameId))];
+    
+    // Create a result for each frame
+    const result: any[] = [];
+    
+    for (const frameId of uniqueFrameIds) {
+      const frameLikes = allLikes.filter(like => like.frameId === frameId);
+      
+      result.push({
+        frameId,
+        totalLikes: frameLikes.length,
+        isLiked: frameLikes.some(like => like.likerId === likerId)
+      });
+    }
+    
+    return result;
+  }
+
   async sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
     const canSell = await this.canSellButterfly(userId, exhibitionButterflyId);
     if (!canSell) {
@@ -1153,6 +1185,21 @@ export class PostgresStorage implements IStorage {
   }
 
   async likeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    // Can't like your own frame
+    if (userId === frameOwnerId) {
+      return { success: false, message: 'Cannot like your own frame' };
+    }
+
+    // Check if frame is full (6 butterflies)
+    const frameButterflies = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, frameOwnerId), eq(exhibitionButterflies.frameId, frameId)));
+    
+    if (frameButterflies.length < 6) {
+      return { success: false, message: 'Only full frames can be liked' };
+    }
+
     // Check if already liked
     const existing = await this.db
       .select()

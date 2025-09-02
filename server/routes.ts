@@ -641,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid user IDs' });
       }
       
-      const likes = await storage.getUserFrameLikes(userId, frameOwnerId);
+      const likes = await storage.getFrameLikesForUser(userId, frameOwnerId);
       res.json({ likes });
     } catch (error) {
       console.error('Failed to get frame likes:', error);
