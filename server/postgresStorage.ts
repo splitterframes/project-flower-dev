@@ -1244,6 +1244,15 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
+  async getForeignExhibitionFrames(frameOwnerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionFrames)
+      .where(eq(exhibitionFrames.userId, frameOwnerId));
+    
+    return result;
+  }
+
   // Bouquet timing methods for butterfly spawner
   async updateBouquetNextSpawnTime(userId: number, fieldIndex: number, nextSpawnAt: Date): Promise<void> {
     await this.db

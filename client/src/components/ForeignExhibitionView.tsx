@@ -20,6 +20,14 @@ interface ExhibitionButterfly {
   createdAt: string;
 }
 
+interface ExhibitionFrame {
+  id: number;
+  userId: number;
+  frameNumber: number;
+  purchasedAt: string;
+  createdAt: string;
+}
+
 interface FrameLike {
   frameId: number;
   isLiked: boolean;
@@ -39,6 +47,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 }) => {
   const { user } = useAuth();
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
+  const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
@@ -56,6 +65,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       const response = await fetch(`/api/user/${ownerId}/foreign-exhibition`);
       const data = await response.json();
       setButterflies(data.butterflies || []);
+      setFrames(data.frames || []);
     } catch (error) {
       console.error('Failed to load foreign exhibition:', error);
     }
@@ -118,14 +128,18 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   };
 
   // Group butterflies by frame
-  const frames = new Map<number, ExhibitionButterfly[]>();
+  const butterflyFrames = new Map<number, ExhibitionButterfly[]>();
   butterflies.forEach(butterfly => {
-    const frameButterflies = frames.get(butterfly.frameId) || [];
+    const frameButterflies = butterflyFrames.get(butterfly.frameId) || [];
     frameButterflies.push(butterfly);
-    frames.set(butterfly.frameId, frameButterflies);
+    butterflyFrames.set(butterfly.frameId, frameButterflies);
   });
 
-  const sortedFrameIds = Array.from(frames.keys()).sort((a, b) => a - b);
+  const sortedFrameIds = Array.from(butterflyFrames.keys()).sort((a, b) => {
+    const frameA = frames.find(f => f.id === a);
+    const frameB = frames.find(f => f.id === b);
+    return (frameA?.frameNumber || 0) - (frameB?.frameNumber || 0);
+  });
 
   // Reset frame index when frames change
   useEffect(() => {
@@ -190,7 +204,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               </Button>
               
               <div className="text-lg font-semibold text-slate-300">
-                #{sortedFrameIds[currentFrameIndex] || 1} / {sortedFrameIds.length}
+                #{(frames.find(f => f.id === sortedFrameIds[currentFrameIndex])?.frameNumber || 1)} / {sortedFrameIds.length}
               </div>
               
               <Button
@@ -207,7 +221,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
             {/* Current Frame */}
             {sortedFrameIds[currentFrameIndex] && (() => {
               const frameId = sortedFrameIds[currentFrameIndex];
-              const frameButterflies = frames.get(frameId) || [];
+              const frameData = frames.find(f => f.id === frameId);
+              const frameNumber = frameData?.frameNumber || 1;
+              const frameButterflies = butterflyFrames.get(frameId) || [];
               const frameLike = frameLikes.find(fl => fl.frameId === frameId);
               
               const isFullFrame = frameButterflies.length === 6;
@@ -225,7 +241,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
                       <div className="flex items-center">
-                        <span>🖼️ Rahmen #{frameId}</span>
+                        <span>🖼️ Rahmen #{frameNumber}</span>
                         {isFullFrame && (
                           <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse">
                             Vollständig
