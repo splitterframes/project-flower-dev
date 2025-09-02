@@ -1,6 +1,6 @@
 // Rarity system utilities for Mariposa game
 
-export type RarityTier = 'common' | 'uncommon' | 'rare' | 'super-rare' | 'epic' | 'legendary' | 'mythical';
+export type RarityTier = 'common' | 'uncommon' | 'rare' | 'super-rare' | 'epic' | 'legendary' | 'mythical' | 'vip';
 
 export interface RarityConfig {
   tier: RarityTier;
@@ -149,6 +149,7 @@ export function getRarityColor(rarity: RarityTier): string {
     case 'epic': return 'text-purple-400';
     case 'legendary': return 'text-orange-400';
     case 'mythical': return 'text-red-400';
+    case 'vip': return 'text-pink-400 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-bold';
     default: return 'text-gray-400';
   }
 }
@@ -165,6 +166,7 @@ export function getRarityBorder(rarity: RarityTier): string {
     case 'epic': return 'border-purple-400';
     case 'legendary': return 'border-orange-400';
     case 'mythical': return 'border-red-400';
+    case 'vip': return 'border-pink-500 shadow-lg shadow-pink-500/50';
     default: return 'border-gray-400';
   }
 }
@@ -198,6 +200,7 @@ export function getRarityDisplayName(rarity: RarityTier): string {
     case 'epic': return 'Episch';
     case 'legendary': return 'Legendär';
     case 'mythical': return 'Mythisch';
+    case 'vip': return '✨ VIP Premium 👑';
     default: return 'Unbekannt';
   }
 }
@@ -322,6 +325,7 @@ export function getRarityTierIndex(rarity: RarityTier): number {
     case 'epic': return 4;
     case 'legendary': return 5;
     case 'mythical': return 6;
+    case 'vip': return 7;
     default: return 0;
   }
 }

@@ -123,7 +123,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
       'super-rare': 400,
       'epic': 600,
       'legendary': 800,
-      'mythical': 1000
+      'mythical': 1000,
+      'vip': 2500  // VIP butterflies are extra valuable!
     };
     return prices[rarity as keyof typeof prices] || 50;
   };
