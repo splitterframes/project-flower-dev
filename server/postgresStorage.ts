@@ -713,27 +713,47 @@ export class PostgresStorage implements IStorage {
 
     let result: UserButterfly;
     
-    if (existing.length > 0) {
-      // Increase quantity
-      console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
-      const updated = await this.db
-        .update(userButterflies)
-        .set({ quantity: existing[0].quantity + 1 })
-        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
-        .returning();
-      result = updated[0];
-    } else {
-      // Add new butterfly to inventory  
-      console.log(`🦋 Adding new butterfly to inventory`);
-      const newButterfly = await this.db.insert(userButterflies).values({
-        userId,
-        butterflyId: fieldButterfly[0].butterflyId,
-        butterflyName: fieldButterfly[0].butterflyName,
-        butterflyRarity: fieldButterfly[0].butterflyRarity,
-        butterflyImageUrl: fieldButterfly[0].butterflyImageUrl,
-        quantity: 1
-      }).returning();
-      result = newButterfly[0];
+    try {
+      if (existing.length > 0) {
+        // Increase quantity
+        console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existing[0].quantity + 1 })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
+          .returning();
+        result = updated[0];
+      } else {
+        // Add new butterfly to inventory  
+        console.log(`🦋 Adding new butterfly to inventory`);
+        const newButterfly = await this.db.insert(userButterflies).values({
+          userId,
+          butterflyId: fieldButterfly[0].butterflyId,
+          butterflyName: fieldButterfly[0].butterflyName,
+          butterflyRarity: fieldButterfly[0].butterflyRarity,
+          butterflyImageUrl: fieldButterfly[0].butterflyImageUrl,
+          quantity: 1
+        }).returning();
+        result = newButterfly[0];
+      }
+    } catch (error: any) {
+      // Handle unique constraint violation (race condition)
+      if (error.code === '23505') {
+        console.log(`🦋 Race condition detected, retrying with quantity update`);
+        const existingRetry = await this.db
+          .select()
+          .from(userButterflies)
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)));
+        
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existingRetry[0].quantity + 1 })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
+          .returning();
+        result = updated[0];
+      } else {
+        throw error;
+      }
     }
 
     // Remove from field
