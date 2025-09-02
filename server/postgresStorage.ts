@@ -1279,6 +1279,25 @@ export class PostgresStorage implements IStorage {
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
     // Get all exhibition butterflies for this user
     const butterflies = await this.getExhibitionButterflies(userId);
+    if (butterflies.length === 0) {
+      return { success: true, creditsEarned: 0 };
+    }
+    
+    // Get user's last passive income time
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false };
+    }
+    
+    const now = new Date();
+    const lastIncomeTime = user.lastPassiveIncomeAt || new Date(now.getTime() - 60 * 60 * 1000); // Default to 1 hour ago
+    const minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
+    
+    // Don't process if less than 1 minute has passed
+    if (minutesElapsed < 1) {
+      return { success: true, creditsEarned: 0 };
+    }
+    
     let totalCredits = 0;
     
     for (const butterfly of butterflies) {
@@ -1286,8 +1305,10 @@ export class PostgresStorage implements IStorage {
       const rarityIncomePerHour = { common: 1, uncommon: 2, rare: 5, 'super-rare': 10, epic: 20, legendary: 50, mythical: 100 };
       const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
       
-      // For now, award 1 hour of income
-      totalCredits += incomePerHour;
+      // Calculate income proportional to minutes elapsed (minutengenau)
+      const incomePerMinute = incomePerHour / 60;
+      const earnedCredits = Math.floor(incomePerMinute * minutesElapsed);
+      totalCredits += earnedCredits;
       
       // Log passive income
       await this.db.insert(passiveIncomeLog).values({
@@ -1299,10 +1320,11 @@ export class PostgresStorage implements IStorage {
     }
     
     if (totalCredits > 0) {
-      const user = await this.getUser(userId);
-      if (user) {
-        await this.updateUserCredits(userId, user.credits + totalCredits);
-      }
+      // Update user credits and last passive income time
+      await this.updateUserCredits(userId, user.credits + totalCredits);
+      await this.db.update(users)
+        .set({ lastPassiveIncomeAt: now })
+        .where(eq(users.id, userId));
     }
     
     return { success: true, creditsEarned: totalCredits };
