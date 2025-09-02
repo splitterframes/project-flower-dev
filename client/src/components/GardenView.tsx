@@ -297,12 +297,21 @@ export const GardenView: React.FC = () => {
   const calculateUnlockCost = (fieldId: number) => {
     // Count unlocked fields excluding the 4 starter fields (1, 2, 11, 12)
     const starterFields = [1, 2, 11, 12];
-    const unlockedCount = gardenFields.filter(f => f.isUnlocked && !starterFields.includes(f.id)).length;
-    return Math.round(1000 * Math.pow(1.2, unlockedCount));
+    const unlockedFields = gardenFields.filter(f => f.isUnlocked && !starterFields.includes(f.id));
+    const unlockedCount = unlockedFields.length;
+    const cost = Math.round(1000 * Math.pow(1.2, unlockedCount));
+    
+    console.log(`🔢 Freischalt-Berechnung für Feld ${fieldId}:`);
+    console.log(`📊 Freigeschaltete Zusatzfelder:`, unlockedFields.map(f => f.id));
+    console.log(`📈 Anzahl: ${unlockedCount}, Kosten: ${cost} Cr`);
+    
+    return cost;
   };
 
   const unlockField = async (fieldId: number) => {
     const cost = calculateUnlockCost(fieldId);
+    
+    console.log(`💰 Freischaltung von Feld ${fieldId} für ${cost} Cr (Aktuell: ${credits} Cr)`);
     
     if (credits < cost) {
       alert(`Du brauchst ${cost} Cr um dieses Feld freizuschalten!`);
@@ -310,9 +319,11 @@ export const GardenView: React.FC = () => {
     }
 
     // Update credits
+    console.log(`💳 Ziehe ${cost} Cr ab...`);
     await updateCredits(user.id, -cost);
     
     // Unlock the field
+    console.log(`🔓 Schalte Feld ${fieldId} frei...`);
     setGardenFields(prev => 
       prev.map(field => 
         field.id === fieldId 
@@ -320,6 +331,8 @@ export const GardenView: React.FC = () => {
           : field
       )
     );
+    
+    console.log(`✅ Feld ${fieldId} freigeschaltet!`);
   };
 
   const openSeedSelection = (fieldIndex: number) => {
