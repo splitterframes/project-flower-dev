@@ -427,16 +427,26 @@ export class PostgresStorage implements IStorage {
   // Create bouquet from 3 flowers
   async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
     try {
+      console.log(`🔍 Creating bouquet for user ${userId} with flowers:`, data);
+      
       // Get all flowers for this user
       const allUserFlowers = await this.db
         .select()
         .from(userFlowers)
         .where(eq(userFlowers.userId, userId));
 
+      console.log(`🔍 Available flowers:`, allUserFlowers.map(f => ({ id: f.id, flowerId: f.flowerId, name: f.flowerName })));
+
       // Find the specific flowers
       const flower1 = allUserFlowers.find((f: any) => f.id === data.flowerId1);
       const flower2 = allUserFlowers.find((f: any) => f.id === data.flowerId2);
       const flower3 = allUserFlowers.find((f: any) => f.id === data.flowerId3);
+
+      console.log(`🔍 Found flowers:`, { 
+        flower1: flower1 ? { id: flower1.id, name: flower1.flowerName } : 'NOT FOUND',
+        flower2: flower2 ? { id: flower2.id, name: flower2.flowerName } : 'NOT FOUND',
+        flower3: flower3 ? { id: flower3.id, name: flower3.flowerName } : 'NOT FOUND'
+      });
 
       if (!flower1 || !flower2 || !flower3) {
         return { success: false, message: 'Eine oder mehrere Blumen nicht gefunden' };
@@ -784,7 +794,48 @@ export class PostgresStorage implements IStorage {
   }
 
   async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
-    throw new Error('Not implemented yet');
+    try {
+      // Find the placed bouquet to get the field index
+      const placedBouquet = await this.db
+        .select()
+        .from(placedBouquets)
+        .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.bouquetId, bouquetId)))
+        .limit(1);
+
+      if (placedBouquet.length === 0) {
+        return { success: false };
+      }
+
+      const fieldIndex = placedBouquet[0].fieldIndex;
+
+      // Generate random butterfly based on bouquet rarity
+      const { generateRandomButterfly } = await import('./bouquet');
+      const butterflyData = await generateRandomButterfly(bouquetRarity);
+
+      // Create field butterfly
+      const newFieldButterfly = await this.db.insert(fieldButterflies).values({
+        userId,
+        fieldIndex,
+        butterflyId: butterflyData.id,
+        butterflyName: butterflyData.name,
+        butterflyRarity: bouquetRarity,
+        butterflyImageUrl: butterflyData.imageUrl,
+        bouquetId: bouquetId,
+        spawnedAt: new Date()
+      }).returning();
+
+      console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
+      
+      return { 
+        success: true, 
+        fieldButterfly: newFieldButterfly[0],
+        fieldIndex: fieldIndex
+      };
+      
+    } catch (error) {
+      console.error('Failed to spawn butterfly:', error);
+      return { success: false };
+    }
   }
 
   // Additional exhibition methods (from routes usage)
