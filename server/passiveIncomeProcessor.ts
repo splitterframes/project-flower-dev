@@ -16,10 +16,10 @@ class PassiveIncomeProcessor {
     // Process immediately once, then start interval
     this.processAllUsersPassiveIncome();
     
-    // Process every minute (60000ms)
+    // Process every hour (3600000ms)
     this.intervalId = setInterval(() => {
       this.processAllUsersPassiveIncome();
-    }, 60000);
+    }, 3600000);
   }
 
   stop() {
