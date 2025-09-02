@@ -1154,27 +1154,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('🗑️ ADMIN: Resetting all user data...');
       
-      // Get database instance
+      // Use storage methods to safely delete data
       if ('db' in storage) {
         const db = (storage as any).db;
         
+        // Import the schema tables directly
+        const {
+          exhibitionVipButterflies,
+          exhibitionButterflies,
+          fieldButterflies,
+          userButterflies,
+          userVipButterflies,
+          placedBouquets,
+          userBouquets,
+          userFlowers,
+          plantedFields,
+          userSeeds,
+          marketListings,
+          passiveIncomeLog,
+          challengeDonations,
+          challengeRewards,
+          exhibitionFrameLikes,
+          users
+        } = await import('@shared/schema');
+        
         // Delete all user-related data in correct order (foreign keys)
-        await db.delete((storage as any).exhibitionVipButterflies);
-        await db.delete((storage as any).exhibitionButterflies);
-        await db.delete((storage as any).fieldButterflies);
-        await db.delete((storage as any).userButterflies);
-        await db.delete((storage as any).userVipButterflies);
-        await db.delete((storage as any).placedBouquets);
-        await db.delete((storage as any).userBouquets);
-        await db.delete((storage as any).userFlowers);
-        await db.delete((storage as any).plantedFields);
-        await db.delete((storage as any).userSeeds);
-        await db.delete((storage as any).marketListings);
-        await db.delete((storage as any).passiveIncomeLog);
-        await db.delete((storage as any).challengeDonations);
-        await db.delete((storage as any).challengeRewards);
-        await db.delete((storage as any).exhibitionFrameLikes);
-        await db.delete((storage as any).users);
+        await db.delete(exhibitionVipButterflies);
+        await db.delete(exhibitionButterflies);
+        await db.delete(fieldButterflies);
+        await db.delete(userButterflies);
+        await db.delete(userVipButterflies);
+        await db.delete(placedBouquets);
+        await db.delete(userBouquets);
+        await db.delete(userFlowers);
+        await db.delete(plantedFields);
+        await db.delete(userSeeds);
+        await db.delete(marketListings);
+        await db.delete(passiveIncomeLog);
+        await db.delete(challengeDonations);
+        await db.delete(challengeRewards);
+        await db.delete(exhibitionFrameLikes);
+        await db.delete(users);
         
         console.log('✅ All user data deleted successfully');
         
