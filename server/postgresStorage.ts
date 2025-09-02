@@ -420,9 +420,70 @@ export class PostgresStorage implements IStorage {
     }
   }
 
-  // Placeholder methods - will be implemented based on existing MemStorage
+  // Create bouquet from 3 flowers
   async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
-    throw new Error('Not implemented yet');
+    try {
+      // Get all flowers for this user
+      const allUserFlowers = await this.db
+        .select()
+        .from(userFlowers)
+        .where(eq(userFlowers.userId, userId));
+
+      // Find the specific flowers
+      const flower1 = allUserFlowers.find(f => f.id === data.flowerId1);
+      const flower2 = allUserFlowers.find(f => f.id === data.flowerId2);
+      const flower3 = allUserFlowers.find(f => f.id === data.flowerId3);
+
+      if (!flower1 || !flower2 || !flower3) {
+        return { success: false, message: 'Eine oder mehrere Blumen nicht gefunden' };
+      }
+
+      // Calculate average rarity
+      const rarity1 = flower1.flowerRarity as RarityTier;
+      const rarity2 = flower2.flowerRarity as RarityTier;
+      const rarity3 = flower3.flowerRarity as RarityTier;
+      const avgRarity = calculateAverageRarity(rarity1, rarity2, rarity3);
+
+      // Create unique bouquet name
+      const bouquetName = data.name || `Bouquet-${Date.now()}`;
+
+      // Create bouquet
+      const newBouquet = await this.db.insert(bouquets).values({
+        name: bouquetName,
+        rarity: avgRarity,
+        imageUrl: "/Blumen/bouquet.jpg"
+      }).returning();
+
+      // Create recipe
+      await this.db.insert(bouquetRecipes).values({
+        bouquetId: newBouquet[0].id,
+        flowerId1: flower1.flowerId,
+        flowerId2: flower2.flowerId,
+        flowerId3: flower3.flowerId
+      });
+
+      // Add to user inventory
+      await this.db.insert(userBouquets).values({
+        userId,
+        bouquetId: newBouquet[0].id,
+        quantity: 1,
+        bouquetName: bouquetName,
+        bouquetRarity: avgRarity,
+        bouquetImageUrl: "/Blumen/bouquet.jpg"
+      });
+
+      // Remove flowers from inventory
+      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId1));
+      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId2));
+      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId3));
+
+      console.log(`💐 Created bouquet "${bouquetName}" for user ${userId}`);
+      return { success: true, bouquet: newBouquet[0] };
+
+    } catch (error) {
+      console.error('Failed to create bouquet:', error);
+      return { success: false, message: 'Fehler beim Erstellen des Bouquets' };
+    }
   }
 
   async getUserBouquets(userId: number): Promise<UserBouquet[]> {
