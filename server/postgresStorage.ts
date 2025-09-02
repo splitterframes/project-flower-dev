@@ -360,16 +360,34 @@ export class PostgresStorage implements IStorage {
   }
 
   async addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void> {
-    await this.db.insert(userFlowers).values({
-      userId,
-      flowerId,
-      rarity: this.getRarityInteger(flowerRarity),
-      flowerName,
-      flowerRarity,
-      flowerImageUrl,
-      quantity: 1
-    });
-    console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
+    // Check if user already has this flower
+    const existingFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(eq(userFlowers.userId, userId), eq(userFlowers.flowerId, flowerId)))
+      .limit(1);
+
+    if (existingFlower.length > 0) {
+      // Increase quantity of existing flower
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: existingFlower[0].quantity + 1 })
+        .where(eq(userFlowers.id, existingFlower[0].id));
+      
+      console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + 1} for user ${userId}`);
+    } else {
+      // Create new flower entry
+      await this.db.insert(userFlowers).values({
+        userId,
+        flowerId,
+        rarity: this.getRarityInteger(flowerRarity),
+        flowerName,
+        flowerRarity,
+        flowerImageUrl,
+        quantity: 1
+      });
+      console.log(`💾 Added new flower ${flowerName} for user ${userId} to PostgreSQL`);
+    }
   }
 
   private getRarityInteger(rarity: string): number {
