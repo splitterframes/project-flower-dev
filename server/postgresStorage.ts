@@ -133,8 +133,9 @@ export class PostgresStorage implements IStorage {
       throw new Error(`User ${id} not found`);
     }
     
-    const newCredits = currentUser.credits + amount;
-    console.log(`💰 Credit Update: User ${id} hatte ${currentUser.credits} Cr, ${amount >= 0 ? '+' : ''}${amount} Cr = ${newCredits} Cr`);
+    const newCredits = amount; // amount is the new total, not a delta
+    const change = newCredits - currentUser.credits;
+    console.log(`💰 Credit Update: User ${id} hatte ${currentUser.credits} Cr, ${change >= 0 ? '+' : ''}${change} Cr = ${newCredits} Cr`);
     
     const result = await this.db
       .update(users)
