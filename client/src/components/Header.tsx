@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) => {
   const { user, logout } = useAuth();
-  const { credits } = useCredits();
+  const { credits, setCredits } = useCredits();
   const [inventoryCounts, setInventoryCounts] = useState({
     seeds: 0,
     flowers: 0,
@@ -35,8 +35,23 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     setForeignExhibition(null);
   };
 
+  const fetchCredits = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/credits`);
+      if (response.ok) {
+        const data = await response.json();
+        setCredits(data.credits);
+      }
+    } catch (error) {
+      console.error('Failed to fetch credits:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
+      fetchCredits();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -45,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   // Refresh header when trigger changes (view switching)
   useEffect(() => {
     if (user && refreshTrigger !== undefined) {
+      fetchCredits();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -55,6 +71,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     if (!user) return;
     
     const interval = setInterval(() => {
+      fetchCredits();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }, 10000); // Update every 10 seconds
