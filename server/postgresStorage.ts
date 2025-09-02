@@ -1683,6 +1683,20 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
+  async deactivateChallenge(challengeId: number): Promise<void> {
+    try {
+      await this.db
+        .update(weeklyChallenges)
+        .set({ isActive: false })
+        .where(eq(weeklyChallenges.id, challengeId));
+      
+      console.log(`🌸 Deactivated challenge ${challengeId}`);
+    } catch (error) {
+      console.error('Error deactivating challenge:', error);
+      throw error;
+    }
+  }
+
   private getRandomFlowerByRarity(targetRarity: string): number {
     // Based on rarity distribution from replit.md:
     // Uncommon: 56-100, Rare: 101-135, Super-rare: 136-160

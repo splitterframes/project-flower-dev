@@ -77,5 +77,10 @@ app.use((req, res, next) => {
       passiveIncomeProcessor.start();
       log('💰 Passive income processing system initialized');
     });
+
+    // Start weekly challenge management system
+    import('./challengeManager').then(({ challengeManager }) => {
+      challengeManager.start();
+    });
   });
 })();
