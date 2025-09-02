@@ -1843,8 +1843,10 @@ export class PostgresStorage implements IStorage {
 
       if (rank === 1) {
         // VIP Animated butterfly with passive income - use real VIP system
-        const randomVipId = Math.floor(Math.random() * 5) + 1; // VIP1.gif to VIP5.gif
-        const vipButterflyName = `VIP Mariposa ${['Dorada', 'Platinada', 'Diamante', 'Celestial', 'Imperial'][randomVipId - 1]}`;
+        // Get available VIP files dynamically
+        const availableVipIds = await this.getAvailableVipIds();
+        const randomVipId = availableVipIds[Math.floor(Math.random() * availableVipIds.length)];
+        const vipButterflyName = `VIP Mariposa ${this.getVipName(randomVipId)}`;
         
         // Add VIP butterfly to user's collection using VIP system
         await this.addVipButterflyToInventory(user.userId, randomVipId, vipButterflyName, `/VIP/VIP${randomVipId}.gif`);
@@ -1940,6 +1942,59 @@ export class PostgresStorage implements IStorage {
 
   private getRandomButterflyByRarity(targetRarity: string): any {
     return generateRandomButterfly(targetRarity as RarityTier);
+  }
+
+  private async getAvailableVipIds(): Promise<number[]> {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const vipDir = path.join(process.cwd(), 'client/public/VIP');
+      const files = await fs.readdir(vipDir);
+      
+      // Extract VIP numbers from VIPx.gif files
+      const vipIds: number[] = [];
+      files.forEach(file => {
+        const match = file.match(/^VIP(\d+)\.gif$/i);
+        if (match) {
+          const vipId = parseInt(match[1]);
+          if (!isNaN(vipId)) {
+            vipIds.push(vipId);
+          }
+        }
+      });
+      
+      // Sort and return available VIP IDs
+      const sortedIds = vipIds.sort((a, b) => a - b);
+      console.log(`🦋 Found ${sortedIds.length} VIP butterfly files: VIP${sortedIds.join('.gif, VIP')}.gif`);
+      
+      return sortedIds.length > 0 ? sortedIds : [1]; // Fallback to VIP1 if none found
+    } catch (error) {
+      console.error('🦋 Error reading VIP directory:', error);
+      return [1]; // Fallback to VIP1
+    }
+  }
+
+  private getVipName(vipId: number): string {
+    const vipNames = [
+      'Dorada',     // VIP1
+      'Platinada',  // VIP2  
+      'Diamante',   // VIP3
+      'Celestial',  // VIP4
+      'Imperial',   // VIP5
+      'Divina',     // VIP6
+      'Suprema',    // VIP7
+      'Legendaria', // VIP8
+      'Mística',    // VIP9
+      'Eterna'      // VIP10
+    ];
+    
+    // Return name based on VIP ID, with fallback pattern for higher numbers
+    if (vipId <= vipNames.length) {
+      return vipNames[vipId - 1];
+    } else {
+      return `Extraordinaria ${vipId}`;
+    }
   }
 
   async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
