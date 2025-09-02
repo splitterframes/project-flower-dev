@@ -1469,18 +1469,21 @@ export class PostgresStorage implements IStorage {
   // ========== WEEKLY CHALLENGE SYSTEM ==========
 
   async getCurrentWeeklyChallenge(): Promise<WeeklyChallenge | null> {
-    const now = new Date();
-    
-    const challenge = await this.db
-      .select()
-      .from(weeklyChallenges)
-      .where(and(
-        eq(weeklyChallenges.isActive, true),
-        lt(weeklyChallenges.startTime, now)
-      ))
-      .limit(1);
+    try {
+      const now = new Date();
+      
+      const challenge = await this.db
+        .select()
+        .from(weeklyChallenges)
+        .where(eq(weeklyChallenges.isActive, true))
+        .limit(1);
 
-    return challenge[0] || null;
+      console.log('🌸 Retrieved weekly challenge:', challenge[0] || 'No active challenge');
+      return challenge[0] || null;
+    } catch (error) {
+      console.error('Error retrieving weekly challenge:', error);
+      throw error;
+    }
   }
 
   async createWeeklyChallenge(): Promise<WeeklyChallenge> {
@@ -1707,6 +1710,30 @@ export class PostgresStorage implements IStorage {
 
   private getRandomButterflyByRarity(targetRarity: string): any {
     return generateRandomButterfly(targetRarity as RarityTier);
+  }
+
+  async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
+    // Check if user already has this seed type
+    const existingSeed = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)))
+      .limit(1);
+
+    if (existingSeed.length > 0) {
+      // Update quantity
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: existingSeed[0].quantity + quantity })
+        .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+    } else {
+      // Insert new seed
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity
+      });
+    }
   }
 }
 
