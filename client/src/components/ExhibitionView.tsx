@@ -12,12 +12,19 @@ import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/r
 import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly } from "@shared/schema";
 
 
+interface FrameLike {
+  frameId: number;
+  totalLikes: number;
+  isLiked: boolean;
+}
+
 export const ExhibitionView: React.FC = () => {
   const { user } = useAuth();
   const { credits, setCredits } = useCredits();
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [exhibitionButterflies, setExhibitionButterflies] = useState<ExhibitionButterfly[]>([]);
   const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
+  const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +36,7 @@ export const ExhibitionView: React.FC = () => {
     if (user) {
       fetchExhibitionData();
       fetchUserButterflies();
+      loadFrameLikes();
       // No need to manually process passive income anymore - it's automatic
     }
   }, [user]);
@@ -69,6 +77,20 @@ export const ExhibitionView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch user butterflies:', error);
+    }
+  };
+
+  const loadFrameLikes = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/exhibition/${user.id}/likes`);
+      if (response.ok) {
+        const data = await response.json();
+        setFrameLikes(data.likes || []);
+      }
+    } catch (error) {
+      console.error('Failed to load frame likes:', error);
     }
   };
 
@@ -201,6 +223,7 @@ export const ExhibitionView: React.FC = () => {
       if (response.ok) {
         await fetchExhibitionData();
         await fetchUserButterflies();
+        await loadFrameLikes();
         setShowInventoryDialog(false);
         setSelectedSlot(null);
       } else {
@@ -217,6 +240,7 @@ export const ExhibitionView: React.FC = () => {
   const renderFrame = (frame: ExhibitionFrame, index: number) => {
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
     const isFullFrame = frameButterflies.length === 6;
+    const frameLike = frameLikes.find(fl => fl.frameId === frame.id);
     
     return (
       <Card key={frame.id} className="bg-gradient-to-br from-amber-900 to-amber-800 border-amber-700 shadow-2xl">
@@ -236,6 +260,15 @@ export const ExhibitionView: React.FC = () => {
                 </span>
               )}
             </div>
+            {(frameLike?.totalLikes || 0) > 0 && (
+              <div className="flex items-center text-pink-300">
+                <Star className="h-4 w-4 mr-1 fill-pink-300" />
+                <span className="text-sm">{frameLike?.totalLikes}</span>
+                {isFullFrame && (
+                  <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
+                )}
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
