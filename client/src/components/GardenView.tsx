@@ -794,13 +794,13 @@ export const GardenView: React.FC = () => {
                         >
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger className="cursor-pointer">
+                              <TooltipTrigger className="cursor-pointer w-full h-full">
                                 <RarityImage 
                                   src={field.flowerImageUrl}
                                   alt="Blume"
                                   rarity={field.seedRarity as RarityTier}
                                   size="large"
-                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover"
+                                  className="field-image"
                                 />
                               </TooltipTrigger>
                               <TooltipContent className="bg-slate-800 border-slate-600 text-white">
@@ -818,18 +818,20 @@ export const GardenView: React.FC = () => {
                     } else if (field.isGrowing) {
                       // Show seed image while growing
                       return (
-                        <div className="flex flex-col items-center">
+                        <div className="relative w-full h-full">
                           <RarityImage 
                             src="/Blumen/0.jpg"
                             alt="Wachsender Samen"
                             rarity={field.seedRarity as RarityTier}
                             size="medium"
-                            className="mx-auto w-[70%] h-[70%] max-w-12 max-h-12 min-w-6 min-h-6 object-cover"
+                            className="field-image"
                           />
                           {status && (
-                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-1 py-0.5 mt-1 max-w-full">
-                              <div className="text-[10px] sm:text-xs md:text-sm font-bold text-green-300 text-center animate-pulse leading-tight">
-                                ⏱️ {status.remainingTime}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="bg-green-500/80 border border-green-400 rounded-lg px-2 py-1 backdrop-blur-sm">
+                                <div className="text-xs font-bold text-white text-center animate-pulse">
+                                  ⏱️ {status.remainingTime}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -845,22 +847,22 @@ export const GardenView: React.FC = () => {
                   {field.isUnlocked && field.hasBouquet && (() => {
                     const bouquetStatus = getBouquetStatus(field);
                     return (
-                      <div className="flex flex-col items-center">
+                      <div className="relative w-full h-full">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger 
-                              className={bouquetStatus?.isExpired ? "cursor-pointer" : "cursor-default"}
+                              className={`w-full h-full ${bouquetStatus?.isExpired ? "cursor-pointer" : "cursor-default"}`}
                               onClick={() => bouquetStatus?.isExpired && collectExpiredBouquet(field.id - 1)}
                             >
-                              <div className="relative">
+                              <div className="relative w-full h-full">
                                 <RarityImage 
                                   src="/Blumen/Bouquet.jpg"
                                   alt="Bouquet"
                                   rarity={(field.bouquetRarity as RarityTier) || "common"}
                                   size="large"
-                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover"
+                                  className="field-image"
                                 />
-                                <Heart className="absolute -top-1 -right-1 h-4 w-4 text-pink-400" />
+                                <Heart className="absolute top-2 right-2 h-4 w-4 text-pink-400" />
                                 {bouquetStatus?.isExpired && (
                                   <div className="absolute inset-0 bg-gray-800/70 rounded-lg flex items-center justify-center">
                                     <Sparkles className="h-6 w-6 text-yellow-400" />
@@ -885,9 +887,11 @@ export const GardenView: React.FC = () => {
                           </Tooltip>
                         </TooltipProvider>
                         {bouquetStatus && !bouquetStatus.isExpired && (
-                          <div className="bg-pink-500/20 border border-pink-400 rounded-lg px-1 py-0.5 mt-1 max-w-full">
-                            <div className="text-[10px] sm:text-xs md:text-sm font-bold text-pink-300 text-center animate-pulse leading-tight">
-                              💐 {bouquetStatus.remainingTime}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="bg-pink-500/80 border border-pink-400 rounded-lg px-2 py-1 backdrop-blur-sm">
+                              <div className="text-xs font-bold text-white text-center animate-pulse">
+                                💐 {bouquetStatus.remainingTime}
+                              </div>
                             </div>
                           </div>
                         )}
@@ -897,7 +901,7 @@ export const GardenView: React.FC = () => {
 
                   {/* Butterfly Display */}
                   {field.isUnlocked && field.hasButterfly && (
-                    <div className="flex flex-col items-center">
+                    <div className="relative w-full h-full">
                       <ButterflyHoverPreview
                         butterflyImageUrl={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
                         butterflyName={field.butterflyName || "Schmetterling"}
@@ -906,18 +910,18 @@ export const GardenView: React.FC = () => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger 
-                              className="cursor-pointer"
+                              className="cursor-pointer w-full h-full"
                               onClick={() => collectButterfly(field.id - 1)}
                             >
-                              <div className="relative">
+                              <div className="relative w-full h-full">
                                 <RarityImage 
                                   src={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
                                   alt="Schmetterling"
                                   rarity={field.butterflyRarity as RarityTier || "common"}
                                   size="large"
-                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover animate-pulse"
+                                  className="field-image animate-pulse"
                                 />
-                                <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
+                                <Sparkles className="absolute top-2 right-2 h-4 w-4 text-orange-400 animate-pulse" />
                               </div>
                             </TooltipTrigger>
                             <TooltipContent className="bg-slate-800 border-slate-600 text-white">
