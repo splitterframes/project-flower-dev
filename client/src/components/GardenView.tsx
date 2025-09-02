@@ -798,7 +798,7 @@ export const GardenView: React.FC = () => {
                                   alt="Blume"
                                   rarity={field.seedRarity as RarityTier}
                                   size="large"
-                                  className="mx-auto w-16 h-16"
+                                  className="mx-auto w-14 h-14"
                                 />
                               </TooltipTrigger>
                               <TooltipContent className="bg-slate-800 border-slate-600 text-white">
@@ -822,7 +822,7 @@ export const GardenView: React.FC = () => {
                             alt="Wachsender Samen"
                             rarity={field.seedRarity as RarityTier}
                             size="medium"
-                            className="mx-auto w-14 h-14"
+                            className="mx-auto w-12 h-12"
                           />
                           {status && (
                             <div className="bg-green-500/20 border border-green-400 rounded-lg px-2 py-1 mt-2 md:block">
@@ -856,7 +856,7 @@ export const GardenView: React.FC = () => {
                                   alt="Bouquet"
                                   rarity={(field.bouquetRarity as RarityTier) || "common"}
                                   size="large"
-                                  className="mx-auto w-16 h-16"
+                                  className="mx-auto w-14 h-14"
                                 />
                                 <Heart className="absolute -top-1 -right-1 h-4 w-4 text-pink-400" />
                                 {bouquetStatus?.isExpired && (
@@ -913,7 +913,7 @@ export const GardenView: React.FC = () => {
                                   alt="Schmetterling"
                                   rarity={field.butterflyRarity as RarityTier || "common"}
                                   size="large"
-                                  className="mx-auto w-16 h-16 animate-pulse"
+                                  className="mx-auto w-14 h-14 animate-pulse"
                                 />
                                 <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
                               </div>
