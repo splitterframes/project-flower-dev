@@ -871,7 +871,36 @@ export class PostgresStorage implements IStorage {
         return { success: false };
       }
 
-      const fieldIndex = placedBouquet[0].fieldIndex;
+      // Get all occupied fields for this user
+      const [userPlantedFields, userPlacedBouquets, userExistingButterflies] = await Promise.all([
+        this.db.select({ fieldIndex: plantedFields.fieldIndex }).from(plantedFields).where(eq(plantedFields.userId, userId)),
+        this.db.select({ fieldIndex: placedBouquets.fieldIndex }).from(placedBouquets).where(eq(placedBouquets.userId, userId)),
+        this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId))
+      ]);
+
+      // Collect all occupied field indices
+      const occupiedFields = new Set([
+        ...userPlantedFields.map((f: { fieldIndex: number }) => f.fieldIndex),
+        ...userPlacedBouquets.map((f: { fieldIndex: number }) => f.fieldIndex),
+        ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
+      ]);
+
+      // Find available fields (assuming 16 total fields: 0-15)
+      const totalFields = 16;
+      const availableFields = [];
+      for (let i = 0; i < totalFields; i++) {
+        if (!occupiedFields.has(i)) {
+          availableFields.push(i);
+        }
+      }
+
+      if (availableFields.length === 0) {
+        console.log(`🦋 No available fields for butterfly spawn for user ${userId}`);
+        return { success: false };
+      }
+
+      // Select random available field
+      const fieldIndex = availableFields[Math.floor(Math.random() * availableFields.length)];
 
       // Generate random butterfly based on bouquet rarity
       const { generateRandomButterfly } = await import('./bouquet');
