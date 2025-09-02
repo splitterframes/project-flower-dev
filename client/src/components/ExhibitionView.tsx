@@ -216,13 +216,26 @@ export const ExhibitionView: React.FC = () => {
 
   const renderFrame = (frame: ExhibitionFrame, index: number) => {
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
+    const isFullFrame = frameButterflies.length === 6;
     
     return (
       <Card key={frame.id} className="bg-gradient-to-br from-amber-900 to-amber-800 border-amber-700 shadow-2xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-amber-100 text-center flex items-center justify-center">
-            <Trophy className="h-5 w-5 mr-2 text-amber-300" />
-            Rahmen #{frame.frameNumber} ({getFrameHourlyIncome(frame.id)} cr/h)
+          <CardTitle className="text-amber-100 text-center flex items-center justify-between">
+            <div className="flex items-center">
+              <Trophy className="h-5 w-5 mr-2 text-amber-300" />
+              <span>Rahmen #{frame.frameNumber} ({getFrameHourlyIncome(frame.id)} cr/h)</span>
+              {isFullFrame && (
+                <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse shadow-lg">
+                  ✨ Vollständig
+                </span>
+              )}
+              {!isFullFrame && (
+                <span className="ml-2 text-xs bg-amber-600 text-amber-100 px-2 py-1 rounded-full">
+                  {frameButterflies.length}/6
+                </span>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
