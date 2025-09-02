@@ -852,7 +852,7 @@ export const GardenView: React.FC = () => {
                                 <RarityImage 
                                   src="/Blumen/Bouquet.jpg"
                                   alt="Bouquet"
-                                  rarity="common"
+                                  rarity={(field.bouquetRarity as RarityTier) || "common"}
                                   size="large"
                                   className="mx-auto w-16 h-16"
                                 />
