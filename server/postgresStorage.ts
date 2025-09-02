@@ -1680,9 +1680,6 @@ export class PostgresStorage implements IStorage {
     const result = await this.db.insert(weeklyChallenges).values(challengeData).returning();
     console.log('🌸 Created new weekly challenge:', challengeData);
     
-    // Initialize leaderboard with all existing users (0 donations each)
-    await this.initializeLeaderboard(result[0].id);
-    
     return result[0];
   }
 
@@ -1899,29 +1896,6 @@ export class PostgresStorage implements IStorage {
     }
 
     console.log(`🏆 Processed rewards for challenge ${challengeId}, ${leaderboard.length} participants`);
-  }
-
-  async initializeLeaderboard(challengeId: number): Promise<void> {
-    try {
-      // Get all existing users
-      const allUsers = await this.db.select({ id: users.id }).from(users);
-      
-      // Create 0-donation entries for all users
-      const initialEntries = allUsers.map((user: any) => ({
-        challengeId,
-        userId: user.id,
-        flowerId: 1, // Dummy flower ID for initialization
-        quantity: 0,
-        createdAt: new Date()
-      }));
-      
-      if (initialEntries.length > 0) {
-        await this.db.insert(challengeDonations).values(initialEntries);
-        console.log(`🌸 Initialized leaderboard with ${initialEntries.length} users for challenge ${challengeId}`);
-      }
-    } catch (error) {
-      console.error('🌸 Error initializing leaderboard:', error);
-    }
   }
 
   private getRandomButterflyByRarity(targetRarity: string): any {
