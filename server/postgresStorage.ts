@@ -166,7 +166,8 @@ export class PostgresStorage implements IStorage {
       sellerId,
       seedId: data.seedId,
       quantity: data.quantity,
-      pricePerUnit: data.pricePerSeed
+      pricePerUnit: data.pricePerUnit,
+      totalPrice: data.pricePerUnit * data.quantity
     }).returning();
 
     // Deduct seeds from seller

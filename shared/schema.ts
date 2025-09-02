@@ -63,6 +63,9 @@ export const buyListingSchema = z.object({
   quantity: z.number().min(1),
 });
 
+export type CreateMarketListingRequest = z.infer<typeof createMarketListingSchema>;
+export type BuyListingRequest = z.infer<typeof buyListingSchema>;
+
 // Garden field schema
 export const plantedFields = pgTable("planted_fields", {
   id: serial("id").primaryKey(),
