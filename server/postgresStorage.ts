@@ -566,7 +566,7 @@ export class PostgresStorage implements IStorage {
       // Deduct 30 credits for bouquet creation
       const user = await this.getUser(userId);
       if (user && user.credits >= 30) {
-        await this.updateUserCredits(userId, user.credits - 30);
+        await this.updateUserCredits(userId, -30); // Deduct 30 credits (negative delta)
         console.log(`💰 Deducted 30 credits for bouquet creation. User ${userId} credits: ${user.credits} -> ${user.credits - 30}`);
       } else {
         console.log(`⚠️ Warning: User ${userId} has insufficient credits (${user?.credits || 0}) for bouquet creation, but bouquet was still created`);

@@ -350,8 +350,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (flower1 && flower2 && flower3) {
           console.log(`🆘 SOS Activated: User ${userId} has required flowers but no credits, granting 30 credits`);
-          await storage.updateUserCredits(userId, 30);
-          console.log(`🆘 SOS Complete: User ${userId} credits updated to 30`);
+          const creditDelta = 30 - user.credits; // Calculate delta to reach 30 credits
+          await storage.updateUserCredits(userId, creditDelta);
+          console.log(`🆘 SOS Complete: User ${userId} credits updated from ${user.credits} to 30 (delta: ${creditDelta})`);
         }
       }
       
