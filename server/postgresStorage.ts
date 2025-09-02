@@ -123,9 +123,18 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
+    // First get current credits
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const newCredits = currentUser.credits + amount;
+    console.log(`💰 Credit Update: User ${id} hatte ${currentUser.credits} Cr, ${amount >= 0 ? '+' : ''}${amount} Cr = ${newCredits} Cr`);
+    
     const result = await this.db
       .update(users)
-      .set({ credits: amount })
+      .set({ credits: newCredits })
       .where(eq(users.id, id))
       .returning();
     return result[0] as User | undefined;
