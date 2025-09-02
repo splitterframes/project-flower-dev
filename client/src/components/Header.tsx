@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
+import { EmergencyDialog } from "./EmergencyDialog";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   });
   const [passiveIncome, setPassiveIncome] = useState(0);
   const [showUserList, setShowUserList] = useState(false);
+  const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   const [foreignExhibition, setForeignExhibition] = useState<{
     ownerId: number;
     ownerName: string;
@@ -33,6 +35,11 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   
   const handleBackFromForeign = () => {
     setForeignExhibition(null);
+  };
+
+  const handleEmergencySeedsReceived = () => {
+    // Refresh inventory counts after receiving emergency seeds
+    fetchInventoryCounts();
   };
 
   const fetchCredits = async () => {
@@ -200,6 +207,18 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
                 <span className="text-orange-400 font-semibold text-sm sm:text-base">{credits} Cr</span>
               </div>
               
+              {/* Emergency Button - Smaller on mobile */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEmergencyDialog(true)}
+                className="border-red-500 text-red-300 hover:bg-red-800 hover:text-white px-2 sm:px-3"
+                title="Notfall-Hilfe"
+              >
+                <AlertTriangle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">🆘 SOS</span>
+              </Button>
+
               {/* User List Button - Smaller on mobile */}
               <Button
                 variant="outline"
@@ -246,6 +265,13 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
         onVisitExhibition={handleVisitExhibition}
       />
       
+      {/* Emergency Dialog */}
+      <EmergencyDialog
+        isOpen={showEmergencyDialog}
+        onClose={() => setShowEmergencyDialog(false)}
+        onSeedsReceived={handleEmergencySeedsReceived}
+      />
+
       {/* Foreign Exhibition Modal/View */}
       {foreignExhibition && (
         <div className="fixed inset-0 z-50 bg-black/80">

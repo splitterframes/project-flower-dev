@@ -38,8 +38,9 @@ export const MarketView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
+  const [serverOffers, setServerOffers] = useState<any[]>([]);
   const [mySeeds, setMySeeds] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const [activeTab, setActiveTab] = useState<"buy" | "sell" | "server">("buy");
   const [isLoading, setIsLoading] = useState(false);
   
   const getBorderColor = (rarity: RarityTier): string => {
@@ -65,9 +66,22 @@ export const MarketView: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchMarketListings();
+      fetchServerOffers();
       fetchMySeeds();
     }
   }, [user]);
+
+  const fetchServerOffers = async () => {
+    try {
+      const response = await fetch('/api/market/server-shop');
+      if (response.ok) {
+        const data = await response.json();
+        setServerOffers(data.serverOffers || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch server offers:', error);
+    }
+  };
 
   const fetchMarketListings = async () => {
     try {
@@ -152,6 +166,38 @@ export const MarketView: React.FC = () => {
       }
     } catch (error) {
       alert('Angebot fehlgeschlagen');
+    }
+    setIsLoading(false);
+  };
+
+  const buyFromServer = async (seedId: number, quantity: number, totalCost: number) => {
+    if (!user || credits < totalCost) {
+      alert(`Du brauchst ${totalCost} Cr um ${quantity} Samen zu kaufen!`);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/market/buy-from-server', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user.id.toString()
+        },
+        body: JSON.stringify({ seedId, quantity })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await updateCredits(user.id, -totalCost);
+        await fetchMySeeds();
+        alert(data.message || 'Kauf erfolgreich!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Kauf fehlgeschlagen');
+      }
+    } catch (error) {
+      alert('Kauf fehlgeschlagen');
     }
     setIsLoading(false);
   };
@@ -244,6 +290,23 @@ export const MarketView: React.FC = () => {
           )}
         </Button>
         <Button
+          variant={activeTab === "server" ? "default" : "outline"}
+          onClick={() => setActiveTab("server")}
+          className={`relative transition-all duration-300 ${
+            activeTab === "server" 
+              ? "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg scale-110" 
+              : "border-slate-500 text-slate-300 hover:border-blue-400 hover:text-blue-400"
+          } px-8 py-3 font-bold text-lg`}
+        >
+          <div className="flex items-center">
+            <Store className="h-5 w-5 mr-3" />
+            <span>🏪 Shop</span>
+          </div>
+          {activeTab === "server" && (
+            <div className="absolute inset-0 bg-blue-400 rounded opacity-20 animate-ping"></div>
+          )}
+        </Button>
+        <Button
           variant={activeTab === "sell" ? "default" : "outline"}
           onClick={() => setActiveTab("sell")}
           className={`relative transition-all duration-300 ${
@@ -325,6 +388,86 @@ export const MarketView: React.FC = () => {
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "server" && (
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-500/30 shadow-2xl">
+          <CardHeader className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-t-lg -mx-6 -my-2"></div>
+            <CardTitle className="text-white flex items-center relative z-10">
+              <div className="relative">
+                <Store className="h-8 w-8 mr-3 text-blue-400 animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 mr-3 text-blue-400 animate-ping opacity-30"></div>
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
+                🏪 Mariposa Shop
+              </span>
+            </CardTitle>
+            <p className="text-slate-400 text-sm mt-2 relative z-10">
+              Offizielle Samen vom Mariposa-Händler
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {serverOffers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="bg-slate-900 rounded-lg p-4 border-2"
+                  style={{ borderColor: getBorderColor(offer.seedRarity as RarityTier) }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-bold text-white">{offer.seedName}</h4>
+                    <div className="flex items-center">
+                      <Star className={`h-4 w-4 mr-1 ${getRarityColor(offer.seedRarity as RarityTier)}`} />
+                      <span className={`text-xs ${getRarityColor(offer.seedRarity as RarityTier)}`}>
+                        {offer.seedRarity}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-3">Von: {offer.seller}</p>
+                  <p className="text-slate-300 text-sm mb-3">{offer.description}</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Verfügbar:</span>
+                      <span className="text-white">♾️ Unbegrenzt</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Preis/Stück:</span>
+                      <span className="text-orange-400">{offer.pricePerUnit} Cr</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex space-x-2">
+                      <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => buyFromServer(offer.seedId, 1, offer.pricePerUnit)}
+                        disabled={isLoading || credits < offer.pricePerUnit}
+                      >
+                        1x kaufen ({offer.pricePerUnit} Cr)
+                      </Button>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => buyFromServer(offer.seedId, 5, offer.pricePerUnit * 5)}
+                        disabled={isLoading || credits < offer.pricePerUnit * 5}
+                      >
+                        5x kaufen ({offer.pricePerUnit * 5} Cr)
+                      </Button>
+                      <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => buyFromServer(offer.seedId, 10, offer.pricePerUnit * 10)}
+                        disabled={isLoading || credits < offer.pricePerUnit * 10}
+                      >
+                        10x kaufen ({offer.pricePerUnit * 10} Cr)
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

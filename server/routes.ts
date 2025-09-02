@@ -137,6 +137,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Server Shop routes
+  app.get("/api/market/server-shop", async (req, res) => {
+    try {
+      // Server offers unlimited Common seeds for 50 credits each
+      const serverOffers = [
+        {
+          id: "server-common-seeds",
+          seedId: 1, // Common seed ID
+          seedName: "Gewöhnliche Samen",
+          seedRarity: "common",
+          pricePerUnit: 50,
+          quantity: 999, // Unlimited
+          seller: "🏪 Mariposa Shop",
+          description: "Hochwertige Samen vom offiziellen Mariposa-Händler"
+        }
+      ];
+      
+      res.json({ serverOffers });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/market/buy-from-server", async (req, res) => {
+    try {
+      const { seedId, quantity } = req.body;
+      const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      if (seedId !== 1) {
+        return res.status(400).json({ message: "Server verkauft nur gewöhnliche Samen" });
+      }
+      
+      if (quantity <= 0 || quantity > 100) {
+        return res.status(400).json({ message: "Ungültige Menge (1-100)" });
+      }
+      
+      const totalCost = quantity * 50; // 50 credits per common seed
+      
+      const user = await storage.getUser(buyerId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.credits < totalCost) {
+        return res.status(400).json({ message: `Du brauchst ${totalCost} Credits für ${quantity} Samen` });
+      }
+      
+      // Deduct credits and give seeds
+      await storage.updateUserCredits(buyerId, -totalCost);
+      await storage.giveUserSeed(buyerId, 1, quantity); // Give common seeds
+      
+      res.json({ 
+        success: true, 
+        message: `Erfolgreich ${quantity} gewöhnliche Samen für ${totalCost} Credits gekauft!` 
+      });
+    } catch (error) {
+      console.error('Server shop purchase error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Emergency starter seeds route
+  app.post("/api/user/:id/emergency-seeds", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Check if user qualifies for emergency seeds
+      const qualifies = await storage.checkEmergencyQualification(userId);
+      
+      if (!qualifies.eligible) {
+        return res.status(400).json({ 
+          message: qualifies.reason || "Du bist nicht berechtigt für Notfall-Samen" 
+        });
+      }
+      
+      // Give 3 common seeds
+      await storage.giveUserSeed(userId, 1, 3);
+      
+      res.json({ 
+        success: true, 
+        message: "Du hast 3 gewöhnliche Notfall-Samen erhalten! 🌱",
+        seeds: 3
+      });
+    } catch (error) {
+      console.error('Emergency seeds error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/seeds", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);

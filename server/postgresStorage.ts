@@ -46,7 +46,8 @@ import {
   type WeeklyChallenge,
   type ChallengeDonation,
   type ChallengeReward,
-  type DonateChallengeFlowerRequest
+  type DonateChallengeFlowerRequest,
+  type InsertUser
 } from "@shared/schema";
 import { eq, ilike, and, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -1500,6 +1501,80 @@ export class PostgresStorage implements IStorage {
     // Update user's last activity timestamp if needed
     // For now, just a placeholder
     console.log(`User ${userId} activity updated`);
+  }
+
+  // Emergency system methods
+  async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
+    console.log(`🎁 Giving ${quantity} seeds (ID: ${seedId}) to user ${userId}`);
+    
+    // Check if user already has this seed type
+    const existingUserSeed = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+    
+    if (existingUserSeed.length > 0) {
+      // Update existing quantity
+      const newQuantity = existingUserSeed[0].quantity + quantity;
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: newQuantity })
+        .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+      
+      console.log(`🎁 Updated existing seed: User ${userId} now has ${newQuantity} seeds (ID: ${seedId})`);
+    } else {
+      // Create new seed entry
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity,
+        createdAt: new Date()
+      });
+      
+      console.log(`🎁 Created new seed entry: User ${userId} received ${quantity} seeds (ID: ${seedId})`);
+    }
+  }
+
+  async checkEmergencyQualification(userId: number): Promise<{ eligible: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { eligible: false, reason: "User not found" };
+    }
+
+    // Check 1: User has 0 credits
+    if (user.credits > 0) {
+      return { eligible: false, reason: "Du hast noch Credits verfügbar" };
+    }
+
+    // Check 2: User has no seeds
+    const userSeedsList = await this.getUserSeeds(userId);
+    const totalSeeds = userSeedsList.reduce((sum, seed) => sum + seed.quantity, 0);
+    if (totalSeeds > 0) {
+      return { eligible: false, reason: "Du hast noch Samen verfügbar" };
+    }
+
+    // Check 3: User has less than 3 flowers for bouquet
+    const userFlowersList = await this.getUserFlowers(userId);
+    if (userFlowersList.length >= 3) {
+      return { eligible: false, reason: "Du hast genug Blumen für ein Bouquet" };
+    }
+
+    // Check 4: User has no bouquets
+    const userBouquetsList = await this.getUserBouquets(userId);
+    if (userBouquetsList.length > 0) {
+      return { eligible: false, reason: "Du hast noch Bouquets verfügbar" };
+    }
+
+    // Check 5: User has no passive income (no exhibition butterflies)
+    const exhibitionButterfliesList = await this.getExhibitionButterflies(userId);
+    const vipButterfliesList = await this.getExhibitionVipButterflies(userId);
+    
+    if (exhibitionButterfliesList.length > 0 || vipButterfliesList.length > 0) {
+      return { eligible: false, reason: "Du hast passives Einkommen durch Ausstellungs-Schmetterlinge" };
+    }
+
+    // User qualifies for emergency seeds!
+    return { eligible: true };
   }
 
   async getAllUsersWithStatus(): Promise<User[]> {
