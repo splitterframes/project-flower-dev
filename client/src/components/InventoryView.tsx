@@ -8,7 +8,7 @@ import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/r
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
-import type { UserFlower, UserBouquet, UserButterfly } from "@shared/schema";
+import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
@@ -16,6 +16,7 @@ export const InventoryView: React.FC = () => {
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
   const [myButterflies, setMyButterflies] = useState<UserButterfly[]>([]);
+  const [myVipButterflies, setMyVipButterflies] = useState<UserVipButterfly[]>([]);
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -176,6 +177,44 @@ export const InventoryView: React.FC = () => {
     </div>
   );
 
+  const VipButterflyCard = ({ vipButterfly }: { vipButterfly: UserVipButterfly }) => (
+    <div className="bg-gradient-to-r from-pink-900/50 to-purple-900/50 rounded-lg p-3 border-2 border-pink-500 relative">
+      {/* Animated sparkle overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 rounded-lg animate-pulse"></div>
+      
+      <div className="flex items-center space-x-3 relative z-10">
+        {/* Animated GIF Display */}
+        <div className="relative">
+          <img
+            src={vipButterfly.vipButterflyImageUrl}
+            alt={vipButterfly.vipButterflyName}
+            className="w-12 h-12 rounded-lg object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          {/* VIP Crown Icon */}
+          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+            <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+          </div>
+        </div>
+        
+        <div className="flex-1">
+          <h4 className="font-bold text-pink-200 text-sm flex items-center gap-1">
+            {vipButterfly.vipButterflyName}
+            <span className="text-yellow-400">👑</span>
+          </h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-pink-300 font-semibold">
+              ✨ VIP Premium
+            </span>
+            <span className="text-sm font-bold text-pink-400 flex-shrink-0">x{vipButterfly.quantity}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const BouquetCard = ({ bouquet, getBorderColor }: { bouquet: any; getBorderColor: (rarity: RarityTier) => string }) => (
     <div
       className="bg-slate-900 rounded-lg p-3 border-2"
@@ -208,6 +247,7 @@ export const InventoryView: React.FC = () => {
       fetchMyFlowers();
       fetchMyBouquets();
       fetchMyButterflies();
+      fetchMyVipButterflies();
     }
   }, [user]);
 
@@ -217,6 +257,7 @@ export const InventoryView: React.FC = () => {
     
     const interval = setInterval(() => {
       fetchMyButterflies();
+      fetchMyVipButterflies();
     }, 15000);
     
     return () => clearInterval(interval);
@@ -271,6 +312,19 @@ export const InventoryView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch my butterflies:', error);
+    }
+  };
+
+  const fetchMyVipButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/vip-butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyVipButterflies(data.vipButterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my VIP butterflies:', error);
     }
   };
 
@@ -480,6 +534,42 @@ export const InventoryView: React.FC = () => {
                   );
                 })}
               </Accordion>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* VIP Butterflies Section */}
+        <Card className="bg-gradient-to-br from-pink-900 to-purple-900 border border-pink-500/50 shadow-lg relative overflow-hidden">
+          {/* Animated background sparkles */}
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 animate-pulse"></div>
+          
+          <CardHeader className="pb-3 relative z-10">
+            <CardTitle className="text-white flex items-center">
+              <Star className="h-5 w-5 mr-2 text-pink-400" fill="currentColor" />
+              <span className="text-lg font-semibold text-pink-200">
+                VIP Schmetterlinge ✨👑 ({myVipButterflies.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            {myVipButterflies.length === 0 ? (
+              <div className="text-center py-12 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 rounded-lg"></div>
+                <div className="relative z-10">
+                  <div className="relative mb-6">
+                    <Star className="h-16 w-16 text-pink-400 mx-auto animate-bounce" fill="currentColor" />
+                    <div className="absolute inset-0 h-16 w-16 mx-auto text-pink-400 animate-ping opacity-20"></div>
+                  </div>
+                  <p className="text-pink-200 text-xl mb-3">✨ Noch keine VIP-Schmetterlinge</p>
+                  <p className="text-pink-300 text-lg">Gewinne sie als 1. Preis in Flowerpower-Challenges!</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                {myVipButterflies.map((vipButterfly) => (
+                  <VipButterflyCard key={vipButterfly.id} vipButterfly={vipButterfly} />
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

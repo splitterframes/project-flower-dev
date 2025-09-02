@@ -214,6 +214,30 @@ export const fieldButterflies = pgTable("field_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// VIP Butterflies - Premium animated butterflies (GIF format)
+export const userVipButterflies = pgTable("user_vip_butterflies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  vipButterflyId: integer("vip_butterfly_id").notNull(),
+  vipButterflyName: text("vip_butterfly_name").notNull(),
+  vipButterflyImageUrl: text("vip_butterfly_image_url").notNull(), // Path to .gif file
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// VIP Butterflies placed in exhibition frames  
+export const exhibitionVipButterflies = pgTable("exhibition_vip_butterflies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  frameId: integer("frame_id").notNull().references(() => exhibitionFrames.id),
+  slotIndex: integer("slot_index").notNull(), // 0-5 for 3x2 grid
+  vipButterflyId: integer("vip_butterfly_id").notNull(),
+  vipButterflyName: text("vip_butterfly_name").notNull(),
+  vipButterflyImageUrl: text("vip_butterfly_image_url").notNull(), // Path to .gif file
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const createBouquetSchema = z.object({
   flowerId1: z.number().min(1),
   flowerId2: z.number().min(1),
@@ -294,8 +318,10 @@ export type UserBouquet = typeof userBouquets.$inferSelect;
 export type PlacedBouquet = typeof placedBouquets.$inferSelect;
 export type UserButterfly = typeof userButterflies.$inferSelect;
 export type FieldButterfly = typeof fieldButterflies.$inferSelect;
+export type UserVipButterfly = typeof userVipButterflies.$inferSelect;
 export type ExhibitionFrame = typeof exhibitionFrames.$inferSelect;
 export type ExhibitionButterfly = typeof exhibitionButterflies.$inferSelect;
+export type ExhibitionVipButterfly = typeof exhibitionVipButterflies.$inferSelect;
 export type PassiveIncomeLog = typeof passiveIncomeLog.$inferSelect;
 export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
 export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;

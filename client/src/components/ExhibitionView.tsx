@@ -9,7 +9,7 @@ import { ButterflyDetailModal } from "./ButterflyDetailModal";
 import { RarityImage } from "./RarityImage";
 import { Trophy, Plus, DollarSign, Clock, Star, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
-import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly } from "@shared/schema";
+import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly, UserVipButterfly } from "@shared/schema";
 
 
 interface FrameLike {
@@ -24,18 +24,21 @@ export const ExhibitionView: React.FC = () => {
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [exhibitionButterflies, setExhibitionButterflies] = useState<ExhibitionButterfly[]>([]);
   const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
+  const [userVipButterflies, setUserVipButterflies] = useState<UserVipButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{frameId: number, slotIndex: number} | null>(null);
   const [showInventoryDialog, setShowInventoryDialog] = useState(false);
+  const [showVipInventoryDialog, setShowVipInventoryDialog] = useState(false);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
   useEffect(() => {
     if (user) {
       fetchExhibitionData();
       fetchUserButterflies();
+      fetchUserVipButterflies();
       loadFrameLikes();
       // No need to manually process passive income anymore - it's automatic
     }
@@ -77,6 +80,19 @@ export const ExhibitionView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch user butterflies:', error);
+    }
+  };
+
+  const fetchUserVipButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/vip-butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserVipButterflies(data.vipButterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user VIP butterflies:', error);
     }
   };
 
@@ -203,7 +219,21 @@ export const ExhibitionView: React.FC = () => {
 
   const handleEmptySlotClick = (frameId: number, slotIndex: number) => {
     setSelectedSlot({ frameId, slotIndex });
-    setShowInventoryDialog(true);
+    
+    // Show appropriate inventory dialog based on available butterflies
+    if (userVipButterflies.length > 0 && userButterflies.length > 0) {
+      // Ask user which type they want to place
+      const choice = window.confirm("VIP-Schmetterling verwenden? \n\nOK = VIP-Schmetterling\nAbbrechen = Normaler Schmetterling");
+      if (choice) {
+        setShowVipInventoryDialog(true);
+      } else {
+        setShowInventoryDialog(true);
+      }
+    } else if (userVipButterflies.length > 0) {
+      setShowVipInventoryDialog(true);
+    } else {
+      setShowInventoryDialog(true);
+    }
   };
 
   const placeButterflyInSlot = async (butterflyId: number) => {
@@ -228,6 +258,7 @@ export const ExhibitionView: React.FC = () => {
       if (response.ok) {
         await fetchExhibitionData();
         await fetchUserButterflies();
+        await fetchUserVipButterflies();
         await loadFrameLikes();
         setShowInventoryDialog(false);
         setSelectedSlot(null);
@@ -238,6 +269,43 @@ export const ExhibitionView: React.FC = () => {
     } catch (error) {
       console.error('Failed to place butterfly:', error);
       alert('Fehler beim Platzieren des Schmetterlings');
+    }
+    setIsLoading(false);
+  };
+
+  const placeVipButterflyInSlot = async (vipButterflyId: number) => {
+    if (!selectedSlot || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/exhibition/place-vip-butterfly', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
+        body: JSON.stringify({ 
+          userId: user.id, 
+          frameId: selectedSlot.frameId, 
+          slotIndex: selectedSlot.slotIndex, 
+          vipButterflyId 
+        })
+      });
+      
+      if (response.ok) {
+        await fetchExhibitionData();
+        await fetchUserButterflies();
+        await fetchUserVipButterflies();
+        await loadFrameLikes();
+        setShowVipInventoryDialog(false);
+        setSelectedSlot(null);
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Fehler beim Platzieren des VIP-Schmetterlings');
+      }
+    } catch (error) {
+      console.error('Failed to place VIP butterfly:', error);
+      alert('Fehler beim Platzieren des VIP-Schmetterlings');
     }
     setIsLoading(false);
   };
@@ -472,6 +540,7 @@ export const ExhibitionView: React.FC = () => {
         onSold={() => {
           fetchExhibitionData();
           fetchUserButterflies();
+          fetchUserVipButterflies();
         }}
       />
 
@@ -528,6 +597,69 @@ export const ExhibitionView: React.FC = () => {
                           </div>
                         </div>
                       </ButterflyHoverPreview>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* VIP Butterfly Inventory Dialog */}
+      <Dialog open={showVipInventoryDialog} onOpenChange={setShowVipInventoryDialog}>
+        <DialogContent className="bg-gradient-to-br from-pink-900 to-purple-900 border-pink-500 text-white max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold text-pink-200 flex items-center justify-center gap-2">
+              <Star className="h-6 w-6 text-pink-400" fill="currentColor" />
+              VIP-Schmetterling auswählen ✨👑
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {userVipButterflies.length === 0 ? (
+              <div className="text-center py-8 text-pink-300">
+                Keine VIP-Schmetterlinge im Inventar
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {userVipButterflies.map((vipButterfly) => (
+                  <Card
+                    key={vipButterfly.id}
+                    className="bg-gradient-to-r from-pink-800/50 to-purple-800/50 border-pink-500 cursor-pointer hover:from-pink-700/60 hover:to-purple-700/60 transition-colors relative"
+                    onClick={() => placeVipButterflyInSlot(vipButterfly.vipButterflyId)}
+                  >
+                    {/* Animated sparkle overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-lg animate-pulse"></div>
+                    
+                    <CardContent className="p-4 relative z-10">
+                      <div className="text-center">
+                        {/* VIP GIF Display */}
+                        <div className="relative mb-2">
+                          <img
+                            src={vipButterfly.vipButterflyImageUrl}
+                            alt={vipButterfly.vipButterflyName}
+                            className="w-16 h-16 mx-auto rounded-lg object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          {/* VIP Crown Icon */}
+                          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+                            <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm font-semibold text-pink-200 mb-1 flex items-center justify-center gap-1">
+                          {vipButterfly.vipButterflyName}
+                          <span className="text-yellow-400">👑</span>
+                        </div>
+                        <div className="text-xs text-pink-300 font-semibold mb-1">
+                          ✨ VIP Premium
+                        </div>
+                        <div className="text-xs text-pink-400">
+                          Anzahl: {vipButterfly.quantity}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

@@ -547,6 +547,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================================
+  // VIP BUTTERFLY ROUTES
+  // ================================
+
+  // Get user's VIP butterflies (animated collection)
+  app.get("/api/user/:id/vip-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log('✨ Getting VIP butterflies for user:', userId);
+      const vipButterflies = await storage.getUserVipButterflies(userId);
+      console.log('✨ Found VIP butterflies:', vipButterflies.length);
+      res.json({ vipButterflies });
+    } catch (error) {
+      console.error('✨ Error getting VIP butterflies:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get VIP butterflies placed in exhibition frames
+  app.get("/api/user/:id/exhibition-vip-butterflies", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const vipButterflies = await storage.getExhibitionVipButterflies(userId);
+      res.json({ vipButterflies });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Place VIP butterfly in exhibition frame
+  app.post("/api/exhibition/place-vip-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex, vipButterflyId } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined || !vipButterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.placeVipButterflyInExhibition(userId, frameId, slotIndex, vipButterflyId);
+      
+      if (result.success) {
+        res.json({ message: 'VIP-Schmetterling erfolgreich platziert!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('✨ Error placing VIP butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remove VIP butterfly from exhibition frame
+  app.post("/api/exhibition/remove-vip-butterfly", async (req, res) => {
+    try {
+      const { userId, frameId, slotIndex } = req.body;
+      
+      if (!userId || !frameId || slotIndex === undefined) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.removeVipButterflyFromExhibition(userId, frameId, slotIndex);
+      
+      if (result.success) {
+        res.json({ message: 'VIP-Schmetterling erfolgreich entfernt!' });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('✨ Error removing VIP butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/exhibition/process-income", async (req, res) => {
     try {
       const { userId } = req.body;

@@ -11,8 +11,10 @@ import {
   placedBouquets,
   userButterflies,
   fieldButterflies,
+  userVipButterflies,
   exhibitionFrames,
   exhibitionButterflies,
+  exhibitionVipButterflies,
   passiveIncomeLog,
   exhibitionFrameLikes,
   weeklyChallenges,
@@ -34,8 +36,10 @@ import {
   type PlacedBouquet,
   type UserButterfly,
   type FieldButterfly,
+  type UserVipButterfly,
   type ExhibitionFrame,
   type ExhibitionButterfly,
+  type ExhibitionVipButterfly,
   type PassiveIncomeLog,
   type CreateBouquetRequest,
   type PlaceBouquetRequest,
@@ -681,6 +685,136 @@ export class PostgresStorage implements IStorage {
       .where(eq(userButterflies.userId, userId));
     
     return result;
+  }
+
+  // VIP Butterfly methods
+  async getUserVipButterflies(userId: number): Promise<UserVipButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(eq(userVipButterflies.userId, userId));
+    
+    return result;
+  }
+
+  async addVipButterflyToInventory(userId: number, vipButterflyId: number, vipButterflyName: string, vipButterflyImageUrl: string): Promise<void> {
+    // Check if user already has this VIP butterfly
+    const existing = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(and(eq(userVipButterflies.userId, userId), eq(userVipButterflies.vipButterflyId, vipButterflyId)));
+
+    if (existing.length > 0) {
+      // Increase quantity
+      await this.db
+        .update(userVipButterflies)
+        .set({ quantity: existing[0].quantity + 1 })
+        .where(eq(userVipButterflies.id, existing[0].id));
+    } else {
+      // Add new VIP butterfly
+      await this.db.insert(userVipButterflies).values({
+        userId,
+        vipButterflyId,
+        vipButterflyName,
+        vipButterflyImageUrl,
+        quantity: 1
+      });
+    }
+    
+    console.log(`✨ Added VIP butterfly ${vipButterflyName} to user ${userId}'s inventory`);
+  }
+
+  // VIP Exhibition methods
+  async getExhibitionVipButterflies(userId: number): Promise<ExhibitionVipButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.userId, userId));
+    
+    return result;
+  }
+
+  async placeVipButterflyInExhibition(userId: number, frameId: number, slotIndex: number, vipButterflyId: number): Promise<{ success: boolean; message?: string }> {
+    // Check if user has this VIP butterfly
+    const userVipButterfly = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(and(eq(userVipButterflies.userId, userId), eq(userVipButterflies.vipButterflyId, vipButterflyId)));
+
+    if (userVipButterfly.length === 0) {
+      return { success: false, message: "VIP-Schmetterling nicht gefunden" };
+    }
+
+    // Check if slot is already occupied
+    const existingPlacement = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.frameId, frameId), eq(exhibitionVipButterflies.slotIndex, slotIndex)));
+
+    if (existingPlacement.length > 0) {
+      return { success: false, message: "Slot bereits belegt" };
+    }
+
+    const vipButterfly = userVipButterfly[0];
+
+    // Place VIP butterfly in exhibition
+    await this.db.insert(exhibitionVipButterflies).values({
+      userId,
+      frameId,
+      slotIndex,
+      vipButterflyId: vipButterfly.vipButterflyId,
+      vipButterflyName: vipButterfly.vipButterflyName,
+      vipButterflyImageUrl: vipButterfly.vipButterflyImageUrl
+    });
+
+    // Remove from user inventory (or decrease quantity)
+    if (vipButterfly.quantity > 1) {
+      await this.db
+        .update(userVipButterflies)
+        .set({ quantity: vipButterfly.quantity - 1 })
+        .where(eq(userVipButterflies.id, vipButterfly.id));
+    } else {
+      await this.db
+        .delete(userVipButterflies)
+        .where(eq(userVipButterflies.id, vipButterfly.id));
+    }
+
+    console.log(`✨ Placed VIP butterfly ${vipButterfly.vipButterflyName} in frame ${frameId}, slot ${slotIndex}`);
+    return { success: true };
+  }
+
+  async removeVipButterflyFromExhibition(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
+    // Find the VIP butterfly in the exhibition
+    const exhibitionVipButterfly = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(
+        eq(exhibitionVipButterflies.userId, userId),
+        eq(exhibitionVipButterflies.frameId, frameId),
+        eq(exhibitionVipButterflies.slotIndex, slotIndex)
+      ));
+
+    if (exhibitionVipButterfly.length === 0) {
+      return { success: false, message: "Kein VIP-Schmetterling in diesem Slot gefunden" };
+    }
+
+    const vipButterfly = exhibitionVipButterfly[0];
+
+    // Remove from exhibition
+    await this.db
+      .delete(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.id, vipButterfly.id));
+
+    // Return to user inventory
+    await this.addVipButterflyToInventory(
+      userId,
+      vipButterfly.vipButterflyId,
+      vipButterfly.vipButterflyName,
+      vipButterfly.vipButterflyImageUrl
+    );
+
+    console.log(`✨ Removed VIP butterfly ${vipButterfly.vipButterflyName} from frame ${frameId}, slot ${slotIndex}`);
+    return { success: true };
   }
 
   // Field butterfly methods
@@ -1675,10 +1809,30 @@ export class PostgresStorage implements IStorage {
       let passiveIncome = 0;
 
       if (rank === 1) {
-        // Animated butterfly with passive income
-        butterfly = generateRandomButterfly();
-        isAnimated = true;
-        passiveIncome = 60; // 60cr/h
+        // VIP Animated butterfly with passive income - use real VIP system
+        const randomVipId = Math.floor(Math.random() * 5) + 1; // VIP1.gif to VIP5.gif
+        const vipButterflyName = `VIP Mariposa ${['Dorada', 'Platinada', 'Diamante', 'Celestial', 'Imperial'][randomVipId - 1]}`;
+        
+        // Add VIP butterfly to user's collection using VIP system
+        await this.addVipButterflyToInventory(user.userId, randomVipId, vipButterflyName, `/VIP/VIP${randomVipId}.gif`);
+        
+        console.log(`🏆 Winner ${user.username} received VIP butterfly: ${vipButterflyName}`);
+        
+        // Record VIP reward in challenge rewards (modify structure for VIP)
+        await this.db.insert(challengeRewards).values({
+          challengeId,
+          userId: user.userId,
+          rank,
+          totalDonations: user.totalDonations,
+          butterflyId: randomVipId,
+          butterflyName: vipButterflyName,
+          butterflyRarity: "vip",
+          butterflyImageUrl: `/VIP/VIP${randomVipId}.gif`,
+          isAnimated: true,
+          passiveIncome: 60
+        });
+        
+        continue; // Skip normal butterfly processing for rank 1
       } else if (rank === 2) {
         butterfly = this.getRandomButterflyByRarity("epic");
       } else if (rank === 3) {
