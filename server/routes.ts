@@ -200,8 +200,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Emergency starter seeds route
   app.post("/api/user/:id/emergency-seeds", async (req, res) => {
+    console.log(`🚨 Emergency Seeds Request reached for user ${req.params.id}`);
     try {
       const userId = parseInt(req.params.id);
+      console.log(`🚨 Parsed userId: ${userId}`);
       
       // 🆘 SOS SYSTEM: Check if user has extremely negative credits (≤ -100) - override normal restrictions
       const user = await storage.getUser(userId);
