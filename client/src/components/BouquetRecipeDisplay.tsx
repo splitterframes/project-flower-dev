@@ -118,17 +118,20 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
           )}
         </div>
         
-        <div className="flex items-center justify-center gap-3">
+        <div className="space-y-3">
           {ingredients.map((flower, index) => (
-            <div key={index} className="text-center">
+            <div key={index} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg border border-slate-600/30">
               <RarityImage 
                 src={flower.imageUrl}
                 alt={flower.name}
                 rarity={flower.rarity as RarityTier}
-                size="small"
-                className="w-8 h-8 mx-auto mb-1"
+                size="medium"
+                className="w-16 h-16 flex-shrink-0"
               />
-              <div className="text-xs text-slate-300 truncate max-w-12">{flower.name.substring(0, 8)}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-white">{flower.name}</div>
+                <div className="text-xs text-slate-400 capitalize">{flower.rarity}</div>
+              </div>
             </div>
           ))}
         </div>
