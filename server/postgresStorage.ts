@@ -359,12 +359,26 @@ export class PostgresStorage implements IStorage {
     await this.db.insert(userFlowers).values({
       userId,
       flowerId,
+      rarity: this.getRarityInteger(flowerRarity),
       flowerName,
       flowerRarity,
       flowerImageUrl,
       quantity: 1
     });
     console.log(`💾 Added new flower for user ${userId} to PostgreSQL`);
+  }
+
+  private getRarityInteger(rarity: string): number {
+    switch (rarity.toLowerCase()) {
+      case 'common': return 1;
+      case 'uncommon': return 2;
+      case 'rare': return 3;
+      case 'super-rare': return 4;
+      case 'epic': return 5;
+      case 'legendary': return 6;
+      case 'mythical': return 7;
+      default: return 1; // Default to common
+    }
   }
 
   // NEW: Implement correct addSeedToInventory from interface
