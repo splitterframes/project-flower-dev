@@ -17,6 +17,7 @@ export const BouquetsView: React.FC = () => {
   const { credits, updateCredits } = useCredits();
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
+  const [myCreatedRecipes, setMyCreatedRecipes] = useState<any[]>([]); // Persistent user recipes
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showBouquetCreation, setShowBouquetCreation] = useState(false);
   const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
@@ -26,6 +27,7 @@ export const BouquetsView: React.FC = () => {
     if (user) {
       fetchMyFlowers();
       fetchMyBouquets();
+      fetchMyCreatedRecipes(); // Fetch persistent user recipes
       fetchPlacedBouquets();
       fetchBouquetRecipes();
     }
@@ -56,6 +58,20 @@ export const BouquetsView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch my bouquets:', error);
+    }
+  };
+
+  const fetchMyCreatedRecipes = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/created-bouquet-recipes`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyCreatedRecipes(data.recipes || []);
+        console.log('User created recipes loaded:', data.recipes);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user created recipes:', error);
     }
   };
 
@@ -240,7 +256,7 @@ export const BouquetsView: React.FC = () => {
           </div>
           <div className="flex items-center space-x-2">
             <Gift className="h-4 w-4 text-pink-400" />
-            <span className="text-white font-semibold">{myBouquets.length}</span>
+            <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
             <span className="text-slate-400">Rezepte</span>
           </div>
         </div>
@@ -257,21 +273,21 @@ export const BouquetsView: React.FC = () => {
               </span>
             </div>
             <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
-              {myBouquets.length}
+              {myCreatedRecipes.length}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {myBouquets.length === 0 ? (
+          {myCreatedRecipes.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-slate-400">Noch keine Bouquets erstellt</p>
+              <p className="text-slate-400">Noch keine Bouquet-Rezepte erstellt</p>
               <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {myBouquets.map((bouquet) => (
+              {myCreatedRecipes.map((recipe) => (
                 <Card 
-                  key={bouquet.id}
+                  key={recipe.bouquetId}
                   className="bg-gradient-to-br from-slate-900 to-slate-950 border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300"
                 >
                   <CardContent className="p-4">
@@ -279,58 +295,59 @@ export const BouquetsView: React.FC = () => {
                       <RarityImage 
                         src="/Blumen/Bouquet.jpg"
                         alt="Bouquet"
-                        rarity={(bouquet.bouquetRarity || "common") as RarityTier}
+                        rarity={(recipe.bouquetRarity || "common") as RarityTier}
                         size="medium"
                         className="w-16 h-16 flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-white text-lg mb-1 truncate">
-                          {bouquet.bouquetName || `Bouquet #${bouquet.id}`}
+                          {recipe.bouquetName || `Bouquet #${recipe.bouquetId}`}
                         </h4>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Badge 
                               variant="secondary"
-                              className={`px-2 py-1 text-sm ${getRarityColor((bouquet.bouquetRarity || "common") as RarityTier)}`}
+                              className={`px-2 py-1 text-sm ${getRarityColor((recipe.bouquetRarity || "common") as RarityTier)}`}
                             >
                               <Star className="h-3 w-3 mr-1" />
-                              {getRarityDisplayName((bouquet.bouquetRarity || "common") as RarityTier)}
+                              {getRarityDisplayName((recipe.bouquetRarity || "common") as RarityTier)}
                             </Badge>
-                            <Badge className={`px-2 py-1 text-sm ${
-                              bouquet.quantity > 0 
-                                ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
-                                : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
-                            }`}>
-                              x{bouquet.quantity}
+                            <Badge className="bg-blue-500/20 text-blue-400 border border-blue-400/30 px-2 py-1 text-sm">
+                              <Palette className="h-3 w-3 mr-1" />
+                              Rezept
                             </Badge>
                           </div>
                           <Button
                             onClick={async () => {
-                              const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
+                              const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
                               setExpandedBouquet(newExpanded);
-                              if (newExpanded === bouquet.bouquetId) {
-                                await fetchBouquetRecipes();
-                              }
                             }}
                             variant="outline"
                             size="sm"
                             className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
                           >
-                            {expandedBouquet === bouquet.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
+                            {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
                           </Button>
                         </div>
                       </div>
                     </div>
 
                     {/* Recipe Display */}
-                    {expandedBouquet === bouquet.bouquetId && (
+                    {expandedBouquet === recipe.bouquetId && (
                       <div className="mt-4 pt-4 border-t border-purple-400/20">
                         <BouquetRecipeDisplay 
-                          bouquetId={bouquet.bouquetId} 
-                          recipe={bouquetRecipes[bouquet.bouquetId]} 
+                          bouquetId={recipe.bouquetId} 
+                          recipe={{
+                            id: 0,
+                            bouquetId: recipe.bouquetId,
+                            flowerId1: recipe.flowerId1,
+                            flowerId2: recipe.flowerId2,
+                            flowerId3: recipe.flowerId3,
+                            createdAt: new Date()
+                          }}
                           userFlowers={myFlowers}
                           onRecreate={(flowerId1, flowerId2, flowerId3) => 
-                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
+                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, recipe.bouquetName, false)
                           }
                         />
                       </div>

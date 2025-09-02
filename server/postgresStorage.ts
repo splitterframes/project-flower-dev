@@ -503,7 +503,8 @@ export class PostgresStorage implements IStorage {
       const newBouquet = await this.db.insert(bouquets).values({
         name: bouquetName,
         rarity: avgRarity,
-        imageUrl: "/Blumen/bouquet.jpg"
+        imageUrl: "/Blumen/bouquet.jpg",
+        createdByUserId: userId
       }).returning();
 
       // Create recipe
@@ -582,6 +583,27 @@ export class PostgresStorage implements IStorage {
 
   async getBouquetRecipes(): Promise<BouquetRecipe[]> {
     const result = await this.db.select().from(bouquetRecipes);
+    return result;
+  }
+
+  async getUserCreatedBouquetRecipes(userId: number): Promise<any[]> {
+    // Get all bouquets created by this user with their recipes
+    const result = await this.db
+      .select({
+        bouquetId: bouquets.id,
+        bouquetName: bouquets.name,
+        bouquetRarity: bouquets.rarity,
+        bouquetImageUrl: bouquets.imageUrl,
+        createdAt: bouquets.createdAt,
+        flowerId1: bouquetRecipes.flowerId1,
+        flowerId2: bouquetRecipes.flowerId2,
+        flowerId3: bouquetRecipes.flowerId3
+      })
+      .from(bouquets)
+      .leftJoin(bouquetRecipes, eq(bouquets.id, bouquetRecipes.bouquetId))
+      .where(eq(bouquets.createdByUserId, userId))
+      .orderBy(bouquets.createdAt);
+    
     return result;
   }
 

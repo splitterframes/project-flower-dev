@@ -107,6 +107,7 @@ export const bouquets = pgTable("bouquets", {
   name: text("name").notNull().unique(),
   rarity: text("rarity").notNull(), // Average rarity of the 3 flowers
   imageUrl: text("image_url").notNull().default("/Blumen/bouquet.jpg"),
+  createdByUserId: integer("created_by_user_id").notNull().references(() => users.id), // Track creator
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

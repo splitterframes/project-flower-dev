@@ -387,6 +387,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get bouquet recipes created by specific user (for "Meine Bouquets")
+  app.get("/api/user/:id/created-bouquet-recipes", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const userRecipes = await storage.getUserCreatedBouquetRecipes(userId);
+      res.json({ recipes: userRecipes });
+    } catch (error) {
+      console.error('Error getting user created recipes:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/butterflies", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
