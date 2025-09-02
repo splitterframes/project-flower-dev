@@ -316,7 +316,21 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                                 <div 
                                   className="relative w-full h-full group cursor-pointer bg-gradient-to-br from-pink-800/50 to-purple-800/50 rounded border-2 border-pink-500"
                                   onClick={() => {
-                                    alert(`VIP-Schmetterling: ${vipButterfly.vipButterflyName}\nVon ${ownerName}'s Premium Collection!`);
+                                    // Convert VIP butterfly to normal butterfly format for the modal
+                                    const butterflyForModal = {
+                                      id: vipButterfly.id,
+                                      userId: vipButterfly.userId,
+                                      frameId: vipButterfly.frameId,
+                                      slotIndex: vipButterfly.slotIndex,
+                                      butterflyId: vipButterfly.vipButterflyId,
+                                      butterflyName: vipButterfly.vipButterflyName,
+                                      butterflyRarity: 'vip',
+                                      butterflyImageUrl: vipButterfly.vipButterflyImageUrl,
+                                      placedAt: vipButterfly.placedAt,
+                                      createdAt: vipButterfly.createdAt
+                                    };
+                                    setSelectedButterfly(butterflyForModal);
+                                    setShowButterflyModal(true);
                                   }}
                                 >
                                   {/* Animated sparkle overlay */}

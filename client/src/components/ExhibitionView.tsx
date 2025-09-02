@@ -222,8 +222,21 @@ export const ExhibitionView: React.FC = () => {
   };
 
   const handleVipButterflyClick = (vipButterfly: any) => {
-    // For now, just show an alert for VIP butterflies
-    alert(`VIP-Schmetterling: ${vipButterfly.vipButterflyName}\nSpecial animated butterfly in premium exhibition!`);
+    // Convert VIP butterfly to normal butterfly format for the modal
+    const butterflyForModal = {
+      id: vipButterfly.id,
+      userId: vipButterfly.userId,
+      frameId: vipButterfly.frameId,
+      slotIndex: vipButterfly.slotIndex,
+      butterflyId: vipButterfly.vipButterflyId,
+      butterflyName: vipButterfly.vipButterflyName,
+      butterflyRarity: 'vip',
+      butterflyImageUrl: vipButterfly.vipButterflyImageUrl,
+      placedAt: vipButterfly.placedAt,
+      createdAt: vipButterfly.createdAt
+    };
+    setSelectedButterfly(butterflyForModal);
+    setShowButterflyDialog(true);
   };
 
   const handleEmptySlotClick = (frameId: number, slotIndex: number) => {
