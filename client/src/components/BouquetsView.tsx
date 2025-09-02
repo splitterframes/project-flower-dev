@@ -174,6 +174,7 @@ export const BouquetsView: React.FC = () => {
         await fetchMyFlowers();
         await fetchMyBouquets();
         await fetchBouquetRecipes();
+        await fetchMyCreatedRecipes();
         // Fetch updated credits from server after deduction
         if (user) {
           const creditsResponse = await fetch(`/api/user/${user.id}/credits`);
