@@ -205,21 +205,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       console.log(`🚨 Parsed userId: ${userId}`);
       
-      // 🆘 SOS SYSTEM: Check if user has extremely negative credits (≤ -100) - override normal restrictions
+      // Get user first
       const user = await storage.getUser(userId);
-      console.log(`🔍 SOS Debug: User ${userId} credits: ${user?.credits || 'undefined'}`);
-      const isSOSCase = user && user.credits <= -100;
+      if (!user) {
+        console.log(`❌ User ${userId} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`🔍 SOS Debug: User ${userId} credits: ${user.credits}`);
+      
+      // 🆘 SOS SYSTEM: Check if user has extremely negative credits (≤ -100) - override ALL restrictions
+      const isSOSCase = user.credits <= -100;
       console.log(`🔍 SOS Debug: isSOSCase = ${isSOSCase}`);
       
       if (isSOSCase) {
-        console.log(`🆘 SOS Emergency Seeds: User ${userId} has extreme negative credits (${user.credits}), providing emergency help`);
+        console.log(`🆘 SOS ACTIVATED: User ${userId} has extreme negative credits (${user.credits}), providing emergency help`);
         
         // Give emergency help: 50 credits + 3 seeds
         const creditDelta = 50 - user.credits; // Calculate delta to reach 50 credits
         await storage.updateUserCredits(userId, creditDelta);
         await storage.giveUserSeed(userId, 1, 3);
         
-        console.log(`🆘 SOS Complete: User ${userId} credits: ${user.credits} -> 50, +3 seeds`);
+        console.log(`🆘 SOS SUCCESS: User ${userId} credits: ${user.credits} -> 50, +3 seeds`);
         
         return res.json({ 
           success: true, 
@@ -230,15 +237,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      console.log(`📋 Normal Emergency Seeds check for user ${userId}`);
       // Check if user qualifies for emergency seeds (normal case)
       const qualifies = await storage.checkEmergencyQualification(userId);
+      console.log(`📋 Emergency qualification result:`, qualifies);
       
       if (!qualifies.eligible) {
+        console.log(`❌ User ${userId} not eligible: ${qualifies.reason}`);
         return res.status(400).json({ 
           message: qualifies.reason || "Du bist nicht berechtigt für Notfall-Samen" 
         });
       }
       
+      console.log(`✅ Giving user ${userId} emergency seeds`);
       // Give 3 common seeds
       await storage.giveUserSeed(userId, 1, 3);
       
