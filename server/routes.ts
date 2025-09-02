@@ -203,7 +203,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       
-      // Check if user qualifies for emergency seeds
+      // 🆘 SOS SYSTEM: Check if user has extremely negative credits (≤ -100) - override normal restrictions
+      const user = await storage.getUser(userId);
+      const isSOSCase = user && user.credits <= -100;
+      
+      if (isSOSCase) {
+        console.log(`🆘 SOS Emergency Seeds: User ${userId} has extreme negative credits (${user.credits}), providing emergency help`);
+        
+        // Give emergency help: 50 credits + 3 seeds
+        const creditDelta = 50 - user.credits; // Calculate delta to reach 50 credits
+        await storage.updateUserCredits(userId, creditDelta);
+        await storage.giveUserSeed(userId, 1, 3);
+        
+        console.log(`🆘 SOS Complete: User ${userId} credits: ${user.credits} -> 50, +3 seeds`);
+        
+        return res.json({ 
+          success: true, 
+          message: "🆘 Notfall-Hilfe erhalten! Du hast 50 Credits und 3 Samen bekommen.",
+          credits: 50,
+          seeds: 3,
+          sosActivated: true
+        });
+      }
+      
+      // Check if user qualifies for emergency seeds (normal case)
       const qualifies = await storage.checkEmergencyQualification(userId);
       
       if (!qualifies.eligible) {
