@@ -852,6 +852,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for debugging passive income
+  app.post('/api/test/passive-income/:userId', async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    
+    try {
+      console.log(`🔧 DEBUG: Testing passive income for user ${userId}`);
+      
+      // Get user data
+      const user = await storage.getUser(userId);
+      console.log(`🔧 DEBUG: User data:`, { 
+        id: user?.id, 
+        credits: user?.credits, 
+        lastPassiveIncomeAt: user?.lastPassiveIncomeAt 
+      });
+      
+      // Get butterflies
+      const normalButterflies = await storage.getExhibitionButterflies(userId);
+      const vipButterflies = await storage.getExhibitionVipButterflies(userId);
+      console.log(`🔧 DEBUG: Butterflies - Normal: ${normalButterflies.length}, VIP: ${vipButterflies.length}`);
+      
+      // Process passive income
+      const result = await storage.processPassiveIncome(userId);
+      console.log(`🔧 DEBUG: Passive income result:`, result);
+      
+      // Get updated user data
+      const updatedUser = await storage.getUser(userId);
+      console.log(`🔧 DEBUG: Updated user data:`, { 
+        id: updatedUser?.id, 
+        credits: updatedUser?.credits, 
+        lastPassiveIncomeAt: updatedUser?.lastPassiveIncomeAt 
+      });
+      
+      res.json({
+        success: true,
+        beforeCredits: user?.credits || 0,
+        afterCredits: updatedUser?.credits || 0,
+        creditsEarned: result.creditsEarned || 0,
+        normalButterflies: normalButterflies.length,
+        vipButterflies: vipButterflies.length
+      });
+    } catch (error) {
+      console.error('Failed to test passive income:', error);
+      res.status(500).json({ error: 'Failed to test passive income' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
