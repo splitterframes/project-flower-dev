@@ -8,6 +8,7 @@ import { GardenView } from "./GardenView";
 import { MarketView } from "./MarketView";
 import { InventoryView } from "./InventoryView";
 import { BouquetsView } from "./BouquetsView";
+import { FlowerpowerView } from "./FlowerpowerView";
 import { ExhibitionView } from "./ExhibitionView";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
@@ -47,6 +48,8 @@ export const Layout: React.FC = () => {
         return <InventoryView />;
       case "bouquets":
         return <BouquetsView />;
+      case "flowerpower":
+        return <FlowerpowerView />;
       case "ausstellung":
         return <ExhibitionView />;
       case "dashboard":
