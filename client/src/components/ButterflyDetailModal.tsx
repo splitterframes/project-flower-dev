@@ -15,6 +15,7 @@ interface ButterflyDetailProps {
   butterflyImageUrl: string;
   placedAt: string;
   userId: number;
+  frameId?: number; // Add frameId to get likes information
 }
 
 interface ButterflyDetailModalProps {
@@ -35,6 +36,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [canSell, setCanSell] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
+  const [frameLikes, setFrameLikes] = useState<number>(0);
 
   // Calculate countdown every second (using server data with like reduction)
   useEffect(() => {
@@ -52,6 +54,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           const data = await response.json();
           setCanSell(data.canSell);
           setTimeRemaining(data.timeRemainingMs);
+          setFrameLikes(data.likesCount || 0);
         } else {
           // Fallback to local calculation
           const placedTime = new Date(butterfly.placedAt).getTime();
@@ -250,14 +253,24 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                     </span>
                   </div>
 
-                  <div className={`text-3xl font-bold mb-4 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                  <div className={`text-3xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
                     {formatTimeRemaining(timeRemaining)}
                   </div>
+
+                  {frameLikes > 0 && !canSell && (
+                    <div className="text-lg text-pink-300 mb-2 flex items-center justify-center">
+                      <Star className="h-4 w-4 mr-1 fill-pink-300" />
+                      <span>{frameLikes} Likes</span>
+                      <span className="ml-2 text-green-300">(-{frameLikes} min)</span>
+                    </div>
+                  )}
 
                   <div className="text-sm text-slate-400">
                     {canSell 
                       ? "Dieser Schmetterling kann jetzt verkauft werden!"
-                      : "Schmetterlinge können nach 72 Stunden verkauft werden"
+                      : frameLikes > 0 
+                        ? `Countdown reduziert durch ${frameLikes} Likes auf diesem Rahmen!`
+                        : "Schmetterlinge können nach 72 Stunden verkauft werden"
                     }
                   </div>
                 </CardContent>

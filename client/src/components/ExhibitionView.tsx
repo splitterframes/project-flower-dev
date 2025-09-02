@@ -192,7 +192,12 @@ export const ExhibitionView: React.FC = () => {
   };
 
   const handleButterflyClick = (butterfly: ExhibitionButterfly) => {
-    setSelectedButterfly(butterfly);
+    // Add frameId to the butterfly data for the modal
+    const butterflyWithFrame = {
+      ...butterfly,
+      frameId: butterfly.frameId
+    };
+    setSelectedButterfly(butterflyWithFrame);
     setShowButterflyDialog(true);
   };
 
