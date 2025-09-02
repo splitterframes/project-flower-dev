@@ -301,9 +301,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/butterflies", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
+      console.log('🦋 Getting butterflies for user:', userId);
       const butterflies = await storage.getUserButterflies(userId);
+      console.log('🦋 Found butterflies:', butterflies.length);
       res.json({ butterflies });
     } catch (error) {
+      console.error('🦋 Error getting butterflies:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -312,9 +315,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/field-butterflies", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
+      console.log('🦋 Getting field butterflies for user:', userId);
       const fieldButterflies = await storage.getFieldButterflies(userId);
+      console.log('🦋 Found field butterflies:', fieldButterflies.length);
       res.json({ fieldButterflies });
     } catch (error) {
+      console.error('🦋 Error getting field butterflies:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -493,11 +499,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Schmetterling nicht gefunden" });
       }
 
-      const canSell = storage.canSellButterfly(exhibitionButterfly.placedAt, exhibitionButterfly.frameId);
-      const timeRemaining = storage.getTimeUntilSellable(exhibitionButterfly.placedAt, exhibitionButterfly.frameId);
+      const canSell = await storage.canSellButterfly(userId, exhibitionButterflyId);
+      const timeRemaining = await storage.getTimeUntilSellable(userId, exhibitionButterflyId);
       
       // Get likes count using getUserFrameLikes and find our specific frame
-      const allFrameLikes = await storage.getUserFrameLikes(userId, exhibitionButterfly.userId);
+      const allFrameLikes = await storage.getUserFrameLikes(exhibitionButterfly.userId);
       const frameWithLikes = allFrameLikes.find(f => f.frameId === exhibitionButterfly.frameId);
       const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
 
@@ -573,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update current user's last activity timestamp
       await storage.updateUserActivity(currentUserId);
       
-      const users = await storage.getAllUsersWithStatus(currentUserId);
+      const users = await storage.getAllUsersWithStatus();
       res.json({ users });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });

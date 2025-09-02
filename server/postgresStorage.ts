@@ -276,6 +276,10 @@ export class PostgresStorage implements IStorage {
 
     // Generate random flower
     const randomFlower = generateRandomFlower(seedInfo[0].rarity as RarityTier);
+    
+    if (!randomFlower) {
+      return { success: false, message: 'Failed to generate flower' };
+    }
 
     // Plant seed
     await this.db.insert(plantedFields).values({
@@ -430,9 +434,9 @@ export class PostgresStorage implements IStorage {
         .where(eq(userFlowers.userId, userId));
 
       // Find the specific flowers
-      const flower1 = allUserFlowers.find(f => f.id === data.flowerId1);
-      const flower2 = allUserFlowers.find(f => f.id === data.flowerId2);
-      const flower3 = allUserFlowers.find(f => f.id === data.flowerId3);
+      const flower1 = allUserFlowers.find((f: any) => f.id === data.flowerId1);
+      const flower2 = allUserFlowers.find((f: any) => f.id === data.flowerId2);
+      const flower3 = allUserFlowers.find((f: any) => f.id === data.flowerId3);
 
       if (!flower1 || !flower2 || !flower3) {
         return { success: false, message: 'Eine oder mehrere Blumen nicht gefunden' };
@@ -510,7 +514,63 @@ export class PostgresStorage implements IStorage {
   }
 
   async placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }> {
-    throw new Error('Not implemented yet');
+    try {
+      // Check if user has the bouquet
+      const userBouquet = await this.db
+        .select()
+        .from(userBouquets)
+        .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)))
+        .limit(1);
+
+      if (userBouquet.length === 0) {
+        return { success: false, message: 'Bouquet nicht gefunden' };
+      }
+
+      // Check if field is already occupied
+      const existingField = await this.db
+        .select()
+        .from(placedBouquets)
+        .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, data.fieldIndex)))
+        .limit(1);
+
+      if (existingField.length > 0) {
+        return { success: false, message: 'Feld ist bereits belegt' };
+      }
+
+      // Calculate spawn timing (4 butterflies over 21 minutes)
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 21 * 60 * 1000); // 21 minutes
+      const nextSpawnAt = new Date(now.getTime() + 5.25 * 60 * 1000); // First spawn in 5.25 minutes
+
+      // Place bouquet
+      await this.db.insert(placedBouquets).values({
+        userId,
+        bouquetId: data.bouquetId,
+        fieldIndex: data.fieldIndex,
+        placedAt: now,
+        expiresAt: expiresAt,
+        nextSpawnAt: nextSpawnAt,
+        currentSpawnSlot: 1
+      });
+
+      // Remove bouquet from user inventory
+      if (userBouquet[0].quantity > 1) {
+        await this.db
+          .update(userBouquets)
+          .set({ quantity: userBouquet[0].quantity - 1 })
+          .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)));
+      } else {
+        await this.db
+          .delete(userBouquets)
+          .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)));
+      }
+
+      console.log(`💐 Placed bouquet ${data.bouquetId} on field ${data.fieldIndex} for user ${userId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to place bouquet:', error);
+      return { success: false, message: 'Fehler beim Platzieren des Bouquets' };
+    }
   }
 
   async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
