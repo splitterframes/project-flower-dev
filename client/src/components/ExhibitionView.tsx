@@ -23,6 +23,7 @@ export const ExhibitionView: React.FC = () => {
   const { credits, setCredits } = useCredits();
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [exhibitionButterflies, setExhibitionButterflies] = useState<ExhibitionButterfly[]>([]);
+  const [exhibitionVipButterflies, setExhibitionVipButterflies] = useState<any[]>([]);
   const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
   const [userVipButterflies, setUserVipButterflies] = useState<UserVipButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
@@ -54,16 +55,19 @@ export const ExhibitionView: React.FC = () => {
   const fetchExhibitionData = async () => {
     if (!user) return;
     try {
-      const [framesRes, butterfliesRes] = await Promise.all([
+      const [framesRes, butterfliesRes, vipButterfliesRes] = await Promise.all([
         fetch(`/api/user/${user.id}/exhibition-frames`),
-        fetch(`/api/user/${user.id}/exhibition-butterflies`)
+        fetch(`/api/user/${user.id}/exhibition-butterflies`),
+        fetch(`/api/user/${user.id}/exhibition-vip-butterflies`)
       ]);
       
-      if (framesRes.ok && butterfliesRes.ok) {
+      if (framesRes.ok && butterfliesRes.ok && vipButterfliesRes.ok) {
         const framesData = await framesRes.json();
         const butterfliesData = await butterfliesRes.json();
+        const vipButterfliesData = await vipButterfliesRes.json();
         setFrames(framesData.frames || []);
         setExhibitionButterflies(butterfliesData.butterflies || []);
+        setExhibitionVipButterflies(vipButterfliesData.vipButterflies || []);
       }
     } catch (error) {
       console.error('Failed to fetch exhibition data:', error);
@@ -217,6 +221,11 @@ export const ExhibitionView: React.FC = () => {
     setShowButterflyDialog(true);
   };
 
+  const handleVipButterflyClick = (vipButterfly: any) => {
+    // For now, just show an alert for VIP butterflies
+    alert(`VIP-Schmetterling: ${vipButterfly.vipButterflyName}\nSpecial animated butterfly in premium exhibition!`);
+  };
+
   const handleEmptySlotClick = (frameId: number, slotIndex: number) => {
     setSelectedSlot({ frameId, slotIndex });
     
@@ -312,7 +321,9 @@ export const ExhibitionView: React.FC = () => {
 
   const renderFrame = (frame: ExhibitionFrame, index: number) => {
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
-    const isFullFrame = frameButterflies.length === 6;
+    const frameVipButterflies = exhibitionVipButterflies.filter(b => b.frameId === frame.id);
+    const totalButterflies = frameButterflies.length + frameVipButterflies.length;
+    const isFullFrame = totalButterflies === 6;
     const frameLike = frameLikes.find(fl => fl.frameId === frame.id);
     
     return (
@@ -329,7 +340,7 @@ export const ExhibitionView: React.FC = () => {
               )}
               {!isFullFrame && (
                 <span className="ml-2 text-xs bg-amber-600 text-amber-100 px-2 py-1 rounded-full">
-                  {frameButterflies.length}/6
+                  {totalButterflies}/6
                 </span>
               )}
             </div>
@@ -350,34 +361,72 @@ export const ExhibitionView: React.FC = () => {
             <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[400px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
+                const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
+                const hasContent = butterfly || vipButterfly;
                 
                 return (
                   <div 
                     key={slotIndex}
                     className="aspect-square bg-white border border-slate-300 rounded flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow min-h-0"
                   >
-                    {butterfly ? (
-                      <ButterflyHoverPreview
-                        butterflyImageUrl={butterfly.butterflyImageUrl}
-                        butterflyName={butterfly.butterflyName}
-                        rarity={butterfly.butterflyRarity as RarityTier}
-                      >
-                        <div 
-                          className="w-full h-full cursor-pointer relative group"
-                          onClick={() => handleButterflyClick(butterfly)}
+                    {hasContent ? (
+                      vipButterfly ? (
+                        // VIP Butterfly Display
+                        <ButterflyHoverPreview
+                          butterflyImageUrl={vipButterfly.vipButterflyImageUrl}
+                          butterflyName={vipButterfly.vipButterflyName}
+                          rarity="vip" as any
                         >
-                          <RarityImage
-                            src={butterfly.butterflyImageUrl}
-                            alt={butterfly.butterflyName}
-                            rarity={butterfly.butterflyRarity as RarityTier}
-                            size="medium"
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
-                            <Info className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div 
+                            className="w-full h-full cursor-pointer relative group bg-gradient-to-br from-pink-800/50 to-purple-800/50 rounded border-2 border-pink-500"
+                            onClick={() => handleVipButterflyClick(vipButterfly)}
+                          >
+                            {/* Animated sparkle overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded animate-pulse"></div>
+                            
+                            <img
+                              src={vipButterfly.vipButterflyImageUrl}
+                              alt={vipButterfly.vipButterflyName}
+                              className="w-full h-full object-cover rounded transition-transform group-hover:scale-105 relative z-10"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                            
+                            {/* VIP Crown Icon */}
+                            <div className="absolute top-1 right-1 bg-yellow-400 rounded-full p-1 z-20">
+                              <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+                            </div>
+                            
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center z-20">
+                              <Info className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
                           </div>
-                        </div>
-                      </ButterflyHoverPreview>
+                        </ButterflyHoverPreview>
+                      ) : (
+                        // Normal Butterfly Display
+                        <ButterflyHoverPreview
+                          butterflyImageUrl={butterfly.butterflyImageUrl}
+                          butterflyName={butterfly.butterflyName}
+                          rarity={butterfly.butterflyRarity as RarityTier}
+                        >
+                          <div 
+                            className="w-full h-full cursor-pointer relative group"
+                            onClick={() => handleButterflyClick(butterfly)}
+                          >
+                            <RarityImage
+                              src={butterfly.butterflyImageUrl}
+                              alt={butterfly.butterflyName}
+                              rarity={butterfly.butterflyRarity as RarityTier}
+                              size="medium"
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
+                              <Info className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </div>
+                        </ButterflyHoverPreview>
+                      )
                     ) : (
                       <div 
                         className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
