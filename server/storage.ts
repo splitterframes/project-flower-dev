@@ -94,6 +94,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private db: any; // Global database connection
   private users: Map<number, User>;
   private seeds: Map<number, Seed>;
   private userSeeds: Map<number, UserSeed & { seedName: string; seedRarity: string }>;
@@ -130,6 +131,11 @@ export class MemStorage implements IStorage {
   private autoSaveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
+    // Initialize global database connection
+    if (process.env.DATABASE_URL) {
+      const sql = neon(process.env.DATABASE_URL);
+      this.db = drizzle(sql);
+    }
     this.users = new Map();
     this.seeds = new Map();
     this.userSeeds = new Map();
@@ -388,7 +394,7 @@ export class MemStorage implements IStorage {
       if (process.env.DATABASE_URL) {
         const sql = neon(process.env.DATABASE_URL);
         const db = drizzle(sql);
-        const dbUsers = await db.select().from(users).where(eq(users.username, username));
+        const dbUsers = await this.db.select().from(users).where(eq(users.username, username));
         if (dbUsers.length > 0) {
           const dbUser = dbUsers[0] as User;
           // Add to memory cache for future requests
@@ -550,7 +556,7 @@ export class MemStorage implements IStorage {
       if (process.env.DATABASE_URL) {
         const sql = neon(process.env.DATABASE_URL);
         const db = drizzle(sql);
-        const dbSeeds = await db.select().from(userSeeds).where(eq(userSeeds.userId, userId));
+        const dbSeeds = await this.db.select().from(userSeeds).where(eq(userSeeds.userId, userId));
         
         // Load into memory cache and return
         dbSeeds.forEach(seed => {
@@ -588,7 +594,7 @@ export class MemStorage implements IStorage {
       if (process.env.DATABASE_URL) {
         const sql = neon(process.env.DATABASE_URL);
         const db = drizzle(sql);
-        await db.insert(users).values({
+        await this.db.insert(users).values({
           username: user.username,
           password: user.password,
           credits: user.credits,
@@ -702,10 +708,8 @@ export class MemStorage implements IStorage {
     // If not found in memory, check PostgreSQL database
     if (fields.length === 0) {
       try {
-        if (process.env.DATABASE_URL) {
-          const sql = neon(process.env.DATABASE_URL);
-          const db = drizzle(sql);
-          const dbFields = await db.select().from(plantedFields).where(eq(plantedFields.userId, userId));
+        if (process.env.DATABASE_URL && this.db) {
+          const dbFields = await this.db.select().from(plantedFields).where(eq(plantedFields.userId, userId));
           
           // Load into memory cache
           dbFields.forEach(field => {
@@ -793,7 +797,7 @@ export class MemStorage implements IStorage {
       if (process.env.DATABASE_URL) {
         const sql = neon(process.env.DATABASE_URL);
         const db = drizzle(sql);
-        const dbFlowers = await db.select().from(userFlowers).where(eq(userFlowers.userId, userId));
+        const dbFlowers = await this.db.select().from(userFlowers).where(eq(userFlowers.userId, userId));
         
         // Load into memory cache and return
         dbFlowers.forEach(flower => {
@@ -825,10 +829,8 @@ export class MemStorage implements IStorage {
       
       // CRITICAL: Update PostgreSQL too!
       try {
-        if (process.env.DATABASE_URL) {
-          const sql = neon(process.env.DATABASE_URL);
-          const db = drizzle(sql);
-          await db.update(userFlowers)
+        if (process.env.DATABASE_URL && this.db) {
+          await this.db.update(userFlowers)
             .set({ quantity: existingFlower.quantity })
             .where(eq(userFlowers.id, existingFlower.id));
           console.log(`💾 Updated flower quantity for user ${userId} in PostgreSQL`);
@@ -853,10 +855,8 @@ export class MemStorage implements IStorage {
       
       // CRITICAL: Save to PostgreSQL too!
       try {
-        if (process.env.DATABASE_URL) {
-          const sql = neon(process.env.DATABASE_URL);
-          const db = drizzle(sql);
-          await db.insert(userFlowers).values({
+        if (process.env.DATABASE_URL && this.db) {
+          await this.db.insert(userFlowers).values({
             userId: newFlower.userId,
             flowerId: newFlower.flowerId,
             flowerName: newFlower.flowerName,
@@ -1180,10 +1180,8 @@ export class MemStorage implements IStorage {
       
       // CRITICAL: Update PostgreSQL too!
       try {
-        if (process.env.DATABASE_URL) {
-          const sql = neon(process.env.DATABASE_URL);
-          const db = drizzle(sql);
-          await db.update(userSeeds)
+        if (process.env.DATABASE_URL && this.db) {
+          await this.db.update(userSeeds)
             .set({ quantity: existingSeed.quantity })
             .where(eq(userSeeds.id, existingSeed.id));
           console.log(`💾 Updated seed quantity for user ${userId} in PostgreSQL`);
@@ -1206,10 +1204,8 @@ export class MemStorage implements IStorage {
       
       // CRITICAL: Save to PostgreSQL too!
       try {
-        if (process.env.DATABASE_URL) {
-          const sql = neon(process.env.DATABASE_URL);
-          const db = drizzle(sql);
-          await db.insert(userSeeds).values({
+        if (process.env.DATABASE_URL && this.db) {
+          await this.db.insert(userSeeds).values({
             userId: newUserSeed.userId,
             seedId: newUserSeed.seedId,
             quantity: newUserSeed.quantity,
