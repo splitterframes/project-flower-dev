@@ -1,0 +1,74 @@
+r
+9:45:45 PM [express] GET /api/user/1/field-butterflies 304 in 133ms :: {"fieldButterflies":[{"id":1,…
+2025-09-02 23:45:45.48
+61d9e4a0
+User
+9:45:45 PM [express] GET /api/user/1/seeds 304 in 137ms :: {"seeds":[{"id":1,"userId":1,"seedId":1,"…
+2025-09-02 23:45:45.51
+61d9e4a0
+User
+🔍 User 1: lastPassiveIncomeAt=Wed Sep 03 2025 03:35:50 GMT+0000 (Coordinated Universal Time), minutesElapsed=-351
+2025-09-02 23:45:45.51
+61d9e4a0
+User
+🔍 User 1: Only -351 minutes elapsed, skipping (need >=1 minute)
+2025-09-02 23:45:45.51
+61d9e4a0
+User
+💰 Passive income processing complete: No credits awarded this cycle
+2025-09-02 23:45:45.57
+61d9e4a0
+User
+9:45:45 PM [express] GET /api/user/1/exhibition-vip-butterflies 304 in 47ms :: {"vipButterflies":[]}
+2025-09-02 23:45:47.72
+36eb21a1
+User
+🦋 Checking individual bouquet spawn times...
+2025-09-02 23:45:47.72
+36eb21a1
+User
+🦋 Next butterfly check in 1:00 minute
+2025-09-02 23:45:49.10
+36eb21a1
+User
+💾 Retrieved placed bouquets for user 1: []
+2025-09-02 23:45:49.10
+36eb21a1
+User
+🦋 Individual spawn cycle complete: No butterflies spawned (0 bouquets checked)
+2025-09-02 23:45:49.10
+36eb21a1
+User
+💰 Processing passive income for all users...
+2025-09-02 23:45:50.20
+36eb21a1
+User
+💰 Passive income processing complete: No credits awarded this cycle
+2025-09-02 23:45:48.78
+61d9e4a0
+User
+🦋 Getting butterflies for user: 1
+2025-09-02 23:45:48.79
+61d9e4a0
+User
+9:45:48 PM [express] GET /api/market/server-shop 304 in 1ms :: {"serverOffers":[{"id":"server-common…
+2025-09-02 23:45:48.83
+61d9e4a0
+User
+9:45:48 PM [express] GET /api/user/1/seeds 304 in 58ms :: {"seeds":[{"id":1,"userId":1,"seedId":1,"q…
+2025-09-02 23:45:48.83
+61d9e4a0
+User
+9:45:48 PM [express] GET /api/market/listings 304 in 56ms :: {"listings":[]}
+2025-09-02 23:45:48.84
+61d9e4a0
+User
+9:45:48 PM [express] GET /api/user/1/exhibition-butterflies 304 in 54ms :: {"butterflies":[{"id":1,"…
+2025-09-02 23:45:48.84
+61d9e4a0
+User
+9:45:48 PM [express] GET /api/user/1/flowers 304 in 53ms :: {"flowers":[{"id":20,"userId":1,"flowerI…
+2025-09-02 23:45:48.84
+61d9e4a0
+User
+🦋 Found butterflies:
