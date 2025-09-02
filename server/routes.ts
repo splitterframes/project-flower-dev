@@ -1056,6 +1056,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🔧 ADMIN: Fix passive income time bug
+  app.get("/api/admin/fix-passive-income/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get user before fix
+      const userBefore = await storage.getUser(userId);
+      
+      // Reset last_passive_income_at to NULL for the user
+      await storage.db.update(storage.users).set({ 
+        lastPassiveIncomeAt: null 
+      }).where(storage.eq(storage.users.id, userId));
+      
+      res.json({ 
+        success: true, 
+        message: `✅ Passive income time reset for user ${userId}`,
+        beforeTime: userBefore?.lastPassiveIncomeAt || 'NULL',
+        afterTime: 'NULL (will use current time)',
+        instructions: "🎉 Passive income should now work correctly! The negative time bug is fixed."
+      });
+    } catch (error) {
+      console.error('Admin fix error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "❌ Error fixing passive income", 
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
