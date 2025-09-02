@@ -38,6 +38,7 @@ interface GardenField {
   hasBouquet?: boolean;
   bouquetId?: number;
   bouquetName?: string;
+  bouquetRarity?: string;
   bouquetPlacedAt?: Date;
   bouquetExpiresAt?: Date;
   hasButterfly?: boolean;
@@ -798,7 +799,7 @@ export const GardenView: React.FC = () => {
                                   alt="Blume"
                                   rarity={field.seedRarity as RarityTier}
                                   size="large"
-                                  className="mx-auto w-14 h-14"
+                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover"
                                 />
                               </TooltipTrigger>
                               <TooltipContent className="bg-slate-800 border-slate-600 text-white">
@@ -822,11 +823,11 @@ export const GardenView: React.FC = () => {
                             alt="Wachsender Samen"
                             rarity={field.seedRarity as RarityTier}
                             size="medium"
-                            className="mx-auto w-12 h-12"
+                            className="mx-auto w-[70%] h-[70%] max-w-12 max-h-12 min-w-6 min-h-6 object-cover"
                           />
                           {status && (
-                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-2 py-1 mt-2 md:block">
-                              <div className="text-xs md:text-base font-bold text-green-300 text-center animate-pulse countdown-mobile md:countdown-desktop">
+                            <div className="bg-green-500/20 border border-green-400 rounded-lg px-1 py-0.5 mt-1 max-w-full">
+                              <div className="text-[10px] sm:text-xs md:text-sm font-bold text-green-300 text-center animate-pulse leading-tight">
                                 ⏱️ {status.remainingTime}
                               </div>
                             </div>
@@ -856,7 +857,7 @@ export const GardenView: React.FC = () => {
                                   alt="Bouquet"
                                   rarity={(field.bouquetRarity as RarityTier) || "common"}
                                   size="large"
-                                  className="mx-auto w-14 h-14"
+                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover"
                                 />
                                 <Heart className="absolute -top-1 -right-1 h-4 w-4 text-pink-400" />
                                 {bouquetStatus?.isExpired && (
@@ -883,8 +884,8 @@ export const GardenView: React.FC = () => {
                           </Tooltip>
                         </TooltipProvider>
                         {bouquetStatus && !bouquetStatus.isExpired && (
-                          <div className="bg-pink-500/20 border border-pink-400 rounded-lg px-2 py-1 mt-2">
-                            <div className="text-base font-bold text-pink-300 text-center animate-pulse">
+                          <div className="bg-pink-500/20 border border-pink-400 rounded-lg px-1 py-0.5 mt-1 max-w-full">
+                            <div className="text-[10px] sm:text-xs md:text-sm font-bold text-pink-300 text-center animate-pulse leading-tight">
                               💐 {bouquetStatus.remainingTime}
                             </div>
                           </div>
@@ -913,7 +914,7 @@ export const GardenView: React.FC = () => {
                                   alt="Schmetterling"
                                   rarity={field.butterflyRarity as RarityTier || "common"}
                                   size="large"
-                                  className="mx-auto w-14 h-14 animate-pulse"
+                                  className="mx-auto w-[80%] h-[80%] max-w-14 max-h-14 min-w-8 min-h-8 object-cover animate-pulse"
                                 />
                                 <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-orange-400 animate-pulse" />
                               </div>

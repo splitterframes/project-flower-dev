@@ -210,6 +210,15 @@ canvas {
     gap: 0.5rem; /* 8px */
   }
 
+  /* Responsive field content */
+  .field-content {
+    @apply w-full h-full flex flex-col items-center justify-center p-1;
+  }
+  
+  .field-image {
+    @apply w-[80%] h-[80%] max-w-14 max-h-14 min-w-6 min-h-6 object-contain;
+  }
+
   /* Safe area support for modern phones */
   .safe-area-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
