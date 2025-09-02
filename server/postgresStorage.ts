@@ -707,6 +707,12 @@ export class PostgresStorage implements IStorage {
 
     console.log(`🦋 Found butterfly: ${fieldButterfly[0].butterflyName} (ID: ${fieldButterfly[0].butterflyId})`);
 
+    // IMMEDIATELY remove from field to prevent race conditions
+    console.log(`🦋 Removing butterfly from field ${fieldIndex}`);
+    await this.db
+      .delete(fieldButterflies)
+      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+
     // Check if user already has this butterfly type
     const existing = await this.db
       .select()
@@ -757,12 +763,6 @@ export class PostgresStorage implements IStorage {
         throw error;
       }
     }
-
-    // Remove from field
-    console.log(`🦋 Removing butterfly from field ${fieldIndex}`);
-    await this.db
-      .delete(fieldButterflies)
-      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
 
     console.log(`🦋 Successfully collected butterfly: ${result.butterflyName}`);
     return { success: true, butterfly: result };
