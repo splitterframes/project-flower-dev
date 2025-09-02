@@ -816,16 +816,52 @@ export const GardenView: React.FC = () => {
                         </FlowerHoverPreview>
                       );
                     } else if (field.isGrowing) {
-                      // Show seed image while growing
+                      // Show seed image while growing with animated scaling
+                      const getGrowthScale = () => {
+                        if (!status) return 0.3;
+                        
+                        // Get growth duration based on rarity
+                        const growthDurations = {
+                          common: 75,
+                          uncommon: 120,
+                          rare: 180,
+                          'super-rare': 300,
+                          epic: 450,
+                          legendary: 540,
+                          mythical: 600
+                        };
+                        
+                        const totalDuration = growthDurations[field.seedRarity as keyof typeof growthDurations] || 75;
+                        
+                        // Calculate remaining seconds from time string (MM:SS format)
+                        const parts = status.remainingTime.split(':');
+                        const remainingSeconds = parts.length === 2 
+                          ? parseInt(parts[0]) * 60 + parseInt(parts[1]) 
+                          : 0;
+                        
+                        const elapsed = totalDuration - remainingSeconds;
+                        const progress = Math.max(0, Math.min(1, elapsed / totalDuration));
+                        
+                        // Scale from 30% to 100%
+                        return 0.3 + (0.7 * progress);
+                      };
+                      
+                      const scale = getGrowthScale();
+                      
                       return (
-                        <div className="relative w-full h-full">
-                          <RarityImage 
-                            src="/Blumen/0.jpg"
-                            alt="Wachsender Samen"
-                            rarity={field.seedRarity as RarityTier}
-                            size="medium"
-                            className="field-image"
-                          />
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <div 
+                            className="transition-transform duration-1000 ease-out"
+                            style={{ transform: `scale(${scale})` }}
+                          >
+                            <RarityImage 
+                              src="/Blumen/0.jpg"
+                              alt="Wachsender Samen"
+                              rarity={field.seedRarity as RarityTier}
+                              size="medium"
+                              className="field-image"
+                            />
+                          </div>
                           {status && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="bg-green-500/80 border border-green-400 rounded-lg px-2 py-1 backdrop-blur-sm">

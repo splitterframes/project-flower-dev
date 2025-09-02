@@ -69,7 +69,7 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   return (
     <div 
       className={`
-        ${sizeClasses[size]} 
+        ${className.includes('field-image') ? '' : sizeClasses[size]} 
         ${borderSize[size]} 
         rounded-lg 
         overflow-hidden 
