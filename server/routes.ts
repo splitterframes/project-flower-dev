@@ -1090,6 +1090,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🔍 DEBUG: Show user 1 exhibition status on live server
+  app.get("/api/debug/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get user data
+      const user = await storage.getUser(userId);
+      
+      // Get exhibition butterflies
+      const normalButterflies = await storage.getExhibitionButterflies(userId);
+      const vipButterflies = await storage.getExhibitionVipButterflies(userId);
+      
+      // Get current time info
+      const now = new Date();
+      const lastTime = user?.lastPassiveIncomeAt;
+      const minutesElapsed = lastTime ? Math.floor((now.getTime() - new Date(lastTime).getTime()) / (1000 * 60)) : 'NULL';
+      
+      res.json({
+        userId: userId,
+        userName: user?.username || 'Unknown',
+        credits: user?.credits || 0,
+        lastPassiveIncomeAt: lastTime || 'NULL',
+        minutesElapsed: minutesElapsed,
+        normalButterflies: normalButterflies.length,
+        vipButterflies: vipButterflies.length,
+        totalCreditsPerHour: (normalButterflies.length * 30) + (vipButterflies.length * 61),
+        debugTime: now.toISOString(),
+        normalButterflyList: normalButterflies.map(b => ({ id: b.id, name: b.butterflyName, rarity: b.butterflyRarity })),
+        vipButterflyList: vipButterflies.map(b => ({ id: b.id, name: b.butterflyName }))
+      });
+    } catch (error) {
+      console.error('Debug error:', error);
+      res.status(500).json({ error: 'Debug failed', message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
