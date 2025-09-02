@@ -35,17 +35,53 @@ export const InventoryView: React.FC = () => {
     
     if (rarityFilter) {
       if (Array.isArray(rarityFilter)) {
-        filtered = myFlowers.filter(flower => rarityFilter.includes(flower.flowerRarity));
+        filtered = myFlowers.filter(flower => flower.flowerRarity && rarityFilter.includes(flower.flowerRarity));
       } else {
         filtered = myFlowers.filter(flower => flower.flowerRarity === rarityFilter);
       }
     }
     
-    return filtered.sort((a, b) => a.flowerName.localeCompare(b.flowerName));
+    return filtered.sort((a, b) => (a.flowerName || '').localeCompare(b.flowerName || ''));
   };
 
   const getFlowersByRarity = (rarity: string) => {
     return myFlowers.filter(flower => flower.flowerRarity === rarity);
+  };
+
+  const getButterflyesByRarity = (rarity: string) => {
+    return myButterflies.filter(butterfly => butterfly.butterflyRarity === rarity);
+  };
+
+  const getBouquetsByRarity = (rarity: string) => {
+    return myBouquets.filter(bouquet => (bouquet.bouquetRarity || "common") === rarity && bouquet.quantity > 0);
+  };
+
+  const getSortedButterflies = (rarityFilter?: string | string[]) => {
+    let filtered = myButterflies;
+    
+    if (rarityFilter) {
+      if (Array.isArray(rarityFilter)) {
+        filtered = myButterflies.filter(butterfly => rarityFilter.includes(butterfly.butterflyRarity));
+      } else {
+        filtered = myButterflies.filter(butterfly => butterfly.butterflyRarity === rarityFilter);
+      }
+    }
+    
+    return filtered.sort((a, b) => a.butterflyName.localeCompare(b.butterflyName));
+  };
+
+  const getSortedBouquets = (rarityFilter?: string | string[]) => {
+    let filtered = myBouquets.filter(bouquet => bouquet.quantity > 0);
+    
+    if (rarityFilter) {
+      if (Array.isArray(rarityFilter)) {
+        filtered = filtered.filter(bouquet => rarityFilter.includes(bouquet.bouquetRarity || "common"));
+      } else {
+        filtered = filtered.filter(bouquet => (bouquet.bouquetRarity || "common") === rarityFilter);
+      }
+    }
+    
+    return filtered.sort((a, b) => a.bouquetName.localeCompare(b.bouquetName));
   };
 
   const getRarityLabel = (rarity: string) => {
@@ -102,6 +138,64 @@ export const InventoryView: React.FC = () => {
               {getRarityDisplayName(flower.flowerRarity as RarityTier)}
             </span>
             <span className="text-sm font-bold text-green-400 flex-shrink-0">x{flower.quantity}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ButterflyCard = ({ butterfly, getBorderColor }: { butterfly: any; getBorderColor: (rarity: RarityTier) => string }) => (
+    <div
+      className="bg-slate-900 rounded-lg p-3 border-2"
+      style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
+    >
+      <div className="flex items-center space-x-3">
+        <ButterflyHoverPreview
+          butterflyImageUrl={butterfly.butterflyImageUrl}
+          butterflyName={butterfly.butterflyName}
+          rarity={butterfly.butterflyRarity as RarityTier}
+        >
+          <RarityImage 
+            src={butterfly.butterflyImageUrl}
+            alt={butterfly.butterflyName}
+            rarity={butterfly.butterflyRarity as RarityTier}
+            size="medium"
+            className="w-12 h-12"
+          />
+        </ButterflyHoverPreview>
+        <div className="flex-1">
+          <h4 className="font-bold text-white text-sm">{butterfly.butterflyName}</h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`}>
+              {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+            </span>
+            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const BouquetCard = ({ bouquet, getBorderColor }: { bouquet: any; getBorderColor: (rarity: RarityTier) => string }) => (
+    <div
+      className="bg-slate-900 rounded-lg p-3 border-2"
+      style={{ borderColor: getBorderColor((bouquet.bouquetRarity || "common") as RarityTier) }}
+    >
+      <div className="flex items-center space-x-3">
+        <RarityImage 
+          src="/Blumen/Bouquet.jpg"
+          alt="Bouquet"
+          rarity={(bouquet.bouquetRarity || "common") as RarityTier}
+          size="medium"
+          className="w-12 h-12"
+        />
+        <div className="flex-1">
+          <h4 className="font-bold text-white text-sm">{bouquet.bouquetName}</h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs ${getRarityColor((bouquet.bouquetRarity || "common") as RarityTier)}`}>
+              {getRarityDisplayName((bouquet.bouquetRarity || "common") as RarityTier)}
+            </span>
+            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
           </div>
         </div>
       </div>
@@ -358,40 +452,34 @@ export const InventoryView: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
-                {myButterflies.map((butterfly) => (
-                  <div
-                    key={butterfly.id}
-                    className="bg-slate-900 rounded-lg p-4 border-2 min-h-[60px]"
-                    style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <ButterflyHoverPreview
-                        butterflyImageUrl={butterfly.butterflyImageUrl}
-                        butterflyName={butterfly.butterflyName}
-                        rarity={butterfly.butterflyRarity as RarityTier}
-                      >
-                        <RarityImage 
-                          src={butterfly.butterflyImageUrl}
-                          alt={butterfly.butterflyName}
-                          rarity={butterfly.butterflyRarity as RarityTier}
-                          size="medium"
-                          className="w-14 h-14 flex-shrink-0"
-                        />
-                      </ButterflyHoverPreview>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white text-sm mb-1 truncate">{butterfly.butterflyName}</h4>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs font-medium ${getRarityColorClass(butterfly.butterflyRarity as RarityTier)}`}>
-                            {getRarityLabel(butterfly.butterflyRarity as RarityTier)}
+              <Accordion type="multiple" className="w-full space-y-2">
+                {rarities.map((rarity) => {
+                  const butterfliesInRarity = getButterflyesByRarity(rarity);
+                  if (butterfliesInRarity.length === 0) return null;
+                  
+                  return (
+                    <AccordionItem key={rarity} value={rarity} className="border border-slate-600 rounded-lg bg-slate-800/50">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`font-semibold ${getRarityColorClass(rarity)}`}>
+                            {getRarityLabel(rarity)}
                           </span>
-                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
+                          <span className="text-sm text-slate-400">
+                            {butterfliesInRarity.reduce((sum, butterfly) => sum + butterfly.quantity, 0)} Schmetterlinge
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {getSortedButterflies(rarity).map((butterfly) => (
+                            <ButterflyCard key={butterfly.id} butterfly={butterfly} getBorderColor={getBorderColor} />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             )}
           </CardContent>
         </Card>
@@ -413,34 +501,34 @@ export const InventoryView: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-2">Erstelle Bouquets im Bouquet-Bereich</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {myBouquets.filter(b => b.quantity > 0).map((bouquet) => (
-                  <div
-                    key={bouquet.id}
-                    className="bg-slate-900 rounded-lg p-3 border-2"
-                    style={{ borderColor: getBorderColor((bouquet.bouquetRarity || "common") as RarityTier) }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <RarityImage 
-                        src="/Blumen/Bouquet.jpg"
-                        alt="Bouquet"
-                        rarity={(bouquet.bouquetRarity || "common") as RarityTier}
-                        size="medium"
-                        className="w-12 h-12"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-sm">{bouquet.bouquetName}</h4>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs ${getRarityColor((bouquet.bouquetRarity || "common") as RarityTier)}`}>
-                            {getRarityDisplayName((bouquet.bouquetRarity || "common") as RarityTier)}
+              <Accordion type="multiple" className="w-full space-y-2">
+                {rarities.map((rarity) => {
+                  const bouquetsInRarity = getBouquetsByRarity(rarity);
+                  if (bouquetsInRarity.length === 0) return null;
+                  
+                  return (
+                    <AccordionItem key={rarity} value={rarity} className="border border-slate-600 rounded-lg bg-slate-800/50">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`font-semibold ${getRarityColorClass(rarity)}`}>
+                            {getRarityLabel(rarity)}
                           </span>
-                          <span className="text-sm font-bold text-green-400 flex-shrink-0">x{bouquet.quantity}</span>
+                          <span className="text-sm text-slate-400">
+                            {bouquetsInRarity.reduce((sum, bouquet) => sum + bouquet.quantity, 0)} Bouquets
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {getSortedBouquets(rarity).map((bouquet) => (
+                            <BouquetCard key={bouquet.id} bouquet={bouquet} getBorderColor={getBorderColor} />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             )}
           </CardContent>
         </Card>
