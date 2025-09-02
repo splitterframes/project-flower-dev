@@ -877,7 +877,10 @@ export class PostgresStorage implements IStorage {
       const { generateRandomButterfly } = await import('./bouquet');
       const butterflyData = await generateRandomButterfly(bouquetRarity);
 
-      // Create field butterfly
+      // Create field butterfly with 24-hour despawn time
+      const spawnTime = new Date();
+      const despawnTime = new Date(spawnTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
+      
       const newFieldButterfly = await this.db.insert(fieldButterflies).values({
         userId,
         fieldIndex,
@@ -886,7 +889,8 @@ export class PostgresStorage implements IStorage {
         butterflyRarity: bouquetRarity,
         butterflyImageUrl: butterflyData.imageUrl,
         bouquetId: bouquetId,
-        spawnedAt: new Date()
+        spawnedAt: spawnTime,
+        despawnAt: despawnTime
       }).returning();
 
       console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
