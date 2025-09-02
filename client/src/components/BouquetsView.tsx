@@ -246,99 +246,102 @@ export const BouquetsView: React.FC = () => {
         </div>
       </div>
 
-      {/* My Bouquets Collection */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Clean Bouquet Collection */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center justify-between">
-              <div className="flex items-center">
-                <Gift className="h-5 w-5 mr-2 text-purple-400" />
-                <span className="text-lg font-semibold text-purple-300">
-                  Meine Rezepte
-                </span>
-              </div>
-              <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
-                {myBouquets.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {myBouquets.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400">Noch keine Bouquets erstellt</p>
-                <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt</p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {myBouquets.map((bouquet) => (
-                  <div
-                    key={bouquet.id}
-                    className="bg-slate-900 rounded-lg border border-purple-400/30"
-                  >
-                    {/* Bouquet Header */}
-                    <div className="p-3">
-                      <div className="flex items-center space-x-3">
-                        <RarityImage 
-                          src="/Blumen/Bouquet.jpg"
-                          alt="Bouquet"
-                          rarity={(bouquet.bouquetRarity || "common") as RarityTier}
-                          size="medium"
-                          className="w-10 h-10 flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-white text-sm truncate">
-                            {bouquet.bouquetName || `Bouquet #${bouquet.id}`}
-                          </h4>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-purple-400">Bouquet</span>
-                            <div className="flex items-center gap-2">
-                              <Badge className={`px-2 py-0.5 text-xs ${
-                                bouquet.quantity > 0 
-                                  ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
-                                  : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
-                              }`}>
-                                x{bouquet.quantity}
-                              </Badge>
-                              <Button
-                                onClick={async () => {
-                                  const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
-                                  setExpandedBouquet(newExpanded);
-                                  if (newExpanded === bouquet.bouquetId) {
-                                    await fetchBouquetRecipes();
-                                  }
-                                }}
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs text-purple-300 hover:text-purple-200 hover:bg-purple-500/10"
-                              >
-                                {expandedBouquet === bouquet.bouquetId ? 'Ausblenden' : 'Rezept'}
-                              </Button>
-                            </div>
+      {/* My Bouquets Collection - Single Column */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white flex items-center justify-between">
+            <div className="flex items-center">
+              <Gift className="h-5 w-5 mr-2 text-purple-400" />
+              <span className="text-lg font-semibold text-purple-300">
+                Meine Bouquets
+              </span>
+            </div>
+            <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
+              {myBouquets.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {myBouquets.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-400">Noch keine Bouquets erstellt</p>
+              <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myBouquets.map((bouquet) => (
+                <Card 
+                  key={bouquet.id}
+                  className="bg-gradient-to-br from-slate-900 to-slate-950 border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <RarityImage 
+                        src="/Blumen/Bouquet.jpg"
+                        alt="Bouquet"
+                        rarity={(bouquet.bouquetRarity || "common") as RarityTier}
+                        size="medium"
+                        className="w-16 h-16 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-lg mb-1 truncate">
+                          {bouquet.bouquetName || `Bouquet #${bouquet.id}`}
+                        </h4>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Badge 
+                              variant="secondary"
+                              className={`px-2 py-1 text-sm ${getRarityColor((bouquet.bouquetRarity || "common") as RarityTier)}`}
+                            >
+                              <Star className="h-3 w-3 mr-1" />
+                              {getRarityDisplayName((bouquet.bouquetRarity || "common") as RarityTier)}
+                            </Badge>
+                            <Badge className={`px-2 py-1 text-sm ${
+                              bouquet.quantity > 0 
+                                ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
+                                : 'bg-slate-600/20 text-gray-400 border border-gray-500/30'
+                            }`}>
+                              x{bouquet.quantity}
+                            </Badge>
                           </div>
+                          <Button
+                            onClick={async () => {
+                              const newExpanded = expandedBouquet === bouquet.bouquetId ? null : bouquet.bouquetId;
+                              setExpandedBouquet(newExpanded);
+                              if (newExpanded === bouquet.bouquetId) {
+                                await fetchBouquetRecipes();
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
+                          >
+                            {expandedBouquet === bouquet.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
+                          </Button>
                         </div>
                       </div>
                     </div>
 
                     {/* Recipe Display */}
                     {expandedBouquet === bouquet.bouquetId && (
-                      <BouquetRecipeDisplay 
-                        bouquetId={bouquet.bouquetId} 
-                        recipe={bouquetRecipes[bouquet.bouquetId]} 
-                        userFlowers={myFlowers}
-                        onRecreate={(flowerId1, flowerId2, flowerId3) => 
-                          handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
-                        }
-                      />
+                      <div className="mt-4 pt-4 border-t border-purple-400/20">
+                        <BouquetRecipeDisplay 
+                          bouquetId={bouquet.bouquetId} 
+                          recipe={bouquetRecipes[bouquet.bouquetId]} 
+                          userFlowers={myFlowers}
+                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
+                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, undefined, true)
+                          }
+                        />
+                      </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-      </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Clean Bouquet Workshop */}
       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-orange-500/30 shadow-lg">
