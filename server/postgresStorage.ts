@@ -677,32 +677,73 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
+  private mapRarityToNumber(rarity: string): number {
+    const rarityMap: { [key: string]: number } = {
+      'common': 1,
+      'uncommon': 2, 
+      'rare': 3,
+      'super-rare': 4,
+      'epic': 5,
+      'legendary': 6,
+      'mythical': 7
+    };
+    return rarityMap[rarity] || 1; // Default to common if unknown
+  }
+
   async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    console.log(`🦋 Collecting butterfly for user ${userId} on field ${fieldIndex}`);
+    
     const fieldButterfly = await this.db
       .select()
       .from(fieldButterflies)
       .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
 
     if (fieldButterfly.length === 0) {
+      console.log(`🦋 No butterfly found on field ${fieldIndex} for user ${userId}`);
       return { success: false };
     }
 
-    // Add butterfly to inventory
-    const newButterfly = await this.db.insert(userButterflies).values({
-      userId,
-      butterflyId: fieldButterfly[0].butterflyId,
-      butterflyName: fieldButterfly[0].butterflyName,
-      butterflyRarity: fieldButterfly[0].butterflyRarity,
-      butterflyImageUrl: fieldButterfly[0].butterflyImageUrl,
-      quantity: 1
-    }).returning();
+    console.log(`🦋 Found butterfly: ${fieldButterfly[0].butterflyName} (ID: ${fieldButterfly[0].butterflyId})`);
+
+    // Check if user already has this butterfly type
+    const existing = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)));
+
+    let result: UserButterfly;
+    
+    if (existing.length > 0) {
+      // Increase quantity
+      console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+      const updated = await this.db
+        .update(userButterflies)
+        .set({ quantity: existing[0].quantity + 1 })
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
+        .returning();
+      result = updated[0];
+    } else {
+      // Add new butterfly to inventory  
+      console.log(`🦋 Adding new butterfly to inventory`);
+      const newButterfly = await this.db.insert(userButterflies).values({
+        userId,
+        butterflyId: fieldButterfly[0].butterflyId,
+        butterflyName: fieldButterfly[0].butterflyName,
+        butterflyRarity: fieldButterfly[0].butterflyRarity,
+        butterflyImageUrl: fieldButterfly[0].butterflyImageUrl,
+        quantity: 1
+      }).returning();
+      result = newButterfly[0];
+    }
 
     // Remove from field
+    console.log(`🦋 Removing butterfly from field ${fieldIndex}`);
     await this.db
       .delete(fieldButterflies)
       .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
 
-    return { success: true, butterfly: newButterfly[0] };
+    console.log(`🦋 Successfully collected butterfly: ${result.butterflyName}`);
+    return { success: true, butterfly: result };
   }
 
   // Exhibition methods

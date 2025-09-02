@@ -331,6 +331,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { fieldIndex } = req.body;
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       
+      console.log(`🦋 Attempting to collect butterfly on field ${fieldIndex}`);
+      
       if (fieldIndex === undefined) {
         return res.status(400).json({ message: 'Missing fieldIndex' });
       }
@@ -343,6 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(404).json({ message: 'Kein Schmetterling auf diesem Feld gefunden' });
       }
     } catch (error) {
+      console.error('🦋 Error collecting butterfly:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
