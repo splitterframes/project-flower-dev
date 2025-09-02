@@ -1504,7 +1504,7 @@ export class PostgresStorage implements IStorage {
     
     if (totalCredits > 0) {
       // Update user credits
-      await this.updateUserCredits(userId, user.credits + totalCredits);
+      await this.updateUserCredits(userId, totalCredits);
       
       // Log passive income (single log entry for all butterflies)
       await this.db.insert(passiveIncomeLog).values({
