@@ -665,16 +665,25 @@ export class PostgresStorage implements IStorage {
   }
 
   async purchaseExhibitionFrame(userId: number): Promise<{ success: boolean; message?: string; newCredits?: number; frame?: ExhibitionFrame }> {
-    const FRAME_COST = 1000;
-    
     const user = await this.getUser(userId);
-    if (!user || user.credits < FRAME_COST) {
-      return { success: false, message: 'Insufficient credits' };
+    if (!user) {
+      return { success: false, message: 'User not found' };
     }
 
     // Get current frame count to determine next frame number
     const existingFrames = await this.getExhibitionFrames(userId);
     const frameNumber = existingFrames.length + 1;
+    
+    // Calculate cost - first frame is free, subsequent frames increase exponentially
+    let cost = 0;
+    if (frameNumber > 1) {
+      // First frame is free, subsequent frames cost credits with exponential scaling
+      cost = Math.round(500 * Math.pow(1.2, frameNumber - 2));
+    }
+
+    if (user.credits < cost) {
+      return { success: false, message: 'Insufficient credits' };
+    }
 
     // Create frame
     const newFrame = await this.db.insert(exhibitionFrames).values({
@@ -682,12 +691,17 @@ export class PostgresStorage implements IStorage {
       frameNumber
     }).returning();
 
-    // Deduct credits
-    const updatedUser = await this.updateUserCredits(userId, user.credits - FRAME_COST);
+    // Deduct credits (only if cost > 0)
+    let updatedUser = user;
+    if (cost > 0) {
+      updatedUser = await this.updateUserCredits(userId, user.credits - cost);
+    }
+
+    console.log(`🖼️ User ${userId} purchased frame ${frameNumber} for ${cost} credits`);
 
     return { 
       success: true, 
-      newCredits: updatedUser?.credits,
+      newCredits: updatedUser?.credits || user.credits,
       frame: newFrame[0]
     };
   }
