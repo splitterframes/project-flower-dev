@@ -695,29 +695,26 @@ export class PostgresStorage implements IStorage {
   async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
     console.log(`🦋 Collecting butterfly for user ${userId} on field ${fieldIndex}`);
     
-    const fieldButterfly = await this.db
-      .select()
-      .from(fieldButterflies)
-      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+    // ATOMIC: Delete and return the butterfly in one operation - only one request can succeed
+    const deletedButterfly = await this.db
+      .delete(fieldButterflies)
+      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)))
+      .returning();
 
-    if (fieldButterfly.length === 0) {
+    if (deletedButterfly.length === 0) {
       console.log(`🦋 No butterfly found on field ${fieldIndex} for user ${userId}`);
       return { success: false };
     }
 
-    console.log(`🦋 Found butterfly: ${fieldButterfly[0].butterflyName} (ID: ${fieldButterfly[0].butterflyId})`);
-
-    // IMMEDIATELY remove from field to prevent race conditions
-    console.log(`🦋 Removing butterfly from field ${fieldIndex}`);
-    await this.db
-      .delete(fieldButterflies)
-      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+    const fieldButterfly = deletedButterfly[0];
+    console.log(`🦋 Found butterfly: ${fieldButterfly.butterflyName} (ID: ${fieldButterfly.butterflyId})`);
+    console.log(`🦋 Removed butterfly from field ${fieldIndex}`);
 
     // Check if user already has this butterfly type
     const existing = await this.db
       .select()
       .from(userButterflies)
-      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)));
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)));
 
     let result: UserButterfly;
     
@@ -728,7 +725,7 @@ export class PostgresStorage implements IStorage {
         const updated = await this.db
           .update(userButterflies)
           .set({ quantity: existing[0].quantity + 1 })
-          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)))
           .returning();
         result = updated[0];
       } else {
@@ -736,10 +733,10 @@ export class PostgresStorage implements IStorage {
         console.log(`🦋 Adding new butterfly to inventory`);
         const newButterfly = await this.db.insert(userButterflies).values({
           userId,
-          butterflyId: fieldButterfly[0].butterflyId,
-          butterflyName: fieldButterfly[0].butterflyName,
-          butterflyRarity: fieldButterfly[0].butterflyRarity,
-          butterflyImageUrl: fieldButterfly[0].butterflyImageUrl,
+          butterflyId: fieldButterfly.butterflyId,
+          butterflyName: fieldButterfly.butterflyName,
+          butterflyRarity: fieldButterfly.butterflyRarity,
+          butterflyImageUrl: fieldButterfly.butterflyImageUrl,
           quantity: 1
         }).returning();
         result = newButterfly[0];
@@ -751,12 +748,12 @@ export class PostgresStorage implements IStorage {
         const existingRetry = await this.db
           .select()
           .from(userButterflies)
-          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)));
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)));
         
         const updated = await this.db
           .update(userButterflies)
           .set({ quantity: existingRetry[0].quantity + 1 })
-          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly[0].butterflyId)))
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)))
           .returning();
         result = updated[0];
       } else {
