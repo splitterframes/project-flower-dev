@@ -1175,6 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           challengeDonations,
           challengeRewards,
           exhibitionFrameLikes,
+          exhibitionFrames,
           users
         } = await import('@shared/schema');
         
@@ -1194,6 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.delete(challengeDonations);
         await db.delete(challengeRewards);
         await db.delete(exhibitionFrameLikes);
+        await db.delete(exhibitionFrames); // ← Diese Tabelle fehlte!
         await db.delete(users);
         
         console.log('✅ All user data deleted successfully');
