@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { postgresStorage as storage } from './postgresStorage';
 import type { RarityTier } from '@shared/rarity';
 
 /**
@@ -104,11 +104,11 @@ export class ButterflySpawner {
               console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (Slot ${currentSlot}/4)`);
               
               // Advance to next spawn slot
-              await storage.updateBouquetNextSpawnTime(placedBouquet.id, currentSlot);
+              await storage.updateBouquetNextSpawnTime(user.id, placedBouquet.fieldIndex, new Date());
             } else {
               // Spawn failed due to probability check - still advance to next slot
               console.log(`🎲 User ${user.id}: Spawn probability check failed for ${rarity} bouquet #${placedBouquet.bouquetId} (Slot ${currentSlot}/4)`);
-              await storage.updateBouquetNextSpawnTime(placedBouquet.id, currentSlot);
+              await storage.updateBouquetNextSpawnTime(user.id, placedBouquet.fieldIndex, new Date());
             }
           }
         } catch (error) {

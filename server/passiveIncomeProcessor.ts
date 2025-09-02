@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { postgresStorage as storage } from './postgresStorage';
 
 class PassiveIncomeProcessor {
   private isRunning = false;
