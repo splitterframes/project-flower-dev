@@ -41,7 +41,7 @@ import {
 import { eq, ilike, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { generateRandomFlower, getGrowthTime, type RarityTier } from "@shared/rarity";
+import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import type { IStorage } from './storage';
 
@@ -916,7 +916,62 @@ export class PostgresStorage implements IStorage {
 
   // Additional methods that may be needed
   async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
-    throw new Error('Not implemented yet');
+    try {
+      // Find expired bouquet on this field
+      const expiredBouquet = await this.db
+        .select()
+        .from(placedBouquets)
+        .where(and(
+          eq(placedBouquets.userId, userId), 
+          eq(placedBouquets.fieldIndex, fieldIndex),
+          lt(placedBouquets.expiresAt, new Date()) // Must be expired
+        ))
+        .limit(1);
+
+      if (expiredBouquet.length === 0) {
+        return { success: false };
+      }
+
+      // Generate seed drop based on bouquet rarity (1-3 seeds)
+      const seedQuantity = Math.floor(Math.random() * 3) + 1; // 1-3 seeds
+      const seedRarity = getRandomRarity();
+
+      // Get a random seed ID of this rarity
+      const availableSeeds = await this.db
+        .select()
+        .from(seeds)
+        .where(eq(seeds.rarity, seedRarity));
+
+      if (availableSeeds.length === 0) {
+        return { success: false };
+      }
+
+      const randomSeed = availableSeeds[Math.floor(Math.random() * availableSeeds.length)];
+
+      // Add seeds to user inventory
+      await this.addSeedToInventory(userId, randomSeed.id, seedQuantity);
+
+      // Remove the expired bouquet
+      await this.db
+        .delete(placedBouquets)
+        .where(and(
+          eq(placedBouquets.userId, userId),
+          eq(placedBouquets.fieldIndex, fieldIndex)
+        ));
+
+      console.log(`💧 Collected expired bouquet on field ${fieldIndex} for user ${userId}, got ${seedQuantity}x ${seedRarity} seeds`);
+
+      return { 
+        success: true, 
+        seedDrop: { 
+          rarity: seedRarity, 
+          quantity: seedQuantity 
+        } 
+      };
+    } catch (error) {
+      console.error('Failed to collect expired bouquet:', error);
+      return { success: false };
+    }
   }
 
   async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
