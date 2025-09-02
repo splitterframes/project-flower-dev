@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Layout: React.FC = () => {
   const [currentView, setCurrentView] = useState("garten");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [headerRefreshTrigger, setHeaderRefreshTrigger] = useState(0);
   const { user } = useAuth();
   const { setCredits } = useCredits();
 
@@ -28,6 +29,8 @@ export const Layout: React.FC = () => {
 
   const handleViewChange = (view: string) => {
     setCurrentView(view);
+    // Trigger header refresh when switching views
+    setHeaderRefreshTrigger(prev => prev + 1);
   };
 
   const handleAuthClick = () => {
@@ -57,7 +60,7 @@ export const Layout: React.FC = () => {
 
   return (
     <div className="layout-container h-screen bg-slate-950 flex flex-col">
-      <Header onAuthClick={handleAuthClick} />
+      <Header onAuthClick={handleAuthClick} refreshTrigger={headerRefreshTrigger} />
       
       <main className="layout-main flex-1 overflow-y-auto">
         {renderContent()}

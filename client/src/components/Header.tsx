@@ -8,9 +8,10 @@ import { ForeignExhibitionView } from "./ForeignExhibitionView";
 
 interface HeaderProps {
   onAuthClick: () => void;
+  refreshTrigger?: number; // Add refresh trigger prop
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) => {
   const { user, logout } = useAuth();
   const { credits } = useCredits();
   const [inventoryCounts, setInventoryCounts] = useState({
@@ -40,6 +41,14 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
       fetchPassiveIncome();
     }
   }, [user]);
+
+  // Refresh header when trigger changes (view switching)
+  useEffect(() => {
+    if (user && refreshTrigger !== undefined) {
+      fetchInventoryCounts();
+      fetchPassiveIncome();
+    }
+  }, [refreshTrigger]);
 
   // Auto-refresh header data every 10 seconds
   useEffect(() => {
