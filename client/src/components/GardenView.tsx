@@ -295,8 +295,9 @@ export const GardenView: React.FC = () => {
   }
 
   const calculateUnlockCost = (fieldId: number) => {
-    // First unlocked field costs 1000, then multiply by 1.2 for each subsequent field
-    const unlockedCount = gardenFields.filter(f => f.isUnlocked).length;
+    // Count unlocked fields excluding the 4 starter fields (1, 2, 11, 12)
+    const starterFields = [1, 2, 11, 12];
+    const unlockedCount = gardenFields.filter(f => f.isUnlocked && !starterFields.includes(f.id)).length;
     return Math.round(1000 * Math.pow(1.2, unlockedCount));
   };
 
