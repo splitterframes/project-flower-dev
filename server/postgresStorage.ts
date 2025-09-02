@@ -59,6 +59,36 @@ export class PostgresStorage implements IStorage {
     const sql = neon(process.env.DATABASE_URL);
     this.db = drizzle(sql);
     console.log('🗄️ PostgreSQL-only storage initialized');
+    
+    // Initialize basic seeds if they don't exist
+    this.initializeSeeds();
+  }
+
+  private async initializeSeeds() {
+    try {
+      // Check if seeds exist
+      const existingSeeds = await this.db.select().from(seeds);
+      
+      if (existingSeeds.length === 0) {
+        console.log('🌱 Initializing basic seeds...');
+        
+        // Create basic seeds for all rarity tiers
+        const basicSeeds = [
+          { name: 'Gelbe Samen', rarity: 'common', price: 10, description: 'Gewöhnliche gelbe Samen' },
+          { name: 'Grüne Samen', rarity: 'uncommon', price: 25, description: 'Ungewöhnliche grüne Samen' },
+          { name: 'Blaue Samen', rarity: 'rare', price: 50, description: 'Seltene blaue Samen' },
+          { name: 'Türkise Samen', rarity: 'super-rare', price: 100, description: 'Super seltene türkise Samen' },
+          { name: 'Lila Samen', rarity: 'epic', price: 200, description: 'Epische lila Samen' },
+          { name: 'Orange Samen', rarity: 'legendary', price: 500, description: 'Legendäre orange Samen' },
+          { name: 'Rote Samen', rarity: 'mythical', price: 1000, description: 'Mythische rote Samen' }
+        ];
+        
+        await this.db.insert(seeds).values(basicSeeds);
+        console.log(`🌱 Created ${basicSeeds.length} basic seeds in database`);
+      }
+    } catch (error) {
+      console.error('Failed to initialize seeds:', error);
+    }
   }
 
   // User methods
@@ -74,8 +104,19 @@ export class PostgresStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const result = await this.db.insert(users).values(user).returning();
-    console.log(`💾 Created new user "${user.username}" in PostgreSQL (ID: ${result[0].id})`);
-    return result[0] as User;
+    const newUser = result[0] as User;
+    
+    console.log(`💾 Created new user "${user.username}" in PostgreSQL (ID: ${newUser.id})`);
+    
+    // Give starter seeds to new user (3 common seeds)
+    try {
+      await this.addSeedToInventory(newUser.id, 'common' as RarityTier, 3);
+      console.log(`🌱 Gave 3 starter seeds to new user ${newUser.username}`);
+    } catch (error) {
+      console.error(`Failed to give starter seeds to user ${newUser.id}:`, error);
+    }
+    
+    return newUser;
   }
 
   async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
