@@ -47,6 +47,102 @@
         "createdAt": "2025-09-01T18:32:43.515Z",
         "updatedAt": "2025-09-01T18:32:43.515Z"
       }
+    ],
+    [
+      21,
+      {
+        "id": 21,
+        "username": "Kulamtar",
+        "password": "123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": "2025-09-01T18:09:44.143Z",
+        "createdAt": "2025-09-01T18:09:44.143Z",
+        "updatedAt": "2025-09-01T18:09:44.143Z"
+      }
+    ],
+    [
+      16,
+      {
+        "id": 16,
+        "username": "testuser",
+        "password": "test123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T17:43:51.040Z",
+        "updatedAt": "2025-09-01T17:43:51.083Z"
+      }
+    ],
+    [
+      17,
+      {
+        "id": 17,
+        "username": "afterrestart",
+        "password": "test123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T17:48:08.083Z",
+        "updatedAt": "2025-09-01T17:48:08.130Z"
+      }
+    ],
+    [
+      19,
+      {
+        "id": 19,
+        "username": "TestUser",
+        "password": "test123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T17:58:48.295Z",
+        "updatedAt": "2025-09-01T17:58:48.295Z"
+      }
+    ],
+    [
+      20,
+      {
+        "id": 20,
+        "username": "TestPlayer",
+        "password": "test123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T18:09:12.422Z",
+        "updatedAt": "2025-09-01T18:09:12.422Z"
+      }
+    ],
+    [
+      22,
+      {
+        "id": 22,
+        "username": "testuser123",
+        "password": "testpass",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T18:14:21.029Z",
+        "updatedAt": "2025-09-01T18:14:21.029Z"
+      }
+    ],
+    [
+      24,
+      {
+        "id": 24,
+        "username": "Sascha",
+        "password": "123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T18:16:11.602Z",
+        "updatedAt": "2025-09-01T18:16:11.602Z"
+      }
+    ],
+    [
+      26,
+      {
+        "id": 26,
+        "username": "Neuuser",
+        "password": "123",
+        "credits": 1000,
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-01T18:35:17.102Z",
+        "updatedAt": "2025-09-01T18:35:17.102Z"
+      }
     ]
   ],
   "seeds": [
@@ -213,6 +309,146 @@
         "quantity": 4,
         "createdAt": "2025-09-01T18:32:43.579Z"
       }
+    ],
+    [
+      35,
+      {
+        "id": 35,
+        "userId": 21,
+        "seedId": 2,
+        "quantity": 5,
+        "createdAt": "2025-09-01T18:09:44.214Z"
+      }
+    ],
+    [
+      34,
+      {
+        "id": 34,
+        "userId": 21,
+        "seedId": 1,
+        "quantity": 9,
+        "createdAt": "2025-09-01T18:09:44.214Z"
+      }
+    ],
+    [
+      27,
+      {
+        "id": 27,
+        "userId": 16,
+        "seedId": 1,
+        "quantity": 3,
+        "createdAt": "2025-09-01T17:43:51.094Z"
+      }
+    ],
+    [
+      28,
+      {
+        "id": 28,
+        "userId": 17,
+        "seedId": 1,
+        "quantity": 3,
+        "createdAt": "2025-09-01T17:48:08.142Z"
+      }
+    ],
+    [
+      31,
+      {
+        "id": 31,
+        "userId": 19,
+        "seedId": 2,
+        "quantity": 5,
+        "createdAt": "2025-09-01T17:58:48.352Z"
+      }
+    ],
+    [
+      30,
+      {
+        "id": 30,
+        "userId": 19,
+        "seedId": 1,
+        "quantity": 9,
+        "createdAt": "2025-09-01T17:58:48.352Z"
+      }
+    ],
+    [
+      33,
+      {
+        "id": 33,
+        "userId": 20,
+        "seedId": 2,
+        "quantity": 5,
+        "createdAt": "2025-09-01T18:09:12.534Z"
+      }
+    ],
+    [
+      32,
+      {
+        "id": 32,
+        "userId": 20,
+        "seedId": 1,
+        "quantity": 9,
+        "createdAt": "2025-09-01T18:09:12.534Z"
+      }
+    ],
+    [
+      36,
+      {
+        "id": 36,
+        "userId": 22,
+        "seedId": 1,
+        "quantity": 10,
+        "createdAt": "2025-09-01T18:14:21.092Z"
+      }
+    ],
+    [
+      37,
+      {
+        "id": 37,
+        "userId": 22,
+        "seedId": 2,
+        "quantity": 5,
+        "createdAt": "2025-09-01T18:14:21.092Z"
+      }
+    ],
+    [
+      39,
+      {
+        "id": 39,
+        "userId": 24,
+        "seedId": 2,
+        "quantity": 4,
+        "createdAt": "2025-09-01T18:16:11.662Z"
+      }
+    ],
+    [
+      38,
+      {
+        "id": 38,
+        "userId": 24,
+        "seedId": 1,
+        "quantity": 9,
+        "createdAt": "2025-09-01T18:16:11.662Z"
+      }
+    ],
+    [
+      43,
+      {
+        "id": 43,
+        "userId": 26,
+        "seedId": 2,
+        "quantity": 5,
+        "createdAt": "2025-09-01T18:35:17.170Z"
+      }
+    ],
+    [
+      42,
+      {
+        "id": 42,
+        "userId": 26,
+        "seedId": 1,
+        "quantity": 8,
+        "createdAt": "2025-09-01T18:35:17.170Z"
+      }
     ]
   ],
   "marketListings": [
@@ -344,6 +580,48 @@
         "rarity": 2,
         "quantity": 1,
         "createdAt": "2025-09-01T22:36:08.035Z"
+      }
+    ],
+    [
+      1,
+      {
+        "id": 1,
+        "userId": 24,
+        "flowerId": 29,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-01T18:17:49.233Z",
+        "flowerName": null,
+        "flowerRarity": null,
+        "flowerImageUrl": null
+      }
+    ],
+    [
+      2,
+      {
+        "id": 2,
+        "userId": 26,
+        "flowerId": 55,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-01T18:56:58.140Z",
+        "flowerName": null,
+        "flowerRarity": null,
+        "flowerImageUrl": null
+      }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "userId": 26,
+        "flowerId": 48,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-01T18:57:06.335Z",
+        "flowerName": null,
+        "flowerRarity": null,
+        "flowerImageUrl": null
       }
     ]
   ],
@@ -582,5 +860,5 @@
     "currentPassiveIncomeId": 9,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-02T06:09:01.292Z"
+  "savedAt": "2025-09-02T06:11:54.397Z"
 }

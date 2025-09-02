@@ -176,6 +176,9 @@ export class MemStorage implements IStorage {
     // Load saved data if exists
     this.loadData();
     
+    // Sync all PostgreSQL data into memory on startup
+    this.syncFromPostgreSQL();
+    
     // Auto-save every 30 seconds
     this.autoSaveInterval = setInterval(() => {
       this.saveData();
@@ -356,6 +359,59 @@ export class MemStorage implements IStorage {
   // Manual save trigger for important operations
   public forceSave(): void {
     this.saveData();
+  }
+
+  // Complete PostgreSQL → Memory synchronization on startup
+  private async syncFromPostgreSQL(): Promise<void> {
+    if (!process.env.DATABASE_URL) {
+      console.log('💾 No DATABASE_URL found, skipping PostgreSQL sync');
+      return;
+    }
+
+    try {
+      console.log('🔄 Starting full PostgreSQL → Memory synchronization...');
+
+      // Sync all users
+      const dbUsers = await this.db.select().from(users);
+      for (const user of dbUsers) {
+        if (!this.users.has(user.id)) {
+          this.users.set(user.id, user as User);
+        }
+      }
+
+      // Sync all user seeds
+      const dbUserSeeds = await this.db.select().from(userSeeds);
+      for (const userSeed of dbUserSeeds) {
+        if (!this.userSeeds.has(userSeed.id)) {
+          this.userSeeds.set(userSeed.id, userSeed as UserSeed);
+        }
+      }
+
+      // Sync all user flowers
+      const dbUserFlowers = await this.db.select().from(userFlowers);
+      for (const userFlower of dbUserFlowers) {
+        if (!this.userFlowers.has(userFlower.id)) {
+          this.userFlowers.set(userFlower.id, userFlower as UserFlower);
+        }
+      }
+
+      // Sync all user bouquets
+      const dbUserBouquets = await this.db.select().from(userBouquets);
+      for (const userBouquet of dbUserBouquets) {
+        if (!this.userBouquets.has(userBouquet.id)) {
+          this.userBouquets.set(userBouquet.id, {
+            ...userBouquet,
+            bouquetName: userBouquet.bouquetName || `Bouquet #${userBouquet.bouquetId}`,
+            bouquetRarity: userBouquet.bouquetRarity || 'common'
+          } as UserBouquet & { bouquetName: string; bouquetRarity: string });
+        }
+      }
+
+      console.log(`🔄 PostgreSQL sync complete: ${this.users.size} users, ${this.userSeeds.size} seeds, ${this.userFlowers.size} flowers`);
+      
+    } catch (error) {
+      console.error('❌ Failed to sync from PostgreSQL:', error);
+    }
   }
 
 
