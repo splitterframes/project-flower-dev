@@ -885,22 +885,40 @@ export class PostgresStorage implements IStorage {
         ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
       ]);
 
-      // Find available fields (assuming 16 total fields: 0-15)
-      const totalFields = 16;
-      const availableFields = [];
-      for (let i = 0; i < totalFields; i++) {
-        if (!occupiedFields.has(i)) {
-          availableFields.push(i);
+      // Get adjacent fields around the bouquet (4x4 grid: 0-15)
+      const bouquetFieldIndex = placedBouquet[0].fieldIndex;
+      const gridWidth = 4;
+      
+      // Calculate adjacent field indices (8 surrounding fields)
+      const adjacentFields = [];
+      const row = Math.floor(bouquetFieldIndex / gridWidth);
+      const col = bouquetFieldIndex % gridWidth;
+      
+      for (let deltaRow = -1; deltaRow <= 1; deltaRow++) {
+        for (let deltaCol = -1; deltaCol <= 1; deltaCol++) {
+          if (deltaRow === 0 && deltaCol === 0) continue; // Skip the bouquet field itself
+          
+          const newRow = row + deltaRow;
+          const newCol = col + deltaCol;
+          
+          // Check bounds
+          if (newRow >= 0 && newRow < gridWidth && newCol >= 0 && newCol < gridWidth) {
+            const adjacentFieldIndex = newRow * gridWidth + newCol;
+            adjacentFields.push(adjacentFieldIndex);
+          }
         }
       }
 
-      if (availableFields.length === 0) {
-        console.log(`🦋 No available fields for butterfly spawn for user ${userId}`);
+      // Find available adjacent fields (not occupied)
+      const availableAdjacentFields = adjacentFields.filter(fieldIndex => !occupiedFields.has(fieldIndex));
+
+      if (availableAdjacentFields.length === 0) {
+        console.log(`🦋 No available adjacent fields for butterfly spawn around bouquet field ${bouquetFieldIndex} for user ${userId}`);
         return { success: false };
       }
 
-      // Select random available field
-      const fieldIndex = availableFields[Math.floor(Math.random() * availableFields.length)];
+      // Select random available adjacent field
+      const fieldIndex = availableAdjacentFields[Math.floor(Math.random() * availableAdjacentFields.length)];
 
       // Generate random butterfly based on bouquet rarity
       const { generateRandomButterfly } = await import('./bouquet');
@@ -923,6 +941,7 @@ export class PostgresStorage implements IStorage {
       }).returning();
 
       console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
+      console.log(`🔍 DEBUG: Bouquet on field ${bouquetFieldIndex}, adjacent fields: [${adjacentFields.join(', ')}], available: [${availableAdjacentFields.join(', ')}]`);
       
       return { 
         success: true, 
