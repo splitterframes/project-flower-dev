@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RarityImage } from './RarityImage';
+import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { getRarityColor, getRarityDisplayName } from '@shared/rarity';
 import type { BouquetRecipe, UserFlower } from '@shared/schema';
 import type { RarityTier } from '@shared/rarity';
@@ -122,13 +123,19 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
         <div className="space-y-3">
           {ingredients.map((flower, index) => (
             <div key={index} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg border border-slate-600/30">
-              <RarityImage 
-                src={flower.imageUrl}
-                alt={flower.name}
+              <FlowerHoverPreview
+                flowerImageUrl={flower.imageUrl}
+                flowerName={flower.name}
                 rarity={flower.rarity as RarityTier}
-                size="medium"
-                className="w-16 h-16 flex-shrink-0"
-              />
+              >
+                <RarityImage 
+                  src={flower.imageUrl}
+                  alt={flower.name}
+                  rarity={flower.rarity as RarityTier}
+                  size="medium"
+                  className="w-16 h-16 flex-shrink-0 cursor-pointer"
+                />
+              </FlowerHoverPreview>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white">{flower.name}</div>
                 <div className={`text-xs font-medium ${getRarityColor(flower.rarity as RarityTier)}`}>
