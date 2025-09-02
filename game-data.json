@@ -1,147 +1,15 @@
 {
   "users": [
     [
-      1,
+      27,
       {
-        "username": "Hans",
-        "password": "123",
-        "id": 1,
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T10:07:36.924Z",
-        "createdAt": "2025-09-01T10:07:36.924Z",
-        "updatedAt": "2025-09-01T10:07:36.924Z"
-      }
-    ],
-    [
-      2,
-      {
-        "username": "www",
-        "password": "1",
-        "id": 2,
-        "credits": 991,
-        "lastPassiveIncomeAt": "2025-09-02T06:06:54.003Z",
-        "createdAt": "2025-09-01T19:32:26.759Z",
-        "updatedAt": "2025-09-01T20:01:40.990Z"
-      }
-    ],
-    [
-      18,
-      {
-        "id": 18,
-        "username": "Orn",
-        "password": "1",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T17:48:40.079Z",
-        "createdAt": "2025-09-01T17:48:40.079Z",
-        "updatedAt": "2025-09-01T17:48:40.140Z"
-      }
-    ],
-    [
-      25,
-      {
-        "id": 25,
-        "username": "Testuser",
-        "password": "test123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:32:43.515Z",
-        "createdAt": "2025-09-01T18:32:43.515Z",
-        "updatedAt": "2025-09-01T18:32:43.515Z"
-      }
-    ],
-    [
-      21,
-      {
-        "id": 21,
-        "username": "Kulamtar",
-        "password": "123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:09:44.143Z",
-        "createdAt": "2025-09-01T18:09:44.143Z",
-        "updatedAt": "2025-09-01T18:09:44.143Z"
-      }
-    ],
-    [
-      16,
-      {
-        "id": 16,
+        "id": 27,
         "username": "testuser",
         "password": "test123",
         "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T17:43:51.040Z",
-        "createdAt": "2025-09-01T17:43:51.040Z",
-        "updatedAt": "2025-09-01T17:43:51.083Z"
-      }
-    ],
-    [
-      17,
-      {
-        "id": 17,
-        "username": "afterrestart",
-        "password": "test123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T17:48:08.083Z",
-        "createdAt": "2025-09-01T17:48:08.083Z",
-        "updatedAt": "2025-09-01T17:48:08.130Z"
-      }
-    ],
-    [
-      19,
-      {
-        "id": 19,
-        "username": "TestUser",
-        "password": "test123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T17:58:48.295Z",
-        "createdAt": "2025-09-01T17:58:48.295Z",
-        "updatedAt": "2025-09-01T17:58:48.295Z"
-      }
-    ],
-    [
-      20,
-      {
-        "id": 20,
-        "username": "TestPlayer",
-        "password": "test123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:09:12.422Z",
-        "createdAt": "2025-09-01T18:09:12.422Z",
-        "updatedAt": "2025-09-01T18:09:12.422Z"
-      }
-    ],
-    [
-      22,
-      {
-        "id": 22,
-        "username": "testuser123",
-        "password": "testpass",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:14:21.029Z",
-        "createdAt": "2025-09-01T18:14:21.029Z",
-        "updatedAt": "2025-09-01T18:14:21.029Z"
-      }
-    ],
-    [
-      24,
-      {
-        "id": 24,
-        "username": "Sascha",
-        "password": "123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:16:11.602Z",
-        "createdAt": "2025-09-01T18:16:11.602Z",
-        "updatedAt": "2025-09-01T18:16:11.602Z"
-      }
-    ],
-    [
-      26,
-      {
-        "id": 26,
-        "username": "Neuuser",
-        "password": "123",
-        "credits": 1000,
-        "lastPassiveIncomeAt": "2025-09-01T18:35:17.102Z",
-        "createdAt": "2025-09-01T18:35:17.102Z",
-        "updatedAt": "2025-09-01T18:35:17.102Z"
+        "lastPassiveIncomeAt": null,
+        "createdAt": "2025-09-02T06:17:41.371Z",
+        "updatedAt": "2025-09-02T06:17:41.371Z"
       }
     ]
   ],
@@ -155,7 +23,7 @@
         "price": 10,
         "description": "Ein gewöhnlicher Samen mit einfachen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -167,7 +35,7 @@
         "price": 25,
         "description": "Ein ungewöhnlicher Samen mit besonderen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -179,7 +47,7 @@
         "price": 50,
         "description": "Ein seltener Samen mit wertvollen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -191,7 +59,7 @@
         "price": 100,
         "description": "Ein super-seltener Samen mit außergewöhnlichen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -203,7 +71,7 @@
         "price": 200,
         "description": "Ein epischer Samen mit mächtigen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -215,7 +83,7 @@
         "price": 400,
         "description": "Ein legendärer Samen mit mythischen Eigenschaften",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ],
     [
@@ -227,505 +95,23 @@
         "price": 800,
         "description": "Ein mythischer Samen aus einer anderen Welt",
         "imageUrl": "/Blumen/0.jpg",
-        "createdAt": "2025-09-01T06:18:10.152Z"
+        "createdAt": "2025-09-02T06:17:55.546Z"
       }
     ]
   ],
-  "userSeeds": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 1,
-        "seedId": 1,
-        "quantity": 4,
-        "createdAt": "2025-09-01T10:07:36.924Z",
-        "seedName": "Common Samen",
-        "seedRarity": "common"
-      }
-    ],
-    [
-      2,
-      {
-        "id": 2,
-        "userId": 1,
-        "seedId": 3,
-        "quantity": 3,
-        "createdAt": "2025-09-01T10:07:36.924Z",
-        "seedName": "Rare Samen",
-        "seedRarity": "rare"
-      }
-    ],
-    [
-      3,
-      {
-        "id": 3,
-        "userId": 2,
-        "seedId": 1,
-        "quantity": 2,
-        "createdAt": "2025-09-01T19:32:26.759Z",
-        "seedName": "Common Samen",
-        "seedRarity": "common"
-      }
-    ],
-    [
-      4,
-      {
-        "id": 4,
-        "userId": 2,
-        "seedId": 3,
-        "quantity": 1,
-        "createdAt": "2025-09-01T19:32:26.759Z",
-        "seedName": "Rare Samen",
-        "seedRarity": "rare"
-      }
-    ],
-    [
-      29,
-      {
-        "id": 29,
-        "userId": 18,
-        "seedId": 1,
-        "quantity": 3,
-        "createdAt": "2025-09-01T17:48:40.151Z"
-      }
-    ],
-    [
-      40,
-      {
-        "id": 40,
-        "userId": 25,
-        "seedId": 1,
-        "quantity": 9,
-        "createdAt": "2025-09-01T18:32:43.579Z"
-      }
-    ],
-    [
-      41,
-      {
-        "id": 41,
-        "userId": 25,
-        "seedId": 2,
-        "quantity": 4,
-        "createdAt": "2025-09-01T18:32:43.579Z"
-      }
-    ],
-    [
-      35,
-      {
-        "id": 35,
-        "userId": 21,
-        "seedId": 2,
-        "quantity": 5,
-        "createdAt": "2025-09-01T18:09:44.214Z"
-      }
-    ],
-    [
-      34,
-      {
-        "id": 34,
-        "userId": 21,
-        "seedId": 1,
-        "quantity": 8,
-        "createdAt": "2025-09-01T18:09:44.214Z"
-      }
-    ],
-    [
-      27,
-      {
-        "id": 27,
-        "userId": 16,
-        "seedId": 1,
-        "quantity": 3,
-        "createdAt": "2025-09-01T17:43:51.094Z"
-      }
-    ],
-    [
-      28,
-      {
-        "id": 28,
-        "userId": 17,
-        "seedId": 1,
-        "quantity": 3,
-        "createdAt": "2025-09-01T17:48:08.142Z"
-      }
-    ],
-    [
-      31,
-      {
-        "id": 31,
-        "userId": 19,
-        "seedId": 2,
-        "quantity": 5,
-        "createdAt": "2025-09-01T17:58:48.352Z"
-      }
-    ],
-    [
-      30,
-      {
-        "id": 30,
-        "userId": 19,
-        "seedId": 1,
-        "quantity": 9,
-        "createdAt": "2025-09-01T17:58:48.352Z"
-      }
-    ],
-    [
-      33,
-      {
-        "id": 33,
-        "userId": 20,
-        "seedId": 2,
-        "quantity": 5,
-        "createdAt": "2025-09-01T18:09:12.534Z"
-      }
-    ],
-    [
-      32,
-      {
-        "id": 32,
-        "userId": 20,
-        "seedId": 1,
-        "quantity": 9,
-        "createdAt": "2025-09-01T18:09:12.534Z"
-      }
-    ],
-    [
-      36,
-      {
-        "id": 36,
-        "userId": 22,
-        "seedId": 1,
-        "quantity": 10,
-        "createdAt": "2025-09-01T18:14:21.092Z"
-      }
-    ],
-    [
-      37,
-      {
-        "id": 37,
-        "userId": 22,
-        "seedId": 2,
-        "quantity": 5,
-        "createdAt": "2025-09-01T18:14:21.092Z"
-      }
-    ],
-    [
-      39,
-      {
-        "id": 39,
-        "userId": 24,
-        "seedId": 2,
-        "quantity": 4,
-        "createdAt": "2025-09-01T18:16:11.662Z"
-      }
-    ],
-    [
-      38,
-      {
-        "id": 38,
-        "userId": 24,
-        "seedId": 1,
-        "quantity": 9,
-        "createdAt": "2025-09-01T18:16:11.662Z"
-      }
-    ],
-    [
-      43,
-      {
-        "id": 43,
-        "userId": 26,
-        "seedId": 2,
-        "quantity": 5,
-        "createdAt": "2025-09-01T18:35:17.170Z"
-      }
-    ],
-    [
-      42,
-      {
-        "id": 42,
-        "userId": 26,
-        "seedId": 1,
-        "quantity": 8,
-        "createdAt": "2025-09-01T18:35:17.170Z"
-      }
-    ]
-  ],
-  "marketListings": [
-    [
-      1,
-      {
-        "id": 1,
-        "sellerId": 2,
-        "seedId": 1,
-        "quantity": 1,
-        "pricePerUnit": 10,
-        "totalPrice": 10,
-        "isActive": true,
-        "createdAt": "2025-09-01T19:39:01.825Z",
-        "updatedAt": "2025-09-01T19:39:01.825Z",
-        "sellerUsername": "www",
-        "seedName": "Common Samen",
-        "seedRarity": "common"
-      }
-    ]
-  ],
-  "plantedFields": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 1,
-        "fieldIndex": 0,
-        "seedId": 1,
-        "seedRarity": "common",
-        "plantedAt": "2025-09-01T10:07:43.499Z",
-        "isGrown": true,
-        "flowerId": 3,
-        "flowerName": "Corona radiatus",
-        "flowerImageUrl": "/Blumen/3.jpg",
-        "createdAt": "2025-09-01T10:07:43.499Z"
-      }
-    ],
-    [
-      60,
-      {
-        "id": 60,
-        "userId": 21,
-        "fieldIndex": 0,
-        "seedId": 1,
-        "seedRarity": null,
-        "plantedAt": "2025-09-01T18:15:04.746Z",
-        "isGrown": true,
-        "flowerId": null,
-        "flowerName": null,
-        "flowerImageUrl": null,
-        "createdAt": "2025-09-01T18:15:04.746Z"
-      }
-    ],
-    [
-      58,
-      {
-        "id": 58,
-        "userId": 19,
-        "fieldIndex": 0,
-        "seedId": 1,
-        "seedRarity": null,
-        "plantedAt": "2025-09-01T18:00:59.346Z",
-        "isGrown": false,
-        "flowerId": null,
-        "flowerName": null,
-        "flowerImageUrl": null,
-        "createdAt": "2025-09-01T18:00:59.346Z"
-      }
-    ],
-    [
-      59,
-      {
-        "id": 59,
-        "userId": 20,
-        "fieldIndex": 1,
-        "seedId": 1,
-        "seedRarity": null,
-        "plantedAt": "2025-09-01T18:09:17.801Z",
-        "isGrown": false,
-        "flowerId": null,
-        "flowerName": null,
-        "flowerImageUrl": null,
-        "createdAt": "2025-09-01T18:09:17.801Z"
-      }
-    ],
-    [
-      61,
-      {
-        "id": 61,
-        "userId": 24,
-        "fieldIndex": 0,
-        "seedId": 2,
-        "seedRarity": null,
-        "plantedAt": "2025-09-01T18:16:18.783Z",
-        "isGrown": false,
-        "flowerId": null,
-        "flowerName": null,
-        "flowerImageUrl": null,
-        "createdAt": "2025-09-01T18:16:18.783Z"
-      }
-    ]
-  ],
-  "userFlowers": [
-    [
-      4,
-      {
-        "id": 4,
-        "userId": 2,
-        "flowerId": 114,
-        "flowerName": "Petala crystallinus",
-        "flowerRarity": "rare",
-        "flowerImageUrl": "/Blumen/114.jpg",
-        "quantity": 1,
-        "createdAt": "2025-09-01T19:38:33.173Z"
-      }
-    ],
-    [
-      5,
-      {
-        "id": 5,
-        "userId": 2,
-        "flowerId": 22,
-        "flowerName": "Viola splendidus",
-        "flowerRarity": "common",
-        "flowerImageUrl": "/Blumen/22.jpg",
-        "quantity": 1,
-        "createdAt": "2025-09-01T20:53:16.824Z"
-      }
-    ],
-    [
-      6,
-      {
-        "id": 6,
-        "userId": 2,
-        "flowerId": 129,
-        "flowerName": "Aurora diamanteus",
-        "flowerRarity": "rare",
-        "flowerImageUrl": "/Blumen/129.jpg",
-        "quantity": 1,
-        "createdAt": "2025-09-01T20:53:17.713Z"
-      }
-    ],
-    [
-      7,
-      {
-        "id": 7,
-        "userId": 2,
-        "flowerId": 32,
-        "flowerName": "Splendida elegantia",
-        "flowerRarity": "common",
-        "flowerImageUrl": "/Blumen/32.jpg",
-        "quantity": 1,
-        "createdAt": "2025-09-01T20:53:18.584Z"
-      }
-    ],
-    [
-      8,
-      {
-        "id": 8,
-        "userId": 2,
-        "flowerId": 23,
-        "flowerName": "Rubra mirabilis",
-        "flowerRarity": "common",
-        "flowerImageUrl": "/Blumen/23.jpg",
-        "quantity": 1,
-        "createdAt": "2025-09-01T20:53:19.161Z"
-      }
-    ],
-    [
-      9,
-      {
-        "id": 9,
-        "userId": 25,
-        "flowerId": 1,
-        "flowerName": "Rubra divinus",
-        "flowerRarity": "common",
-        "flowerImageUrl": "/Blumen/1.jpg",
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-01T22:34:55.223Z"
-      }
-    ],
-    [
-      10,
-      {
-        "id": 10,
-        "userId": 25,
-        "flowerId": 88,
-        "flowerName": "Flos imperialis",
-        "flowerRarity": "uncommon",
-        "flowerImageUrl": "/Blumen/88.jpg",
-        "rarity": 2,
-        "quantity": 1,
-        "createdAt": "2025-09-01T22:36:08.035Z"
-      }
-    ],
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 24,
-        "flowerId": 29,
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-01T18:17:49.233Z",
-        "flowerName": null,
-        "flowerRarity": null,
-        "flowerImageUrl": null
-      }
-    ],
-    [
-      2,
-      {
-        "id": 2,
-        "userId": 26,
-        "flowerId": 55,
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-01T18:56:58.140Z",
-        "flowerName": null,
-        "flowerRarity": null,
-        "flowerImageUrl": null
-      }
-    ],
-    [
-      3,
-      {
-        "id": 3,
-        "userId": 26,
-        "flowerId": 48,
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-01T18:57:06.335Z",
-        "flowerName": null,
-        "flowerRarity": null,
-        "flowerImageUrl": null
-      }
-    ],
-    [
-      11,
-      {
-        "id": 11,
-        "userId": 21,
-        "flowerId": null,
-        "flowerName": null,
-        "flowerRarity": null,
-        "flowerImageUrl": null,
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-02T06:12:58.445Z"
-      }
-    ],
-    [
-      12,
-      {
-        "id": 12,
-        "userId": 21,
-        "flowerId": 39,
-        "flowerName": "Iris perfectus",
-        "flowerRarity": "common",
-        "flowerImageUrl": "/Blumen/39.jpg",
-        "rarity": 1,
-        "quantity": 1,
-        "createdAt": "2025-09-02T06:14:24.744Z"
-      }
-    ]
-  ],
+  "userSeeds": [],
+  "marketListings": [],
+  "plantedFields": [],
+  "userFlowers": [],
   "bouquets": [
     [
       1,
       {
         "id": 1,
-        "name": "Bescheidene Blüte",
-        "rarity": "common",
+        "name": "Test Bouquet",
+        "rarity": "uncommon",
         "imageUrl": "/Blumen/Bouquet.jpg",
-        "createdAt": "2025-09-01T19:34:00.948Z"
+        "createdAt": "2025-09-01T14:23:56.717Z"
       }
     ],
     [
@@ -829,31 +215,17 @@
       }
     ]
   ],
-  "userBouquets": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 2,
-        "bouquetId": 1,
-        "quantity": 0,
-        "createdAt": "2025-09-01T19:34:00.948Z",
-        "bouquetName": "Bescheidene Blüte",
-        "bouquetRarity": "common",
-        "bouquetImageUrl": "/Blumen/Bouquet.jpg"
-      }
-    ]
-  ],
+  "userBouquets": [],
   "bouquetRecipes": [
     [
       1,
       {
         "id": 1,
         "bouquetId": 1,
-        "flowerId1": 16,
-        "flowerId2": 53,
-        "flowerId3": 1,
-        "createdAt": "2025-09-01T19:34:00.948Z"
+        "flowerId1": 21,
+        "flowerId2": 130,
+        "flowerId3": 21,
+        "createdAt": "2025-09-01T14:23:56.738Z"
       }
     ],
     [
@@ -969,198 +341,28 @@
   ],
   "placedBouquets": [],
   "userButterflies": [],
-  "fieldButterflies": [
-    [
-      3,
-      {
-        "id": 3,
-        "userId": 2,
-        "fieldIndex": 2,
-        "butterflyId": 59,
-        "butterflyName": "Pontia perfectus",
-        "butterflyRarity": "common",
-        "butterflyImageUrl": "/Schmetterlinge/59.jpg",
-        "bouquetId": 1,
-        "spawnedAt": "2025-09-01T19:46:46.161Z",
-        "createdAt": "2025-09-01T19:46:46.161Z"
-      }
-    ],
-    [
-      4,
-      {
-        "id": 4,
-        "userId": 2,
-        "fieldIndex": 3,
-        "butterflyId": 510,
-        "butterflyName": "Vanessa volans",
-        "butterflyRarity": "common",
-        "butterflyImageUrl": "/Schmetterlinge/510.jpg",
-        "bouquetId": 1,
-        "spawnedAt": "2025-09-01T19:51:46.162Z",
-        "createdAt": "2025-09-01T19:51:46.162Z"
-      }
-    ]
-  ],
-  "exhibitionFrames": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 2,
-        "frameNumber": 1,
-        "purchasedAt": "2025-09-01T19:32:37.859Z",
-        "createdAt": "2025-09-01T19:32:37.859Z"
-      }
-    ]
-  ],
-  "exhibitionButterflies": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 2,
-        "frameId": 1,
-        "slotIndex": 0,
-        "butterflyId": 644,
-        "butterflyName": "Colias aureus",
-        "butterflyRarity": "common",
-        "butterflyImageUrl": "/Schmetterlinge/644.jpg",
-        "placedAt": "2025-09-01T19:36:13.229Z",
-        "createdAt": "2025-09-01T19:36:13.229Z"
-      }
-    ],
-    [
-      2,
-      {
-        "id": 2,
-        "userId": 2,
-        "frameId": 1,
-        "slotIndex": 1,
-        "butterflyId": 360,
-        "butterflyName": "Monarch celestis",
-        "butterflyRarity": "common",
-        "butterflyImageUrl": "/Schmetterlinge/360.jpg",
-        "placedAt": "2025-09-01T20:01:38.145Z",
-        "createdAt": "2025-09-01T20:01:38.145Z"
-      }
-    ]
-  ],
-  "passiveIncomeLog": [
-    [
-      1,
-      {
-        "id": 1,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T20:07:38.837Z",
-        "createdAt": "2025-09-01T20:07:38.837Z"
-      }
-    ],
-    [
-      2,
-      {
-        "id": 2,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T20:37:16.151Z",
-        "createdAt": "2025-09-01T20:37:16.151Z"
-      }
-    ],
-    [
-      3,
-      {
-        "id": 3,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T21:07:16.169Z",
-        "createdAt": "2025-09-01T21:07:16.169Z"
-      }
-    ],
-    [
-      4,
-      {
-        "id": 4,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T21:37:07.490Z",
-        "createdAt": "2025-09-01T21:37:07.490Z"
-      }
-    ],
-    [
-      5,
-      {
-        "id": 5,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T22:06:59.898Z",
-        "createdAt": "2025-09-01T22:06:59.898Z"
-      }
-    ],
-    [
-      6,
-      {
-        "id": 6,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-01T22:36:57.233Z",
-        "createdAt": "2025-09-01T22:36:57.233Z"
-      }
-    ],
-    [
-      7,
-      {
-        "id": 7,
-        "userId": 2,
-        "amount": 14,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-02T05:39:18.501Z",
-        "createdAt": "2025-09-02T05:39:18.501Z"
-      }
-    ],
-    [
-      8,
-      {
-        "id": 8,
-        "userId": 2,
-        "amount": 1,
-        "sourceType": "exhibition",
-        "sourceDetails": "2 butterflies, 2cr/h",
-        "earnedAt": "2025-09-02T06:07:01.414Z",
-        "createdAt": "2025-09-02T06:07:01.414Z"
-      }
-    ]
-  ],
+  "fieldButterflies": [],
+  "exhibitionFrames": [],
+  "exhibitionButterflies": [],
+  "passiveIncomeLog": [],
   "exhibitionFrameLikes": [],
   "counters": {
-    "currentId": 3,
+    "currentId": 1,
     "currentSeedId": 8,
-    "currentUserSeedId": 5,
-    "currentListingId": 2,
-    "currentFieldId": 13,
-    "currentBouquetId": 2,
-    "currentUserBouquetId": 2,
-    "currentRecipeId": 2,
-    "currentPlacedBouquetId": 2,
-    "currentButterflyId": 3,
-    "currentFieldButterflyId": 5,
-    "currentFlowerId": 13,
-    "currentExhibitionFrameId": 2,
-    "currentExhibitionButterflyId": 3,
-    "currentPassiveIncomeId": 9,
+    "currentUserSeedId": 1,
+    "currentListingId": 1,
+    "currentFieldId": 1,
+    "currentBouquetId": 1,
+    "currentUserBouquetId": 1,
+    "currentRecipeId": 1,
+    "currentPlacedBouquetId": 1,
+    "currentButterflyId": 1,
+    "currentFieldButterflyId": 1,
+    "currentFlowerId": 1,
+    "currentExhibitionFrameId": 1,
+    "currentExhibitionButterflyId": 1,
+    "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-02T06:14:47.478Z"
+  "savedAt": "2025-09-02T06:18:25.549Z"
 }
