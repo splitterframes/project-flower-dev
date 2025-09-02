@@ -205,7 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // 🆘 SOS SYSTEM: Check if user has extremely negative credits (≤ -100) - override normal restrictions
       const user = await storage.getUser(userId);
+      console.log(`🔍 SOS Debug: User ${userId} credits: ${user?.credits || 'undefined'}`);
       const isSOSCase = user && user.credits <= -100;
+      console.log(`🔍 SOS Debug: isSOSCase = ${isSOSCase}`);
       
       if (isSOSCase) {
         console.log(`🆘 SOS Emergency Seeds: User ${userId} has extreme negative credits (${user.credits}), providing emergency help`);
