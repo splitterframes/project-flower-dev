@@ -1453,11 +1453,16 @@ export class PostgresStorage implements IStorage {
   }
 
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
+    console.log(`🔍 Processing passive income for user ${userId}...`);
+    
     // Get all exhibition butterflies (normal + VIP) for this user
     const normalButterflies = await this.getExhibitionButterflies(userId);
     const vipButterflies = await this.getExhibitionVipButterflies(userId);
     
+    console.log(`🔍 User ${userId}: ${normalButterflies.length} normal butterflies, ${vipButterflies.length} VIP butterflies`);
+    
     if (normalButterflies.length === 0 && vipButterflies.length === 0) {
+      console.log(`🔍 User ${userId}: No exhibition butterflies, skipping passive income`);
       return { success: true, creditsEarned: 0 };
     }
     
@@ -1471,8 +1476,11 @@ export class PostgresStorage implements IStorage {
     const lastIncomeTime = user.lastPassiveIncomeAt || new Date(now.getTime() - 60 * 1000); // Default to 1 minute ago
     const minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
     
+    console.log(`🔍 User ${userId}: lastPassiveIncomeAt=${user.lastPassiveIncomeAt}, minutesElapsed=${minutesElapsed}`);
+    
     // Don't process if less than 1 minute has passed
     if (minutesElapsed < 1) {
+      console.log(`🔍 User ${userId}: Only ${minutesElapsed} minutes elapsed, skipping (need >=1 minute)`);
       return { success: true, creditsEarned: 0 };
     }
     
@@ -1608,7 +1616,9 @@ export class PostgresStorage implements IStorage {
   }
 
   async getAllUsersWithStatus(): Promise<User[]> {
+    console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding all users for passive income processing');
     const result = await this.db.select().from(users);
+    console.log(`🔍 Found ${result.length} users for passive income check:`, result.map(u => `${u.username}(${u.id})`));
     return result;
   }
 
