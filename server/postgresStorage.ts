@@ -1592,14 +1592,12 @@ export class PostgresStorage implements IStorage {
       quantity: donation.quantity
     });
 
-    // Give seeds (50% chance for 1 rarity tier lower)
+    // Give seeds (ALWAYS 1 seed per donated flower: 50% same rarity, 50% one tier higher)
     let seedsReceived = 0;
     for (let i = 0; i < donation.quantity; i++) {
-      if (Math.random() < 0.5) {
-        const lowerRaritySeed = this.getLowerRaritySeed(userFlower[0].flowerRarity || "common");
-        await this.giveUserSeed(userId, lowerRaritySeed, 1);
-        seedsReceived++;
-      }
+      const rewardSeed = this.getChallengeRewardSeed(userFlower[0].flowerRarity || "common");
+      await this.giveUserSeed(userId, rewardSeed, 1);
+      seedsReceived++;
     }
 
     console.log(`🌸 User ${userId} donated ${donation.quantity}x flower ${donation.flowerId}, received ${seedsReceived} seeds`);
@@ -1611,19 +1609,28 @@ export class PostgresStorage implements IStorage {
     };
   }
 
-  private getLowerRaritySeed(currentRarity: string): number {
-    // Get one tier lower rarity seed
-    const rarityMap = {
-      "mythical": 4, // super-rare seed
-      "legendary": 4, // super-rare seed  
-      "epic": 3, // rare seed
-      "super-rare": 2, // uncommon seed
-      "rare": 1, // common seed
-      "uncommon": 1, // common seed
-      "common": 1 // stay common
+  private getChallengeRewardSeed(currentRarity: string): number {
+    // 50% same rarity, 50% one tier higher (never lower!)
+    const sameRarity = Math.random() < 0.5;
+    
+    const rarityToSeedMap = {
+      "common": 1,
+      "uncommon": 2,
+      "rare": 3,
+      "super-rare": 4,
+      "epic": 5,
+      "legendary": 5, // legendary can't go higher, stays legendary
+      "mythical": 5  // mythical can't go higher, stays legendary
     };
     
-    return rarityMap[currentRarity as keyof typeof rarityMap] || 1;
+    const currentSeedId = rarityToSeedMap[currentRarity as keyof typeof rarityToSeedMap] || 1;
+    
+    if (sameRarity) {
+      return currentSeedId; // Same rarity as donated flower
+    } else {
+      // One tier higher (max legendary = seedId 5)
+      return Math.min(currentSeedId + 1, 5);
+    }
   }
 
   async getChallengeLeaderboard(challengeId: number): Promise<any[]> {
