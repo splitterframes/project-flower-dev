@@ -455,10 +455,10 @@ export class PostgresStorage implements IStorage {
 
       console.log(`🔍 Available flowers:`, allUserFlowers.map(f => ({ id: f.id, flowerId: f.flowerId, name: f.flowerName })));
 
-      // Find the specific flowers
-      const flower1 = allUserFlowers.find((f: any) => f.id === data.flowerId1);
-      const flower2 = allUserFlowers.find((f: any) => f.id === data.flowerId2);
-      const flower3 = allUserFlowers.find((f: any) => f.id === data.flowerId3);
+      // Find the specific flowers by flowerId (not by id)
+      const flower1 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId1);
+      const flower2 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId2);
+      const flower3 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId3);
 
       console.log(`🔍 Found flowers:`, { 
         flower1: flower1 ? { id: flower1.id, name: flower1.flowerName } : 'NOT FOUND',
@@ -504,10 +504,43 @@ export class PostgresStorage implements IStorage {
         bouquetImageUrl: "/Blumen/bouquet.jpg"
       });
 
-      // Remove flowers from inventory
-      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId1));
-      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId2));
-      await this.db.delete(userFlowers).where(eq(userFlowers.id, data.flowerId3));
+      // Remove flowers from inventory (decrease quantity or delete if quantity becomes 0)
+      
+      // Handle flower1
+      if (flower1.quantity > 1) {
+        console.log(`🌸 Reducing flower1 (${flower1.flowerName}) quantity from ${flower1.quantity} to ${flower1.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower1.quantity - 1 })
+          .where(eq(userFlowers.id, flower1.id));
+      } else {
+        console.log(`🌸 Deleting flower1 (${flower1.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower1.id));
+      }
+      
+      // Handle flower2
+      if (flower2.quantity > 1) {
+        console.log(`🌸 Reducing flower2 (${flower2.flowerName}) quantity from ${flower2.quantity} to ${flower2.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower2.quantity - 1 })
+          .where(eq(userFlowers.id, flower2.id));
+      } else {
+        console.log(`🌸 Deleting flower2 (${flower2.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower2.id));
+      }
+      
+      // Handle flower3
+      if (flower3.quantity > 1) {
+        console.log(`🌸 Reducing flower3 (${flower3.flowerName}) quantity from ${flower3.quantity} to ${flower3.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower3.quantity - 1 })
+          .where(eq(userFlowers.id, flower3.id));
+      } else {
+        console.log(`🌸 Deleting flower3 (${flower3.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower3.id));
+      }
 
       console.log(`💐 Created bouquet "${bouquetName}" for user ${userId}`);
       return { success: true, bouquet: newBouquet[0] };
