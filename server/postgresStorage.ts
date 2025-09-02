@@ -1305,9 +1305,11 @@ export class PostgresStorage implements IStorage {
       const rarityIncomePerHour = { common: 1, uncommon: 2, rare: 5, 'super-rare': 10, epic: 20, legendary: 50, mythical: 100 };
       const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
       
-      // Calculate income proportional to minutes elapsed (minutengenau)
-      const incomePerMinute = incomePerHour / 60;
-      const earnedCredits = Math.floor(incomePerMinute * minutesElapsed);
+      // Calculate how many minutes are needed per credit
+      const minutesPerCredit = 60 / incomePerHour; // z.B. 12cr/h = 5min pro Credit
+      
+      // Calculate how many whole credits can be awarded
+      const earnedCredits = Math.floor(minutesElapsed / minutesPerCredit);
       totalCredits += earnedCredits;
       
       // Log passive income
@@ -1322,8 +1324,22 @@ export class PostgresStorage implements IStorage {
     if (totalCredits > 0) {
       // Update user credits and last passive income time
       await this.updateUserCredits(userId, user.credits + totalCredits);
+      
+      // Calculate the actual time to subtract based on credits awarded
+      // This preserves fractional time for the next calculation
+      let totalMinutesConsumed = 0;
+      for (const butterfly of butterflies) {
+        const rarityIncomePerHour = { common: 1, uncommon: 2, rare: 5, 'super-rare': 10, epic: 20, legendary: 50, mythical: 100 };
+        const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
+        const minutesPerCredit = 60 / incomePerHour;
+        const earnedCredits = Math.floor(minutesElapsed / minutesPerCredit);
+        totalMinutesConsumed += earnedCredits * minutesPerCredit;
+      }
+      
+      // Only update time by the amount that was actually "consumed" for credits
+      const newLastIncomeTime = new Date(lastIncomeTime.getTime() + totalMinutesConsumed * 60 * 1000);
       await this.db.update(users)
-        .set({ lastPassiveIncomeAt: now })
+        .set({ lastPassiveIncomeAt: newLastIncomeTime })
         .where(eq(users.id, userId));
     }
     
