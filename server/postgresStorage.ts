@@ -1571,6 +1571,15 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
+  async getForeignExhibitionVipButterflies(frameOwnerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.userId, frameOwnerId));
+    
+    return result;
+  }
+
   // Bouquet timing methods for butterfly spawner
   async updateBouquetNextSpawnTime(userId: number, fieldIndex: number, nextSpawnAt: Date): Promise<void> {
     // Get current spawn slot for this bouquet

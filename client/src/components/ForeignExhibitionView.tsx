@@ -47,6 +47,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 }) => {
   const { user } = useAuth();
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
+  const [vipButterflies, setVipButterflies] = useState<any[]>([]);
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       const response = await fetch(`/api/user/${ownerId}/foreign-exhibition`);
       const data = await response.json();
       setButterflies(data.butterflies || []);
+      setVipButterflies(data.vipButterflies || []);
       setFrames(data.frames || []);
     } catch (error) {
       console.error('Failed to load foreign exhibition:', error);
@@ -129,13 +131,27 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 
   // Group butterflies by frame
   const butterflyFrames = new Map<number, ExhibitionButterfly[]>();
+  const vipButterflyFrames = new Map<number, any[]>();
+  
   butterflies.forEach(butterfly => {
     const frameButterflies = butterflyFrames.get(butterfly.frameId) || [];
     frameButterflies.push(butterfly);
     butterflyFrames.set(butterfly.frameId, frameButterflies);
   });
+  
+  vipButterflies.forEach(vipButterfly => {
+    const frameVipButterflies = vipButterflyFrames.get(vipButterfly.frameId) || [];
+    frameVipButterflies.push(vipButterfly);
+    vipButterflyFrames.set(vipButterfly.frameId, frameVipButterflies);
+  });
 
-  const sortedFrameIds = Array.from(butterflyFrames.keys()).sort((a, b) => {
+  // Get all frame IDs with butterflies (both normal and VIP)
+  const allFrameIds = new Set([
+    ...Array.from(butterflyFrames.keys()),
+    ...Array.from(vipButterflyFrames.keys())
+  ]);
+  
+  const sortedFrameIds = Array.from(allFrameIds).sort((a, b) => {
     const frameA = frames.find(f => f.id === a);
     const frameB = frames.find(f => f.id === b);
     return (frameA?.frameNumber || 0) - (frameB?.frameNumber || 0);
@@ -224,9 +240,11 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               const frameData = frames.find(f => f.id === frameId);
               const frameNumber = frameData?.frameNumber || 1;
               const frameButterflies = butterflyFrames.get(frameId) || [];
+              const frameVipButterflies = vipButterflyFrames.get(frameId) || [];
               const frameLike = frameLikes.find(fl => fl.frameId === frameId);
               
-              const isFullFrame = frameButterflies.length === 6;
+              const totalButterflies = frameButterflies.length + frameVipButterflies.length;
+              const isFullFrame = totalButterflies === 6;
               const canBeLiked = isFullFrame || frameLike?.isLiked;
               
               return (
@@ -249,7 +267,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                         )}
                         {!isFullFrame && (
                           <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
-                            {frameButterflies.length}/6
+                            {totalButterflies}/6
                           </span>
                         )}
                       </div>
@@ -284,39 +302,79 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[400px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
                       {[0, 1, 2, 3, 4, 5].map(slotIndex => {
                         const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
+                        const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
+                        const hasContent = butterfly || vipButterfly;
                         
                         return (
                           <div
                             key={slotIndex}
                             className="aspect-square border border-dashed border-slate-600 rounded flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300 min-h-0"
                           >
-                            {butterfly ? (
-                              <div 
-                                className="relative w-full h-full group cursor-pointer"
-                                onClick={() => {
-                                  setSelectedButterfly(butterfly);
-                                  setShowButterflyModal(true);
-                                }}
-                              >
-                                <RarityImage
-                                  src={butterfly.butterflyImageUrl}
-                                  alt={butterfly.butterflyName}
-                                  rarity={butterfly.butterflyRarity as RarityTier}
-                                  size="medium"
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
-                                  <div className="text-center text-white text-xs">
-                                    <div className="font-bold">{butterfly.butterflyName}</div>
-                                    <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
-                                      {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-                                    </div>
-                                    <div className="mt-2 text-green-300 font-semibold">
-                                      Klicken für Details
+                            {hasContent ? (
+                              vipButterfly ? (
+                                // VIP Butterfly Display
+                                <div 
+                                  className="relative w-full h-full group cursor-pointer bg-gradient-to-br from-pink-800/50 to-purple-800/50 rounded border-2 border-pink-500"
+                                  onClick={() => {
+                                    alert(`VIP-Schmetterling: ${vipButterfly.vipButterflyName}\nVon ${ownerName}'s Premium Collection!`);
+                                  }}
+                                >
+                                  {/* Animated sparkle overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded animate-pulse"></div>
+                                  
+                                  <img
+                                    src={vipButterfly.vipButterflyImageUrl}
+                                    alt={vipButterfly.vipButterflyName}
+                                    className="w-full h-full object-cover rounded transition-transform group-hover:scale-105 relative z-10"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                  
+                                  {/* VIP Crown Icon */}
+                                  <div className="absolute top-1 right-1 bg-yellow-400 rounded-full p-1 z-20">
+                                    <Bug className="w-3 h-3 text-yellow-900" />
+                                  </div>
+                                  
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center z-20">
+                                    <div className="text-center text-white text-xs">
+                                      <div className="font-bold text-pink-200">{vipButterfly.vipButterflyName}</div>
+                                      <div className="text-yellow-300 font-semibold">✨ VIP Premium 👑</div>
+                                      <div className="mt-2 text-green-300 font-semibold">
+                                        Klicken für Details
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
+                              ) : (
+                                // Normal Butterfly Display
+                                <div 
+                                  className="relative w-full h-full group cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedButterfly(butterfly);
+                                    setShowButterflyModal(true);
+                                  }}
+                                >
+                                  <RarityImage
+                                    src={butterfly.butterflyImageUrl}
+                                    alt={butterfly.butterflyName}
+                                    rarity={butterfly.butterflyRarity as RarityTier}
+                                    size="medium"
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
+                                    <div className="text-center text-white text-xs">
+                                      <div className="font-bold">{butterfly.butterflyName}</div>
+                                      <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
+                                        {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                                      </div>
+                                      <div className="mt-2 text-green-300 font-semibold">
+                                        Klicken für Details
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
                             ) : (
                               <div className="text-slate-500 text-xs text-center">
                                 Leer

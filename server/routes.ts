@@ -731,8 +731,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const butterflies = await storage.getForeignExhibitionButterflies(ownerId);
+      const vipButterflies = await storage.getForeignExhibitionVipButterflies(ownerId);
       const frames = await storage.getForeignExhibitionFrames(ownerId);
-      res.json({ butterflies, frames });
+      res.json({ butterflies, vipButterflies, frames });
     } catch (error) {
       console.error('Failed to get foreign exhibition:', error);
       res.status(500).json({ error: 'Failed to get foreign exhibition' });
