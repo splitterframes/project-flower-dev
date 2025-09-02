@@ -1090,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔍 DEBUG: Show user 1 exhibition status on live server
+  // 🔍 DEBUG: Deep dive into user exhibition data
   app.get("/api/debug/user/:userId", async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -1098,9 +1098,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user data
       const user = await storage.getUser(userId);
       
-      // Get exhibition butterflies
+      // Get exhibition butterflies with more details
       const normalButterflies = await storage.getExhibitionButterflies(userId);
       const vipButterflies = await storage.getExhibitionVipButterflies(userId);
+      
+      // Get raw database data for deeper inspection
+      let rawExhibitionData = [];
+      let rawVipExhibitionData = [];
+      let allUsers = [];
+      
+      try {
+        // Direct database queries to see what's really there
+        if ('db' in storage) {
+          const db = (storage as any).db;
+          rawExhibitionData = await db.select().from((storage as any).exhibitionButterflies).where((storage as any).eq((storage as any).exhibitionButterflies.userId, userId));
+          rawVipExhibitionData = await db.select().from((storage as any).exhibitionVipButterflies).where((storage as any).eq((storage as any).exhibitionVipButterflies.userId, userId));
+          allUsers = await db.select().from((storage as any).users);
+        }
+      } catch (dbError) {
+        console.error('Direct DB query failed:', dbError);
+      }
       
       // Get current time info
       const now = new Date();
@@ -1117,8 +1134,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vipButterflies: vipButterflies.length,
         totalCreditsPerHour: (normalButterflies.length * 30) + (vipButterflies.length * 61),
         debugTime: now.toISOString(),
-        normalButterflyList: normalButterflies.map(b => ({ id: b.id, name: b.butterflyName, rarity: b.butterflyRarity })),
-        vipButterflyList: vipButterflies.map(b => ({ id: b.id, name: b.butterflyName }))
+        normalButterflyList: normalButterflies.map(b => ({ id: b.id, name: b.butterflyName, rarity: b.butterflyRarity, frameIndex: b.frameIndex })),
+        vipButterflyList: vipButterflies.map(b => ({ id: b.id, name: b.butterflyName, frameIndex: b.frameIndex })),
+        rawExhibitionCount: rawExhibitionData.length,
+        rawVipExhibitionCount: rawVipExhibitionData.length,
+        rawExhibitionData: rawExhibitionData,
+        rawVipExhibitionData: rawVipExhibitionData,
+        allUsersCount: allUsers.length,
+        allUserIds: allUsers.map(u => ({ id: u.id, username: u.username }))
       });
     } catch (error) {
       console.error('Debug error:', error);
