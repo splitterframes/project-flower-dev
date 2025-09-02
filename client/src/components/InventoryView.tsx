@@ -183,21 +183,27 @@ export const InventoryView: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 rounded-lg animate-pulse"></div>
       
       <div className="flex items-center space-x-3 relative z-10">
-        {/* Animated GIF Display */}
-        <div className="relative">
-          <img
-            src={vipButterfly.vipButterflyImageUrl}
-            alt={vipButterfly.vipButterflyName}
-            className="w-12 h-12 rounded-lg object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          {/* VIP Crown Icon */}
-          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
-            <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+        {/* Animated GIF Display with Hover Preview */}
+        <ButterflyHoverPreview
+          butterflyImageUrl={vipButterfly.vipButterflyImageUrl}
+          butterflyName={vipButterfly.vipButterflyName}
+          rarity="vip"
+        >
+          <div className="relative">
+            <img
+              src={vipButterfly.vipButterflyImageUrl}
+              alt={vipButterfly.vipButterflyName}
+              className="w-12 h-12 rounded-lg object-cover cursor-pointer"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {/* VIP Crown Icon */}
+            <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+              <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+            </div>
           </div>
-        </div>
+        </ButterflyHoverPreview>
         
         <div className="flex-1">
           <h4 className="font-bold text-pink-200 text-sm flex items-center gap-1">
@@ -247,7 +253,7 @@ export const InventoryView: React.FC = () => {
       fetchMyFlowers();
       fetchMyBouquets();
       fetchMyButterflies();
-      fetchMyVipButterflies();
+      fetchMyVipButterflies(); // Initial VIP fetch
     }
   }, [user]);
 

@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 interface ButterflyHoverPreviewProps {
   butterflyImageUrl: string;
   butterflyName: string;
-  rarity: RarityTier;
+  rarity: RarityTier | "vip";
   children: React.ReactNode;
 }
 
@@ -117,8 +117,8 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
             </div>
             <div className="text-center">
               <div className="font-bold text-white text-lg mb-1">{butterflyName}</div>
-              <div className={`text-sm ${getRarityColor(rarity)}`}>
-                {getRarityDisplayName(rarity)}
+              <div className={`text-sm ${rarity === "vip" ? "text-pink-200 bg-gradient-to-r from-pink-500/30 to-purple-500/30 rounded-full px-2 py-1" : getRarityColor(rarity as RarityTier)}`}>
+                {rarity === "vip" ? "✨ VIP Premium 👑" : getRarityDisplayName(rarity as RarityTier)}
               </div>
             </div>
           </div>
