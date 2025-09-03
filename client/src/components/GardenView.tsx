@@ -1120,13 +1120,17 @@ export const GardenView: React.FC = () => {
 
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
-                    <div className="absolute inset-0 z-10">
+                    <div className="absolute inset-0 z-50">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="cursor-pointer w-full h-full">
-                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-300/20 to-orange-300/20 rounded-md transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-105 hover:bg-yellow-300/30'}`}>
-                              <Sun className="w-full h-full max-w-16 max-h-16 text-yellow-400 animate-pulse drop-shadow-lg" />
-                              <Sparkles className="absolute top-2 right-2 h-4 w-4 text-orange-400 animate-pulse" />
+                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-300/40 to-orange-300/40 rounded-lg border-2 border-yellow-400/60 shadow-2xl transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 hover:shadow-yellow-400/50 animate-bounce'}`}>
+                              <Sun className="w-full h-full max-w-20 max-h-20 text-yellow-300 animate-spin drop-shadow-2xl" style={{animationDuration: '3s'}} />
+                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-orange-300 animate-pulse" />
+                              <div className="absolute inset-0 bg-yellow-400/20 rounded-lg animate-ping"></div>
+                              <div className="absolute bottom-1 left-1 text-xs font-bold text-yellow-200 bg-orange-600/80 px-1 rounded">
+                                {field.sunSpawnAmount}☀️
+                              </div>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-slate-800 border-slate-600 text-yellow-300">
