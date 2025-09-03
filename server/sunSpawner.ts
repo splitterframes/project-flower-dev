@@ -57,10 +57,10 @@ class SunSpawner {
 
       let spawnedAny = false;
 
-      // Try to spawn a sun for each user (50% chance per user)
+      // Try to spawn a sun for each user with available fields
       for (const user of allUsers) {
-        // 50% chance to spawn for this user this cycle
-        if (Math.random() < 0.5) {
+        // Always try to spawn for users with available fields
+        if (true) {
           
           // Get user's unlocked fields
           const unlockedFields = await storage.getUnlockedFields(user.id);
