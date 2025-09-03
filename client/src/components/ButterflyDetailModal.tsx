@@ -345,7 +345,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                   <img 
                     src={butterfly.butterflyImageUrl}
                     alt={butterfly.butterflyName}
-                    className={`w-[800px] h-[800px] object-contain mx-auto border-4 rounded-lg shadow-lg ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'border-')}`}
+                    className={`w-[700px] h-[700px] object-contain mx-auto border-4 rounded-lg shadow-lg ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'border-')}`}
                     style={{
                       filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
                     }}
