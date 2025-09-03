@@ -81,6 +81,7 @@ export const GardenView: React.FC = () => {
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
   const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
   const [collectedBouquets, setCollectedBouquets] = useState<Set<number>>(new Set());
+  const [bouquetSeedDrops, setBouquetSeedDrops] = useState<Record<number, {quantity: number, rarity: string}>>({});
   const [touchStart, setTouchStart] = useState<{fieldIndex: number, timer: NodeJS.Timeout} | null>(null);
 
   useEffect(() => {
@@ -498,6 +499,12 @@ export const GardenView: React.FC = () => {
           const { rarity, quantity } = data.seedDrop;
           const rarityName = getRarityDisplayName(rarity as RarityTier);
           
+          // Store seed drop info for overlay display
+          setBouquetSeedDrops(prev => ({
+            ...prev,
+            [fieldIndex]: { quantity, rarity }
+          }));
+          
           toast.success("Verwelktes Bouquet gesammelt!", {
             description: `Du hast ${quantity}x ${rarityName} Samen erhalten! 🌱`,
             duration: 4000,
@@ -516,6 +523,11 @@ export const GardenView: React.FC = () => {
             const newSet = new Set(prev);
             newSet.delete(fieldIndex);
             return newSet;
+          });
+          setBouquetSeedDrops(prev => {
+            const newDrops = { ...prev };
+            delete newDrops[fieldIndex];
+            return newDrops;
           });
         }, 1200);
       } else {
@@ -719,7 +731,7 @@ export const GardenView: React.FC = () => {
                       ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40 active:bg-green-900/60' 
                       : isNextToUnlock 
                         ? 'border-orange-500 bg-slate-700 hover:bg-slate-600 active:bg-slate-500' 
-                        : 'border-slate-600 bg-slate-800 opacity-50'
+                        : 'border-slate-600 bg-slate-800 opacity-30'
                     }
                   `}
                   style={{
@@ -790,13 +802,20 @@ export const GardenView: React.FC = () => {
                     </div>
                   )}
                   
-                  {collectedBouquets.has(field.id - 1) && (
-                    <div className="absolute inset-0 bg-yellow-400/30 rounded-lg flex items-center justify-center z-10">
-                      <div className="text-white font-bold text-sm animate-pulse text-center">
-                        +3 Samen<br/>erhalten!
+                  {collectedBouquets.has(field.id - 1) && (() => {
+                    const seedDrop = bouquetSeedDrops[field.id - 1];
+                    const quantity = seedDrop?.quantity || 3;
+                    const rarity = seedDrop?.rarity || 'common';
+                    const rarityName = getRarityDisplayName(rarity as RarityTier);
+                    
+                    return (
+                      <div className="absolute inset-0 bg-yellow-400/30 rounded-lg flex items-center justify-center z-10">
+                        <div className="text-white font-bold text-sm animate-pulse text-center">
+                          +{quantity} {rarityName}<br/>Samen erhalten!
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   
                   {!field.isUnlocked && (
                     <>
