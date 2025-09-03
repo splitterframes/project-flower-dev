@@ -1625,6 +1625,43 @@ export class PostgresStorage implements IStorage {
     return { success: true, creditsEarned };
   }
 
+  async applyButterflyTimeBoost(userId: number, exhibitionButterflyId: number, minutes: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if butterfly exists and belongs to user
+      const butterfly = await this.db
+        .select()
+        .from(exhibitionButterflies)
+        .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+      
+      if (butterfly.length === 0) {
+        return { success: false, message: 'Schmetterling nicht gefunden oder gehört dir nicht' };
+      }
+
+      // Check if already sellable
+      const canSell = await this.canSellButterfly(userId, exhibitionButterflyId);
+      if (canSell) {
+        return { success: false, message: 'Schmetterling ist bereits verkaufbar' };
+      }
+
+      // Calculate new placedAt date (move it back by the specified minutes)
+      const currentPlacedAt = new Date(butterfly[0].placedAt);
+      const newPlacedAt = new Date(currentPlacedAt.getTime() - (minutes * 60 * 1000));
+
+      // Update the placedAt time
+      await this.db
+        .update(exhibitionButterflies)
+        .set({ placedAt: newPlacedAt })
+        .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+
+      console.log(`☀️ Time Boost: User ${userId} butterfly ${exhibitionButterflyId} placedAt moved back ${minutes} minutes`);
+      
+      return { success: true, message: `Countdown um ${minutes} Minuten verkürzt` };
+    } catch (error) {
+      console.error('Error applying butterfly time boost:', error);
+      return { success: false, message: 'Fehler beim Anwenden des Zeit-Boosts' };
+    }
+  }
+
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
     console.log(`🔍 Processing passive income for user ${userId}...`);
     

@@ -3,10 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { RarityImage } from "./RarityImage";
-import { X, Clock, Coins, Star, Timer, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Clock, Coins, Star, Timer, ChevronLeft, ChevronRight, Sun, Zap } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { toast } from "sonner";
+import { useSuns } from "@/lib/stores/useSuns";
 
 interface ButterflyDetailProps {
   id: number;
@@ -46,6 +48,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   const [canSell, setCanSell] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const [frameLikes, setFrameLikes] = useState<number>(0);
+  
+  // Sonnen-Boost state
+  const [boostMinutes, setBoostMinutes] = useState<string>('1');
+  const [isBoosting, setIsBoosting] = useState<boolean>(false);
+  const { suns, refreshSuns } = useSuns();
 
   // Calculate countdown every second (using server data with like reduction)
   useEffect(() => {
@@ -182,6 +189,70 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     }
   };
 
+  const handleSunBoost = async () => {
+    if (!butterfly || canSell) return;
+
+    const minutes = parseInt(boostMinutes);
+    if (isNaN(minutes) || minutes <= 0 || minutes > 720) {
+      toast.error("Ungültige Eingabe", {
+        description: 'Bitte gib eine gültige Anzahl Minuten ein (1-720)',
+        duration: 4000,
+      });
+      return;
+    }
+
+    const sunsCost = minutes * 10;
+    if (suns < sunsCost) {
+      toast.error("Nicht genug Sonnen", {
+        description: `Du brauchst ${sunsCost} Sonnen für ${minutes} Minuten Boost`,
+        duration: 4000,
+      });
+      return;
+    }
+
+    setIsBoosting(true);
+    try {
+      const response = await fetch('/api/exhibition/butterfly-sun-boost', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': butterfly.userId.toString() || '1'
+        },
+        body: JSON.stringify({
+          exhibitionButterflyId: butterfly.id,
+          minutes: minutes
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success("☀️ Sonnen-Boost erfolgreich!", {
+          description: `Countdown um ${minutes} Minuten für ${sunsCost} Sonnen verkürzt!`,
+          duration: 4000,
+          className: "border-l-4 border-l-yellow-500",
+        });
+        // Refresh suns to show updated amount
+        refreshSuns();
+        // Reset input
+        setBoostMinutes('1');
+      } else {
+        const error = await response.json();
+        toast.error("Boost fehlgeschlagen", {
+          description: error.message || 'Unbekannter Fehler',
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      console.error('Error applying sun boost:', error);
+      toast.error("Verbindungsfehler", {
+        description: 'Sonnen-Boost konnte nicht angewendet werden',
+        duration: 4000,
+      });
+    } finally {
+      setIsBoosting(false);
+    }
+  };
+
   if (!butterfly) return null;
 
   const sellPrice = getSellPrice(butterfly.butterflyRarity);
@@ -275,7 +346,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                     </div>
                   )}
 
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-slate-400 mb-4">
                     {canSell 
                       ? "Dieser Schmetterling kann jetzt verkauft werden!"
                       : frameLikes > 0 
@@ -283,6 +354,59 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                         : "Schmetterlinge können nach 72 Stunden verkauft werden"
                     }
                   </div>
+
+                  {/* Sonnen-Boost Panel */}
+                  {!canSell && (
+                    <div className="border-t border-slate-600 pt-4">
+                      <div className="flex items-center mb-3">
+                        <Sun className="h-5 w-5 mr-2 text-yellow-400" />
+                        <span className="text-lg font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
+                      </div>
+                      
+                      <div className="text-sm text-slate-400 mb-3">
+                        Verkürze den Countdown mit Sonnen: 10 ☀️ = 1 Minute weniger
+                      </div>
+
+                      <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <label className="text-sm text-slate-300 mb-1 block">Minuten</label>
+                          <Input
+                            type="number"
+                            value={boostMinutes}
+                            onChange={(e) => setBoostMinutes(e.target.value)}
+                            min="1"
+                            max="720"
+                            className="bg-slate-800 border-slate-600 text-white"
+                            placeholder="1"
+                          />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="text-sm text-slate-300 mb-1">Kosten</div>
+                          <div className="bg-slate-800 border border-slate-600 rounded-md px-3 py-2 text-center">
+                            <span className="text-yellow-400 font-bold">
+                              {parseInt(boostMinutes) * 10 || 0} ☀️
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          onClick={handleSunBoost}
+                          disabled={isBoosting || parseInt(boostMinutes) <= 0 || parseInt(boostMinutes) > 720 || suns < (parseInt(boostMinutes) * 10)}
+                          className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 disabled:from-slate-600 disabled:to-slate-700 text-white px-4 py-2"
+                        >
+                          <div className="flex items-center">
+                            <Zap className="h-4 w-4 mr-2" />
+                            {isBoosting ? "Boost..." : "Boost!"}
+                          </div>
+                        </Button>
+                      </div>
+
+                      <div className="text-xs text-slate-500 mt-2 text-center">
+                        Du hast {suns} ☀️ Sonnen
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

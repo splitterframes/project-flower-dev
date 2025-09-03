@@ -876,6 +876,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sonnen-Boost for butterfly countdown (10 Sonnen = 1 minute reduction)
+  app.post("/api/exhibition/butterfly-sun-boost", async (req, res) => {
+    try {
+      const { exhibitionButterflyId, minutes } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      if (!exhibitionButterflyId || !minutes || minutes <= 0 || minutes > 720) {
+        return res.status(400).json({ message: 'Ungültige Parameter (1-720 Minuten erlaubt)' });
+      }
+
+      const sunsCost = minutes * 10; // 10 Sonnen pro Minute
+      
+      // Check if user has enough suns
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.suns < sunsCost) {
+        return res.status(400).json({ message: `Du brauchst ${sunsCost} Sonnen für ${minutes} Minuten Boost` });
+      }
+
+      // Apply the boost
+      const result = await storage.applyButterflyTimeBoost(userId, exhibitionButterflyId, minutes);
+      
+      if (result.success) {
+        // Deduct suns
+        await storage.updateUserSuns(userId, -sunsCost);
+        
+        res.json({ 
+          success: true,
+          message: `Countdown um ${minutes} Minuten für ${sunsCost} Sonnen verkürzt!`,
+          minutesReduced: minutes,
+          sunsCost
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Boost fehlgeschlagen' });
+      }
+    } catch (error) {
+      console.error('Sun boost error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // ================================
   // VIP BUTTERFLY ROUTES
   // ================================
