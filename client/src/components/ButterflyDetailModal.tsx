@@ -299,8 +299,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
               {/* Navigation Controls */}
               {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
-                <div className="text-center">
-                  <div className="text-sm text-slate-400 mb-3">
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-slate-400">
                     Schmetterling {currentIndex + 1} von {totalCount}
                   </div>
                   
