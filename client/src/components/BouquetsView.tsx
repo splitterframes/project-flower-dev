@@ -390,7 +390,31 @@ export const BouquetsView: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-              {myCreatedRecipes.map((recipe) => (
+              {myCreatedRecipes
+                .sort((a, b) => {
+                  // Sortiere nach Kompatibilität: Rezepte mit den meisten verfügbaren Blumen zuerst
+                  const getCompatibilityScore = (recipe: any) => {
+                    const hasFlower1 = myFlowers.some(f => f.flowerId === recipe.flowerId1);
+                    const hasFlower2 = myFlowers.some(f => f.flowerId === recipe.flowerId2);  
+                    const hasFlower3 = myFlowers.some(f => f.flowerId === recipe.flowerId3);
+                    return [hasFlower1, hasFlower2, hasFlower3].filter(Boolean).length;
+                  };
+                  
+                  const scoreA = getCompatibilityScore(a);
+                  const scoreB = getCompatibilityScore(b);
+                  
+                  // Zuerst nach Kompatibilität sortieren (höchste zuerst), dann nach Seltenheit
+                  if (scoreA !== scoreB) {
+                    return scoreB - scoreA;
+                  }
+                  
+                  // Bei gleicher Kompatibilität nach Seltenheit sortieren
+                  const rarityOrder = ['mythical', 'legendary', 'epic', 'super-rare', 'rare', 'uncommon', 'common'];
+                  const rarityA = rarityOrder.indexOf(a.bouquetRarity || 'common');
+                  const rarityB = rarityOrder.indexOf(b.bouquetRarity || 'common');
+                  return rarityA - rarityB;
+                })
+                .map((recipe) => (
                 <Card 
                   key={recipe.bouquetId}
                   className="bg-gradient-to-br from-slate-900 to-slate-950 border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300"
