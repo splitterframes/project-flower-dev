@@ -266,25 +266,13 @@ export const BouquetsView: React.FC = () => {
       {/* Clean Bouquet Workshop - Moved to TOP for better UX */}
       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-orange-500/30 shadow-lg">
         <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center justify-between">
-            <div className="flex items-center">
-              <Palette className="h-5 w-5 mr-2 text-orange-400" />
-              <span className="text-lg font-semibold text-orange-300">
-                Bouquet Werkstatt 🎨
+          <CardTitle className="text-white text-center">
+            <div className="flex items-center justify-center">
+              <Palette className="h-6 w-6 mr-2 text-orange-400" />
+              <span className="text-xl font-bold text-orange-300">
+                🎨 Bouquet Werkstatt
               </span>
             </div>
-            <Button
-              onClick={() => setShowBouquetCreation(true)}
-              disabled={myFlowers.length < 3}
-              className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                myFlowers.length >= 3
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-slate-600 text-slate-300 cursor-not-allowed'
-              }`}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              {myFlowers.length >= 3 ? 'Erstellen' : 'Mehr Blumen'}
-            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -302,12 +290,25 @@ export const BouquetsView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-green-400/30">
                 <Sparkles className="h-10 w-10 text-green-400 animate-pulse" />
               </div>
-              <p className="text-green-300 mb-8 text-2xl font-bold">✨ Du kannst jetzt Bouquets erstellen!</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <p className="text-green-300 mb-6 text-xl font-bold">✨ Du kannst jetzt Bouquets erstellen!</p>
+              
+              {/* Großer prominenter Erstellen-Button */}
+              <div className="mb-8">
+                <Button
+                  onClick={() => setShowBouquetCreation(true)}
+                  className="bg-gradient-to-r from-orange-600 via-pink-600 to-red-600 hover:from-orange-700 hover:via-pink-700 hover:to-red-700 text-white font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-orange-400/50 hover:border-orange-300"
+                  size="lg"
+                >
+                  <Heart className="h-8 w-8 mr-3 animate-pulse" />
+                  🌸 BOUQUET ERSTELLEN
+                  <Sparkles className="h-8 w-8 ml-3 animate-pulse" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-xl p-6 border-2 border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105">
                   <div className="flex items-center mb-4">
                     <div className="p-2 bg-purple-500/20 rounded-lg mr-3 border border-purple-400/30">
