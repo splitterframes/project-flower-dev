@@ -447,15 +447,48 @@ export const ExhibitionView: React.FC = () => {
                 </span>
               )}
             </div>
-            {(frameLike?.totalLikes || 0) > 0 && (
-              <div className="flex items-center text-pink-300">
-                <Star className="h-4 w-4 mr-1 fill-pink-300" />
-                <span className="text-sm">{frameLike?.totalLikes}</span>
-                {isFullFrame && (
-                  <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
-                )}
-              </div>
-            )}
+            
+            <div className="flex items-center space-x-3">
+              {/* Likes Display */}
+              {(frameLike?.totalLikes || 0) > 0 && (
+                <div className="flex items-center text-pink-300">
+                  <Star className="h-4 w-4 mr-1 fill-pink-300" />
+                  <span className="text-sm">{frameLike?.totalLikes}</span>
+                  {isFullFrame && (
+                    <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
+                  )}
+                </div>
+              )}
+              
+              {/* Navigation Controls */}
+              {frames.length > 1 && (
+                <div className="flex items-center space-x-2 bg-amber-800/60 rounded-lg px-2 py-1 border border-amber-600">
+                  <Button
+                    onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                    disabled={currentFrameIndex === 0}
+                    variant="outline"
+                    size="sm"
+                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-6 w-6 p-0"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+                  
+                  <div className="text-sm font-semibold text-amber-100 px-2">
+                    #{frame.frameNumber} / {frames.length}
+                  </div>
+                  
+                  <Button
+                    onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}
+                    disabled={currentFrameIndex >= frames.length - 1}
+                    variant="outline"
+                    size="sm"
+                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-6 w-6 p-0"
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -615,40 +648,10 @@ export const ExhibitionView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Frame Navigation */}
+      {/* Frame Display */}
       {frames.length > 0 && (
-        <div className="space-y-6">
-          {/* Navigation Controls */}
-          <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
-            <Button
-              onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
-              disabled={currentFrameIndex === 0}
-              variant="outline"
-              size="sm"
-              className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            
-            <div className="text-lg font-semibold text-slate-300">
-              #{frames[currentFrameIndex]?.frameNumber || 1} / {frames.length}
-            </div>
-            
-            <Button
-              onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}
-              disabled={currentFrameIndex >= frames.length - 1}
-              variant="outline"
-              size="sm"
-              className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Current Frame */}
-          <div className="max-w-2xl mx-auto">
-            {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
-          </div>
+        <div className="max-w-2xl mx-auto">
+          {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
         </div>
       )}
       
