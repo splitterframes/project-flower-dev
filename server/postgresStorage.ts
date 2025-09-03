@@ -53,7 +53,7 @@ import {
   type DonateChallengeFlowerRequest,
   type InsertUser
 } from "@shared/schema";
-import { eq, ilike, and, lt, gt } from "drizzle-orm";
+import { eq, ilike, and, lt, gt, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
@@ -2433,6 +2433,62 @@ export class PostgresStorage implements IStorage {
       .where(and(
         eq(sunSpawns.isActive, true),
         gt(sunSpawns.expiresAt, now) // Still active (not expired yet)
+      ));
+  }
+
+  /**
+   * Get active sun spawns for a specific user (only on their inactive fields)
+   */
+  async getActiveSunSpawnsForUser(userId: number): Promise<any[]> {
+    const now = new Date();
+    
+    // Get user's unlocked fields
+    const unlockedFields = await this.getUnlockedFields(userId);
+    const unlockedFieldIndices = unlockedFields.map(field => field.fieldIndex);
+    
+    // Calculate which fields are "unlock fields" (adjacent to unlocked fields)
+    const unlockFieldIndices: number[] = [];
+    for (const fieldIndex of unlockedFieldIndices) {
+      // Add adjacent fields as unlock fields
+      const row = Math.floor(fieldIndex / 10);
+      const col = fieldIndex % 10;
+      
+      // Check all 4 directions (up, down, left, right)
+      const adjacents = [
+        (row - 1) * 10 + col, // up
+        (row + 1) * 10 + col, // down
+        row * 10 + (col - 1), // left
+        row * 10 + (col + 1)  // right
+      ];
+      
+      for (const adj of adjacents) {
+        if (adj >= 0 && adj < 50 && !unlockedFieldIndices.includes(adj) && !unlockFieldIndices.includes(adj)) {
+          unlockFieldIndices.push(adj);
+        }
+      }
+    }
+    
+    // Find inactive fields (not unlocked, not unlock fields)
+    const inactiveFields: number[] = [];
+    for (let fieldIndex = 0; fieldIndex < 50; fieldIndex++) {
+      if (!unlockedFieldIndices.includes(fieldIndex) && !unlockFieldIndices.includes(fieldIndex)) {
+        inactiveFields.push(fieldIndex);
+      }
+    }
+    
+    // Get active sun spawns only on inactive fields for this user
+    if (inactiveFields.length === 0) {
+      return [];
+    }
+    
+    return await this.db
+      .select()
+      .from(sunSpawns)
+      .where(and(
+        eq(sunSpawns.isActive, true),
+        gt(sunSpawns.expiresAt, now), // Still active (not expired yet)
+        // Only return suns on fields that are inactive for this user
+        inArray(sunSpawns.fieldIndex, inactiveFields)
       ));
   }
 

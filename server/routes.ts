@@ -483,7 +483,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/garden/sun-spawns", async (req, res) => {
     try {
-      const activeSuns = await storage.getActiveSunSpawns();
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const activeSuns = await storage.getActiveSunSpawnsForUser(userId);
       res.json({ sunSpawns: activeSuns });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });

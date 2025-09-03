@@ -1,0 +1,56 @@
+🦋 Found field butterflies: 0
+6:59:42 PM [express] GET /api/user/2/field-butterflies 304 in 18ms :: {"fieldButterflies":[]}
+6:59:43 PM [express] GET /api/user/2/exhibition-vip-butterflies 304 in 17ms :: {"vipButterflies":[{"…
+☀️ Attempting to spawn sun...
+🔍 PostgreSQL getAllUsersWithStatus: Finding all users for passive income processing
+🔍 Found 5 users for passive income check: [ 'Ralf(2)', 'TestUser2(4)', 'TestUser3(5)', 'Olaf(1)', 'User1(3)' ]
+☀️ Processing user Ralf (ID: 2)
+☀️ User Ralf unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User Ralf unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User Ralf has 41 inactive fields available
+☀️ User Ralf has 41 inactive fields without active suns
+☀️ Spawning 3 suns on field 18
+☀️ Successfully spawned 3 suns on inactive field 18 for user Ralf
+☀️ Processing user TestUser2 (ID: 4)
+☀️ User TestUser2 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User TestUser2 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User TestUser2 has 41 inactive fields available
+☀️ User TestUser2 has 40 inactive fields without active suns
+☀️ Spawning 2 suns on field 34
+☀️ Successfully spawned 2 suns on inactive field 34 for user TestUser2
+☀️ Processing user TestUser3 (ID: 5)
+☀️ User TestUser3 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User TestUser3 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User TestUser3 has 41 inactive fields available
+☀️ User TestUser3 has 39 inactive fields without active suns
+☀️ Spawning 1 suns on field 32
+☀️ Successfully spawned 1 suns on inactive field 32 for user TestUser3
+☀️ Processing user Olaf (ID: 1)
+☀️ User Olaf unlocked fields: [ 0, 1, 5, 6 ]
+☀️ User Olaf unlock fields: [
+  10, 11, 2, 15,
+   4, 16, 7
+]
+☀️ User Olaf has 39 inactive fields available
+☀️ User Olaf has 36 inactive fields without active suns
+☀️ Spawning 2 suns on field 49
+☀️ Successfully spawned 2 suns on inactive field 49 for user Olaf
+☀️ Processing user User1 (ID: 3)
+☀️ User User1 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User User1 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User User1 has 41 inactive fields available
+🦋 Getting butterflies for user: 2
+6:59:52 PM [express] GET /api/user/2/suns 304 in 17ms :: {"suns":22}
+6:59:52 PM [express] GET /api/user/2/seeds 304 in 51ms :: {"seeds":[{"id":3,"userId":2,"seedId":1,"q…
+6:59:52 PM [express] GET /api/user/2/flowers 304 in 53ms :: {"flowers":[{"id":17,"userId":2,"flowerI…
+6:59:52 PM [express] GET /api/user/2/credits 304 in 52ms :: {"credits":1046}
+🦋 Found butterflies: 1
+6:59:52 PM [express] GET /api/user/2/butterflies 304 in 58ms :: {"butterflies":[{"id":12,"userId":2,…
+6:59:52 PM [express] GET /api/user/2/bouquets 304 in 55ms :: {"bouquets":[]}
+☀️ User User1 has 37 inactive fields without active suns
+☀️ Spawning 2 suns on field 19
+☀️ Successfully spawned 2 suns on inactive field 19 for user User1
+☀️ Next sun spawn in 71 seconds
+6:59:52 PM [express] GET /api/user/2/exhibition-butterflies 304 in 23ms :: {"butterflies":[{"id":2,"…
+🦋 Getting field butterflies for user: 2
+🦋 Found field butterflies: 0
