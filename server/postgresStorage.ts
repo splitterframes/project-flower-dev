@@ -1351,7 +1351,7 @@ export class PostgresStorage implements IStorage {
     }
 
     // Check if user has enough credits
-    const user = await this.getUserById(userId);
+    const user = await this.getUser(userId);
     if (!user || user.credits < cost) {
       return { success: false, message: "Not enough credits" };
     }
