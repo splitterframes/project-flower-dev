@@ -177,21 +177,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Server Shop routes
   app.get("/api/market/server-shop", async (req, res) => {
     try {
-      // Server offers unlimited Common seeds for 50 credits each
-      const serverOffers = [
+      // Server offers - Credits
+      const creditOffers = [
         {
-          id: "server-common-seeds",
+          id: "server-common-seeds-credits",
           seedId: 1, // Common seed ID
           seedName: "Gewöhnliche Samen",
           seedRarity: "common",
           pricePerUnit: 50,
+          currency: "credits",
           quantity: 999, // Unlimited
           seller: "🏪 Mariposa Shop",
           description: "Hochwertige Samen vom offiziellen Mariposa-Händler"
         }
       ];
       
-      res.json({ serverOffers });
+      // Server offers - Sonnen
+      const sunOffers = [
+        {
+          id: "server-common-seeds-suns",
+          seedId: 1, // Common seed ID
+          seedName: "Gewöhnliche Samen",
+          seedRarity: "common",
+          pricePerUnit: 20,
+          currency: "suns",
+          quantity: 999, // Unlimited
+          seller: "☀️ Sonnen-Shop",
+          description: "Gewöhnliche Samen für Sonnen"
+        },
+        {
+          id: "server-uncommon-seeds-suns",
+          seedId: 2, // Uncommon seed ID
+          seedName: "Ungewöhnliche Samen",
+          seedRarity: "uncommon",
+          pricePerUnit: 30,
+          currency: "suns",
+          quantity: 999, // Unlimited
+          seller: "☀️ Sonnen-Shop",
+          description: "Ungewöhnliche Samen für Sonnen"
+        },
+        {
+          id: "server-rare-seeds-suns",
+          seedId: 3, // Rare seed ID
+          seedName: "Seltene Samen",
+          seedRarity: "rare",
+          pricePerUnit: 50,
+          currency: "suns",
+          quantity: 999, // Unlimited
+          seller: "☀️ Sonnen-Shop",
+          description: "Seltene Samen für Sonnen"
+        },
+        {
+          id: "server-superrare-seeds-suns",
+          seedId: 4, // Super-rare seed ID
+          seedName: "Super-seltene Samen",
+          seedRarity: "super-rare",
+          pricePerUnit: 100,
+          currency: "suns",
+          quantity: 999, // Unlimited
+          seller: "☀️ Sonnen-Shop",
+          description: "Super-seltene Samen für Sonnen"
+        }
+      ];
+      
+      res.json({ creditOffers, sunOffers });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -203,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       if (seedId !== 1) {
-        return res.status(400).json({ message: "Server verkauft nur gewöhnliche Samen" });
+        return res.status(400).json({ message: "Server verkauft nur gewöhnliche Samen für Credits" });
       }
       
       if (quantity <= 0 || quantity > 100) {
@@ -231,6 +280,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Server shop purchase error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Sonnen-Shop route
+  app.post("/api/market/buy-from-server-suns", async (req, res) => {
+    try {
+      const { seedId, quantity } = req.body;
+      const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      // Define valid seeds and their prices in Sonnen
+      const sunPrices = {
+        1: { name: "gewöhnliche", price: 20 },    // Common
+        2: { name: "ungewöhnliche", price: 30 },  // Uncommon  
+        3: { name: "seltene", price: 50 },        // Rare
+        4: { name: "super-seltene", price: 100 }  // Super-rare
+      };
+      
+      if (!sunPrices[seedId]) {
+        return res.status(400).json({ message: "Ungültige Samen-ID für Sonnen-Shop" });
+      }
+      
+      if (quantity <= 0 || quantity > 100) {
+        return res.status(400).json({ message: "Ungültige Menge (1-100)" });
+      }
+      
+      const seedInfo = sunPrices[seedId];
+      const totalCost = quantity * seedInfo.price;
+      
+      const user = await storage.getUser(buyerId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.suns < totalCost) {
+        return res.status(400).json({ message: `Du brauchst ${totalCost} Sonnen für ${quantity} ${seedInfo.name} Samen` });
+      }
+      
+      // Deduct suns and give seeds
+      await storage.updateUserSuns(buyerId, -totalCost);
+      await storage.giveUserSeed(buyerId, seedId, quantity);
+      
+      res.json({ 
+        success: true, 
+        message: `Erfolgreich ${quantity} ${seedInfo.name} Samen für ${totalCost} Sonnen gekauft!` 
+      });
+    } catch (error) {
+      console.error('Suns shop purchase error:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
