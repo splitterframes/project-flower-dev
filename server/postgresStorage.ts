@@ -1304,8 +1304,9 @@ export class PostgresStorage implements IStorage {
       ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
     ]);
 
-    // 4x4 garden = 16 fields (0-15), find all free fields
-    const allFields = Array.from({ length: 16 }, (_, i) => i);
+    // 50-field garden (0-49), find all free fields
+    // TODO: Later integrate with unlocked field system (currently frontend-only)
+    const allFields = Array.from({ length: 50 }, (_, i) => i);
     const availableFields = allFields.filter(fieldIndex => !occupiedFields.has(fieldIndex));
     
     return availableFields;
