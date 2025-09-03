@@ -11,6 +11,28 @@ interface ButterflyData {
 }
 
 // Generate a unique bouquet name using AI
+// Get existing bouquet names to avoid duplicates
+async function getExistingBouquetNames(): Promise<string[]> {
+  try {
+    const { storage } = await import('./storage');
+    
+    // Get all bouquets from database to find existing names
+    const db = (storage as any).db;
+    if (db) {
+      const { bouquets } = await import('../shared/schema');
+      const result = await db.select({ name: bouquets.name }).from(bouquets);
+      return result.map((bouquet: any) => bouquet.name || '').filter((name: string) => name.length > 0);
+    }
+    
+    // Fallback to in-memory storage
+    const allBouquets = Array.from((storage as any).bouquets?.values() || []);
+    return allBouquets.map((bouquet: any) => bouquet.name || '').filter((name: string) => name.length > 0);
+  } catch (error) {
+    console.error('Failed to get existing names:', error);
+    return [];
+  }
+}
+
 export async function generateBouquetName(rarity: RarityTier): Promise<string> {
   try {
     const rarityDescriptions = {
@@ -22,6 +44,12 @@ export async function generateBouquetName(rarity: RarityTier): Promise<string> {
       legendary: "mythisch und ehrfurchtgebietend",
       mythical: "göttlich und transzendent"
     };
+
+    // Get existing names to tell the AI to avoid them
+    const existingNames = await getExistingBouquetNames();
+    const existingNamesText = existingNames.length > 0 
+      ? `\n\nVERMEIDE diese bereits existierenden Namen: ${existingNames.slice(-10).join(', ')}`
+      : '';
 
     const response = await openai.chat.completions.create({
       model: "gpt-5",
@@ -35,16 +63,19 @@ export async function generateBouquetName(rarity: RarityTier): Promise<string> {
           - [Adjektiv] + [Blumen-/Natur-Substantiv] (z.B. "Strahlende Morgenröte", "Sanfte Brise")
           - [Poetisches Wort] + der/des + [Natur-Element] (z.B. "Symphonie der Blüten", "Hauch des Frühlings")
           - [Emotional] + [Naturphänomen] (z.B. "Verzauberte Dämmerung", "Träumende Wiese")
+          - [Zeitbezug] + [Natur] (z.B. "Mitternachtstraum", "Morgentau", "Abendsonne")
+          - [Gefühl] + [Element] (z.B. "Stille Schönheit", "Wilde Anmut", "Zarte Kraft")
           
-          Antworte nur mit dem Namen, keine Erklärung. Maximal 3-4 Wörter.`
+          Sei SEHR kreativ und verwende ungewöhnliche Wort-Kombinationen!
+          Antworte nur mit dem Namen, keine Erklärung. Maximal 3-4 Wörter.${existingNamesText}`
         },
         {
           role: "user", 
-          content: `Erstelle einen ${rarityDescriptions[rarity]} Bouquet-Namen der Seltenheitsstufe ${rarity}.`
+          content: `Erstelle einen völlig EINZIGARTIGEN ${rarityDescriptions[rarity]} Bouquet-Namen der Seltenheitsstufe ${rarity}. Verwende seltene, poetische Wörter und ungewöhnliche Kombinationen!`
         }
       ],
       max_tokens: 30,
-      temperature: 0.9
+      temperature: 1.1
     });
 
     const generatedName = response.choices[0].message.content?.trim() || "Unbenanntes Bouquet";
