@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { useSuns } from "@/lib/stores/useSuns";
 import { getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Store,
@@ -37,8 +38,10 @@ interface Seed {
 export const MarketView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
+  const { suns, setSuns } = useSuns();
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
-  const [serverOffers, setServerOffers] = useState<any[]>([]);
+  const [creditOffers, setCreditOffers] = useState<any[]>([]);
+  const [sunOffers, setSunOffers] = useState<any[]>([]);
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"buy" | "sell" | "server">("buy");
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +79,8 @@ export const MarketView: React.FC = () => {
       const response = await fetch('/api/market/server-shop');
       if (response.ok) {
         const data = await response.json();
-        setServerOffers(data.serverOffers || []);
+        setCreditOffers(data.creditOffers || []);
+        setSunOffers(data.sunOffers || []);
       }
     } catch (error) {
       console.error('Failed to fetch server offers:', error);
@@ -202,6 +206,48 @@ export const MarketView: React.FC = () => {
     setIsLoading(false);
   };
 
+  const buyFromServerWithSuns = async (seedId: number, quantity: number, pricePerUnit: number) => {
+    if (!user) return;
+    
+    const totalCost = quantity * pricePerUnit;
+    
+    if (suns < totalCost) {
+      alert(`Du brauchst ${totalCost} Sonnen um ${quantity} Samen zu kaufen!`);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/market/buy-from-server-suns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({ seedId, quantity })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        // Update suns by fetching from server
+        const sunsResponse = await fetch(`/api/user/${user.id}/suns`);
+        if (sunsResponse.ok) {
+          const sunsData = await sunsResponse.json();
+          setSuns(sunsData.suns);
+        }
+        await fetchMySeeds();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Fehler beim Kauf');
+      }
+    } catch (error) {
+      console.error('Suns purchase error:', error);
+      alert('Fehler beim Kauf');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -411,7 +457,7 @@ export const MarketView: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {serverOffers.map((offer) => (
+              {creditOffers.map((offer) => (
                 <div
                   key={offer.id}
                   className="bg-slate-900 rounded-lg p-4 border-2"
