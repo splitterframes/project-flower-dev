@@ -191,7 +191,11 @@ export const GardenView: React.FC = () => {
   const fetchSunSpawns = async () => {
     if (!user) return;
     try {
-      const response = await fetch('/api/garden/sun-spawns');
+      const response = await fetch('/api/garden/sun-spawns', {
+        headers: {
+          'x-user-id': user.id.toString()
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setSunSpawns(data.sunSpawns || []);
@@ -507,7 +511,7 @@ export const GardenView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': user?.id.toString() || '1'
+          'x-user-id': user?.id.toString() || '1'
         },
         body: JSON.stringify({
           fieldIndex,
