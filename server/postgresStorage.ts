@@ -1529,8 +1529,26 @@ export class PostgresStorage implements IStorage {
     }
     
     const now = new Date();
-    const lastIncomeTime = user.lastPassiveIncomeAt || new Date(now.getTime() - 60 * 1000); // Default to 1 minute ago
-    const minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
+    let lastIncomeTime: Date;
+    let minutesElapsed: number;
+    
+    if (user.lastPassiveIncomeAt) {
+      // Normal case: use actual last income time
+      lastIncomeTime = user.lastPassiveIncomeAt;
+      minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
+    } else {
+      // First time or null case: check when first butterfly was placed
+      const firstButterflyTime = await this.getFirstButterflyPlacedTime(userId);
+      if (firstButterflyTime) {
+        lastIncomeTime = firstButterflyTime;
+        minutesElapsed = Math.floor((now.getTime() - firstButterflyTime.getTime()) / (1000 * 60));
+        console.log(`🔍 User ${userId}: First time passive income - using first butterfly time ${firstButterflyTime.toISOString()}`);
+      } else {
+        // Fallback: 1 minute ago
+        lastIncomeTime = new Date(now.getTime() - 60 * 1000);
+        minutesElapsed = 1;
+      }
+    }
     
     console.log(`🔍 User ${userId}: lastPassiveIncomeAt=${user.lastPassiveIncomeAt}, minutesElapsed=${minutesElapsed}`);
     
@@ -2189,6 +2207,47 @@ export class PostgresStorage implements IStorage {
         seedId,
         quantity
       });
+    }
+  }
+
+  /**
+   * Get the time when the first exhibition butterfly was placed for a user
+   */
+  async getFirstButterflyPlacedTime(userId: number): Promise<Date | null> {
+    try {
+      // Check both normal and VIP exhibition butterflies
+      const normalButterflies = await this.db
+        .select()
+        .from(exhibitionButterflies)
+        .where(eq(exhibitionButterflies.userId, userId))
+        .orderBy(exhibitionButterflies.placedAt)
+        .limit(1);
+        
+      const vipButterflies = await this.db
+        .select()
+        .from(exhibitionVipButterflies)
+        .where(eq(exhibitionVipButterflies.userId, userId))
+        .orderBy(exhibitionVipButterflies.placedAt)
+        .limit(1);
+      
+      const firstNormal = normalButterflies[0]?.placedAt;
+      const firstVip = vipButterflies[0]?.placedAt;
+      
+      if (!firstNormal && !firstVip) {
+        return null;
+      }
+      
+      if (!firstNormal) return new Date(firstVip);
+      if (!firstVip) return new Date(firstNormal);
+      
+      // Return whichever came first
+      return new Date(firstNormal) < new Date(firstVip) 
+        ? new Date(firstNormal) 
+        : new Date(firstVip);
+        
+    } catch (error) {
+      console.error('Error getting first butterfly placed time:', error);
+      return null;
     }
   }
 
