@@ -88,6 +88,20 @@ export const harvestFieldSchema = z.object({
   fieldIndex: z.number().min(0).max(49)
 });
 
+// Garden Field Unlocking System
+export const unlockedFields = pgTable("unlocked_fields", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // 0-49 for 50 fields
+  cost: integer("cost").notNull().default(0), // 0 for starter fields
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const unlockFieldSchema = z.object({
+  fieldIndex: z.number().min(0).max(49),
+});
+
 // User flowers inventory
 export const userFlowers = pgTable("user_flowers", {
   id: serial("id").primaryKey(),
@@ -326,6 +340,8 @@ export type ExhibitionVipButterfly = typeof exhibitionVipButterflies.$inferSelec
 export type PassiveIncomeLog = typeof passiveIncomeLog.$inferSelect;
 export type CreateBouquetRequest = z.infer<typeof createBouquetSchema>;
 export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;
+export type UnlockedField = typeof unlockedFields.$inferSelect;
+export type UnlockFieldRequest = z.infer<typeof unlockFieldSchema>;
 export type WeeklyChallenge = typeof weeklyChallenges.$inferSelect;
 export type ChallengeDonation = typeof challengeDonations.$inferSelect;
 export type ChallengeReward = typeof challengeRewards.$inferSelect;

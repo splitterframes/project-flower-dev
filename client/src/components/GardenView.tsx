@@ -60,12 +60,11 @@ export const GardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
 
-  // Initialize garden with fields 1,2,11,12 unlocked (indices 0,1,10,11)
+  // Initialize garden fields (will be populated from backend)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
-    const startFields = [1, 2, 11, 12]; // Field IDs that should be unlocked
     return Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
-      isUnlocked: startFields.includes(i + 1),
+      isUnlocked: false, // Will be loaded from backend
       hasPlant: false,
       plantType: undefined
     }));
@@ -88,6 +87,7 @@ export const GardenView: React.FC = () => {
     if (user) {
       // Use async function to ensure proper order
       const fetchAllData = async () => {
+        await fetchUnlockedFields(); // Load unlocked fields first
         await fetchUserSeeds();
         await fetchPlantedFields();
         await fetchUserBouquets();
@@ -117,6 +117,25 @@ export const GardenView: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const fetchUnlockedFields = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/unlocked-fields`);
+      if (response.ok) {
+        const data = await response.json();
+        const unlockedIndices = new Set(data.unlockedFields.map((field: any) => field.fieldIndex));
+        
+        // Update garden fields with unlocked status
+        setGardenFields(prev => prev.map(field => ({
+          ...field,
+          isUnlocked: unlockedIndices.has(field.id - 1) // Convert field ID to index
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch unlocked fields:', error);
+    }
+  };
 
   const fetchUserSeeds = async () => {
     if (!user) return;
@@ -302,24 +321,31 @@ export const GardenView: React.FC = () => {
   };
 
   const unlockField = async (fieldId: number) => {
-    const cost = calculateUnlockCost(fieldId);
+    if (!user) return;
     
-    if (credits < cost) {
-      alert(`Du brauchst ${cost} Cr um dieses Feld freizuschalten!`);
-      return;
-    }
+    try {
+      const response = await fetch(`/api/user/${user.id}/unlock-field`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fieldIndex: fieldId - 1 // Convert field ID to index
+        }),
+      });
 
-    // Update credits
-    await updateCredits(user.id, -cost);
-    
-    // Unlock the field
-    setGardenFields(prev => 
-      prev.map(field => 
-        field.id === fieldId 
-          ? { ...field, isUnlocked: true }
-          : field
-      )
-    );
+      if (response.ok) {
+        // Refresh unlocked fields and credits from backend
+        await fetchUnlockedFields();
+        window.location.reload(); // Refresh credits display
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Fehler beim Freischalten des Feldes');
+      }
+    } catch (error) {
+      console.error('Failed to unlock field:', error);
+      alert('Fehler beim Freischalten des Feldes');
+    }
   };
 
   const openSeedSelection = (fieldIndex: number) => {

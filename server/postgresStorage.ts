@@ -20,6 +20,7 @@ import {
   weeklyChallenges,
   challengeDonations,
   challengeRewards,
+  unlockedFields,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -43,6 +44,8 @@ import {
   type PassiveIncomeLog,
   type CreateBouquetRequest,
   type PlaceBouquetRequest,
+  type UnlockedField,
+  type UnlockFieldRequest,
   type WeeklyChallenge,
   type ChallengeDonation,
   type ChallengeReward,
@@ -73,6 +76,9 @@ export class PostgresStorage implements IStorage {
     
     // Initialize basic seeds if they don't exist
     this.initializeSeeds();
+    
+    // Initialize starter fields for existing users
+    this.initializeStarterFields();
   }
 
   private async initializeSeeds() {
@@ -99,6 +105,38 @@ export class PostgresStorage implements IStorage {
       }
     } catch (error) {
       console.error('Failed to initialize seeds:', error);
+    }
+  }
+
+  private async initializeStarterFields() {
+    try {
+      // Check if unlocked_fields table exists and initialize starter fields
+      const allUsers = await this.db.select().from(users);
+      
+      for (const user of allUsers) {
+        const existingUnlockedFields = await this.db
+          .select()
+          .from(unlockedFields)
+          .where(eq(unlockedFields.userId, user.id));
+        
+        // If user has no unlocked fields, give them starter fields (0, 1, 10, 11)
+        if (existingUnlockedFields.length === 0) {
+          const starterFields = [0, 1, 10, 11]; // Field indices 0,1,10,11 = Field IDs 1,2,11,12
+          
+          for (const fieldIndex of starterFields) {
+            await this.db.insert(unlockedFields).values({
+              userId: user.id,
+              fieldIndex,
+              cost: 0, // Free starter fields
+            });
+          }
+          
+          console.log(`🌱 Initialized starter fields for user ${user.username} (ID: ${user.id})`);
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing starter fields:', error);
+      // This is OK if table doesn't exist yet
     }
   }
 
@@ -1286,15 +1324,65 @@ export class PostgresStorage implements IStorage {
     return 'common'; // Fallback
   }
 
+  // Field Unlocking System
+  async getUnlockedFields(userId: number): Promise<UnlockedField[]> {
+    const result = await this.db
+      .select()
+      .from(unlockedFields)
+      .where(eq(unlockedFields.userId, userId));
+    
+    return result;
+  }
+
+  async isFieldUnlocked(userId: number, fieldIndex: number): Promise<boolean> {
+    const result = await this.db
+      .select()
+      .from(unlockedFields)
+      .where(and(eq(unlockedFields.userId, userId), eq(unlockedFields.fieldIndex, fieldIndex)));
+    
+    return result.length > 0;
+  }
+
+  async unlockField(userId: number, data: UnlockFieldRequest, cost: number): Promise<{ success: boolean; message?: string }> {
+    // Check if field is already unlocked
+    const isUnlocked = await this.isFieldUnlocked(userId, data.fieldIndex);
+    if (isUnlocked) {
+      return { success: false, message: "Field is already unlocked" };
+    }
+
+    // Check if user has enough credits
+    const user = await this.getUserById(userId);
+    if (!user || user.credits < cost) {
+      return { success: false, message: "Not enough credits" };
+    }
+
+    try {
+      // Deduct credits and unlock field in a transaction-like manner
+      await this.updateCredits(userId, user.credits - cost);
+      
+      await this.db.insert(unlockedFields).values({
+        userId,
+        fieldIndex: data.fieldIndex,
+        cost,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error unlocking field:', error);
+      return { success: false, message: "Failed to unlock field" };
+    }
+  }
+
   /**
-   * Get all available fields for butterfly spawning (any free field in 4x4 garden)
+   * Get all available fields for butterfly spawning (only unlocked & free fields)
    */
   async getAvailableFieldsForButterflies(userId: number): Promise<number[]> {
     // Get all occupied fields for this user in parallel
-    const [userPlantedFields, userPlacedBouquets, userExistingButterflies] = await Promise.all([
+    const [userPlantedFields, userPlacedBouquets, userExistingButterflies, userUnlockedFields] = await Promise.all([
       this.db.select({ fieldIndex: plantedFields.fieldIndex }).from(plantedFields).where(eq(plantedFields.userId, userId)),
       this.db.select({ fieldIndex: placedBouquets.fieldIndex }).from(placedBouquets).where(eq(placedBouquets.userId, userId)),
-      this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId))
+      this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId)),
+      this.db.select({ fieldIndex: unlockedFields.fieldIndex }).from(unlockedFields).where(eq(unlockedFields.userId, userId))
     ]);
 
     // Collect all occupied field indices
@@ -1304,10 +1392,15 @@ export class PostgresStorage implements IStorage {
       ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
     ]);
 
-    // 50-field garden (0-49), find all free fields
-    // TODO: Later integrate with unlocked field system (currently frontend-only)
-    const allFields = Array.from({ length: 50 }, (_, i) => i);
-    const availableFields = allFields.filter(fieldIndex => !occupiedFields.has(fieldIndex));
+    // Get unlocked field indices
+    const unlockedFieldIndices = new Set(
+      userUnlockedFields.map((f: { fieldIndex: number }) => f.fieldIndex)
+    );
+
+    // Find available fields (unlocked AND free)
+    const availableFields = Array.from(unlockedFieldIndices).filter(fieldIndex => 
+      !occupiedFields.has(fieldIndex)
+    );
     
     return availableFields;
   }

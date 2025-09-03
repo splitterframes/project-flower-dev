@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -480,6 +480,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('🦋 Error getting field butterflies:', error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get unlocked fields for a user
+  app.get("/api/user/:id/unlocked-fields", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const unlockedFields = await storage.getUnlockedFields(userId);
+      res.json({ unlockedFields });
+    } catch (error) {
+      console.error('Error getting unlocked fields:', error);
+      res.status(500).json({ error: "Failed to get unlocked fields" });
+    }
+  });
+
+  // Unlock a field for a user
+  app.post("/api/user/:id/unlock-field", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const data = unlockFieldSchema.parse(req.body);
+      
+      // Calculate unlock cost (this matches frontend logic)
+      const userUnlockedFields = await storage.getUnlockedFields(userId);
+      const starterFields = [0, 1, 10, 11]; // Convert field IDs 1,2,11,12 to indices 0,1,10,11
+      const unlockedCount = userUnlockedFields.filter(f => !starterFields.includes(f.fieldIndex)).length;
+      const cost = Math.round(1000 * Math.pow(1.2, unlockedCount));
+      
+      const result = await storage.unlockField(userId, data, cost);
+      
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error) {
+      console.error('Error unlocking field:', error);
+      res.status(500).json({ error: "Failed to unlock field" });
     }
   });
 
