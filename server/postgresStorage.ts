@@ -1286,6 +1286,31 @@ export class PostgresStorage implements IStorage {
     return 'common'; // Fallback
   }
 
+  /**
+   * Get all available fields for butterfly spawning (any free field in 4x4 garden)
+   */
+  async getAvailableFieldsForButterflies(userId: number): Promise<number[]> {
+    // Get all occupied fields for this user in parallel
+    const [userPlantedFields, userPlacedBouquets, userExistingButterflies] = await Promise.all([
+      this.db.select({ fieldIndex: plantedFields.fieldIndex }).from(plantedFields).where(eq(plantedFields.userId, userId)),
+      this.db.select({ fieldIndex: placedBouquets.fieldIndex }).from(placedBouquets).where(eq(placedBouquets.userId, userId)),
+      this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId))
+    ]);
+
+    // Collect all occupied field indices
+    const occupiedFields = new Set([
+      ...userPlantedFields.map((f: { fieldIndex: number }) => f.fieldIndex),
+      ...userPlacedBouquets.map((f: { fieldIndex: number }) => f.fieldIndex),
+      ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
+    ]);
+
+    // 4x4 garden = 16 fields (0-15), find all free fields
+    const allFields = Array.from({ length: 16 }, (_, i) => i);
+    const availableFields = allFields.filter(fieldIndex => !occupiedFields.has(fieldIndex));
+    
+    return availableFields;
+  }
+
   async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
     try {
       // Find the placed bouquet to get the field index
@@ -1299,54 +1324,16 @@ export class PostgresStorage implements IStorage {
         return { success: false };
       }
 
-      // Get all occupied fields for this user
-      const [userPlantedFields, userPlacedBouquets, userExistingButterflies] = await Promise.all([
-        this.db.select({ fieldIndex: plantedFields.fieldIndex }).from(plantedFields).where(eq(plantedFields.userId, userId)),
-        this.db.select({ fieldIndex: placedBouquets.fieldIndex }).from(placedBouquets).where(eq(placedBouquets.userId, userId)),
-        this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId))
-      ]);
+      // Find all available fields for butterfly spawning
+      const availableFields = await this.getAvailableFieldsForButterflies(userId);
 
-      // Collect all occupied field indices
-      const occupiedFields = new Set([
-        ...userPlantedFields.map((f: { fieldIndex: number }) => f.fieldIndex),
-        ...userPlacedBouquets.map((f: { fieldIndex: number }) => f.fieldIndex),
-        ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
-      ]);
-
-      // Get adjacent fields around the bouquet (4x4 grid: 0-15)
-      const bouquetFieldIndex = placedBouquet[0].fieldIndex;
-      const gridWidth = 4;
-      
-      // Calculate adjacent field indices (8 surrounding fields)
-      const adjacentFields = [];
-      const row = Math.floor(bouquetFieldIndex / gridWidth);
-      const col = bouquetFieldIndex % gridWidth;
-      
-      for (let deltaRow = -1; deltaRow <= 1; deltaRow++) {
-        for (let deltaCol = -1; deltaCol <= 1; deltaCol++) {
-          if (deltaRow === 0 && deltaCol === 0) continue; // Skip the bouquet field itself
-          
-          const newRow = row + deltaRow;
-          const newCol = col + deltaCol;
-          
-          // Check bounds
-          if (newRow >= 0 && newRow < gridWidth && newCol >= 0 && newCol < gridWidth) {
-            const adjacentFieldIndex = newRow * gridWidth + newCol;
-            adjacentFields.push(adjacentFieldIndex);
-          }
-        }
-      }
-
-      // Find available adjacent fields (not occupied)
-      const availableAdjacentFields = adjacentFields.filter(fieldIndex => !occupiedFields.has(fieldIndex));
-
-      if (availableAdjacentFields.length === 0) {
-        console.log(`🦋 No available adjacent fields for butterfly spawn around bouquet field ${bouquetFieldIndex} for user ${userId}`);
+      if (availableFields.length === 0) {
+        console.log(`🦋 No available fields for butterfly spawn for user ${userId} (garden full)`);
         return { success: false };
       }
 
-      // Select random available adjacent field
-      const fieldIndex = availableAdjacentFields[Math.floor(Math.random() * availableAdjacentFields.length)];
+      // Select random available field from entire garden
+      const fieldIndex = availableFields[Math.floor(Math.random() * availableFields.length)];
 
       // Generate random butterfly based on bouquet rarity
       const { generateRandomButterfly } = await import('./bouquet');
@@ -1369,7 +1356,7 @@ export class PostgresStorage implements IStorage {
       }).returning();
 
       console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
-      console.log(`🔍 DEBUG: Bouquet on field ${bouquetFieldIndex}, adjacent fields: [${adjacentFields.join(', ')}], available: [${availableAdjacentFields.join(', ')}]`);
+      console.log(`🔍 DEBUG: Random spawn from ${availableFields.length} available fields: [${availableFields.join(', ')}]`);
       
       return { 
         success: true, 
