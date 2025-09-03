@@ -46,12 +46,15 @@ export const ExhibitionView: React.FC = () => {
     }
   }, [user]);
 
-  // Reset frame index when frames change
+  // Set to newest frame when frames are loaded, or reset frame index when frames change
   useEffect(() => {
-    if (currentFrameIndex >= frames.length && frames.length > 0) {
-      setCurrentFrameIndex(frames.length - 1);
+    if (frames.length > 0) {
+      // Always show the newest (last) frame when first loading or when frames change
+      if (currentFrameIndex === 0 || currentFrameIndex >= frames.length) {
+        setCurrentFrameIndex(frames.length - 1);
+      }
     }
-  }, [frames.length, currentFrameIndex]);
+  }, [frames.length]);
 
   const fetchExhibitionData = async () => {
     if (!user) return;
