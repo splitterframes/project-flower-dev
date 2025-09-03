@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { useSuns } from "@/lib/stores/useSuns";
+import { useSunSpawns } from "@/lib/stores/useSunSpawns";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { RarityImage } from "./RarityImage";
@@ -18,7 +20,8 @@ import {
   Sprout,
   Clock,
   Heart,
-  Sparkles
+  Sparkles,
+  Sun
 } from "lucide-react";
 import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -46,6 +49,9 @@ interface GardenField {
   butterflyName?: string;
   butterflyImageUrl?: string;
   butterflyRarity?: string;
+  hasSunSpawn?: boolean;
+  sunSpawnAmount?: number;
+  sunSpawnExpiresAt?: Date;
 }
 
 interface UserSeed {
@@ -59,6 +65,8 @@ interface UserSeed {
 export const GardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
+  const { suns, setSuns } = useSuns();
+  const { sunSpawns, setSunSpawns, removeSunSpawn, getSunSpawnOnField, setLoading } = useSunSpawns();
 
   // Initialize garden fields (will be populated from backend)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
@@ -81,6 +89,7 @@ export const GardenView: React.FC = () => {
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
   const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
   const [collectedBouquets, setCollectedBouquets] = useState<Set<number>>(new Set());
+  const [collectedSuns, setCollectedSuns] = useState<Set<number>>(new Set());
   const [bouquetSeedDrops, setBouquetSeedDrops] = useState<Record<number, {quantity: number, rarity: string}>>({});
   const [touchStart, setTouchStart] = useState<{fieldIndex: number, timer: NodeJS.Timeout} | null>(null);
 
@@ -94,6 +103,7 @@ export const GardenView: React.FC = () => {
         await fetchUserBouquets();
         await fetchPlacedBouquets();
         await fetchFieldButterflies();
+        await fetchSunSpawns();
       };
       fetchAllData();
     }
@@ -162,6 +172,20 @@ export const GardenView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch field butterflies:', error);
+    }
+  };
+
+  const fetchSunSpawns = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch('/api/garden/sun-spawns');
+      if (response.ok) {
+        const data = await response.json();
+        setSunSpawns(data.sunSpawns || []);
+        updateGardenWithSunSpawns(data.sunSpawns || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch sun spawns:', error);
     }
   };
 
@@ -254,6 +278,28 @@ export const GardenView: React.FC = () => {
           butterflyName: undefined,
           butterflyImageUrl: undefined,
           butterflyRarity: undefined
+        };
+      }
+    }));
+  };
+
+  const updateGardenWithSunSpawns = (spawns: any[]) => {
+    console.log('Updating garden with sun spawns:', spawns);
+    setGardenFields(prev => prev.map(field => {
+      const sunSpawn = spawns.find(spawn => spawn.fieldIndex === field.id - 1 && spawn.isActive);
+      if (sunSpawn && new Date(sunSpawn.expiresAt) > new Date()) {
+        return {
+          ...field,
+          hasSunSpawn: true,
+          sunSpawnAmount: sunSpawn.sunAmount,
+          sunSpawnExpiresAt: new Date(sunSpawn.expiresAt)
+        };
+      } else {
+        return {
+          ...field,
+          hasSunSpawn: false,
+          sunSpawnAmount: undefined,
+          sunSpawnExpiresAt: undefined
         };
       }
     }));
@@ -434,6 +480,70 @@ export const GardenView: React.FC = () => {
     } catch (error) {
       console.error('Failed to plant seed:', error);
       alert('Fehler beim Pflanzen');
+    }
+  };
+
+  const collectSun = async (fieldIndex: number) => {
+    try {
+      console.log('Starting sun collection for field:', fieldIndex);
+      
+      // Add visual feedback immediately
+      setCollectedSuns(prev => new Set([...Array.from(prev), fieldIndex]));
+      
+      const response = await fetch('/api/garden/collect-sun', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
+        body: JSON.stringify({
+          fieldIndex,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sun collected successfully!', data);
+        
+        // Update suns count
+        setSuns(suns + data.sunAmount);
+        
+        // Remove sun spawn from local state
+        removeSunSpawn(fieldIndex);
+        
+        // Refresh sun spawns data
+        await fetchSunSpawns();
+        
+        // Show success message
+        toast.success(data.message);
+        
+        // Remove visual feedback after short delay
+        setTimeout(() => {
+          setCollectedSuns(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldIndex);
+            return newSet;
+          });
+        }, 800);
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Fehler beim Einsammeln der Sonne');
+        // Remove visual feedback on error
+        setCollectedSuns(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldIndex);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to collect sun:', error);
+      toast.error('Fehler beim Einsammeln der Sonne');
+      // Remove visual feedback on error
+      setCollectedSuns(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldIndex);
+        return newSet;
+      });
     }
   };
 
@@ -729,6 +839,8 @@ export const GardenView: React.FC = () => {
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
                       unlockField(field.id);
+                    } else if (field.hasSunSpawn) {
+                      collectSun(field.id - 1);
                     } else if (field.hasButterfly) {
                       collectButterfly(field.id - 1);
                     } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly) {
@@ -1005,8 +1117,38 @@ export const GardenView: React.FC = () => {
                       </ButterflyHoverPreview>
                     </div>
                   )}
+
+                  {/* Sun Spawn Display */}
+                  {field.hasSunSpawn && (
+                    <div className="relative w-full h-full">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-pointer w-full h-full">
+                            <div className={`relative w-full h-full ${collectedSuns.has(field.id - 1) ? 'opacity-50' : ''}`}>
+                              <Sun className="h-8 w-8 text-yellow-400 animate-pulse" />
+                              <Sparkles className="absolute top-0 right-0 h-3 w-3 text-orange-400 animate-pulse" />
+                              {field.sunSpawnAmount && field.sunSpawnAmount > 1 && (
+                                <div className="absolute bottom-0 left-0 bg-yellow-600 text-white text-xs rounded-full px-1 font-bold">
+                                  {field.sunSpawnAmount}
+                                </div>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-slate-800 border-slate-600 text-yellow-300">
+                            <div className="text-center">
+                              <div className="font-bold text-sm">☀️ Sonne</div>
+                              <div className="text-xs">
+                                {field.sunSpawnAmount || 1} Sonnen sammeln
+                              </div>
+                              <div className="text-xs text-orange-400 mt-1">Klicke zum Sammeln</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                   
-                  {field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly && (
+                  {field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasButterfly && !field.hasSunSpawn && (
                     <div className="text-xs text-green-400">+</div>
                   )}
                   

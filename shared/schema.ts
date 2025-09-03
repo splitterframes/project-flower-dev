@@ -89,6 +89,10 @@ export const harvestFieldSchema = z.object({
   fieldIndex: z.number().min(0).max(49)
 });
 
+export const collectSunSchema = z.object({
+  fieldIndex: z.number().min(0).max(49)
+});
+
 // Garden Field Unlocking System
 export const unlockedFields = pgTable("unlocked_fields", {
   id: serial("id").primaryKey(),
@@ -102,6 +106,18 @@ export const unlockedFields = pgTable("unlocked_fields", {
 export const unlockFieldSchema = z.object({
   fieldIndex: z.number().min(0).max(49),
 });
+
+// Sun spawns on garden fields
+export const sunSpawns = pgTable("sun_spawns", {
+  id: serial("id").primaryKey(),
+  fieldIndex: integer("field_index").notNull(), // 0-49 for 50 fields
+  spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(), // spawned + 30 seconds
+  sunAmount: integer("sun_amount").notNull(), // 1-3 suns
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 
 // User flowers inventory
 export const userFlowers = pgTable("user_flowers", {

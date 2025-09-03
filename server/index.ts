@@ -72,6 +72,12 @@ app.use((req, res, next) => {
       log('🦋 Butterfly spawning system initialized');
     });
 
+    // Start sun spawning system
+    import('./sunSpawner').then(({ sunSpawner }) => {
+      sunSpawner.start();
+      log('☀️ Sun spawning system initialized');
+    });
+
     // Start passive income processing system
     import('./passiveIncomeProcessor').then(({ passiveIncomeProcessor }) => {
       passiveIncomeProcessor.start();

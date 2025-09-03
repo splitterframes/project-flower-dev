@@ -21,6 +21,7 @@ import {
   challengeDonations,
   challengeRewards,
   unlockedFields,
+  sunSpawns,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -2418,6 +2419,137 @@ export class PostgresStorage implements IStorage {
       .where(eq(users.id, userId));
       
     console.log(`✅ Passive income time fixed for user ${userId}`);
+  }
+
+  // Sun Spawn Management
+  /**
+   * Get all active sun spawns
+   */
+  async getActiveSunSpawns(): Promise<any[]> {
+    const now = new Date();
+    return await this.db
+      .select()
+      .from(sunSpawns)
+      .where(and(
+        eq(sunSpawns.isActive, true),
+        lt(sunSpawns.expiresAt, now) // Still active
+      ));
+  }
+
+  /**
+   * Spawn a new sun on a field
+   */
+  async spawnSun(fieldIndex: number): Promise<{ success: boolean; sunAmount: number }> {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 1000); // 30 seconds
+    const sunAmount = Math.floor(Math.random() * 3) + 1; // 1-3 suns
+
+    try {
+      console.log(`☀️ Spawning ${sunAmount} suns on field ${fieldIndex}`);
+      
+      await this.db
+        .insert(sunSpawns)
+        .values({
+          fieldIndex,
+          spawnedAt: now,
+          expiresAt,
+          sunAmount,
+          isActive: true
+        });
+
+      return { success: true, sunAmount };
+    } catch (error) {
+      console.error('Error spawning sun:', error);
+      return { success: false, sunAmount: 0 };
+    }
+  }
+
+  /**
+   * Collect sun from a field
+   */
+  async collectSun(fieldIndex: number): Promise<{ success: boolean; sunAmount: number; message: string }> {
+    const now = new Date();
+    
+    try {
+      // Find active sun spawn on this field
+      const activeSun = await this.db
+        .select()
+        .from(sunSpawns)
+        .where(and(
+          eq(sunSpawns.fieldIndex, fieldIndex),
+          eq(sunSpawns.isActive, true),
+          lt(now, sunSpawns.expiresAt) // Not expired yet
+        ))
+        .limit(1);
+
+      if (activeSun.length === 0) {
+        return { success: false, sunAmount: 0, message: 'Keine Sonne zum Einsammeln gefunden' };
+      }
+
+      const sun = activeSun[0];
+      
+      // Deactivate the sun spawn
+      await this.db
+        .update(sunSpawns)
+        .set({ isActive: false })
+        .where(eq(sunSpawns.id, sun.id));
+
+      console.log(`☀️ Collected ${sun.sunAmount} suns from field ${fieldIndex}`);
+      
+      return { 
+        success: true, 
+        sunAmount: sun.sunAmount, 
+        message: `${sun.sunAmount} Sonnen eingesammelt!` 
+      };
+    } catch (error) {
+      console.error('Error collecting sun:', error);
+      return { success: false, sunAmount: 0, message: 'Fehler beim Einsammeln der Sonne' };
+    }
+  }
+
+  /**
+   * Clean up expired sun spawns
+   */
+  async cleanupExpiredSuns(): Promise<void> {
+    const now = new Date();
+    
+    try {
+      const result = await this.db
+        .update(sunSpawns)
+        .set({ isActive: false })
+        .where(and(
+          eq(sunSpawns.isActive, true),
+          lt(sunSpawns.expiresAt, now)
+        ));
+
+      console.log(`☀️ Cleaned up expired sun spawns`);
+    } catch (error) {
+      console.error('Error cleaning up expired suns:', error);
+    }
+  }
+
+  /**
+   * Check for active sun on specific field
+   */
+  async getActiveSunOnField(fieldIndex: number): Promise<any | null> {
+    const now = new Date();
+    
+    try {
+      const activeSun = await this.db
+        .select()
+        .from(sunSpawns)
+        .where(and(
+          eq(sunSpawns.fieldIndex, fieldIndex),
+          eq(sunSpawns.isActive, true),
+          lt(now, sunSpawns.expiresAt)
+        ))
+        .limit(1);
+
+      return activeSun.length > 0 ? activeSun[0] : null;
+    } catch (error) {
+      console.error('Error checking active sun on field:', error);
+      return null;
+    }
   }
 }
 

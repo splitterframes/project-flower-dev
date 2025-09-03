@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -453,6 +453,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid input data", errors: error.errors });
       }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/garden/collect-sun", async (req, res) => {
+    try {
+      const collectData = collectSunSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      const result = await storage.collectSun(collectData.fieldIndex);
+      if (result.success) {
+        // Update user's suns
+        await storage.updateUserSuns(userId, result.sunAmount);
+        res.json({ 
+          message: result.message,
+          sunAmount: result.sunAmount 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/garden/sun-spawns", async (req, res) => {
+    try {
+      const activeSuns = await storage.getActiveSunSpawns();
+      res.json({ sunSpawns: activeSuns });
+    } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
   });
