@@ -1132,13 +1132,9 @@ export const GardenView: React.FC = () => {
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
                     <div 
-                      className="absolute pointer-events-auto" 
+                      className="absolute inset-0 pointer-events-auto" 
                       style={{
                         zIndex: 9999,
-                        left: '-10%',
-                        top: '-10%',
-                        width: '120%',
-                        height: '120%',
                         transform: 'translateZ(0)', // Force new stacking context
                       }}
                     >
@@ -1148,21 +1144,18 @@ export const GardenView: React.FC = () => {
                             <div 
                               className={`relative w-full h-full flex items-center justify-center rounded-lg transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 animate-bounce'}`}
                               style={{
-                                background: 'radial-gradient(circle, #ffd700 0%, #ffed4e 30%, #ffa500 70%, #ff8c00 100%)',
-                                border: '3px solid #ffd700',
-                                boxShadow: '0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.8), 0 0 90px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.4)',
-                                filter: 'brightness(1.5) saturate(1.3) contrast(1.1)',
-                                isolation: 'isolate',
-                                opacity: 1
+                                background: '#ffd700',
+                                border: '3px solid #ffed4e',
+                                boxShadow: '0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px #ffd700',
+                                opacity: '1 !important'
                               }}
                             >
                               <Sun 
-                                className="w-full h-full max-w-20 max-h-20 text-white animate-spin" 
+                                className="w-full h-full max-w-16 max-h-16 animate-spin" 
                                 style={{
                                   animationDuration: '3s',
-                                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 20px rgba(255,215,0,0.6))',
-                                  opacity: 1,
-                                  color: '#ffffff'
+                                  color: '#ffffff',
+                                  opacity: '1 !important'
                                 }} 
                               />
                               <Sparkles 
