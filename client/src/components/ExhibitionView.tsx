@@ -595,57 +595,42 @@ export const ExhibitionView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Compact Exhibition Header */}
-      <div className="bg-slate-800/60 p-4 rounded-lg border border-purple-500/30 text-center">
-        <h1 className="text-2xl font-bold text-purple-300 mb-1">
-          Schmetterlingsausstellung 🦋
-        </h1>
-        <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
-      </div>
-
-      {/* Compact Income Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-green-300">
-                Einkommen
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-green-400" />
+      {/* Exhibition Header with Stats */}
+      <div className="bg-slate-800/60 p-6 rounded-lg border border-purple-500/30">
+        {/* Title Section */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-purple-300 mb-1">
+            Schmetterlingsausstellung 🦋
+          </h1>
+          <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
+        </div>
+        
+        {/* Compact Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <DollarSign className="h-3 w-3 text-green-400 mr-1" />
+              <span className="text-xs font-semibold text-green-300">Einkommen</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-green-400">{getTotalHourlyIncome()} Cr/h</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-green-400">{getTotalHourlyIncome()} Cr/h</div>
+          </div>
 
-        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-blue-300">
-                Schmetterlinge
-              </CardTitle>
-              <Star className="h-4 w-4 text-blue-400" />
+          <div className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Star className="h-3 w-3 text-blue-400 mr-1" />
+              <span className="text-xs font-semibold text-blue-300">Schmetterlinge</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-blue-400">{exhibitionButterflies.length}</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-blue-400">{exhibitionButterflies.length}</div>
+          </div>
 
-        <Card className="bg-gradient-to-br from-amber-800/40 to-orange-800/40 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-300 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-amber-300">
-                Rahmen
-              </CardTitle>
-              <Trophy className="h-4 w-4 text-amber-400" />
+          <div className="bg-gradient-to-br from-amber-800/40 to-orange-800/40 border border-amber-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Trophy className="h-3 w-3 text-amber-400 mr-1" />
+              <span className="text-xs font-semibold text-amber-300">Rahmen</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-amber-400">{frames.length}</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-amber-400">{frames.length}</div>
+          </div>
+        </div>
       </div>
 
       {/* Frame Display */}
