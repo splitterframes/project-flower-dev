@@ -786,14 +786,14 @@ export class PostgresStorage implements IStorage {
         nextSpawnAt: placedBouquets.nextSpawnAt,
         currentSpawnSlot: placedBouquets.currentSpawnSlot,
         createdAt: placedBouquets.createdAt,
-        bouquetName: userBouquets.bouquetName,
-        bouquetRarity: userBouquets.bouquetRarity
+        bouquetName: bouquets.name,
+        bouquetRarity: bouquets.rarity
       })
       .from(placedBouquets)
-      .leftJoin(userBouquets, eq(placedBouquets.bouquetId, userBouquets.bouquetId))
+      .leftJoin(bouquets, eq(placedBouquets.bouquetId, bouquets.id))
       .where(eq(placedBouquets.userId, userId));
     
-    console.log(`💾 Retrieved placed bouquets for user ${userId}:`, result.map((r: any) => ({ fieldIndex: r.fieldIndex, rarity: r.bouquetRarity })));
+    console.log(`💾 Retrieved placed bouquets for user ${userId}:`, result.map((r: any) => ({ fieldIndex: r.fieldIndex, rarity: r.bouquetRarity, name: r.bouquetName })));
     
     return result as any;
   }
