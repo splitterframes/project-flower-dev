@@ -51,6 +51,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: number, amount: number): Promise<User | undefined>;
   updateUserSuns(id: number, amount: number): Promise<User | undefined>;
+  sellButterflyForSuns(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string; sunsEarned?: number }>;
   
   // Market methods
   getMarketListings(): Promise<any[]>;
@@ -1826,6 +1827,15 @@ export class MemStorage implements IStorage {
 
     console.log(`☀️ Sold ${butterfly.butterflyName} for ${sunsEarned} suns`);
     return { success: true, sunsEarned };
+  }
+
+  async updateUserSuns(userId: number, amount: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    user.suns = Math.max(0, (user.suns || 0) + amount);
+    this.users.set(userId, user);
+    return user;
   }
 
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {

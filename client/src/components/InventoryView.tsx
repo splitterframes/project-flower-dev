@@ -213,17 +213,21 @@ export const InventoryView: React.FC = () => {
             <span className={`text-xs ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`}>
               {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
             </span>
-            <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
           </div>
         </div>
-        <button
-          onClick={() => sellButterflyForSuns(butterfly.id)}
-          className="bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-all duration-200 hover:scale-105"
-          title={`Verkaufe für ${getButterflyToSunsPrice(butterfly.butterflyRarity)} Sonnen`}
-        >
-          <Sun className="w-3 h-3" />
-          {getButterflyToSunsPrice(butterfly.butterflyRarity)}
-        </button>
+        <div className="flex items-center gap-1">
+          <div className="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
+            x{butterfly.quantity}
+          </div>
+          <button
+            onClick={() => sellButterflyForSuns(butterfly.id)}
+            className="bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-all duration-200 hover:scale-105 min-w-[40px] justify-center"
+            title={`Verkaufe für ${getButterflyToSunsPrice(butterfly.butterflyRarity)} Sonnen`}
+          >
+            <Sun className="w-3 h-3" />
+            {getButterflyToSunsPrice(butterfly.butterflyRarity)}
+          </button>
+        </div>
       </div>
     </div>
   );

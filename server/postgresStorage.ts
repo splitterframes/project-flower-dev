@@ -2568,6 +2568,91 @@ export class PostgresStorage implements IStorage {
       return null;
     }
   }
+
+  /**
+   * Update user's suns count
+   */
+  async updateUserSuns(userId: number, amount: number): Promise<User | undefined> {
+    try {
+      const updatedUsers = await this.db
+        .update(users)
+        .set({ 
+          suns: sql`GREATEST(0, COALESCE(${users.suns}, 0) + ${amount})` 
+        })
+        .where(eq(users.id, userId))
+        .returning();
+        
+      return updatedUsers.length > 0 ? updatedUsers[0] : undefined;
+    } catch (error) {
+      console.error('Error updating user suns:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Get butterfly sell price for suns (direct sale from inventory)
+   */
+  getButterflyToSunsPrice(rarity: string): number {
+    const prices = {
+      'common': 30,
+      'uncommon': 45,
+      'rare': 70,
+      'super-rare': 100,
+      'epic': 150,
+      'legendary': 250,
+      'mythical': 500
+    };
+    return prices[rarity as keyof typeof prices] || 30;
+  }
+
+  /**
+   * Sell butterfly from inventory directly for suns
+   */
+  async sellButterflyForSuns(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string; sunsEarned?: number }> {
+    try {
+      // Find the butterfly in user's collection
+      const userButterflies = await this.getUserButterflies(userId);
+      const butterfly = userButterflies.find(b => b.id === butterflyId);
+      
+      if (!butterfly) {
+        return { success: false, message: "Schmetterling nicht gefunden" };
+      }
+
+      // Check ownership
+      if (butterfly.userId !== userId) {
+        return { success: false, message: "Dieser Schmetterling gehört dir nicht" };
+      }
+
+      // Calculate suns earned
+      const sunsEarned = this.getButterflyToSunsPrice(butterfly.butterflyRarity);
+
+      // Remove butterfly from user's collection (reduce quantity by 1)
+      if (butterfly.quantity <= 1) {
+        // Remove completely if only 1 left
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterflyId));
+      } else {
+        // Reduce quantity by 1
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterfly.quantity - 1 })
+          .where(eq(userButterflies.id, butterflyId));
+      }
+
+      // Add suns to user
+      const user = await this.updateUserSuns(userId, sunsEarned);
+      if (user) {
+        console.log(`☀️ Suns Update: User ${userId} +${sunsEarned} ☀️ = ${user.suns} ☀️`);
+      }
+
+      console.log(`☀️ Sold ${butterfly.butterflyName} for ${sunsEarned} suns`);
+      return { success: true, sunsEarned };
+    } catch (error) {
+      console.error('Error selling butterfly for suns:', error);
+      return { success: false, message: "Fehler beim Verkauf des Schmetterlings" };
+    }
+  }
 }
 
 export const postgresStorage = new PostgresStorage();
