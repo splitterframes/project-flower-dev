@@ -1131,7 +1131,17 @@ export const GardenView: React.FC = () => {
 
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
-                    <div className="absolute inset-0 pointer-events-auto" style={{zIndex: 999}}>
+                    <div 
+                      className="absolute pointer-events-auto" 
+                      style={{
+                        zIndex: 9999,
+                        left: '-10%',
+                        top: '-10%',
+                        width: '120%',
+                        height: '120%',
+                        transform: 'translateZ(0)', // Force new stacking context
+                      }}
+                    >
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="cursor-pointer w-full h-full">
@@ -1140,8 +1150,9 @@ export const GardenView: React.FC = () => {
                               style={{
                                 background: 'radial-gradient(circle, #ffd700 0%, #ffed4e 30%, #ffa500 70%, #ff8c00 100%)',
                                 border: '3px solid #ffd700',
-                                boxShadow: '0 0 25px rgba(255, 215, 0, 0.9), 0 0 50px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3)',
-                                filter: 'brightness(1.3) saturate(1.2)'
+                                boxShadow: '0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.8), 0 0 90px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.4)',
+                                filter: 'brightness(1.5) saturate(1.3) contrast(1.1)',
+                                isolation: 'isolate' // Create new stacking context
                               }}
                             >
                               <Sun 
