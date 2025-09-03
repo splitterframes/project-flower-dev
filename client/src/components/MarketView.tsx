@@ -237,7 +237,6 @@ export const MarketView: React.FC = () => {
         if (sunsResponse.ok) {
           const sunsData = await sunsResponse.json();
           setSuns(sunsData.suns);
-          console.log('🔧 MarketView: Updated suns to', sunsData.suns);
         }
         await fetchMySeeds();
       } else {

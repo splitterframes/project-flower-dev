@@ -68,7 +68,6 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
       if (response.ok) {
         const data = await response.json();
         setSuns(data.suns);
-        console.log('🔧 Header: Updated suns to', data.suns, 'via fetchSuns()');
       }
     } catch (error) {
       console.error('Failed to fetch suns:', error);
