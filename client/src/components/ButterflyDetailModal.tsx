@@ -259,17 +259,17 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-7xl w-full shadow-2xl">
-        <DialogHeader className="relative mb-6">
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-4xl w-full shadow-2xl">
+        <DialogHeader className="relative mb-4">
           {/* Enhanced Header Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
           
           <DialogTitle className="flex items-center text-white relative z-10">
             <div className="relative">
-              <Star className="h-7 w-7 mr-3 text-purple-400 animate-pulse" />
-              <div className="absolute inset-0 h-7 w-7 mr-3 text-purple-400 animate-ping opacity-30"></div>
+              <Star className="h-6 w-6 mr-3 text-purple-400 animate-pulse" />
+              <div className="absolute inset-0 h-6 w-6 mr-3 text-purple-400 animate-ping opacity-30"></div>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
               🦋 Schmetterling-Details
             </span>
           </DialogTitle>
@@ -284,126 +284,151 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           </Button>
         </DialogHeader>
 
-        {/* Horizontal Layout: Image Left, Details Right */}
-        <div className="flex gap-8 min-h-[800px]">
-          {/* Left Side - Large Butterfly Image (800x800) */}
-          <div className="flex-shrink-0">
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg relative overflow-hidden">
-              <div className={`absolute inset-0 rounded-lg opacity-20 ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'bg-')}`}></div>
-              
-              <CardContent className="p-6 relative z-10 text-center">
-                <div className="relative">
+        {/* Compact Layout */}
+        <div className="space-y-4">
+          {/* Top Section: Image with Name, Rarity and Navigation */}
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg relative overflow-hidden">
+            <div className={`absolute inset-0 rounded-lg opacity-20 ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'bg-')}`}></div>
+            
+            <CardContent className="p-4 relative z-10">
+              <div className="flex gap-4">
+                {/* Butterfly Image */}
+                <div className="flex-shrink-0">
                   <img 
                     src={butterfly.butterflyImageUrl}
                     alt={butterfly.butterflyName}
-                    className={`w-[800px] h-[800px] object-contain mx-auto border-4 rounded-lg shadow-lg ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'border-')}`}
+                    className={`w-[300px] h-[300px] object-contain border-4 rounded-lg shadow-lg ${getRarityColor(butterfly.butterflyRarity as RarityTier).replace('text-', 'border-')}`}
                     style={{
-                      filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
+                      filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.3))'
                     }}
                   />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Right Side - Details */}
-          <div className="flex-1 space-y-6">
-            {/* Butterfly Name and Rarity */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-3xl font-bold text-white mb-4 min-h-[5rem] flex items-center justify-center">{butterfly.butterflyName}</h3>
-                
-                <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-lg font-bold px-4 py-2`}>
-                  <Star className="h-4 w-4 mr-2" />
-                  {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-                </Badge>
-              </CardContent>
-            </Card>
+                {/* Info beside image */}
+                <div className="flex-1 flex flex-col justify-between">
+                  {/* Name and Rarity */}
+                  <div className="text-center mb-4">
+                    <h3 className="text-2xl font-bold text-white mb-3">{butterfly.butterflyName}</h3>
+                    
+                    <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-base font-bold px-3 py-1`}>
+                      <Star className="h-4 w-4 mr-2" />
+                      {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                    </Badge>
+                  </div>
 
+                  {/* Navigation Controls */}
+                  {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
+                    <div className="text-center">
+                      <div className="text-sm text-slate-400 mb-3">
+                        Schmetterling {currentIndex + 1} von {totalCount}
+                      </div>
+                      
+                      <div className="flex gap-2 justify-center">
+                        <Button
+                          onClick={onPrevious}
+                          disabled={currentIndex === 0}
+                          size="sm"
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Zurück
+                        </Button>
+                        
+                        <Button
+                          onClick={onNext}
+                          disabled={currentIndex === totalCount - 1}
+                          size="sm"
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
+                        >
+                          Weiter
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bottom Section: Two columns for compact info */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Countdown Timer - Only show for own butterflies */}
             {!readOnly && (
               <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-4">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center mb-3">
                     <div className="relative">
-                      <Timer className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
-                      {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                      <Timer className={`h-5 w-5 mr-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
+                      {!canSell && <div className="absolute inset-0 h-5 w-5 mr-2 text-orange-400 animate-ping opacity-30"></div>}
                     </div>
-                    <span className="text-lg font-semibold">
+                    <span className="text-base font-semibold">
                       {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
                     </span>
                   </div>
 
-                  <div className={`text-3xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                  <div className={`text-2xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
                     {formatTimeRemaining(timeRemaining)}
                   </div>
 
                   {frameLikes > 0 && !canSell && (
-                    <div className="text-lg text-pink-300 mb-2 flex items-center justify-center">
-                      <Star className="h-4 w-4 mr-1 fill-pink-300" />
-                      <span>{frameLikes} Likes</span>
-                      <span className="ml-2 text-green-300">(-{frameLikes} min)</span>
+                    <div className="text-sm text-pink-300 mb-2 flex items-center justify-center">
+                      <Star className="h-3 w-3 mr-1 fill-pink-300" />
+                      <span>{frameLikes} Likes (-{frameLikes} min)</span>
                     </div>
                   )}
 
-                  <div className="text-sm text-slate-400 mb-4">
+                  <div className="text-xs text-slate-400 mb-3">
                     {canSell 
-                      ? "Dieser Schmetterling kann jetzt verkauft werden!"
+                      ? "Verkaufbar!"
                       : frameLikes > 0 
-                        ? `Countdown reduziert durch ${frameLikes} Likes auf diesem Rahmen!`
-                        : "Schmetterlinge können nach 72 Stunden verkauft werden"
+                        ? `Reduziert durch Likes`
+                        : "72h Wartezeit"
                     }
                   </div>
 
                   {/* Sonnen-Boost Panel */}
                   {!canSell && (
-                    <div className="border-t border-slate-600 pt-4">
-                      <div className="flex items-center mb-3">
-                        <Sun className="h-5 w-5 mr-2 text-yellow-400" />
-                        <span className="text-lg font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
+                    <div className="border-t border-slate-600 pt-3">
+                      <div className="flex items-center mb-2">
+                        <Sun className="h-4 w-4 mr-1 text-yellow-400" />
+                        <span className="text-sm font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
                       </div>
                       
-                      <div className="text-sm text-slate-400 mb-3">
-                        Verkürze den Countdown mit Sonnen: 10 ☀️ = 1 Minute weniger
+                      <div className="text-xs text-slate-400 mb-2">
+                        10 ☀️ = 1 Minute weniger
                       </div>
 
-                      <div className="flex gap-3 items-end">
+                      <div className="flex gap-2 items-end">
                         <div className="flex-1">
-                          <label className="text-sm text-slate-300 mb-1 block">Minuten</label>
                           <Input
                             type="number"
                             value={boostMinutes}
                             onChange={(e) => setBoostMinutes(e.target.value)}
                             min="1"
                             max="720"
-                            className="bg-slate-800 border-slate-600 text-white"
-                            placeholder="1"
+                            className="bg-slate-800 border-slate-600 text-white text-sm h-8"
+                            placeholder="Min"
                           />
                         </div>
                         
-                        <div className="flex-1">
-                          <div className="text-sm text-slate-300 mb-1">Kosten</div>
-                          <div className="bg-slate-800 border border-slate-600 rounded-md px-3 py-2 text-center">
-                            <span className="text-yellow-400 font-bold">
-                              {parseInt(boostMinutes) * 10 || 0} ☀️
-                            </span>
-                          </div>
+                        <div className="text-xs text-yellow-400 font-bold min-w-[50px]">
+                          {parseInt(boostMinutes) * 10 || 0} ☀️
                         </div>
 
                         <Button
                           onClick={handleSunBoost}
                           disabled={isBoosting || parseInt(boostMinutes) <= 0 || parseInt(boostMinutes) > 720 || suns < (parseInt(boostMinutes) * 10)}
-                          className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 disabled:from-slate-600 disabled:to-slate-700 text-white px-4 py-2"
+                          size="sm"
+                          className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 disabled:from-slate-600 disabled:to-slate-700 text-white px-3 h-8"
                         >
-                          <div className="flex items-center">
-                            <Zap className="h-4 w-4 mr-2" />
-                            {isBoosting ? "Boost..." : "Boost!"}
-                          </div>
+                          <Zap className="h-3 w-3 mr-1" />
+                          {isBoosting ? "..." : "Boost"}
                         </Button>
                       </div>
 
-                      <div className="text-xs text-slate-500 mt-2 text-center">
-                        Du hast {suns} ☀️ Sonnen
+                      <div className="text-xs text-slate-500 mt-1 text-center">
+                        Du hast {suns} ☀️
                       </div>
                     </div>
                   )}
@@ -414,13 +439,13 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
             {/* Sell Price & Button - Only show for own butterflies */}
             {!readOnly && (
               <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
-                      <Coins className="h-6 w-6 mr-3 text-yellow-400" />
-                      <span className="text-lg font-semibold">Verkaufspreis:</span>
+                      <Coins className="h-5 w-5 mr-2 text-yellow-400" />
+                      <span className="text-base font-semibold">Verkaufspreis:</span>
                     </div>
-                    <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
+                    <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-sm px-3 py-1 font-bold">
                       {sellPrice} Credits
                     </Badge>
                   </div>
@@ -428,14 +453,14 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                   <Button
                     onClick={handleSell}
                     disabled={!canSell || isSelling}
-                    className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
+                    className={`w-full text-base font-bold py-4 rounded-lg transition-all duration-300 ${
                       canSell 
                         ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
                         : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
                     }`}
                   >
                     <div className="flex items-center justify-center">
-                      <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
+                      <Coins className={`h-5 w-5 mr-2 ${canSell ? 'animate-bounce' : ''}`} />
                       {isSelling 
                         ? "Verkaufe..." 
                         : canSell 
@@ -447,53 +472,20 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                 </CardContent>
               </Card>
             )}
-
-            {/* Navigation Controls - Only show if navigation is available */}
-            {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-4">
-                  <div className="text-center mb-4">
-                    <span className="text-sm text-slate-400">
-                      Schmetterling {currentIndex + 1} von {totalCount}
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={onPrevious}
-                      disabled={currentIndex === 0}
-                      className="flex-1 text-base font-semibold py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed transition-all duration-300"
-                    >
-                      <ChevronLeft className="h-5 w-5 mr-2" />
-                      Vorheriger
-                    </Button>
-                    
-                    <Button
-                      onClick={onNext}
-                      disabled={currentIndex === totalCount - 1}
-                      className="flex-1 text-base font-semibold py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed transition-all duration-300"
-                    >
-                      Nächster
-                      <ChevronRight className="h-5 w-5 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Exit Button */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-              <CardContent className="p-6">
-                <Button
-                  onClick={onClose}
-                  className="w-full text-lg font-bold py-4 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
-                >
-                  <X className="h-5 w-5 mr-3" />
-                  Verlassen
-                </Button>
-              </CardContent>
-            </Card>
           </div>
+
+          {/* Exit Button */}
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+            <CardContent className="p-4">
+              <Button
+                onClick={onClose}
+                className="w-full text-base font-bold py-3 rounded-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Verlassen
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
