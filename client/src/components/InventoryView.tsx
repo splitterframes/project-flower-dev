@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
-import { Package, Flower, Bug, Gem, Sprout, Star } from "lucide-react";
+import { Package, Flower, Bug, Gem, Sprout, Star, Sun } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
@@ -145,6 +145,49 @@ export const InventoryView: React.FC = () => {
     </div>
   );
 
+  const getButterflyToSunsPrice = (rarity: string): number => {
+    const prices = {
+      'common': 30,
+      'uncommon': 45,
+      'rare': 70,
+      'super-rare': 100,
+      'epic': 150,
+      'legendary': 250,
+      'mythical': 500
+    };
+    return prices[rarity as keyof typeof prices] || 30;
+  };
+
+  const sellButterflyForSuns = async (butterflyId: number) => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/api/inventory/sell-butterfly-for-suns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          butterflyId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Show success message
+        console.log(`✅ ${data.message}`);
+        // Refresh butterflies
+        await fetchMyButterflies();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to sell butterfly:', errorData.message);
+      }
+    } catch (error) {
+      console.error('Error selling butterfly:', error);
+    }
+  };
+
   const ButterflyCard = ({ butterfly, getBorderColor }: { butterfly: any; getBorderColor: (rarity: RarityTier) => string }) => (
     <div
       className="bg-slate-900 rounded-lg p-3 border-2"
@@ -173,6 +216,14 @@ export const InventoryView: React.FC = () => {
             <span className="text-sm font-bold text-green-400 flex-shrink-0">x{butterfly.quantity}</span>
           </div>
         </div>
+        <button
+          onClick={() => sellButterflyForSuns(butterfly.id)}
+          className="bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-all duration-200 hover:scale-105"
+          title={`Verkaufe für ${getButterflyToSunsPrice(butterfly.butterflyRarity)} Sonnen`}
+        >
+          <Sun className="w-3 h-3" />
+          {getButterflyToSunsPrice(butterfly.butterflyRarity)}
+        </button>
       </div>
     </div>
   );

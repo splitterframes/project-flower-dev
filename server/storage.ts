@@ -1696,6 +1696,20 @@ export class MemStorage implements IStorage {
     return prices[rarity as keyof typeof prices] || 50;
   }
 
+  // Get butterfly sell price for suns (direct sale from inventory)
+  getButterflyToSunsPrice(rarity: string): number {
+    const prices = {
+      'common': 30,
+      'uncommon': 45,
+      'rare': 70,
+      'super-rare': 100,
+      'epic': 150,
+      'legendary': 250,
+      'mythical': 500
+    };
+    return prices[rarity as keyof typeof prices] || 30;
+  }
+
   // Check if butterfly can be sold (72 hours = 259200000 ms after placement, reduced by likes)
   canSellButterfly(placedAt: Date, frameId: number): boolean {
     const now = new Date();
@@ -1772,6 +1786,46 @@ export class MemStorage implements IStorage {
 
     console.log(`💰 Sold ${exhibitionButterfly.butterflyName} for ${creditsEarned} credits`);
     return { success: true, creditsEarned };
+  }
+
+  // Sell butterfly from inventory directly for suns
+  async sellButterflyForSuns(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string; sunsEarned?: number }> {
+    // Find the butterfly in user's collection
+    const userButterflies = await this.getUserButterflies(userId);
+    const butterfly = userButterflies.find(b => b.id === butterflyId);
+    
+    if (!butterfly) {
+      return { success: false, message: "Schmetterling nicht gefunden" };
+    }
+
+    // Check ownership
+    if (butterfly.userId !== userId) {
+      return { success: false, message: "Dieser Schmetterling gehört dir nicht" };
+    }
+
+    // Calculate suns earned
+    const sunsEarned = this.getButterflyToSunsPrice(butterfly.butterflyRarity);
+
+    // Remove butterfly from user's collection (reduce quantity by 1)
+    if (butterfly.quantity <= 1) {
+      // Remove completely if only 1 left
+      this.userButterflies.delete(butterflyId);
+    } else {
+      // Reduce quantity by 1
+      butterfly.quantity -= 1;
+      this.userButterflies.set(butterflyId, butterfly);
+    }
+
+    // Add suns to user
+    const user = this.users.get(userId);
+    if (user) {
+      user.suns = (user.suns || 0) + sunsEarned;
+      this.users.set(userId, user);
+      console.log(`☀️ Suns Update: User ${userId} hatte ${(user.suns || 0) - sunsEarned} ☀️, +${sunsEarned} ☀️ = ${user.suns} ☀️`);
+    }
+
+    console.log(`☀️ Sold ${butterfly.butterflyName} for ${sunsEarned} suns`);
+    return { success: true, sunsEarned };
   }
 
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {

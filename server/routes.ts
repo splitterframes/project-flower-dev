@@ -910,6 +910,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sell butterfly from inventory for suns
+  app.post("/api/inventory/sell-butterfly-for-suns", async (req, res) => {
+    try {
+      const { userId, butterflyId } = req.body;
+      
+      if (!userId || !butterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.sellButterflyForSuns(userId, butterflyId);
+      
+      if (result.success) {
+        res.json({ 
+          message: `${result.sunsEarned} Sonnen erhalten!`, 
+          success: true,
+          sunsEarned: result.sunsEarned 
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Failed to sell butterfly' });
+      }
+    } catch (error) {
+      console.error('Failed to sell butterfly for suns:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Sonnen-Boost for butterfly countdown (10 Sonnen = 1 minute reduction)
   app.post("/api/exhibition/butterfly-sun-boost", async (req, res) => {
     try {
