@@ -1,0 +1,42 @@
+6:48:43 PM [express] GET /api/user/2/flowers 304 in 16ms :: {"flowers":[{"id":17,"userId":2,"flowerI…
+☀️ User TestUser2 has 41 inactive fields without active suns
+☀️ Spawning 3 suns on field 23
+🦋 Getting field butterflies for user: 2
+☀️ Successfully spawned 3 suns on inactive field 23 for user TestUser2
+☀️ Processing user TestUser3 (ID: 5)
+6:48:43 PM [express] GET /api/user/2/exhibition-butterflies 304 in 25ms :: {"butterflies":[{"id":2,"…
+🦋 Found field butterflies: 0
+6:48:43 PM [express] GET /api/user/2/field-butterflies 304 in 38ms :: {"fieldButterflies":[]}
+☀️ User TestUser3 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User TestUser3 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User TestUser3 has 41 inactive fields available
+6:48:43 PM [express] GET /api/user/2/exhibition-vip-butterflies 304 in 24ms :: {"vipButterflies":[{"…
+☀️ User TestUser3 has 40 inactive fields without active suns
+☀️ Spawning 2 suns on field 18
+☀️ Successfully spawned 2 suns on inactive field 18 for user TestUser3
+☀️ Processing user Olaf (ID: 1)
+☀️ User Olaf unlocked fields: [ 0, 1, 5, 6 ]
+☀️ User Olaf unlock fields: [
+  10, 11, 2, 15,
+   4, 16, 7
+]
+☀️ User Olaf has 39 inactive fields available
+☀️ User Olaf has 37 inactive fields without active suns
+☀️ Spawning 3 suns on field 3
+☀️ Successfully spawned 3 suns on inactive field 3 for user Olaf
+☀️ Processing user User1 (ID: 3)
+☀️ User User1 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User User1 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User User1 has 41 inactive fields available
+☀️ User User1 has 38 inactive fields without active suns
+☀️ Spawning 3 suns on field 39
+☀️ Successfully spawned 3 suns on inactive field 39 for user User1
+☀️ Processing user Ralf (ID: 2)
+☀️ User Ralf unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User Ralf unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User Ralf has 41 inactive fields available
+☀️ User Ralf has 37 inactive fields without active suns
+☀️ Spawning 1 suns on field 7
+☀️ Successfully spawned 1 suns on inactive field 7 for user Ralf
+☀️ Next sun spawn in 119 seconds
+🦋 Getting butterflies for
