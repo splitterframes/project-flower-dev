@@ -57,59 +57,75 @@ class SunSpawner {
 
       let spawnedAny = false;
 
-      // Try to spawn a sun for each user with available fields
+      // Try to spawn a sun for each user on inactive fields
       for (const user of allUsers) {
-        // Always try to spawn for users with available fields
+        // Always try to spawn for users
         if (true) {
           
           // Get user's unlocked fields
           const unlockedFields = await storage.getUnlockedFields(user.id);
+          const unlockedFieldIndices = unlockedFields.map(field => field.fieldIndex);
           
-          if (unlockedFields.length === 0) {
-            console.log(`☀️ User ${user.username} has no unlocked fields, skipping`);
-            continue;
+          // Calculate which fields are "unlock fields" (adjacent to unlocked fields)
+          const unlockFieldIndices: number[] = [];
+          for (const fieldIndex of unlockedFieldIndices) {
+            // Add adjacent fields as unlock fields
+            const row = Math.floor(fieldIndex / 10);
+            const col = fieldIndex % 10;
+            
+            // Check all 4 directions (up, down, left, right)
+            const adjacents = [
+              (row - 1) * 10 + col, // up
+              (row + 1) * 10 + col, // down
+              row * 10 + (col - 1), // left
+              row * 10 + (col + 1)  // right
+            ];
+            
+            for (const adj of adjacents) {
+              if (adj >= 0 && adj < 50 && !unlockedFieldIndices.includes(adj) && !unlockFieldIndices.includes(adj)) {
+                unlockFieldIndices.push(adj);
+              }
+            }
           }
-
-          // Get planted fields to avoid spawning on occupied fields
-          const plantedFields = await storage.getPlantedFields(user.id);
-          const plantedFieldIndices = plantedFields.map(field => field.fieldIndex);
           
-          // Filter to only include empty unlocked fields (not planted and not unlock fields)
-          const availableFields = unlockedFields.filter(field => 
-            !plantedFieldIndices.includes(field.fieldIndex) && 
-            field.fieldIndex > 0 // Skip field 0 which is unlock field
-          );
-
-          if (availableFields.length === 0) {
-            console.log(`☀️ User ${user.username} has no available empty fields for sun spawn`);
-            continue;
-          }
-
-          // Check if any field already has an active sun
-          const fieldsWithActiveSuns: any[] = [];
-          for (const field of availableFields) {
-            const activeSun = await storage.getActiveSunOnField(field.fieldIndex);
-            if (!activeSun) {
-              fieldsWithActiveSuns.push(field);
+          // Find inactive fields (not unlocked, not unlock fields)
+          const inactiveFields: number[] = [];
+          for (let fieldIndex = 0; fieldIndex < 50; fieldIndex++) {
+            if (!unlockedFieldIndices.includes(fieldIndex) && !unlockFieldIndices.includes(fieldIndex)) {
+              inactiveFields.push(fieldIndex);
             }
           }
 
-          if (fieldsWithActiveSuns.length === 0) {
-            console.log(`☀️ User ${user.username}: All available fields already have active suns`);
+          if (inactiveFields.length === 0) {
+            console.log(`☀️ User ${user.username} has no inactive fields for sun spawn`);
             continue;
           }
 
-          // Pick a random available field
-          const randomField = fieldsWithActiveSuns[Math.floor(Math.random() * fieldsWithActiveSuns.length)];
+          // Check if any inactive field already has an active sun
+          const fieldsWithoutActiveSuns: number[] = [];
+          for (const fieldIndex of inactiveFields) {
+            const activeSun = await storage.getActiveSunOnField(fieldIndex);
+            if (!activeSun) {
+              fieldsWithoutActiveSuns.push(fieldIndex);
+            }
+          }
+
+          if (fieldsWithoutActiveSuns.length === 0) {
+            console.log(`☀️ User ${user.username}: All inactive fields already have active suns`);
+            continue;
+          }
+
+          // Pick a random inactive field
+          const randomFieldIndex = fieldsWithoutActiveSuns[Math.floor(Math.random() * fieldsWithoutActiveSuns.length)];
           
-          // Spawn sun on the selected field
-          const result = await storage.spawnSun(randomField.fieldIndex);
+          // Spawn sun on the selected inactive field
+          const result = await storage.spawnSun(randomFieldIndex);
           
           if (result.success) {
-            console.log(`☀️ Successfully spawned ${result.sunAmount} suns on field ${randomField.fieldIndex} for user ${user.username}`);
+            console.log(`☀️ Successfully spawned ${result.sunAmount} suns on inactive field ${randomFieldIndex} for user ${user.username}`);
             spawnedAny = true;
           } else {
-            console.log(`☀️ Failed to spawn sun on field ${randomField.fieldIndex} for user ${user.username}`);
+            console.log(`☀️ Failed to spawn sun on inactive field ${randomFieldIndex} for user ${user.username}`);
           }
         }
       }
