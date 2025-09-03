@@ -422,17 +422,50 @@ export const BouquetsView: React.FC = () => {
                               Rezept
                             </Badge>
                           </div>
-                          <Button
-                            onClick={async () => {
-                              const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
-                              setExpandedBouquet(newExpanded);
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
-                          >
-                            {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {/* Kompatibilitäts-Anzeige */}
+                            {(() => {
+                              const hasFlower1 = myFlowers.some(f => f.flowerId === recipe.flowerId1);
+                              const hasFlower2 = myFlowers.some(f => f.flowerId === recipe.flowerId2);  
+                              const hasFlower3 = myFlowers.some(f => f.flowerId === recipe.flowerId3);
+                              const compatibleCount = [hasFlower1, hasFlower2, hasFlower3].filter(Boolean).length;
+                              
+                              if (compatibleCount === 3) {
+                                return (
+                                  <Badge className="bg-green-500/20 text-green-400 border border-green-400/40 px-2 py-1 text-xs font-semibold">
+                                    <Heart className="h-3 w-3 mr-1" />
+                                    ✓ Alle Blumen verfügbar
+                                  </Badge>
+                                );
+                              } else if (compatibleCount > 0) {
+                                return (
+                                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-400/40 px-2 py-1 text-xs">
+                                    <Star className="h-3 w-3 mr-1" />
+                                    {compatibleCount}/3 verfügbar
+                                  </Badge>
+                                );
+                              } else {
+                                return (
+                                  <Badge className="bg-red-500/20 text-red-400 border border-red-400/40 px-2 py-1 text-xs">
+                                    <Flower2 className="h-3 w-3 mr-1" />
+                                    Blumen fehlen
+                                  </Badge>
+                                );
+                              }
+                            })()}
+                            
+                            <Button
+                              onClick={async () => {
+                                const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
+                                setExpandedBouquet(newExpanded);
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
+                            >
+                              {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
