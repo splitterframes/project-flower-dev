@@ -700,7 +700,7 @@ export const GardenView: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
+          <div className="grid grid-cols-10 gap-2 garden-grid-mobile sm:garden-grid-desktop">
             {gardenFields.map((field) => {
               // Check if field is adjacent to any unlocked field
               const isNextToUnlock = !field.isUnlocked && (() => {

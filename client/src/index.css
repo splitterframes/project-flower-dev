@@ -201,8 +201,8 @@ canvas {
 
   /* Mobile garden grid */
   .garden-grid-mobile {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.25rem; /* 4px */
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem; /* 8px */
   }
 
   .garden-grid-desktop {
