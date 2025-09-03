@@ -74,12 +74,16 @@ class SunSpawner {
             const row = Math.floor(fieldIndex / 10);
             const col = fieldIndex % 10;
             
-            // Check all 4 directions (up, down, left, right)
+            // Check all 8 directions (including diagonal) to match frontend logic
             const adjacents = [
-              (row - 1) * 10 + col, // up
-              (row + 1) * 10 + col, // down
-              row * 10 + (col - 1), // left
-              row * 10 + (col + 1)  // right
+              (row - 1) * 10 + (col - 1), // up-left
+              (row - 1) * 10 + col,       // up
+              (row - 1) * 10 + (col + 1), // up-right
+              row * 10 + (col - 1),       // left
+              row * 10 + (col + 1),       // right
+              (row + 1) * 10 + (col - 1), // down-left
+              (row + 1) * 10 + col,       // down
+              (row + 1) * 10 + (col + 1)  // down-right
             ];
             
             for (const adj of adjacents) {
@@ -134,10 +138,14 @@ class SunSpawner {
             const col = fieldIndex % 10;
             
             const adjacents = [
-              (row - 1) * 10 + col, // up
-              (row + 1) * 10 + col, // down
-              row * 10 + (col - 1), // left
-              row * 10 + (col + 1)  // right
+              (row - 1) * 10 + (col - 1), // up-left
+              (row - 1) * 10 + col,       // up
+              (row - 1) * 10 + (col + 1), // up-right
+              row * 10 + (col - 1),       // left
+              row * 10 + (col + 1),       // right
+              (row + 1) * 10 + (col - 1), // down-left
+              (row + 1) * 10 + col,       // down
+              (row + 1) * 10 + (col + 1)  // down-right
             ];
             
             for (const adj of adjacents) {
