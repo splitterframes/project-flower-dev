@@ -1,11 +1,14 @@
 import React, { useEffect } from "react";
 import { Layout } from "./components/Layout";
 import { Toaster } from "./components/ui/sonner";
+import { NotificationDialog } from "./components/ui/NotificationDialog";
 import { useAudio } from "./lib/stores/useAudio";
+import { useNotification } from "./hooks/useNotification";
 import "@fontsource/inter";
 
 function App() {
   const { setBackgroundMusic, setHitSound, setSuccessSound } = useAudio();
+  const { isOpen, message, type, title, closeNotification } = useNotification();
 
   // Initialize audio assets
   useEffect(() => {
@@ -29,6 +32,13 @@ function App() {
     <>
       <Layout />
       <Toaster />
+      <NotificationDialog
+        isOpen={isOpen}
+        onClose={closeNotification}
+        message={message}
+        type={type}
+        title={title}
+      />
     </>
   );
 }

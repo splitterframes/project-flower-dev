@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useNotification } from "../hooks/useNotification";
 import { useSuns } from "@/lib/stores/useSuns";
 import { Package, Flower, Bug, Gem, Sprout, Star, Sun } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -14,6 +15,7 @@ import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly } from "@
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
   const { setSuns } = useSuns();
+  const { showNotification } = useNotification();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
@@ -421,11 +423,11 @@ export const InventoryView: React.FC = () => {
         // Update credits would be here if we had access to it
       } else {
         const error = await response.json();
-        alert(error.message || 'Fehler beim Erstellen des Bouquets');
+        showNotification(error.message || 'Fehler beim Erstellen des Bouquets', 'error');
       }
     } catch (error) {
       console.error('Failed to create bouquet:', error);
-      alert('Fehler beim Erstellen des Bouquets');
+      showNotification('Fehler beim Erstellen des Bouquets', 'error');
     }
   };
 

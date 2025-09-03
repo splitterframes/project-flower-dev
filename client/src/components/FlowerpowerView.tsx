@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useNotification } from "../hooks/useNotification";
 import { RarityImage } from "./RarityImage";
 import { Sparkles, Flower, Zap, Star, Heart, Plus, Minus, Trophy, Users, Info, Gift } from "lucide-react";
 
@@ -40,6 +41,7 @@ interface UserFlower {
 
 export const FlowerpowerView: React.FC = () => {
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [flowers, setFlowers] = useState<UserFlower[]>([]);
   const [challenge, setChallenge] = useState<WeeklyChallenge | null>(null);
   const [isActive, setIsActive] = useState(false);
@@ -129,7 +131,7 @@ export const FlowerpowerView: React.FC = () => {
         loadLeaderboard();
         fetchMyFlowers(); // Refresh flowers
       } else {
-        alert(data.message);
+        showNotification(data.message, 'error');
       }
     } catch (error) {
       console.error('Error donating flower:', error);

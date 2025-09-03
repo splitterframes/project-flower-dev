@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
+import { useNotification } from "../hooks/useNotification";
 import { getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Store,
@@ -39,6 +40,7 @@ export const MarketView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
   const { suns, setSuns } = useSuns();
+  const { showNotification } = useNotification();
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
   const [creditOffers, setCreditOffers] = useState<any[]>([]);
   const [sunOffers, setSunOffers] = useState<any[]>([]);
@@ -114,7 +116,7 @@ export const MarketView: React.FC = () => {
 
   const buyListing = async (listingId: number, quantity: number, totalCost: number) => {
     if (!user || credits < totalCost) {
-      alert(`Du brauchst ${totalCost} Cr um dieses Angebot zu kaufen!`);
+      showNotification(`Du brauchst ${totalCost} Cr um dieses Angebot zu kaufen!`, 'warning');
       return;
     }
 
@@ -133,13 +135,13 @@ export const MarketView: React.FC = () => {
         await updateCredits(user.id, -totalCost);
         await fetchMarketListings();
         await fetchMySeeds();
-        alert('Kauf erfolgreich!');
+        showNotification('Kauf erfolgreich!', 'success');
       } else {
         const error = await response.json();
-        alert(error.message || 'Kauf fehlgeschlagen');
+        showNotification(error.message || 'Kauf fehlgeschlagen', 'error');
       }
     } catch (error) {
-      alert('Kauf fehlgeschlagen');
+      showNotification('Kauf fehlgeschlagen', 'error');
     }
     setIsLoading(false);
   };
@@ -163,20 +165,20 @@ export const MarketView: React.FC = () => {
         await fetchMarketListings();
         await fetchMySeeds();
         setSellForm({ seedId: 0, quantity: 1, pricePerUnit: 10 });
-        alert('Angebot erfolgreich erstellt!');
+        showNotification('Angebot erfolgreich erstellt!', 'success');
       } else {
         const error = await response.json();
-        alert(error.message || 'Angebot fehlgeschlagen');
+        showNotification(error.message || 'Angebot fehlgeschlagen', 'error');
       }
     } catch (error) {
-      alert('Angebot fehlgeschlagen');
+      showNotification('Angebot fehlgeschlagen', 'error');
     }
     setIsLoading(false);
   };
 
   const buyFromServer = async (seedId: number, quantity: number, totalCost: number) => {
     if (!user || credits < totalCost) {
-      alert(`Du brauchst ${totalCost} Cr um ${quantity} Samen zu kaufen!`);
+      showNotification(`Du brauchst ${totalCost} Cr um ${quantity} Samen zu kaufen!`, 'warning');
       return;
     }
 
@@ -195,13 +197,13 @@ export const MarketView: React.FC = () => {
         const data = await response.json();
         await updateCredits(user.id, -totalCost);
         await fetchMySeeds();
-        alert(data.message || 'Kauf erfolgreich!');
+        showNotification(data.message || 'Kauf erfolgreich!', 'success');
       } else {
         const error = await response.json();
-        alert(error.message || 'Kauf fehlgeschlagen');
+        showNotification(error.message || 'Kauf fehlgeschlagen', 'error');
       }
     } catch (error) {
-      alert('Kauf fehlgeschlagen');
+      showNotification('Kauf fehlgeschlagen', 'error');
     }
     setIsLoading(false);
   };
@@ -212,7 +214,7 @@ export const MarketView: React.FC = () => {
     const totalCost = quantity * pricePerUnit;
     
     if (suns < totalCost) {
-      alert(`Du brauchst ${totalCost} Sonnen um ${quantity} Samen zu kaufen!`);
+      showNotification(`Du brauchst ${totalCost} Sonnen um ${quantity} Samen zu kaufen!`, 'warning');
       return;
     }
 
@@ -229,7 +231,7 @@ export const MarketView: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message);
+        showNotification(data.message, 'success');
         // Update suns by fetching from server
         const sunsResponse = await fetch(`/api/user/${user.id}/suns`);
         if (sunsResponse.ok) {
@@ -239,11 +241,11 @@ export const MarketView: React.FC = () => {
         await fetchMySeeds();
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Fehler beim Kauf');
+        showNotification(errorData.message || 'Fehler beim Kauf', 'error');
       }
     } catch (error) {
       console.error('Suns purchase error:', error);
-      alert('Fehler beim Kauf');
+      showNotification('Fehler beim Kauf', 'error');
     } finally {
       setIsLoading(false);
     }

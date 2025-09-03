@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useSunSpawns } from "@/lib/stores/useSunSpawns";
@@ -67,6 +68,7 @@ export const GardenView: React.FC = () => {
   const { credits, updateCredits } = useCredits();
   const { suns, setSuns } = useSuns();
   const { sunSpawns, setSunSpawns, removeSunSpawn, getSunSpawnOnField, setLoading } = useSunSpawns();
+  const { showNotification } = useNotification();
 
   // Initialize garden fields (will be populated from backend)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
@@ -399,11 +401,11 @@ export const GardenView: React.FC = () => {
         window.location.reload();
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Fehler beim Freischalten des Feldes');
+        showNotification(errorData.error || 'Fehler beim Freischalten des Feldes', 'error');
       }
     } catch (error) {
       console.error('Failed to unlock field:', error);
-      alert('Fehler beim Freischalten des Feldes');
+      showNotification('Fehler beim Freischalten des Feldes', 'error');
     }
   };
 
@@ -437,11 +439,11 @@ export const GardenView: React.FC = () => {
         await fetchPlacedBouquets();
       } else {
         const error = await response.json();
-        alert(error.message || 'Fehler beim Platzieren');
+        showNotification(error.message || 'Fehler beim Platzieren', 'error');
       }
     } catch (error) {
       console.error('Failed to place bouquet:', error);
-      alert('Fehler beim Platzieren');
+      showNotification('Fehler beim Platzieren', 'error');
     }
   };
 
@@ -486,11 +488,11 @@ export const GardenView: React.FC = () => {
         await fetchFieldButterflies();
       } else {
         const error = await response.json();
-        alert(error.message || 'Fehler beim Pflanzen');
+        showNotification(error.message || 'Fehler beim Pflanzen', 'error');
       }
     } catch (error) {
       console.error('Failed to plant seed:', error);
-      alert('Fehler beim Pflanzen');
+      showNotification('Fehler beim Pflanzen', 'error');
     }
   };
 
@@ -724,7 +726,7 @@ export const GardenView: React.FC = () => {
         }, 800);
       } else {
         const error = await response.json();
-        alert(error.message || 'Fehler beim Ernten');
+        showNotification(error.message || 'Fehler beim Ernten', 'error');
         // Remove visual feedback on error
         setHarvestedFields(prev => {
           const newSet = new Set(prev);
@@ -734,7 +736,7 @@ export const GardenView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to harvest:', error);
-      alert('Fehler beim Ernten');
+      showNotification('Fehler beim Ernten', 'error');
       // Remove visual feedback on error
       setHarvestedFields(prev => {
         const newSet = new Set(prev);

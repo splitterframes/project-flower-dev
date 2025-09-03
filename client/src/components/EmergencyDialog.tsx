@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { useNotification } from "../hooks/useNotification";
 import { AlertTriangle, Sparkles, Sprout } from "lucide-react";
 
 interface EmergencyDialogProps {
@@ -18,6 +19,7 @@ export const EmergencyDialog: React.FC<EmergencyDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const { credits } = useCredits();
+  const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
   const [eligibilityReason, setEligibilityReason] = useState<string>("");
@@ -65,19 +67,19 @@ export const EmergencyDialog: React.FC<EmergencyDialogProps> = ({
         
         // Check if SOS was activated
         if (data.sosActivated) {
-          alert(`🆘 ${data.message}`);
+          showNotification(`🆘 ${data.message}`, 'warning');
         } else {
-          alert(data.message || "Du hast 3 Notfall-Samen erhalten! 🌱");
+          showNotification(data.message || "Du hast 3 Notfall-Samen erhalten! 🌱", 'success');
         }
         
         onSeedsReceived();
         onClose(); // Always close dialog on success
       } else {
         const error = await response.json();
-        alert(error.message || "Fehler beim Empfangen der Notfall-Samen");
+        showNotification(error.message || "Fehler beim Empfangen der Notfall-Samen", 'error');
       }
     } catch (error) {
-      alert("Fehler beim Empfangen der Notfall-Samen");
+      showNotification("Fehler beim Empfangen der Notfall-Samen", 'error');
     }
     setIsLoading(false);
   };

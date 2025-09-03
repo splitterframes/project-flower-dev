@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
+import { useNotification } from '../hooks/useNotification';
 import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
 import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -46,6 +47,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   onBack
 }) => {
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
   const [vipButterflies, setVipButterflies] = useState<any[]>([]);
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
@@ -96,7 +98,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 
     // Check if frame has 6 butterflies before allowing like
     if (!isCurrentlyLiked && frameButterflies.length < 6) {
-      alert('Du kannst nur volle Rahmen mit 6 Schmetterlingen liken!');
+      showNotification('Du kannst nur volle Rahmen mit 6 Schmetterlingen liken!', 'warning');
       return;
     }
 
@@ -121,11 +123,11 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       } else {
         // Handle server error
         const errorData = await response.json();
-        alert(errorData.message || 'Fehler beim Liken des Rahmens');
+        showNotification(errorData.message || 'Fehler beim Liken des Rahmens', 'error');
       }
     } catch (error) {
       console.error('Failed to toggle like:', error);
-      alert('Fehler beim Liken des Rahmens');
+      showNotification('Fehler beim Liken des Rahmens', 'error');
     }
   };
 
