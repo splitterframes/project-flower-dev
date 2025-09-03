@@ -730,7 +730,7 @@ export const GardenView: React.FC = () => {
                     ${field.isUnlocked 
                       ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40 active:bg-green-900/60' 
                       : isNextToUnlock 
-                        ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-30' 
+                        ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50' 
                         : 'border-slate-600 bg-slate-800 opacity-40'
                     }
                   `}
