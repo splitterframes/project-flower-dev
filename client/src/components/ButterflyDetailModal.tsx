@@ -289,14 +289,12 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               {/* Name and Rarity */}
-              <div className="flex items-center">
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{butterfly.butterflyName}</h3>
-                  <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-base font-bold px-3 py-1`}>
-                    <Star className="h-4 w-4 mr-2" />
-                    {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-                  </Badge>
-                </div>
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-bold text-white">{butterfly.butterflyName}</h3>
+                <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-base font-bold px-3 py-1`}>
+                  <Star className="h-4 w-4 mr-2" />
+                  {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                </Badge>
               </div>
 
               {/* Navigation Controls */}
