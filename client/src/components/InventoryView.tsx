@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useSuns } from "@/lib/stores/useSuns";
 import { Package, Flower, Bug, Gem, Sprout, Star, Sun } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
@@ -12,6 +13,7 @@ import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly } from "@
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
+  const { setSuns } = useSuns();
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
@@ -179,6 +181,12 @@ export const InventoryView: React.FC = () => {
         console.log(`✅ ${data.message}`);
         // Refresh butterflies
         await fetchMyButterflies();
+        // Update suns in header
+        const sunResponse = await fetch(`/api/user/${user.id}/suns`);
+        if (sunResponse.ok) {
+          const sunData = await sunResponse.json();
+          setSuns(sunData.suns);
+        }
       } else {
         const errorData = await response.json();
         console.error('Failed to sell butterfly:', errorData.message);

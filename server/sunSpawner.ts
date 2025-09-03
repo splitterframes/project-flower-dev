@@ -123,6 +123,15 @@ class SunSpawner {
           // Pick a random inactive field
           const randomFieldIndex = fieldsWithoutActiveSuns[Math.floor(Math.random() * fieldsWithoutActiveSuns.length)];
           
+          // Double-check: Make sure field is not unlocked for this specific user before spawning
+          const userUnlockedFields = await storage.getUnlockedFields(user.id);
+          const userUnlockedIndices = userUnlockedFields.map(field => field.fieldIndex);
+          
+          if (userUnlockedIndices.includes(randomFieldIndex)) {
+            console.log(`☀️ ERROR: Attempted to spawn sun on UNLOCKED field ${randomFieldIndex} for user ${user.username}! Skipping.`);
+            continue;
+          }
+
           // Spawn sun on the selected inactive field
           const result = await storage.spawnSun(randomFieldIndex, user.id);
           
