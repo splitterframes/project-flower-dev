@@ -29,6 +29,7 @@ export const ExhibitionView: React.FC = () => {
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
+  const [currentButterflyIndex, setCurrentButterflyIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{frameId: number, slotIndex: number} | null>(null);
   const [showInventoryDialog, setShowInventoryDialog] = useState(false);
@@ -224,12 +225,58 @@ export const ExhibitionView: React.FC = () => {
     return normalIncome + vipIncome;
   };
 
+  // Navigation helpers
+  const getAllButterflies = () => {
+    // Combine normal and VIP butterflies for navigation
+    const normalButterflies = exhibitionButterflies.map(b => ({ ...b, isVip: false }));
+    const vipButterflies = exhibitionVipButterflies.map(vip => ({ 
+      id: vip.id,
+      userId: vip.userId,
+      frameId: vip.frameId,
+      slotIndex: vip.slotIndex,
+      butterflyId: vip.vipButterflyId,
+      butterflyName: vip.vipButterflyName,
+      butterflyRarity: 'vip' as const,
+      butterflyImageUrl: vip.vipButterflyImageUrl,
+      placedAt: vip.placedAt,
+      createdAt: vip.createdAt,
+      isVip: true
+    }));
+    return [...normalButterflies, ...vipButterflies];
+  };
+
+  const navigateToNextButterfly = () => {
+    const allButterflies = getAllButterflies();
+    if (allButterflies.length <= 1) return;
+    
+    const nextIndex = (currentButterflyIndex + 1) % allButterflies.length;
+    const nextButterfly = allButterflies[nextIndex];
+    setCurrentButterflyIndex(nextIndex);
+    setSelectedButterfly(nextButterfly);
+  };
+
+  const navigateToPreviousButterfly = () => {
+    const allButterflies = getAllButterflies();
+    if (allButterflies.length <= 1) return;
+    
+    const prevIndex = currentButterflyIndex === 0 ? allButterflies.length - 1 : currentButterflyIndex - 1;
+    const prevButterfly = allButterflies[prevIndex];
+    setCurrentButterflyIndex(prevIndex);
+    setSelectedButterfly(prevButterfly);
+  };
+
   const handleButterflyClick = (butterfly: ExhibitionButterfly) => {
     // Add frameId to the butterfly data for the modal
     const butterflyWithFrame = {
       ...butterfly,
       frameId: butterfly.frameId
     };
+    
+    // Find the index of this butterfly in the combined list
+    const allButterflies = getAllButterflies();
+    const butterflyIndex = allButterflies.findIndex(b => b.id === butterfly.id && !b.isVip);
+    
+    setCurrentButterflyIndex(butterflyIndex >= 0 ? butterflyIndex : 0);
     setSelectedButterfly(butterflyWithFrame);
     setShowButterflyDialog(true);
   };
@@ -248,6 +295,12 @@ export const ExhibitionView: React.FC = () => {
       placedAt: vipButterfly.placedAt,
       createdAt: vipButterfly.createdAt
     };
+    
+    // Find the index of this VIP butterfly in the combined list
+    const allButterflies = getAllButterflies();
+    const butterflyIndex = allButterflies.findIndex(b => b.id === vipButterfly.id && b.isVip);
+    
+    setCurrentButterflyIndex(butterflyIndex >= 0 ? butterflyIndex : 0);
     setSelectedButterfly(butterflyForModal);
     setShowButterflyDialog(true);
   };
@@ -617,6 +670,10 @@ export const ExhibitionView: React.FC = () => {
           fetchUserButterflies();
           fetchUserVipButterflies();
         }}
+        currentIndex={currentButterflyIndex}
+        totalCount={getAllButterflies().length}
+        onNext={navigateToNextButterfly}
+        onPrevious={navigateToPreviousButterfly}
       />
 
       {/* Butterfly Inventory Dialog */}

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { RarityImage } from "./RarityImage";
-import { X, Clock, Coins, Star, Timer } from "lucide-react";
+import { X, Clock, Coins, Star, Timer, ChevronLeft, ChevronRight } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { toast } from "sonner";
 
@@ -24,6 +24,11 @@ interface ButterflyDetailModalProps {
   butterfly: ButterflyDetailProps | null;
   onSold: () => void;
   readOnly?: boolean; // For viewing other users' butterflies without selling options
+  // Navigation props
+  currentIndex?: number;
+  totalCount?: number;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
@@ -31,7 +36,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   onClose,
   butterfly,
   onSold,
-  readOnly = false
+  readOnly = false,
+  currentIndex,
+  totalCount,
+  onNext,
+  onPrevious
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [canSell, setCanSell] = useState<boolean>(false);
@@ -311,6 +320,39 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                       }
                     </div>
                   </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Navigation Controls - Only show if navigation is available */}
+            {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-4">
+                  <div className="text-center mb-4">
+                    <span className="text-sm text-slate-400">
+                      Schmetterling {currentIndex + 1} von {totalCount}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={onPrevious}
+                      disabled={currentIndex === 0}
+                      className="flex-1 text-base font-semibold py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                      <ChevronLeft className="h-5 w-5 mr-2" />
+                      Vorheriger
+                    </Button>
+                    
+                    <Button
+                      onClick={onNext}
+                      disabled={currentIndex === totalCount - 1}
+                      className="flex-1 text-base font-semibold py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                      Nächster
+                      <ChevronRight className="h-5 w-5 ml-2" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
