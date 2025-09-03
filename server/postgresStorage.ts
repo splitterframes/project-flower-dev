@@ -119,9 +119,9 @@ export class PostgresStorage implements IStorage {
           .from(unlockedFields)
           .where(eq(unlockedFields.userId, user.id));
         
-        // If user has no unlocked fields, give them starter fields (0, 1, 10, 11)
+        // If user has no unlocked fields, give them starter fields (0, 1, 5, 6)
         if (existingUnlockedFields.length === 0) {
-          const starterFields = [0, 1, 10, 11]; // Field indices 0,1,10,11 = Field IDs 1,2,11,12
+          const starterFields = [0, 1, 5, 6]; // Field indices 0,1,5,6 = Field IDs 1,2,6,7
           
           for (const fieldIndex of starterFields) {
             await this.db.insert(unlockedFields).values({
