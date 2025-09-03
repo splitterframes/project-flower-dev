@@ -431,18 +431,18 @@ export const ExhibitionView: React.FC = () => {
     
     return (
       <Card key={frame.id} className="bg-gradient-to-br from-amber-900 to-amber-800 border-amber-700 shadow-2xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-amber-100 text-center flex items-center justify-between">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-amber-100 text-center flex items-center justify-between text-xl">
             <div className="flex items-center">
-              <Trophy className="h-5 w-5 mr-2 text-amber-300" />
+              <Trophy className="h-6 w-6 mr-3 text-amber-300" />
               <span>Rahmen #{frame.frameNumber} ({getFrameHourlyIncome(frame.id)} cr/h)</span>
               {isFullFrame && (
-                <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse shadow-lg">
+                <span className="ml-3 text-sm bg-green-600 text-white px-3 py-1 rounded-full animate-pulse shadow-lg">
                   ✨ Vollständig
                 </span>
               )}
               {!isFullFrame && (
-                <span className="ml-2 text-xs bg-amber-600 text-amber-100 px-2 py-1 rounded-full">
+                <span className="ml-3 text-sm bg-amber-600 text-amber-100 px-3 py-1 rounded-full">
                   {totalButterflies}/6
                 </span>
               )}
@@ -452,28 +452,28 @@ export const ExhibitionView: React.FC = () => {
               {/* Likes Display */}
               {(frameLike?.totalLikes || 0) > 0 && (
                 <div className="flex items-center text-pink-300">
-                  <Star className="h-4 w-4 mr-1 fill-pink-300" />
-                  <span className="text-sm">{frameLike?.totalLikes}</span>
+                  <Star className="h-5 w-5 mr-2 fill-pink-300" />
+                  <span className="text-base">{frameLike?.totalLikes}</span>
                   {isFullFrame && (
-                    <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
+                    <span className="ml-2 text-sm text-green-300">(-{frameLike?.totalLikes}min)</span>
                   )}
                 </div>
               )}
               
               {/* Navigation Controls */}
               {frames.length > 1 && (
-                <div className="flex items-center space-x-2 bg-amber-800/60 rounded-lg px-2 py-1 border border-amber-600">
+                <div className="flex items-center space-x-3 bg-amber-800/60 rounded-lg px-3 py-2 border border-amber-600">
                   <Button
                     onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
                     disabled={currentFrameIndex === 0}
                     variant="outline"
                     size="sm"
-                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-6 w-6 p-0"
+                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-8 w-8 p-0"
                   >
-                    <ChevronLeft className="h-3 w-3" />
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                   
-                  <div className="text-sm font-semibold text-amber-100 px-2">
+                  <div className="text-base font-semibold text-amber-100 px-3">
                     #{frame.frameNumber} / {frames.length}
                   </div>
                   
@@ -482,9 +482,9 @@ export const ExhibitionView: React.FC = () => {
                     disabled={currentFrameIndex >= frames.length - 1}
                     variant="outline"
                     size="sm"
-                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-6 w-6 p-0"
+                    className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-8 w-8 p-0"
                   >
-                    <ChevronRight className="h-3 w-3" />
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               )}
@@ -493,8 +493,8 @@ export const ExhibitionView: React.FC = () => {
         </CardHeader>
         <CardContent>
           {/* Wood frame effect */}
-          <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-6 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-4 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[400px]">
+          <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
+            <div className="bg-slate-100 p-5 rounded grid grid-cols-3 grid-rows-2 gap-4 h-[520px]">
               {Array.from({ length: 6 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
@@ -650,7 +650,7 @@ export const ExhibitionView: React.FC = () => {
 
       {/* Frame Display */}
       {frames.length > 0 && (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
         </div>
       )}
