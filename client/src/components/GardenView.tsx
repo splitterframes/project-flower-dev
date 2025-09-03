@@ -120,6 +120,17 @@ export const GardenView: React.FC = () => {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Auto-refresh sun spawns every 10 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      fetchSunSpawns();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
   // Update timer every second
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1120,15 +1131,38 @@ export const GardenView: React.FC = () => {
 
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
-                    <div className="absolute inset-0 z-[60] pointer-events-auto">
+                    <div className="absolute inset-0 pointer-events-auto" style={{zIndex: 999}}>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="cursor-pointer w-full h-full">
-                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400/80 to-orange-400/70 rounded-lg border-3 border-yellow-500 shadow-2xl transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 hover:shadow-yellow-400/70 animate-bounce'}`}>
-                              <Sun className="w-full h-full max-w-20 max-h-20 text-yellow-100 animate-spin drop-shadow-2xl" style={{animationDuration: '3s'}} />
-                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-orange-200 animate-pulse" />
-                              <div className="absolute inset-0 bg-yellow-300/30 rounded-lg animate-ping"></div>
-                              <div className="absolute bottom-0 left-0 right-0 text-xs font-bold text-white bg-gradient-to-r from-yellow-600 to-orange-600 px-1 py-1 rounded-b-lg text-center border-t border-yellow-400">
+                            <div 
+                              className={`relative w-full h-full flex items-center justify-center rounded-lg transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 animate-bounce'}`}
+                              style={{
+                                background: 'radial-gradient(circle, #ffd700 0%, #ffed4e 30%, #ffa500 70%, #ff8c00 100%)',
+                                border: '3px solid #ffd700',
+                                boxShadow: '0 0 25px rgba(255, 215, 0, 0.9), 0 0 50px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3)',
+                                filter: 'brightness(1.3) saturate(1.2)'
+                              }}
+                            >
+                              <Sun 
+                                className="w-full h-full max-w-20 max-h-20 text-white animate-spin" 
+                                style={{
+                                  animationDuration: '3s',
+                                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 20px rgba(255,215,0,0.6))'
+                                }} 
+                              />
+                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-white animate-pulse" />
+                              <div 
+                                className="absolute inset-0 rounded-lg animate-ping opacity-75"
+                                style={{background: 'radial-gradient(circle, transparent 40%, rgba(255,215,0,0.4) 70%)'}}
+                              ></div>
+                              <div 
+                                className="absolute bottom-0 left-0 right-0 text-xs font-bold text-black px-1 py-1 rounded-b-lg text-center"
+                                style={{
+                                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,215,0,0.9))',
+                                  borderTop: '2px solid white'
+                                }}
+                              >
                                 {field.sunSpawnAmount}☀️
                               </div>
                             </div>
