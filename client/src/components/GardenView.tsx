@@ -1120,15 +1120,15 @@ export const GardenView: React.FC = () => {
 
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
-                    <div className="absolute inset-0 z-50">
+                    <div className="absolute inset-0 z-[60] pointer-events-auto">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="cursor-pointer w-full h-full">
-                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-300/40 to-orange-300/40 rounded-lg border-2 border-yellow-400/60 shadow-2xl transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 hover:shadow-yellow-400/50 animate-bounce'}`}>
-                              <Sun className="w-full h-full max-w-20 max-h-20 text-yellow-300 animate-spin drop-shadow-2xl" style={{animationDuration: '3s'}} />
-                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-orange-300 animate-pulse" />
-                              <div className="absolute inset-0 bg-yellow-400/20 rounded-lg animate-ping"></div>
-                              <div className="absolute bottom-1 left-1 text-xs font-bold text-yellow-200 bg-orange-600/80 px-1 rounded">
+                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400/80 to-orange-400/70 rounded-lg border-3 border-yellow-500 shadow-2xl transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-110 hover:shadow-yellow-400/70 animate-bounce'}`}>
+                              <Sun className="w-full h-full max-w-20 max-h-20 text-yellow-100 animate-spin drop-shadow-2xl" style={{animationDuration: '3s'}} />
+                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-orange-200 animate-pulse" />
+                              <div className="absolute inset-0 bg-yellow-300/30 rounded-lg animate-ping"></div>
+                              <div className="absolute bottom-0 left-0 right-0 text-xs font-bold text-white bg-gradient-to-r from-yellow-600 to-orange-600 px-1 py-1 rounded-b-lg text-center border-t border-yellow-400">
                                 {field.sunSpawnAmount}☀️
                               </div>
                             </div>
