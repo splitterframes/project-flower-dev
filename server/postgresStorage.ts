@@ -53,7 +53,7 @@ import {
   type DonateChallengeFlowerRequest,
   type InsertUser
 } from "@shared/schema";
-import { eq, ilike, and, lt, gt, inArray } from "drizzle-orm";
+import { eq, ilike, and, lt, gt, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
@@ -1780,9 +1780,16 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateUserActivity(userId: number): Promise<void> {
-    // Update user's last activity timestamp if needed
-    // For now, just a placeholder
-    console.log(`User ${userId} activity updated`);
+    try {
+      // Update user's last activity timestamp to current time
+      await this.db.update(users)
+        .set({ updatedAt: new Date() })
+        .where(eq(users.id, userId));
+      
+      console.log(`✅ User ${userId} activity timestamp updated`);
+    } catch (error) {
+      console.error(`❌ Failed to update user ${userId} activity:`, error);
+    }
   }
 
   // Emergency system methods
@@ -1859,11 +1866,85 @@ export class PostgresStorage implements IStorage {
     return { eligible: true };
   }
 
-  async getAllUsersWithStatus(): Promise<User[]> {
-    console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding all users for passive income processing');
-    const result = await this.db.select().from(users);
-    console.log(`🔍 Found ${result.length} users for passive income check:`, result.map(u => `${u.username}(${u.id})`));
-    return result;
+  async getAllUsersWithStatus(excludeUserId?: number): Promise<Array<{
+    id: number;
+    username: string;
+    isOnline: boolean;
+    exhibitionButterflies: number;
+    lastSeen: string;
+    totalLikes: number;
+  }>> {
+    console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
+    
+    // Get all users
+    const allUsers = await this.db.select().from(users);
+    console.log(`🔍 Found ${allUsers.length} users total`);
+    
+    const userList = [];
+    
+    for (const user of allUsers) {
+      // Skip demo users and current user if specified
+      if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
+      
+      // Count exhibition butterflies for this user
+      const butterflyCountResult = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(exhibitionButterflies)
+        .where(eq(exhibitionButterflies.userId, user.id));
+      
+      const butterflyCount = butterflyCountResult[0]?.count || 0;
+      
+      // Calculate online status based on updatedAt timestamp
+      const now = new Date();
+      const lastActivity = user.updatedAt || user.createdAt;
+      const timeDiff = now.getTime() - lastActivity.getTime();
+      const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+      
+      // Consider user online if last activity was within 5 minutes
+      const isOnline = minutesDiff < 5;
+      
+      // Format last seen
+      let lastSeen = '';
+      if (!isOnline) {
+        if (minutesDiff < 60) {
+          lastSeen = `vor ${minutesDiff} Min`;
+        } else if (minutesDiff < 1440) { // 24 hours
+          const hours = Math.floor(minutesDiff / 60);
+          lastSeen = `vor ${hours} Std`;
+        } else {
+          const days = Math.floor(minutesDiff / 1440);
+          lastSeen = `vor ${days} Tag${days === 1 ? '' : 'en'}`;
+        }
+      }
+      
+      // Calculate total likes for this user's exhibition
+      const totalLikesResult = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(exhibitionFrameLikes)
+        .where(eq(exhibitionFrameLikes.frameOwnerId, user.id));
+      
+      const totalLikes = totalLikesResult[0]?.count || 0;
+      
+      userList.push({
+        id: user.id,
+        username: user.username,
+        isOnline,
+        exhibitionButterflies: butterflyCount,
+        lastSeen,
+        totalLikes
+      });
+    }
+    
+    // Sort by online status first, then by username
+    userList.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) {
+        return b.isOnline ? 1 : -1; // Online users first
+      }
+      return a.username.localeCompare(b.username);
+    });
+    
+    console.log(`🔍 Processed ${userList.length} users for user list display`);
+    return userList;
   }
 
   async likeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {

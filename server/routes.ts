@@ -1104,9 +1104,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update current user's last activity timestamp
       await storage.updateUserActivity(currentUserId);
       
-      const users = await storage.getAllUsersWithStatus();
+      // Get user list excluding the current user  
+      const users = await storage.getAllUsersWithStatus(currentUserId);
       res.json({ users });
     } catch (error) {
+      console.error('Error fetching user list:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
