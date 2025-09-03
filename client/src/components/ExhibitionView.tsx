@@ -46,15 +46,36 @@ export const ExhibitionView: React.FC = () => {
     }
   }, [user]);
 
-  // Set to newest frame when frames are loaded, or reset frame index when frames change
+  // Set to newest frame with butterflies when frames are loaded, or reset frame index when frames change
   useEffect(() => {
-    if (frames.length > 0) {
-      // Always show the newest (last) frame when first loading or when frames change
+    if (frames.length > 0 && (exhibitionButterflies.length > 0 || exhibitionVipButterflies.length > 0)) {
+      // Find the last frame that has butterflies
+      let lastFrameWithButterflies = -1;
+      
+      for (let i = frames.length - 1; i >= 0; i--) {
+        const frameId = frames[i].id;
+        const hasNormalButterflies = exhibitionButterflies.some(b => b.frameId === frameId);
+        const hasVipButterflies = exhibitionVipButterflies.some(b => b.frameId === frameId);
+        
+        if (hasNormalButterflies || hasVipButterflies) {
+          lastFrameWithButterflies = i;
+          break;
+        }
+      }
+      
+      // If we found a frame with butterflies, go to it, otherwise go to the last frame
+      const targetIndex = lastFrameWithButterflies >= 0 ? lastFrameWithButterflies : frames.length - 1;
+      
+      if (currentFrameIndex === 0 || currentFrameIndex >= frames.length) {
+        setCurrentFrameIndex(targetIndex);
+      }
+    } else if (frames.length > 0) {
+      // If no butterflies yet, just go to the last frame
       if (currentFrameIndex === 0 || currentFrameIndex >= frames.length) {
         setCurrentFrameIndex(frames.length - 1);
       }
     }
-  }, [frames.length]);
+  }, [frames.length, exhibitionButterflies.length, exhibitionVipButterflies.length]);
 
   const fetchExhibitionData = async () => {
     if (!user) return;
