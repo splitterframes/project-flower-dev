@@ -187,6 +187,25 @@ export class PostgresStorage implements IStorage {
     return result[0] as User | undefined;
   }
 
+  async updateUserSuns(id: number, amount: number): Promise<User | undefined> {
+    // First get current suns
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentSuns = currentUser.suns || 100; // Default to 100 if null
+    const newSuns = currentSuns + amount; // amount is a delta (change), not absolute
+    console.log(`☀️ Suns Update: User ${id} hatte ${currentSuns} ☀️, ${amount >= 0 ? '+' : ''}${amount} ☀️ = ${newSuns} ☀️`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ suns: newSuns })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0] as User | undefined;
+  }
+
   // Market methods
   async getMarketListings(): Promise<any[]> {
     const listings = await this.db

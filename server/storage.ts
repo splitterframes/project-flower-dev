@@ -50,6 +50,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: number, amount: number): Promise<User | undefined>;
+  updateUserSuns(id: number, amount: number): Promise<User | undefined>;
   
   // Market methods
   getMarketListings(): Promise<any[]>;

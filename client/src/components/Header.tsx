@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle } from "lucide-react";
+import { useSuns } from "@/lib/stores/useSuns";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle, Sun } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
@@ -15,6 +16,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) => {
   const { user, logout } = useAuth();
   const { credits, setCredits } = useCredits();
+  const { suns, setSuns } = useSuns();
   const [inventoryCounts, setInventoryCounts] = useState({
     seeds: 0,
     flowers: 0,
@@ -56,9 +58,24 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     }
   };
 
+  const fetchSuns = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/suns`);
+      if (response.ok) {
+        const data = await response.json();
+        setSuns(data.suns);
+      }
+    } catch (error) {
+      console.error('Failed to fetch suns:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchCredits();
+      fetchSuns();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -68,6 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   useEffect(() => {
     if (user && refreshTrigger !== undefined) {
       fetchCredits();
+      fetchSuns();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -79,6 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     
     const interval = setInterval(() => {
       fetchCredits();
+      fetchSuns();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }, 10000); // Update every 10 seconds
@@ -190,6 +209,10 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
                 <div className="flex items-center space-x-1 text-slate-300">
                   <Bug className="h-4 w-4 text-blue-400" />
                   <span className="text-sm font-medium">{inventoryCounts.butterflies}</span>
+                </div>
+                <div className="flex items-center space-x-1 text-slate-300">
+                  <Sun className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm font-medium">{suns}</span>
                 </div>
               </div>
 
