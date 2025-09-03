@@ -240,7 +240,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
             {/* Butterfly Name and Rarity */}
             <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
               <CardContent className="p-6 text-center">
-                <h3 className="text-3xl font-bold text-white mb-4">{butterfly.butterflyName}</h3>
+                <h3 className="text-3xl font-bold text-white mb-4 min-h-[5rem] flex items-center justify-center">{butterfly.butterflyName}</h3>
                 
                 <Badge className={`${getRarityColor(butterfly.butterflyRarity as RarityTier)} text-lg font-bold px-4 py-2`}>
                   <Star className="h-4 w-4 mr-2" />
