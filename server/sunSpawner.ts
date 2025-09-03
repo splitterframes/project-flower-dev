@@ -55,56 +55,67 @@ class SunSpawner {
         return;
       }
 
-      // Pick a random user
-      const randomUser = allUsers[Math.floor(Math.random() * allUsers.length)];
-      
-      // Get user's unlocked fields
-      const unlockedFields = await storage.getUnlockedFields(randomUser.id);
-      
-      if (unlockedFields.length === 0) {
-        console.log(`☀️ User ${randomUser.username} has no unlocked fields, skipping`);
-        return;
-      }
+      let spawnedAny = false;
 
-      // Get planted fields to avoid spawning on occupied fields
-      const plantedFields = await storage.getPlantedFields(randomUser.id);
-      const plantedFieldIndices = plantedFields.map(field => field.fieldIndex);
-      
-      // Filter to only include empty unlocked fields (not planted and not unlock fields)
-      const availableFields = unlockedFields.filter(field => 
-        !plantedFieldIndices.includes(field.fieldIndex) && 
-        field.fieldIndex > 0 // Skip field 0 which is unlock field
-      );
+      // Try to spawn a sun for each user (50% chance per user)
+      for (const user of allUsers) {
+        // 50% chance to spawn for this user this cycle
+        if (Math.random() < 0.5) {
+          
+          // Get user's unlocked fields
+          const unlockedFields = await storage.getUnlockedFields(user.id);
+          
+          if (unlockedFields.length === 0) {
+            console.log(`☀️ User ${user.username} has no unlocked fields, skipping`);
+            continue;
+          }
 
-      if (availableFields.length === 0) {
-        console.log(`☀️ User ${randomUser.username} has no available empty fields for sun spawn`);
-        return;
-      }
+          // Get planted fields to avoid spawning on occupied fields
+          const plantedFields = await storage.getPlantedFields(user.id);
+          const plantedFieldIndices = plantedFields.map(field => field.fieldIndex);
+          
+          // Filter to only include empty unlocked fields (not planted and not unlock fields)
+          const availableFields = unlockedFields.filter(field => 
+            !plantedFieldIndices.includes(field.fieldIndex) && 
+            field.fieldIndex > 0 // Skip field 0 which is unlock field
+          );
 
-      // Check if any field already has an active sun
-      const fieldsWithActiveSuns: any[] = [];
-      for (const field of availableFields) {
-        const activeSun = await storage.getActiveSunOnField(field.fieldIndex);
-        if (!activeSun) {
-          fieldsWithActiveSuns.push(field);
+          if (availableFields.length === 0) {
+            console.log(`☀️ User ${user.username} has no available empty fields for sun spawn`);
+            continue;
+          }
+
+          // Check if any field already has an active sun
+          const fieldsWithActiveSuns: any[] = [];
+          for (const field of availableFields) {
+            const activeSun = await storage.getActiveSunOnField(field.fieldIndex);
+            if (!activeSun) {
+              fieldsWithActiveSuns.push(field);
+            }
+          }
+
+          if (fieldsWithActiveSuns.length === 0) {
+            console.log(`☀️ User ${user.username}: All available fields already have active suns`);
+            continue;
+          }
+
+          // Pick a random available field
+          const randomField = fieldsWithActiveSuns[Math.floor(Math.random() * fieldsWithActiveSuns.length)];
+          
+          // Spawn sun on the selected field
+          const result = await storage.spawnSun(randomField.fieldIndex);
+          
+          if (result.success) {
+            console.log(`☀️ Successfully spawned ${result.sunAmount} suns on field ${randomField.fieldIndex} for user ${user.username}`);
+            spawnedAny = true;
+          } else {
+            console.log(`☀️ Failed to spawn sun on field ${randomField.fieldIndex} for user ${user.username}`);
+          }
         }
       }
 
-      if (fieldsWithActiveSuns.length === 0) {
-        console.log(`☀️ All available fields already have active suns`);
-        return;
-      }
-
-      // Pick a random available field
-      const randomField = fieldsWithActiveSuns[Math.floor(Math.random() * fieldsWithActiveSuns.length)];
-      
-      // Spawn sun on the selected field
-      const result = await storage.spawnSun(randomField.fieldIndex);
-      
-      if (result.success) {
-        console.log(`☀️ Successfully spawned ${result.sunAmount} suns on field ${randomField.fieldIndex} for user ${randomUser.username}`);
-      } else {
-        console.log(`☀️ Failed to spawn sun on field ${randomField.fieldIndex}`);
+      if (!spawnedAny) {
+        console.log('☀️ No suns spawned in this cycle');
       }
 
     } catch (error) {
