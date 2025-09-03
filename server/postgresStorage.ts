@@ -1263,18 +1263,33 @@ export class PostgresStorage implements IStorage {
     const { generateBouquetName } = await import('./bouquet');
     const maxAttempts = 5;
     
+    console.log(`🌹 Generating unique bouquet name for rarity: ${rarity}`);
+    
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      console.log(`🌹 Attempt ${attempt}/${maxAttempts}: Calling OpenAI API...`);
       const generatedName = await generateBouquetName(rarity);
       
-      if (!(await this.isBouquetNameTaken(generatedName))) {
+      console.log(`🌹 Generated name: "${generatedName}", checking availability...`);
+      const isNameTaken = await this.isBouquetNameTaken(generatedName);
+      
+      if (!isNameTaken) {
+        console.log(`🌹 ✅ Name "${generatedName}" is available!`);
         return generatedName;
       }
       
-      console.log(`🌹 Attempt ${attempt}: Bouquet name "${generatedName}" already exists, trying again...`);
+      console.log(`🌹 ❌ Name "${generatedName}" already exists (attempt ${attempt}/${maxAttempts})`);
+      
+      // If first attempt failed, show better error logging
+      if (attempt === 1) {
+        console.log(`🌹 🔄 First generated name was taken, retrying with ${maxAttempts - 1} more attempts...`);
+      }
     }
     
     // If all AI attempts failed, create a fallback unique name
-    return await this.ensureUniqueName(`Seltene ${rarity} Kollektion`);
+    console.log(`🌹 ⚠️ All ${maxAttempts} OpenAI attempts produced duplicate names, using fallback strategy`);
+    const fallbackName = await this.ensureUniqueName(`Seltene ${rarity} Kollektion`);
+    console.log(`🌹 📝 Fallback name generated: "${fallbackName}"`);
+    return fallbackName;
   }
 
   // Ensure name is unique by adding number suffix if needed

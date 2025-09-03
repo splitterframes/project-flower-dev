@@ -136,6 +136,15 @@ export const BouquetsView: React.FC = () => {
 
   const handleCreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string, generateName?: boolean) => {
     try {
+      // Show loading toast when generating name with AI
+      let loadingToast: any;
+      if (generateName) {
+        loadingToast = toast.loading("🧠 KI generiert Bouquet-Namen...", {
+          description: "Dies kann einen Moment dauern.",
+          duration: 0, // Don't auto-dismiss
+        });
+      }
+
       const response = await fetch('/api/bouquets/create', {
         method: 'POST',
         headers: { 
@@ -150,6 +159,11 @@ export const BouquetsView: React.FC = () => {
           generateName
         })
       });
+
+      // Dismiss loading toast
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
 
       if (response.ok) {
         const result = await response.json();
@@ -189,17 +203,30 @@ export const BouquetsView: React.FC = () => {
       } else {
         const error = await response.json();
         
-        // Show user-friendly error message for duplicate names and other errors
+        // Show user-friendly error messages based on error type
         if (error.message && error.message.includes('existiert bereits')) {
           toast.error("❌ Name bereits vergeben", {
-            description: error.message,
+            description: "Die KI hat einen Namen gewählt, der schon existiert. Versuche es nochmal!",
             duration: 5000,
             className: "border-l-4 border-l-red-500",
           });
-        } else {
-          toast.error("Fehler beim Erstellen", {
-            description: error.message || 'Bouquet konnte nicht erstellt werden',
+        } else if (error.message && error.message.includes('nicht genügend')) {
+          toast.error("💰 Nicht genügend Credits", {
+            description: "Du benötigst 30 Credits um ein Bouquet zu erstellen.",
             duration: 4000,
+            className: "border-l-4 border-l-orange-500",
+          });
+        } else if (error.message && error.message.includes('nicht gefunden')) {
+          toast.error("🌸 Blumen nicht gefunden", {
+            description: "Eine der ausgewählten Blumen ist nicht mehr in deinem Inventar.",
+            duration: 4000,
+            className: "border-l-4 border-l-yellow-500",
+          });
+        } else {
+          toast.error("❌ Fehler beim Erstellen", {
+            description: error.message || 'Bouquet konnte nicht erstellt werden. Bitte versuche es erneut.',
+            duration: 4000,
+            className: "border-l-4 border-l-red-500",
           });
         }
       }

@@ -538,6 +538,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if bouquet name already exists
+  app.post("/api/bouquets/check-name", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      
+      const isTaken = await storage.isBouquetNameTaken(name);
+      res.json({ isTaken, available: !isTaken });
+    } catch (error) {
+      console.error('Error checking bouquet name:', error);
+      res.status(500).json({ message: "Failed to check name" });
+    }
+  });
+
   app.post("/api/bouquets/create", async (req, res) => {
     try {
       const bouquetData = createBouquetSchema.parse(req.body);
