@@ -110,6 +110,7 @@ export const unlockFieldSchema = z.object({
 // Sun spawns on garden fields
 export const sunSpawns = pgTable("sun_spawns", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id), // Which user owns this sun spawn
   fieldIndex: integer("field_index").notNull(), // 0-49 for 50 fields
   spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(), // spawned + 30 seconds

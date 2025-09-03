@@ -2437,75 +2437,36 @@ export class PostgresStorage implements IStorage {
   }
 
   /**
-   * Get active sun spawns for a specific user (only on their inactive fields)
+   * Get active sun spawns for a specific user
    */
   async getActiveSunSpawnsForUser(userId: number): Promise<any[]> {
     const now = new Date();
-    
-    // Get user's unlocked fields
-    const unlockedFields = await this.getUnlockedFields(userId);
-    const unlockedFieldIndices = unlockedFields.map(field => field.fieldIndex);
-    
-    // Calculate which fields are "unlock fields" (adjacent to unlocked fields)
-    const unlockFieldIndices: number[] = [];
-    for (const fieldIndex of unlockedFieldIndices) {
-      // Add adjacent fields as unlock fields
-      const row = Math.floor(fieldIndex / 10);
-      const col = fieldIndex % 10;
-      
-      // Check all 4 directions (up, down, left, right)
-      const adjacents = [
-        (row - 1) * 10 + col, // up
-        (row + 1) * 10 + col, // down
-        row * 10 + (col - 1), // left
-        row * 10 + (col + 1)  // right
-      ];
-      
-      for (const adj of adjacents) {
-        if (adj >= 0 && adj < 50 && !unlockedFieldIndices.includes(adj) && !unlockFieldIndices.includes(adj)) {
-          unlockFieldIndices.push(adj);
-        }
-      }
-    }
-    
-    // Find inactive fields (not unlocked, not unlock fields)
-    const inactiveFields: number[] = [];
-    for (let fieldIndex = 0; fieldIndex < 50; fieldIndex++) {
-      if (!unlockedFieldIndices.includes(fieldIndex) && !unlockFieldIndices.includes(fieldIndex)) {
-        inactiveFields.push(fieldIndex);
-      }
-    }
-    
-    // Get active sun spawns only on inactive fields for this user
-    if (inactiveFields.length === 0) {
-      return [];
-    }
     
     return await this.db
       .select()
       .from(sunSpawns)
       .where(and(
+        eq(sunSpawns.userId, userId), // Only return suns that belong to this user
         eq(sunSpawns.isActive, true),
-        gt(sunSpawns.expiresAt, now), // Still active (not expired yet)
-        // Only return suns on fields that are inactive for this user
-        inArray(sunSpawns.fieldIndex, inactiveFields)
+        gt(sunSpawns.expiresAt, now) // Still active (not expired yet)
       ));
   }
 
   /**
-   * Spawn a new sun on a field
+   * Spawn a new sun on a field for a specific user
    */
-  async spawnSun(fieldIndex: number): Promise<{ success: boolean; sunAmount: number }> {
+  async spawnSun(fieldIndex: number, userId: number): Promise<{ success: boolean; sunAmount: number }> {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 120 * 1000); // 120 seconds (2 minutes for testing)
     const sunAmount = Math.floor(Math.random() * 3) + 1; // 1-3 suns
 
     try {
-      console.log(`☀️ Spawning ${sunAmount} suns on field ${fieldIndex}`);
+      console.log(`☀️ Spawning ${sunAmount} suns on field ${fieldIndex} for user ${userId}`);
       
       await this.db
         .insert(sunSpawns)
         .values({
+          userId,
           fieldIndex,
           spawnedAt: now,
           expiresAt,

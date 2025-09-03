@@ -124,7 +124,7 @@ class SunSpawner {
           const randomFieldIndex = fieldsWithoutActiveSuns[Math.floor(Math.random() * fieldsWithoutActiveSuns.length)];
           
           // Spawn sun on the selected inactive field
-          const result = await storage.spawnSun(randomFieldIndex);
+          const result = await storage.spawnSun(randomFieldIndex, user.id);
           
           if (result.success) {
             console.log(`☀️ Successfully spawned ${result.sunAmount} suns on inactive field ${randomFieldIndex} for user ${user.username}`);
