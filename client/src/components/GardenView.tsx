@@ -337,14 +337,8 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         // Refresh unlocked fields and credits from backend
         await fetchUnlockedFields();
-        // Trigger a re-fetch of credits to update the display
-        if (user) {
-          const creditsResponse = await fetch(`/api/user/${user.id}/credits`);
-          if (creditsResponse.ok) {
-            const creditsData = await creditsResponse.json();
-            updateCredits(user.id, creditsData.credits - credits); // Update to new total
-          }
-        }
+        // Refresh page to update credits and UI properly
+        window.location.reload();
       } else {
         const errorData = await response.json();
         alert(errorData.error || 'Fehler beim Freischalten des Feldes');
@@ -729,7 +723,7 @@ export const GardenView: React.FC = () => {
                     }
                   `}
                   style={{
-                    backgroundImage: field.isUnlocked ? 'url("/Landschaft/gras.png")' : 'none',
+                    backgroundImage: 'url("/Landschaft/gras.png")',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     minHeight: '44px',
