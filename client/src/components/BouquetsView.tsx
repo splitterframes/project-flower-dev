@@ -290,74 +290,58 @@ export const BouquetsView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-green-400/30">
-                <Sparkles className="h-10 w-10 text-green-400 animate-pulse" />
-              </div>
-              <p className="text-green-300 mb-6 text-xl font-bold">✨ Du kannst jetzt Bouquets erstellen!</p>
-              
+            <div className="text-center py-4">
               {/* Großer prominenter Erstellen-Button */}
-              <div className="mb-8">
+              <div className="mb-4">
                 <Button
                   onClick={() => setShowBouquetCreation(true)}
-                  className="bg-gradient-to-r from-orange-600 via-pink-600 to-red-600 hover:from-orange-700 hover:via-pink-700 hover:to-red-700 text-white font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-orange-400/50 hover:border-orange-300"
+                  className="bg-gradient-to-r from-orange-600 via-pink-600 to-red-600 hover:from-orange-700 hover:via-pink-700 hover:to-red-700 text-white font-bold text-xl px-8 py-4 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-orange-400/50 hover:border-orange-300"
                   size="lg"
                 >
-                  <Heart className="h-8 w-8 mr-3 animate-pulse" />
+                  <Heart className="h-6 w-6 mr-2 animate-pulse" />
                   🌸 BOUQUET ERSTELLEN
-                  <Sparkles className="h-8 w-8 ml-3 animate-pulse" />
+                  <Sparkles className="h-6 w-6 ml-2 animate-pulse" />
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-xl p-6 border-2 border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-purple-500/20 rounded-lg mr-3 border border-purple-400/30">
-                      <Heart className="h-6 w-6 text-purple-400" />
-                    </div>
-                    <h4 className="text-white font-bold text-lg">🌸 Bouquet Erstellung</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-lg p-4 border border-purple-400/30">
+                  <div className="flex items-center mb-3">
+                    <Heart className="h-5 w-5 text-purple-400 mr-2" />
+                    <h4 className="text-white font-semibold text-sm">🌸 Erstellung</h4>
                   </div>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-slate-300 space-y-1 text-sm">
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
-                      Wähle 3 beliebige Blumen aus
+                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                      3 Blumen auswählen
                     </li>
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
-                      Kosten: 30 Credits
+                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                      30 Credits Kosten
                     </li>
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
-                      AI generiert deutschen Namen
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-yellow-400" />
-                      Bouquet wird ins Inventar hinzugefügt
+                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                      AI Namen + Ins Inventar
                     </li>
                   </ul>
                 </div>
-                <div className="bg-gradient-to-br from-blue-800/40 to-cyan-800/40 rounded-xl p-6 border-2 border-blue-400/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-blue-500/20 rounded-lg mr-3 border border-blue-400/30">
-                      <Sparkles className="h-6 w-6 text-blue-400" />
-                    </div>
-                    <h4 className="text-white font-bold text-lg">🦋 Schmetterling System</h4>
+                <div className="bg-gradient-to-br from-blue-800/40 to-cyan-800/40 rounded-lg p-4 border border-blue-400/30">
+                  <div className="flex items-center mb-3">
+                    <Sparkles className="h-5 w-5 text-blue-400 mr-2" />
+                    <h4 className="text-white font-semibold text-sm">🦋 Verwendung</h4>
                   </div>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-slate-300 space-y-1 text-sm">
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
-                      Platziere Bouquets im Garten
+                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
+                      Im Garten platzieren
                     </li>
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
-                      Schmetterlinge spawnen alle 1-5min
+                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
+                      Schmetterlinge anlocken
                     </li>
                     <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
-                      Bouquet verwelkt nach 21min
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-4 w-4 mr-2 text-cyan-400" />
-                      Erhalte Samen als Belohnung
+                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
+                      Samen als Belohnung
                     </li>
                   </ul>
                 </div>
