@@ -700,12 +700,17 @@ export const GardenView: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-10 gap-2 garden-grid-mobile sm:garden-grid-desktop">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
             {gardenFields.map((field) => {
               // Check if field is adjacent to any unlocked field
               const isNextToUnlock = !field.isUnlocked && (() => {
-                const row = Math.floor((field.id - 1) / 10);
-                const col = (field.id - 1) % 10;
+                // Responsive grid dimensions
+                const isMobile = window.innerWidth < 640; // sm breakpoint
+                const cols = isMobile ? 5 : 10;
+                const rows = isMobile ? 10 : 5;
+                
+                const row = Math.floor((field.id - 1) / cols);
+                const col = (field.id - 1) % cols;
                 
                 // Check all 8 adjacent positions (including diagonals)
                 const adjacent = [
@@ -715,8 +720,8 @@ export const GardenView: React.FC = () => {
                 ];
                 
                 return adjacent.some(pos => {
-                  if (pos.r < 0 || pos.r >= 5 || pos.c < 0 || pos.c >= 10) return false;
-                  const adjacentFieldId = pos.r * 10 + pos.c + 1;
+                  if (pos.r < 0 || pos.r >= rows || pos.c < 0 || pos.c >= cols) return false;
+                  const adjacentFieldId = pos.r * cols + pos.c + 1;
                   const adjacentField = gardenFields.find(f => f.id === adjacentFieldId);
                   return adjacentField?.isUnlocked;
                 });
