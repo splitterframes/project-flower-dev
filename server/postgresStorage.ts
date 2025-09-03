@@ -998,7 +998,7 @@ export class PostgresStorage implements IStorage {
     // Deduct credits (only if cost > 0)
     let updatedUser = user;
     if (cost > 0) {
-      updatedUser = await this.updateUserCredits(userId, user.credits - cost);
+      updatedUser = await this.updateUserCredits(userId, -cost); // Use negative delta to deduct credits
     }
 
     console.log(`🖼️ User ${userId} purchased frame ${frameNumber} for ${cost} credits`);
