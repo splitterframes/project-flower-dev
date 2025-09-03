@@ -704,8 +704,9 @@ export const GardenView: React.FC = () => {
             {gardenFields.map((field) => {
               // Check if field is adjacent to any unlocked field
               const isNextToUnlock = !field.isUnlocked && (() => {
-                const row = Math.floor((field.id - 1) / 10);
-                const col = (field.id - 1) % 10;
+                // VERTICAL NUMBERING: field IDs go top to bottom, then left to right
+                const row = (field.id - 1) % 5;      // 5 rows total
+                const col = Math.floor((field.id - 1) / 5);  // 10 columns total
                 
                 // Check all 8 adjacent positions (including diagonals)
                 const adjacent = [
@@ -716,7 +717,8 @@ export const GardenView: React.FC = () => {
                 
                 return adjacent.some(pos => {
                   if (pos.r < 0 || pos.r >= 5 || pos.c < 0 || pos.c >= 10) return false;
-                  const adjacentFieldId = pos.r * 10 + pos.c + 1;
+                  // VERTICAL NUMBERING: convert row/col back to field ID
+                  const adjacentFieldId = pos.r + pos.c * 5 + 1;
                   const adjacentField = gardenFields.find(f => f.id === adjacentFieldId);
                   return adjacentField?.isUnlocked;
                 });
