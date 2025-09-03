@@ -295,9 +295,9 @@ export const BouquetsView: React.FC = () => {
               </div>
               <p className="text-slate-300 mb-4 text-xl font-semibold">Du benötigst mindestens 3 Blumen für ein Bouquet</p>
               <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600 inline-block">
-                <p className="text-slate-400 text-lg">
+                <div className="text-slate-400 text-lg">
                   Du hast derzeit <Badge className="bg-rose-500/20 text-rose-400 border border-rose-400/30 px-3 py-1 font-bold">{myFlowers.length}</Badge> Blumen
-                </p>
+                </div>
                 <p className="text-slate-500 mt-3">Züchte mehr Blumen in deinem Garten! 🌱</p>
               </div>
             </div>
