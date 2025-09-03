@@ -59,12 +59,13 @@ class SunSpawner {
 
       // Try to spawn a sun for each user on inactive fields
       for (const user of allUsers) {
-        // Always try to spawn for users
-        if (true) {
+        try {
+          console.log(`☀️ Processing user ${user.username} (ID: ${user.id})`);
           
           // Get user's unlocked fields
           const unlockedFields = await storage.getUnlockedFields(user.id);
           const unlockedFieldIndices = unlockedFields.map(field => field.fieldIndex);
+          console.log(`☀️ User ${user.username} unlocked fields:`, unlockedFieldIndices);
           
           // Calculate which fields are "unlock fields" (adjacent to unlocked fields)
           const unlockFieldIndices: number[] = [];
@@ -87,6 +88,7 @@ class SunSpawner {
               }
             }
           }
+          console.log(`☀️ User ${user.username} unlock fields:`, unlockFieldIndices);
           
           // Find inactive fields (not unlocked, not unlock fields)
           const inactiveFields: number[] = [];
@@ -95,6 +97,7 @@ class SunSpawner {
               inactiveFields.push(fieldIndex);
             }
           }
+          console.log(`☀️ User ${user.username} has ${inactiveFields.length} inactive fields available`);
 
           if (inactiveFields.length === 0) {
             console.log(`☀️ User ${user.username} has no inactive fields for sun spawn`);
@@ -109,6 +112,8 @@ class SunSpawner {
               fieldsWithoutActiveSuns.push(fieldIndex);
             }
           }
+
+          console.log(`☀️ User ${user.username} has ${fieldsWithoutActiveSuns.length} inactive fields without active suns`);
 
           if (fieldsWithoutActiveSuns.length === 0) {
             console.log(`☀️ User ${user.username}: All inactive fields already have active suns`);
@@ -127,6 +132,9 @@ class SunSpawner {
           } else {
             console.log(`☀️ Failed to spawn sun on inactive field ${randomFieldIndex} for user ${user.username}`);
           }
+          
+        } catch (error) {
+          console.error(`☀️ Error processing user ${user.username}:`, error);
         }
       }
 
