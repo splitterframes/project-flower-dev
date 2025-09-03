@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle, Sun } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle, Sun, HelpCircle } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
+import { HelpDialog } from "./HelpDialog";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   const [passiveIncome, setPassiveIncome] = useState(0);
   const [showUserList, setShowUserList] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [foreignExhibition, setForeignExhibition] = useState<{
     ownerId: number;
     ownerName: string;
@@ -259,6 +261,18 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
                 <span>{user.username}</span>
               </div>
               
+              {/* Help Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHelpDialog(true)}
+                className="border-blue-500 text-blue-300 hover:bg-blue-800 hover:text-white px-2 sm:px-3"
+                title="Spielanleitung"
+              >
+                <HelpCircle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Hilfe</span>
+              </Button>
+              
               {/* Logout Button */}
               <Button
                 variant="outline"
@@ -293,6 +307,12 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
         isOpen={showEmergencyDialog}
         onClose={() => setShowEmergencyDialog(false)}
         onSeedsReceived={handleEmergencySeedsReceived}
+      />
+      
+      {/* Help Dialog */}
+      <HelpDialog
+        isOpen={showHelpDialog}
+        onClose={() => setShowHelpDialog(false)}
       />
 
       {/* Foreign Exhibition Modal/View */}
