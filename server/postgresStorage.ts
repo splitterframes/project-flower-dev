@@ -53,7 +53,7 @@ import {
   type DonateChallengeFlowerRequest,
   type InsertUser
 } from "@shared/schema";
-import { eq, ilike, and, lt } from "drizzle-orm";
+import { eq, ilike, and, lt, gt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
@@ -2432,7 +2432,7 @@ export class PostgresStorage implements IStorage {
       .from(sunSpawns)
       .where(and(
         eq(sunSpawns.isActive, true),
-        lt(sunSpawns.expiresAt, now) // Still active
+        gt(sunSpawns.expiresAt, now) // Still active (not expired yet)
       ));
   }
 
@@ -2441,7 +2441,7 @@ export class PostgresStorage implements IStorage {
    */
   async spawnSun(fieldIndex: number): Promise<{ success: boolean; sunAmount: number }> {
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 30 * 1000); // 30 seconds
+    const expiresAt = new Date(now.getTime() + 120 * 1000); // 120 seconds (2 minutes for testing)
     const sunAmount = Math.floor(Math.random() * 3) + 1; // 1-3 suns
 
     try {
