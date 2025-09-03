@@ -123,14 +123,44 @@ class SunSpawner {
           // Pick a random inactive field
           const randomFieldIndex = fieldsWithoutActiveSuns[Math.floor(Math.random() * fieldsWithoutActiveSuns.length)];
           
-          // Double-check: Make sure field is not unlocked for this specific user before spawning
-          const userUnlockedFields = await storage.getUnlockedFields(user.id);
-          const userUnlockedIndices = userUnlockedFields.map(field => field.fieldIndex);
+          // TRIPLE-CHECK: Ultra-safe verification system
+          const finalUnlockedFields = await storage.getUnlockedFields(user.id);
+          const finalUnlockedIndices = finalUnlockedFields.map(field => field.fieldIndex);
           
-          if (userUnlockedIndices.includes(randomFieldIndex)) {
-            console.log(`☀️ ERROR: Attempted to spawn sun on UNLOCKED field ${randomFieldIndex} for user ${user.username}! Skipping.`);
+          // Recalculate unlock fields to be 100% sure
+          const finalUnlockFields: number[] = [];
+          for (const fieldIndex of finalUnlockedIndices) {
+            const row = Math.floor(fieldIndex / 10);
+            const col = fieldIndex % 10;
+            
+            const adjacents = [
+              (row - 1) * 10 + col, // up
+              (row + 1) * 10 + col, // down
+              row * 10 + (col - 1), // left
+              row * 10 + (col + 1)  // right
+            ];
+            
+            for (const adj of adjacents) {
+              if (adj >= 0 && adj < 50 && !finalUnlockedIndices.includes(adj) && !finalUnlockFields.includes(adj)) {
+                finalUnlockFields.push(adj);
+              }
+            }
+          }
+          
+          // ABSOLUTE FINAL CHECK: No spawn on unlocked OR unlock fields
+          if (finalUnlockedIndices.includes(randomFieldIndex)) {
+            console.log(`☀️ CRITICAL ERROR: Attempted to spawn sun on UNLOCKED field ${randomFieldIndex} for user ${user.username}! ABORT!`);
             continue;
           }
+          
+          if (finalUnlockFields.includes(randomFieldIndex)) {
+            console.log(`☀️ CRITICAL ERROR: Attempted to spawn sun on UNLOCK field ${randomFieldIndex} for user ${user.username}! ABORT!`);
+            console.log(`☀️ Final unlocked fields: [${finalUnlockedIndices.join(', ')}]`);
+            console.log(`☀️ Final unlock fields: [${finalUnlockFields.join(', ')}]`);
+            continue;
+          }
+          
+          console.log(`☀️ VERIFIED SAFE: Field ${randomFieldIndex} is neither unlocked nor unlock field for user ${user.username}`);
 
           // Spawn sun on the selected inactive field
           const result = await storage.spawnSun(randomFieldIndex, user.id);
