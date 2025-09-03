@@ -439,6 +439,7 @@ export const MarketView: React.FC = () => {
       )}
 
       {activeTab === "server" && (
+        <>
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-500/30 shadow-2xl">
           <CardHeader className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-t-lg -mx-6 -my-2"></div>
@@ -516,6 +517,76 @@ export const MarketView: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        <div className="mt-8 p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-yellow-500/30 rounded-lg shadow-2xl">
+          <div className="flex items-center mb-6">
+            <div className="text-yellow-400 text-4xl mr-3 animate-pulse">☀️</div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+              Sonnen-Shop
+            </span>
+          </div>
+          <p className="text-slate-400 text-sm mb-6">Kaufe Samen mit Sonnen</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sunOffers.map((offer) => (
+              <div
+                key={offer.id}
+                className="bg-slate-900 rounded-lg p-4 border-2"
+                style={{ borderColor: getBorderColor(offer.seedRarity as RarityTier) }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-white">{offer.seedName}</h4>
+                  <div className="flex items-center">
+                    <Star className={`h-4 w-4 mr-1 ${getRarityColor(offer.seedRarity as RarityTier)}`} />
+                    <span className={`text-xs ${getRarityColor(offer.seedRarity as RarityTier)}`}>
+                      {offer.seedRarity}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">Von: {offer.seller}</p>
+                <p className="text-slate-300 text-sm mb-3">{offer.description}</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Verfügbar:</span>
+                    <span className="text-white">♾️ Unbegrenzt</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Preis/Stück:</span>
+                    <span className="text-yellow-400">{offer.pricePerUnit} ☀️</span>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex space-x-2">
+                    <Button
+                      className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+                      onClick={() => buyFromServerWithSuns(offer.seedId, 1, offer.pricePerUnit)}
+                      disabled={isLoading || suns < offer.pricePerUnit}
+                    >
+                      1x kaufen ({offer.pricePerUnit} ☀️)
+                    </Button>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+                      onClick={() => buyFromServerWithSuns(offer.seedId, 5, offer.pricePerUnit * 5)}
+                      disabled={isLoading || suns < offer.pricePerUnit * 5}
+                    >
+                      5x kaufen ({offer.pricePerUnit * 5} ☀️)
+                    </Button>
+                    <Button
+                      className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+                      onClick={() => buyFromServerWithSuns(offer.seedId, 10, offer.pricePerUnit * 10)}
+                      disabled={isLoading || suns < offer.pricePerUnit * 10}
+                    >
+                      10x kaufen ({offer.pricePerUnit * 10} ☀️)
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
       )}
 
       {activeTab === "sell" && (
