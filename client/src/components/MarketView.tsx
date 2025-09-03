@@ -263,57 +263,42 @@ export const MarketView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Compact Market Header */}
-      <div className="bg-slate-800/60 p-4 rounded-lg border border-emerald-500/30 text-center">
-        <h1 className="text-2xl font-bold text-emerald-300 mb-1">
-          Samen Markt 🌱
-        </h1>
-        <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
-      </div>
-
-      {/* Compact Market Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border border-orange-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-orange-300">
-                Credits
-              </CardTitle>
-              <Coins className="h-4 w-4 text-orange-400" />
+      {/* Market Header with Stats */}
+      <div className="bg-slate-800/60 p-6 rounded-lg border border-emerald-500/30">
+        {/* Title Section */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-emerald-300 mb-1">
+            Samen Markt 🌱
+          </h1>
+          <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
+        </div>
+        
+        {/* Compact Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border border-orange-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Coins className="h-3 w-3 text-orange-400 mr-1" />
+              <span className="text-xs font-semibold text-orange-300">Credits</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-orange-400">{credits} Cr</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-orange-400">{credits} Cr</div>
+          </div>
 
-        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-green-300">
-                Angebote
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-400" />
+          <div className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+              <span className="text-xs font-semibold text-green-300">Angebote</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-green-400">{marketListings.length}</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-green-400">{marketListings.length}</div>
+          </div>
 
-        <Card className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-blue-300">
-                Samen
-              </CardTitle>
-              <Package className="h-4 w-4 text-blue-400" />
+          <div className="bg-gradient-to-br from-blue-800/40 to-indigo-800/40 border border-blue-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Package className="h-3 w-3 text-blue-400 mr-1" />
+              <span className="text-xs font-semibold text-blue-300">Samen</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-blue-400">{mySeeds.length}</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-blue-400">{mySeeds.length}</div>
+          </div>
+        </div>
       </div>
 
       {/* Enhanced Market Tabs */}

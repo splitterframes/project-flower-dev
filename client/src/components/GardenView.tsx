@@ -626,64 +626,49 @@ export const GardenView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Compact Garden Header */}
-      <div className="bg-slate-800/60 p-4 rounded-lg border border-green-500/30 text-center">
-        <h1 className="text-2xl font-bold text-green-300 mb-1">
-          Mariposa Garten 🌱
-        </h1>
-        <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
-      </div>
-
-      {/* Compact Garden Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-green-300">
-                Felder
-              </CardTitle>
-              <Shovel className="h-4 w-4 text-green-400" />
+      {/* Garden Header with Stats */}
+      <div className="bg-slate-800/60 p-6 rounded-lg border border-green-500/30">
+        {/* Title Section */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-green-300 mb-1">
+            Mariposa Garten 🌱
+          </h1>
+          <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
+        </div>
+        
+        {/* Compact Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-green-800/40 to-emerald-800/40 border border-green-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Shovel className="h-3 w-3 text-green-400 mr-1" />
+              <span className="text-xs font-semibold text-green-300">Felder</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-green-400 mb-1">
+            <div className="text-lg font-bold text-green-400 mb-1">
               {gardenFields.filter(f => f.isUnlocked).length}/50
             </div>
             <div className="w-full bg-slate-700 rounded-full h-1">
               <div className="bg-green-500 h-1 rounded-full" style={{width: `${(gardenFields.filter(f => f.isUnlocked).length / 50) * 100}%`}}></div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="bg-gradient-to-br from-pink-800/40 to-rose-800/40 border border-pink-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-pink-300">
-                Blumen
-              </CardTitle>
-              <Flower className="h-4 w-4 text-pink-400" />
+          <div className="bg-gradient-to-br from-pink-800/40 to-rose-800/40 border border-pink-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Flower className="h-3 w-3 text-pink-400 mr-1" />
+              <span className="text-xs font-semibold text-pink-300">Blumen</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-pink-400">
+            <div className="text-lg font-bold text-pink-400">
               {gardenFields.filter(f => f.hasPlant).length}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border border-orange-500/30 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold text-orange-300">
-                Credits
-              </CardTitle>
-              <Coins className="h-4 w-4 text-orange-400" />
+          <div className="bg-gradient-to-br from-orange-800/40 to-yellow-800/40 border border-orange-500/30 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Coins className="h-3 w-3 text-orange-400 mr-1" />
+              <span className="text-xs font-semibold text-orange-300">Credits</span>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            <div className="text-2xl font-bold text-orange-400">{credits} Cr</div>
-          </CardContent>
-        </Card>
+            <div className="text-lg font-bold text-orange-400">{credits} Cr</div>
+          </div>
+        </div>
       </div>
 
       {/* Compact Garden Grid */}
