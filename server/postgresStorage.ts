@@ -2586,7 +2586,10 @@ export class PostgresStorage implements IStorage {
       }
 
       const currentUser = currentUsers[0];
-      const newSuns = Math.max(0, (currentUser.suns || 0) + amount);
+      const currentSuns = currentUser.suns || 100; // Default to 100 if null - match other implementations
+      const newSuns = Math.max(0, currentSuns + amount);
+      
+      console.log(`💰 PostgreSQL updateUserSuns: User ${userId} hatte ${currentSuns} ☀️, ${amount >= 0 ? '+' : ''}${amount} ☀️ = ${newSuns} ☀️`);
 
       const updatedUsers = await this.db
         .update(users)

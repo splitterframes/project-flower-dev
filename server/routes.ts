@@ -319,7 +319,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Deduct suns and give seeds
+      console.log(`💰 Sonnen-Kauf: User ${buyerId} kauft ${quantity}x Samen ${seedId} für ${totalCost} Sonnen`);
+      console.log(`💰 Vorher: ${user.suns} Sonnen`);
       await storage.updateUserSuns(buyerId, -totalCost);
+      
+      // Verify the update worked
+      const updatedUser = await storage.getUser(buyerId);
+      console.log(`💰 Nachher: ${updatedUser?.suns} Sonnen`);
+      
       await storage.giveUserSeed(buyerId, seedId, quantity);
       
       res.json({ 
