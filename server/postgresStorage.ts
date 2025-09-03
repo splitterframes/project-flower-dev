@@ -2574,11 +2574,23 @@ export class PostgresStorage implements IStorage {
    */
   async updateUserSuns(userId: number, amount: number): Promise<User | undefined> {
     try {
+      // Get current user to calculate new suns
+      const currentUsers = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (currentUsers.length === 0) {
+        return undefined;
+      }
+
+      const currentUser = currentUsers[0];
+      const newSuns = Math.max(0, (currentUser.suns || 0) + amount);
+
       const updatedUsers = await this.db
         .update(users)
-        .set({ 
-          suns: sql`GREATEST(0, COALESCE(${users.suns}, 0) + ${amount})` 
-        })
+        .set({ suns: newSuns })
         .where(eq(users.id, userId))
         .returning();
         
@@ -2611,8 +2623,8 @@ export class PostgresStorage implements IStorage {
   async sellButterflyForSuns(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string; sunsEarned?: number }> {
     try {
       // Find the butterfly in user's collection
-      const userButterflies = await this.getUserButterflies(userId);
-      const butterfly = userButterflies.find(b => b.id === butterflyId);
+      const userButterfliesData = await this.getUserButterflies(userId);
+      const butterfly = userButterfliesData.find(b => b.id === butterflyId);
       
       if (!butterfly) {
         return { success: false, message: "Schmetterling nicht gefunden" };
