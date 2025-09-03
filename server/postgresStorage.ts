@@ -166,6 +166,23 @@ export class PostgresStorage implements IStorage {
       console.error(`Failed to give starter seeds to user ${newUser.id}:`, error);
     }
     
+    // Give starter fields to new user (field indices 0, 1, 10, 11)
+    try {
+      const starterFields = [0, 1, 10, 11]; // Field indices 0,1,10,11 = Field IDs 1,2,11,12
+      
+      for (const fieldIndex of starterFields) {
+        await this.db.insert(unlockedFields).values({
+          userId: newUser.id,
+          fieldIndex,
+          cost: 0, // Free starter fields
+        });
+      }
+      
+      console.log(`🌱 Gave starter fields to new user ${newUser.username}: Fields 1,2,11,12 (indices 0,1,10,11)`);
+    } catch (error) {
+      console.error(`Failed to give starter fields to user ${newUser.id}:`, error);
+    }
+    
     return newUser;
   }
 
