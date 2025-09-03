@@ -1358,7 +1358,7 @@ export class PostgresStorage implements IStorage {
 
     try {
       // Deduct credits and unlock field in a transaction-like manner
-      await this.updateCredits(userId, user.credits - cost);
+      await this.updateUserCredits(userId, -cost);
       
       await this.db.insert(unlockedFields).values({
         userId,
