@@ -397,19 +397,19 @@ export const InventoryView: React.FC = () => {
             <CardTitle className="text-white flex items-center">
               <Sprout className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold text-green-300">
-                Samen 🌱 ({mySeeds.length})
+                Samen 🌱 ({mySeeds.filter(seed => seed.quantity > 0).length})
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {mySeeds.length === 0 ? (
+            {mySeeds.filter(seed => seed.quantity > 0).length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-slate-400">Noch keine Samen gesammelt</p>
                 <p className="text-slate-500 text-sm mt-2">Kaufe Samen im Markt oder erhalte sie durch Gärtnern</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {mySeeds.map((userSeed) => (
+                {mySeeds.filter(seed => seed.quantity > 0).map((userSeed) => (
                   <div
                     key={userSeed.id}
                     className="bg-slate-900 rounded-lg p-3 border-2"
