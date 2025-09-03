@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { RarityImage } from './RarityImage';
 import { FlowerHoverPreview } from './FlowerHoverPreview';
+import { Badge } from '@/components/ui/badge';
 import { getRarityColor, getRarityDisplayName } from '@shared/rarity';
 import type { BouquetRecipe, UserFlower } from '@shared/schema';
 import type { RarityTier } from '@shared/rarity';
+import { CheckCircle, XCircle, Package } from 'lucide-react';
 
 interface Flower {
   id: number;
@@ -138,8 +140,31 @@ export const BouquetRecipeDisplay: React.FC<BouquetRecipeDisplayProps> = ({
               </FlowerHoverPreview>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white">{flower.name}</div>
-                <div className={`text-xs font-medium ${getRarityColor(flower.rarity as RarityTier)}`}>
-                  {getRarityDisplayName(flower.rarity as RarityTier)}
+                <div className="flex items-center gap-2">
+                  <div className={`text-xs font-medium ${getRarityColor(flower.rarity as RarityTier)}`}>
+                    {getRarityDisplayName(flower.rarity as RarityTier)}
+                  </div>
+                  {/* Verfügbarkeits-Anzeige */}
+                  {(() => {
+                    const userFlower = userFlowers.find(f => f.flowerId === flower.id);
+                    const quantity = userFlower?.quantity || 0;
+                    
+                    if (quantity > 0) {
+                      return (
+                        <Badge className="bg-green-500/20 text-green-400 border border-green-400/40 px-2 py-0.5 text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {quantity}x verfügbar
+                        </Badge>
+                      );
+                    } else {
+                      return (
+                        <Badge className="bg-red-500/20 text-red-400 border border-red-400/40 px-2 py-0.5 text-xs">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Nicht verfügbar
+                        </Badge>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             </div>
