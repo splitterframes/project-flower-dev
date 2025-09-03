@@ -514,8 +514,8 @@ export const GardenView: React.FC = () => {
         // Refresh sun spawns data
         await fetchSunSpawns();
         
-        // Show success message
-        toast.success(data.message);
+        // Animate collection
+        setCollectedSuns(prev => new Set(prev).add(fieldIndex));
         
         // Remove visual feedback after short delay
         setTimeout(() => {
@@ -1120,18 +1120,13 @@ export const GardenView: React.FC = () => {
 
                   {/* Sun Spawn Display */}
                   {field.hasSunSpawn && (
-                    <div className="relative w-full h-full">
+                    <div className="absolute inset-0 z-10">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="cursor-pointer w-full h-full">
-                            <div className={`relative w-full h-full ${collectedSuns.has(field.id - 1) ? 'opacity-50' : ''}`}>
-                              <Sun className="h-8 w-8 text-yellow-400 animate-pulse" />
-                              <Sparkles className="absolute top-0 right-0 h-3 w-3 text-orange-400 animate-pulse" />
-                              {field.sunSpawnAmount && field.sunSpawnAmount > 1 && (
-                                <div className="absolute bottom-0 left-0 bg-yellow-600 text-white text-xs rounded-full px-1 font-bold">
-                                  {field.sunSpawnAmount}
-                                </div>
-                              )}
+                            <div className={`relative w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-300/20 to-orange-300/20 rounded-md transition-all duration-300 ${collectedSuns.has(field.id - 1) ? 'scale-75 opacity-30' : 'hover:scale-105 hover:bg-yellow-300/30'}`}>
+                              <Sun className="w-full h-full max-w-16 max-h-16 text-yellow-400 animate-pulse drop-shadow-lg" />
+                              <Sparkles className="absolute top-2 right-2 h-4 w-4 text-orange-400 animate-pulse" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-slate-800 border-slate-600 text-yellow-300">
