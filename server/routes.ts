@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       // Define valid seeds and their prices in Sonnen
-      const sunPrices = {
+      const sunPrices: Record<number, { name: string; price: number }> = {
         1: { name: "gewöhnliche", price: 20 },    // Common
         2: { name: "ungewöhnliche", price: 30 },  // Uncommon  
         3: { name: "seltene", price: 50 },        // Rare
