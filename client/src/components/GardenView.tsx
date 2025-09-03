@@ -1152,17 +1152,23 @@ export const GardenView: React.FC = () => {
                                 border: '3px solid #ffd700',
                                 boxShadow: '0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.8), 0 0 90px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.4)',
                                 filter: 'brightness(1.5) saturate(1.3) contrast(1.1)',
-                                isolation: 'isolate' // Create new stacking context
+                                isolation: 'isolate',
+                                opacity: 1
                               }}
                             >
                               <Sun 
                                 className="w-full h-full max-w-20 max-h-20 text-white animate-spin" 
                                 style={{
                                   animationDuration: '3s',
-                                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 20px rgba(255,215,0,0.6))'
+                                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 20px rgba(255,215,0,0.6))',
+                                  opacity: 1,
+                                  color: '#ffffff'
                                 }} 
                               />
-                              <Sparkles className="absolute top-1 right-1 h-6 w-6 text-white animate-pulse" />
+                              <Sparkles 
+                                className="absolute top-1 right-1 h-6 w-6 text-white animate-pulse" 
+                                style={{opacity: 1}}
+                              />
                               <div 
                                 className="absolute inset-0 rounded-lg animate-ping opacity-75"
                                 style={{background: 'radial-gradient(circle, transparent 40%, rgba(255,215,0,0.4) 70%)'}}
