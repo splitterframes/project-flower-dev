@@ -131,24 +131,47 @@ async function initializeFishRarities(): Promise<void> {
 
 // Generate random fish of specific rarity
 export async function generateRandomFish(rarity: RarityTier): Promise<FishData> {
+  console.log(`🐟 DEBUG: Generating fish with rarity: ${rarity}`);
+  console.log(`🐟 DEBUG: Available fish IDs:`, AVAILABLE_FISH_IDS.slice(0, 10), `(total: ${AVAILABLE_FISH_IDS.length})`);
+  console.log(`🐟 DEBUG: Fish rarity map size:`, FISH_RARITY_MAP.size);
+  
   // Get all fish IDs that match the requested rarity
   const matchingIds = Array.from(FISH_RARITY_MAP.entries())
     .filter(([id, assignedRarity]) => assignedRarity === rarity)
     .map(([id]) => id);
   
+  console.log(`🐟 DEBUG: Matching IDs for ${rarity}:`, matchingIds.slice(0, 5), `(total: ${matchingIds.length})`);
+  
   // If no fish of this rarity, fall back to any available ID
   const availableIds = matchingIds.length > 0 ? matchingIds : AVAILABLE_FISH_IDS;
+  console.log(`🐟 DEBUG: Using ${availableIds.length} available IDs`);
+  
+  if (availableIds.length === 0) {
+    console.error('🐟 ERROR: No available fish IDs found!');
+    // Emergency fallback - create a default fish
+    return {
+      id: 0,
+      name: 'Notfall-Fisch',
+      imageUrl: '/Fische/0.jpg'
+    };
+  }
+  
   const fishId = availableIds[Math.floor(Math.random() * availableIds.length)];
+  console.log(`🐟 DEBUG: Selected fishId: ${fishId}`);
   
   // Generate consistent Latin name using fishId as seed
   const { generateLatinFishName } = await import('../shared/rarity');
   const name = generateLatinFishName(fishId);
+  console.log(`🐟 DEBUG: Generated name: ${name}`);
 
-  return {
+  const fishData = {
     id: fishId,
     name,
     imageUrl: `/Fische/${getFishImageFilename(fishId)}`
   };
+  
+  console.log(`🐟 DEBUG: Final fish data:`, fishData);
+  return fishData;
 }
 
 // Generate random fish using proper distribution
