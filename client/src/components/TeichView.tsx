@@ -712,38 +712,7 @@ export const TeichView: React.FC = () => {
           )
         );
 
-        // Add to placedButterflies for lifecycle animations
-        const butterflyId = Date.now() + Math.random(); // Unique ID
-        setPlacedButterflies(prev => [...prev, {
-          id: butterflyId,
-          fieldId: selectedField,
-          butterflyImageUrl: butterfly.butterflyImageUrl,
-          butterflyName: butterfly.butterflyName,
-          butterflyRarity: butterfly.butterflyRarity,
-          placedAt: new Date(),
-          isWiggling: true,
-          isBursting: false
-        }]);
-
-        // Start 5-second wiggling, then burst animation
-        setTimeout(() => {
-          setPlacedButterflies(prev => 
-            prev.map(b => 
-              b.id === butterflyId 
-                ? { ...b, isWiggling: false, isBursting: true }
-                : b
-            )
-          );
-
-          // Remove after 0.6s burst animation
-          setTimeout(() => {
-            setPlacedButterflies(prev => prev.filter(b => b.id !== butterflyId));
-            
-            // 🐛 SPAWN CATERPILLAR nach Burst mit entgegengesetzter Animation
-            console.log("🐛 SPAWNING: Caterpillar after butterfly burst!");
-            spawnCaterpillarAfterBurst(selectedField - 1, butterfly.butterflyRarity);
-          }, 600);
-        }, 5000);
+        // 🦋 FIXED: Schmetterlinge bleiben dauerhaft auf dem Feld - keine automatische Entfernung mehr!
 
         // Refresh garden data to show placed butterfly
         fetchTeichData();

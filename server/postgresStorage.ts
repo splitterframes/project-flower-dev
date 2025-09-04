@@ -1547,21 +1547,6 @@ export class PostgresStorage {
     }
 
     console.log(`🦋 Successfully collected butterfly: ${result.butterflyName}`);
-    
-    // 🐛 AUTO-SPAWN CATERPILLAR: After collecting butterfly, spawn caterpillar on same field
-    try {
-      console.log(`🐛 Auto-spawning caterpillar on field ${fieldIndex} after butterfly collection`);
-      const caterpillarSpawnResult = await this.spawnCaterpillarOnField(userId, fieldIndex, fieldButterfly.butterflyRarity);
-      if (caterpillarSpawnResult.success) {
-        console.log(`🐛 Successfully spawned caterpillar: ${caterpillarSpawnResult.caterpillar?.caterpillarName}`);
-      } else {
-        console.log(`🐛 Failed to spawn caterpillar: ${caterpillarSpawnResult.message}`);
-      }
-    } catch (error) {
-      console.error(`🐛 Error spawning caterpillar after butterfly collection:`, error);
-      // Don't fail the butterfly collection if caterpillar spawning fails
-    }
-    
     return { success: true, butterfly: result };
   }
 
