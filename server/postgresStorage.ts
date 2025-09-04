@@ -3415,11 +3415,16 @@ export class PostgresStorage {
     const key = this.getFedCaterpillarsKey(userId, fieldIndex);
     const rarities = this.fedCaterpillarRarities.get(key) || [];
     
+    console.log(`🐟 DEBUG: Getting average for field ${fieldIndex}, stored rarities:`, rarities);
+    
     if (rarities.length === 0) {
+      console.log(`🐟 DEBUG: No rarities stored, returning 'common'`);
       return 'common'; // Default if no caterpillars fed yet
     }
     
-    return this.calculateAverageRarity(rarities);
+    const averageRarity = this.calculateAverageRarity(rarities);
+    console.log(`🐟 DEBUG: Calculated average from [${rarities.join(', ')}] = ${averageRarity}`);
+    return averageRarity;
   }
   
   // Complete fish feeding with caterpillar - handles average calculation and fish creation
@@ -3465,10 +3470,12 @@ export class PostgresStorage {
       // Store caterpillar rarity for average calculation
       const key = this.getFedCaterpillarsKey(userId, fieldIndex);
       let rarities = this.fedCaterpillarRarities.get(key) || [];
+      console.log(`🐟 DEBUG: Existing rarities for field ${fieldIndex}:`, rarities);
       rarities.push(caterpillarRarity);
       this.fedCaterpillarRarities.set(key, rarities);
       
       console.log(`🐟 Fed caterpillar rarities for field ${fieldIndex}:`, rarities);
+      console.log(`🐟 DEBUG: Storage key used: "${key}"`);
       
       // Update feeding progress normally
       const newProgress = await this.updatePondFeedingProgress(userId, fieldIndex);
