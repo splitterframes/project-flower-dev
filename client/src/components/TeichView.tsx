@@ -409,25 +409,8 @@ export const TeichView: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
               {gardenFields.map((field) => {
-                // Check if field is adjacent to any unlocked field
-                const isNextToUnlock = !field.isUnlocked && (() => {
-                  const row = Math.floor((field.id - 1) / 10);
-                  const col = (field.id - 1) % 10;
-                  
-                  // Check all 8 adjacent positions (including diagonals)
-                  const adjacent = [
-                    { r: row - 1, c: col - 1 }, { r: row - 1, c: col }, { r: row - 1, c: col + 1 },
-                    { r: row, c: col - 1 },                             { r: row, c: col + 1 },
-                    { r: row + 1, c: col - 1 }, { r: row + 1, c: col }, { r: row + 1, c: col + 1 }
-                  ];
-                  
-                  return adjacent.some(pos => {
-                    if (pos.r < 0 || pos.r >= 5 || pos.c < 0 || pos.c >= 10) return false;
-                    const adjacentFieldId = pos.r * 10 + pos.c + 1;
-                    const adjacentField = gardenFields.find(f => f.id === adjacentFieldId);
-                    return adjacentField?.isUnlocked;
-                  });
-                })();
+                // In TeichView, no unlock logic needed since grass fields are auto-unlocked
+                const isNextToUnlock = false;
                 
                 return (
                   <div
