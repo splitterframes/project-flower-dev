@@ -470,14 +470,15 @@ export const TeichView: React.FC = () => {
                             ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50' 
                             : 'border-slate-600 bg-slate-800 opacity-40'
                       }
-                      ${shakingField === field.id ? 'animate-bounce' : ''}
+                      ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
                     style={{
                       backgroundImage: field.isPond ? 'url("/Landschaft/teich.png")' : 'url("/Landschaft/gras.png")',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       minHeight: '44px',
-                      minWidth: '44px'
+                      minWidth: '44px',
+                      animation: shakingField === field.id ? 'pond-wobble 3s ease-in-out infinite' : 'none'
                     }}
                     onClick={() => {
                       if (field.isPond) {
