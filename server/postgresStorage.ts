@@ -463,6 +463,11 @@ export class PostgresStorage implements IStorage {
 
   // Garden methods
   async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
+    // Check if field is a pond field (seeds only in garden)
+    if (this.isPondField(data.fieldIndex)) {
+      return { success: false, message: 'Samen können nur auf Gartenfeldern gepflanzt werden, nicht im Teich' };
+    }
+
     // Check if user has seeds
     const userSeedsResult = await this.db
       .select()
