@@ -897,11 +897,20 @@ export const TeichView: React.FC = () => {
         if (result.fishCreated) {
           showNotification('Fisch geboren!', `Ein ${result.fishName} wurde geboren! Seltenheit: ${result.fishRarity}`, 'success');
         } else {
-          // Import the rarity function
-          const { getExpectedFishRarity } = await import('../../../shared/rarity');
-          const expectedRarity = getExpectedFishRarity();
+          // Use the ACTUAL server-calculated rarity, not a random one!
+          const rarityNames = {
+            'common': 'Gewöhnlich',
+            'uncommon': 'Ungewöhnlich', 
+            'rare': 'Selten',
+            'super-rare': 'Super-selten',
+            'epic': 'Episch',
+            'legendary': 'Legendär',
+            'mythical': 'Mythisch'
+          };
+          const rarityName = rarityNames[result.fishRarity as keyof typeof rarityNames] || result.fishRarity;
+          
           showNotification(
-            `Fütterung ${result.feedingCount}/3 abgeschlossen.\n\nErwartete Durchschnitts-Rarität: ${expectedRarity.name} (${expectedRarity.percentage}%)`, 
+            `Fütterung ${result.feedingCount}/3 abgeschlossen.\n\nAktueller Durchschnitt: ${rarityName}`, 
             'success'
           );
         }
