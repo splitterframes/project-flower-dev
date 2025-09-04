@@ -1023,11 +1023,11 @@ export const TeichView: React.FC = () => {
             <CardTitle className="text-white text-center">
               <div className="flex items-center justify-center gap-3">
                 <Waves className="h-6 w-6 text-blue-400" />
-                <span className="text-2xl font-bold text-blue-300">Mein Teich</span>
+                <span className="text-2xl font-bold text-blue-300">Mariposa Teich</span>
                 <Waves className="h-6 w-6 text-blue-400" />
               </div>
               <div className="text-xs text-slate-400">
-                Grasfelder: Butterflies • Teichfelder: Fish füttern
+                Setze Schmetterlinge ins Gras damit sie neue Raupen bilden und fütter deine Fische mit Ihnen - Sie da wackelt was!
               </div>
             </CardTitle>
           </CardHeader>
