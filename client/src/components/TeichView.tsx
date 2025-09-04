@@ -1197,7 +1197,11 @@ export const TeichView: React.FC = () => {
                       >
                         <div 
                           className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform z-30 animate-fade-in"
-                          onClick={() => collectCaterpillar(field.id - 1)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Verhindert Event-Bubbling zum Feld
+                            setIsCollectingCaterpillar(true); // Sofort blockieren
+                            collectCaterpillar(field.id - 1);
+                          }}
                         >
                           <RarityImage
                             src={caterpillar.caterpillarImageUrl}
@@ -1221,7 +1225,11 @@ export const TeichView: React.FC = () => {
                       >
                         <div 
                           className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all hover:scale-110 animate-bounce-spawn"
-                          onClick={() => collectCaterpillar(field.id - 1)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Verhindert Event-Bubbling zum Feld
+                            setIsCollectingCaterpillar(true); // Sofort blockieren
+                            collectCaterpillar(field.id - 1);
+                          }}
                           style={{
                             animation: 'bounce-spawn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards'
                           }}
