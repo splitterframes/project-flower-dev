@@ -531,12 +531,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fishRarity: fishResult.fishRarity
         });
       } else {
-        // Just track progress without creating fish
+        // Show current average rarity of fed caterpillars so far
+        const currentAverageRarity = calculateAverageRarity(rarities);
+        console.log(`🐟 Current average rarity after feeding ${rarities.length} caterpillars: ${currentAverageRarity}`);
+        
         return res.json({
           feedingCount: newProgress,
           fishCreated: false,
           fishName: `Fisch ${Math.floor(Math.random() * 15) + 1}`,
-          fishRarity: 'common'
+          fishRarity: currentAverageRarity // Show current average, not always 'common'
         });
       }
 
