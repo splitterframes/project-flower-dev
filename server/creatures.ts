@@ -25,10 +25,10 @@ async function generateAvailableFishIds(): Promise<number[]> {
     const fishDir = path.join(process.cwd(), 'client/public/Fische');
     const files = await fs.readdir(fishDir);
     
-    // Extract fish numbers from xxx.png files
+    // Extract fish numbers from xxx.jpg files
     const ids: number[] = [];
     files.forEach(file => {
-      const match = file.match(/^(\d+)\.png$/i);
+      const match = file.match(/^(\d+)\.jpg$/i);
       if (match) {
         const id = parseInt(match[1]);
         if (!isNaN(id)) {
@@ -59,7 +59,7 @@ let TOTAL_FISH = 15; // Default, will be updated
 
 // Get proper filename for fish ID
 function getFishImageFilename(id: number): string {
-  return `${id}.png`;
+  return `${id}.jpg`;
 }
 
 // Base rarity distribution for fish (same percentages as butterflies)
