@@ -1826,6 +1826,16 @@ export class PostgresStorage implements IStorage {
   /**
    * Get all available fields for butterfly spawning (only unlocked & free fields)
    */
+  // Check if a field is in the pond area (Teich)
+  private isPondField(fieldIndex: number): boolean {
+    const fieldId = fieldIndex + 1; // Convert 0-indexed to 1-indexed
+    const row = Math.floor((fieldId - 1) / 10);
+    const col = (fieldId - 1) % 10;
+    
+    // Pond area: rows 1-3, columns 1-8 (0-indexed)
+    return row >= 1 && row <= 3 && col >= 1 && col <= 8;
+  }
+
   async getAvailableFieldsForButterflies(userId: number): Promise<number[]> {
     // Get all occupied fields for this user in parallel
     const [userPlantedFields, userPlacedBouquets, userExistingButterflies, userUnlockedFields] = await Promise.all([
@@ -1847,10 +1857,12 @@ export class PostgresStorage implements IStorage {
       userUnlockedFields.map((f: { fieldIndex: number }) => f.fieldIndex)
     );
 
-    // Find available fields (unlocked AND free)
+    // Find available fields (unlocked AND free AND NOT pond fields)
     const availableFields = Array.from(unlockedFieldIndices).filter(fieldIndex => 
-      !occupiedFields.has(fieldIndex)
+      !occupiedFields.has(fieldIndex) && !this.isPondField(fieldIndex)
     );
+    
+    console.log(`🦋 GARDEN/TEICH SEPARATION: Available butterfly fields for user ${userId}:`, availableFields, '(pond fields excluded)');
     
     return availableFields;
   }
