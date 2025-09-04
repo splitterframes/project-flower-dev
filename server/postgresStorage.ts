@@ -3275,8 +3275,7 @@ export class PostgresStorage {
         const newCount = existing[0].feedingCount + 1;
         
         if (newCount >= 3) {
-          // DON'T delete progress here! Let feedFishWithCaterpillar handle it after fish creation
-          // First update to 3, then the caller will handle fish creation and cleanup
+          // DON'T delete progress here! Update to 3 and let caller handle fish creation and cleanup  
           await this.db
             .update(pondFeedingProgressTable)
             .set({ 
