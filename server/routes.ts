@@ -429,8 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Feed fish with caterpillar endpoint
-  // Temporary in-memory feeding progress tracking (until database table is ready)
-  const pondFeedingProgress = new Map<string, number>(); // key: `${userId}_${fieldIndex}`, value: feeding count
+  // Database-backed feeding progress tracking
 
   app.post('/api/garden/feed-fish', async (req, res) => {
     try {
@@ -457,19 +456,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
       }
 
-      // Track feeding progress
-      const progressKey = `${userId}_${fieldIndex}`;
-      const currentProgress = pondFeedingProgress.get(progressKey) || 0;
-      const newProgress = currentProgress + 1;
-      
-      pondFeedingProgress.set(progressKey, newProgress);
+      // Track feeding progress in database
+      const newProgress = await storage.updatePondFeedingProgress(userId, fieldIndex);
       console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3 });
 
       if (newProgress >= 3) {
         // Create fish after 3 feedings
         const fishResult = await storage.spawnRandomFish(userId, fieldIndex);
-        // Reset progress after fish is born
-        pondFeedingProgress.delete(progressKey);
+        // Reset progress after fish is born - handled in updatePondFeedingProgress
         
         return res.json({
           feedingCount: 3,
@@ -499,20 +493,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { userId } = req.params;
     
     try {
-      const userProgress: Record<number, number> = {};
-      
-      // Extract progress for this user from memory map
-      for (const [key, progress] of pondFeedingProgress.entries()) {
-        const [keyUserId, fieldIndex] = key.split('_');
-        if (keyUserId === userId) {
-          userProgress[parseInt(fieldIndex)] = progress;
-        }
-      }
-      
+      const userProgress = await storage.getUserPondProgress(parseInt(userId));
       res.json({ pondProgress: userProgress });
     } catch (error) {
       console.error('Get pond progress error:', error);
-      res.status(500).json({ message: 'Failed to get pond progress' });
+      res.status(500).json({ message: 'Fehler beim Laden des Fütterungs-Fortschritts.' });
     }
   });
 

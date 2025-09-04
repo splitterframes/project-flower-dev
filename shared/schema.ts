@@ -276,6 +276,19 @@ export const userFish = pgTable("user_fish", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Pond feeding progress system
+export const pondFeedingProgressTable = pgTable("pond_feeding_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(),
+  feedingCount: integer("feeding_count").notNull().default(1),
+  lastFedAt: timestamp("last_fed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  // Unique constraint: one progress entry per user-field combination
+  uniqueUserField: uniqueIndex("unique_user_field_feeding").on(table.userId, table.fieldIndex)
+}));
+
 // Caterpillar collection system  
 export const userCaterpillars = pgTable("user_caterpillars", {
   id: serial("id").primaryKey(),

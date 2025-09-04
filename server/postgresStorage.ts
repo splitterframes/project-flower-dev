@@ -25,6 +25,7 @@ import {
   challengeRewards,
   unlockedFields,
   sunSpawns,
+  pondFeedingProgressTable,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -3305,6 +3306,89 @@ export class PostgresStorage implements IStorage {
     }
 
     return this.spawnButterflyOnField(userId, bouquetId, bouquetRarity);
+  }
+  
+  /**
+   * Pond feeding progress methods for persistent storage
+   */
+  async updatePondFeedingProgress(userId: number, fieldIndex: number): Promise<number> {
+    try {
+      console.log(`🐟 Updating pond feeding progress for user ${userId} field ${fieldIndex}`);
+      
+      // Check if feeding progress already exists for this user-field combination
+      const existing = await this.db.select().from(pondFeedingProgressTable).where(
+        and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        )
+      );
+      
+      if (existing.length > 0) {
+        // Increment existing progress
+        const newCount = existing[0].feedingCount + 1;
+        
+        if (newCount >= 3) {
+          // Reset progress after fish spawns (fish spawning happens in caller)
+          await this.db
+            .delete(pondFeedingProgressTable)
+            .where(
+              and(
+                eq(pondFeedingProgressTable.userId, userId),
+                eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+              )
+            );
+          console.log(`🐟 Reset feeding progress for user ${userId} field ${fieldIndex} after fish spawn`);
+          return 3; // Return 3 to indicate fish creation
+        } else {
+          // Update progress
+          await this.db
+            .update(pondFeedingProgressTable)
+            .set({ 
+              feedingCount: newCount,
+              lastFedAt: new Date()
+            })
+            .where(eq(pondFeedingProgressTable.id, existing[0].id));
+          console.log(`🐟 Updated feeding progress to ${newCount} for user ${userId} field ${fieldIndex}`);
+          return newCount;
+        }
+      } else {
+        // Create new progress entry
+        await this.db.insert(pondFeedingProgressTable).values({
+          userId,
+          fieldIndex,
+          feedingCount: 1,
+          lastFedAt: new Date()
+        });
+        console.log(`🐟 Created new feeding progress (1) for user ${userId} field ${fieldIndex}`);
+        return 1;
+      }
+      
+    } catch (error) {
+      console.error('🐟 Error updating pond feeding progress:', error);
+      throw error;
+    }
+  }
+  
+  async getUserPondProgress(userId: number): Promise<Record<number, number>> {
+    try {
+      console.log(`🐟 Getting pond progress for user ${userId}`);
+      
+      const progressEntries = await this.db.select().from(pondFeedingProgressTable).where(
+        eq(pondFeedingProgressTable.userId, userId)
+      );
+      
+      const userProgress: Record<number, number> = {};
+      for (const entry of progressEntries) {
+        userProgress[entry.fieldIndex] = entry.feedingCount;
+      }
+      
+      console.log(`🐟 Retrieved pond progress for user ${userId}:`, userProgress);
+      return userProgress;
+      
+    } catch (error) {
+      console.error('🐟 Error getting user pond progress:', error);
+      throw error;
+    }
   }
 }
 
