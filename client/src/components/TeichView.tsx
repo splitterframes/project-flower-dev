@@ -219,8 +219,9 @@ export const TeichView: React.FC = () => {
     }
   };
 
-  const plantSeed = async (seedId: number) => {
-    if (!user || selectedField === null) return;
+  const plantSeed = async (seedId: number, fieldIndex?: number) => {
+    if (!user) return;
+    const targetField = fieldIndex !== undefined ? fieldIndex : (selectedField || 1) - 1;
 
     try {
       const response = await fetch('/api/garden/plant', {
@@ -228,7 +229,7 @@ export const TeichView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          fieldIndex: selectedField - 1,
+          fieldIndex: targetField,
           seedId
         })
       });
@@ -278,8 +279,9 @@ export const TeichView: React.FC = () => {
     }
   };
 
-  const placeBouquet = async (bouquetId: number) => {
-    if (!user || selectedField === null) return;
+  const placeBouquet = async (bouquetId: number, fieldIndex?: number) => {
+    if (!user) return;
+    const targetField = fieldIndex !== undefined ? fieldIndex : (selectedField || 1) - 1;
 
     try {
       const response = await fetch('/api/garden/place-bouquet', {
@@ -287,7 +289,7 @@ export const TeichView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          fieldIndex: selectedField - 1,
+          fieldIndex: targetField,
           bouquetId
         })
       });
@@ -659,9 +661,9 @@ export const TeichView: React.FC = () => {
             setShowSeedModal(false);
             setSelectedField(null);
           }}
-          seeds={userSeeds}
+          seeds={userSeeds || []}
           onSelectSeed={plantSeed}
-          selectedField={selectedField}
+          fieldIndex={selectedField || 0}
         />
 
         <BouquetSelectionModal
@@ -670,9 +672,9 @@ export const TeichView: React.FC = () => {
             setShowBouquetModal(false);
             setSelectedField(null);
           }}
-          bouquets={userBouquets}
-          onSelectBouquet={placeBouquet}
-          selectedField={selectedField}
+          userBouquets={userBouquets || []}
+          onPlaceBouquet={placeBouquet}
+          fieldIndex={selectedField || 0}
         />
       </TooltipProvider>
     </div>
