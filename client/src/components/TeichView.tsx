@@ -444,7 +444,7 @@ export const TeichView: React.FC = () => {
                       }
                     `}
                     style={{
-                      backgroundImage: field.isPond ? 'url("/attached_assets/generated_images/Peaceful_pond_water_surface_76b4a375.png")' : 'url("/Landschaft/gras.png")',
+                      backgroundImage: field.isPond ? 'url("/Landschaft/teich.png")' : 'url("/Landschaft/gras.png")',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       minHeight: '44px',
@@ -462,7 +462,7 @@ export const TeichView: React.FC = () => {
                         return;
                       }
                       
-                      if (field.hasSunSpawn) {
+                      if (field.hasSunSpawn && !field.isPond) {
                         collectSun(field.id);
                       } else if (field.hasButterfly) {
                         collectButterfly(field.id);
@@ -493,8 +493,8 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Sun spawn */}
-                    {field.hasSunSpawn && field.sunSpawnAmount && (
+                    {/* Sun spawn - don't show in pond fields */}
+                    {field.hasSunSpawn && field.sunSpawnAmount && !field.isPond && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-yellow-400/20 rounded-lg border border-yellow-400/50 animate-pulse cursor-pointer hover:bg-yellow-400/30">
@@ -622,31 +622,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Locked field next to unlock */}
-                    {!field.isUnlocked && isNextToUnlock && !field.isPond && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <Lock className="h-4 w-4 text-orange-400 mb-1" />
-                            <div className="text-xs text-orange-300 bg-orange-900/60 px-1 rounded flex items-center">
-                              <Coins className="h-3 w-3 mr-1" />
-                              10
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Klicken zum Freischalten</p>
-                          <p className="text-sm text-slate-300">Kosten: 10 Credits</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-
-                    {/* Completely locked field */}
-                    {!field.isUnlocked && !isNextToUnlock && !field.isPond && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Lock className="h-4 w-4 text-slate-500" />
-                      </div>
-                    )}
                   </div>
                 );
               })}
