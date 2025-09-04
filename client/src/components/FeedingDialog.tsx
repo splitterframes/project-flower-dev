@@ -16,35 +16,23 @@ interface UserCaterpillar {
   createdAt: string;
 }
 
-interface UserButterfly {
-  id: number;
-  userId: number;
-  butterflyId: number;
-  butterflyName: string;
-  butterflyRarity: string;
-  butterflyImageUrl: string;
-  quantity: number;
-  createdAt: string;
-}
 
-// Combined item for feeding
+// Feeding item for caterpillars only
 interface FeedingItem {
   id: number;
   name: string;
   rarity: string;
   imageUrl: string;
   quantity: number;
-  type: 'caterpillar' | 'butterfly';
-  originalId: number; // caterpillarId or butterflyId
+  type: 'caterpillar';
+  originalId: number; // caterpillarId
 }
 
 interface FeedingDialogProps {
   isOpen: boolean;
   onClose: () => void;
   caterpillars: UserCaterpillar[];
-  butterflies?: UserButterfly[]; // New: Accept butterflies from garden inventory
   onFeedCaterpillar: (caterpillarId: number, fieldIndex: number) => void;
-  onFeedButterfly?: (butterflyId: number, fieldIndex: number) => void; // New: Feed butterflies (convert to caterpillars)
   fieldIndex: number;
 }
 
@@ -52,44 +40,25 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
   isOpen,
   onClose,
   caterpillars,
-  butterflies = [],
   onFeedCaterpillar,
-  onFeedButterfly,
   fieldIndex
 }) => {
   const [selectedItem, setSelectedItem] = useState<FeedingItem | null>(null);
 
-  // Combine caterpillars and butterflies into feeding items (filter out items with 0 quantity)
-  const feedingItems: FeedingItem[] = [
-    // Convert caterpillars to feeding items
-    ...caterpillars.filter(cat => cat.quantity > 0).map(cat => ({
-      id: cat.id,
-      name: cat.caterpillarName,
-      rarity: cat.caterpillarRarity,
-      imageUrl: cat.caterpillarImageUrl,
-      quantity: cat.quantity,
-      type: 'caterpillar' as const,
-      originalId: cat.caterpillarId
-    })),
-    // Convert butterflies to feeding items (they become caterpillars in pond)
-    ...butterflies.filter(butter => butter.quantity > 0).map(butter => ({
-      id: butter.id + 10000, // Offset to avoid ID conflicts
-      name: `${butter.butterflyName} → Raupe`,
-      rarity: butter.butterflyRarity,
-      imageUrl: butter.butterflyImageUrl,
-      quantity: butter.quantity,
-      type: 'butterfly' as const,
-      originalId: butter.butterflyId
-    }))
-  ];
+  // Convert caterpillars to feeding items (filter out items with 0 quantity)
+  const feedingItems: FeedingItem[] = caterpillars.filter(cat => cat.quantity > 0).map(cat => ({
+    id: cat.id,
+    name: cat.caterpillarName,
+    rarity: cat.caterpillarRarity,
+    imageUrl: cat.caterpillarImageUrl,
+    quantity: cat.quantity,
+    type: 'caterpillar' as const,
+    originalId: cat.caterpillarId
+  }));
 
   const handleFeed = () => {
-    if (selectedItem) {
-      if (selectedItem.type === 'caterpillar') {
-        onFeedCaterpillar(selectedItem.originalId, fieldIndex);
-      } else if (selectedItem.type === 'butterfly' && onFeedButterfly) {
-        onFeedButterfly(selectedItem.originalId, fieldIndex);
-      }
+    if (selectedItem && selectedItem.type === 'caterpillar') {
+      onFeedCaterpillar(selectedItem.originalId, fieldIndex);
       onClose();
       setSelectedItem(null);
     }
@@ -103,15 +72,15 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
             🐟 Fische füttern
           </DialogTitle>
           <DialogDescription className="text-center text-blue-200">
-            Wähle eine Raupe oder einen Schmetterling aus deinem Inventar zum Füttern
+            Wähle eine Raupe aus deinem Inventar zum Füttern
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-2">
           {feedingItems.length === 0 ? (
             <div className="col-span-full text-center py-8">
-              <p className="text-blue-300 mb-2">🦋 Keine Futtermittel verfügbar</p>
-              <p className="text-blue-400 text-sm">Sammle Schmetterlinge im Garten oder bereits vorhandene Raupen!</p>
+              <p className="text-blue-300 mb-2">🐛 Keine Raupen verfügbar</p>
+              <p className="text-blue-400 text-sm">Sammle Schmetterlinge im Garten um Raupen zu erhalten!</p>
             </div>
           ) : (
             feedingItems.map((item) => (
@@ -140,7 +109,7 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
                       className="w-full h-full bg-gradient-to-br from-blue-500 to-green-500 rounded flex items-center justify-center text-2xl"
                       style={{ display: 'none' }}
                     >
-                      {item.type === 'butterfly' ? '🦋' : '🐛'}
+                      🐛
                     </div>
                   </div>
                   <h3 className="font-semibold text-white text-xs truncate mb-1">
@@ -153,7 +122,7 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
                     {getRarityDisplayName(item.rarity)}
                   </Badge>
                   <p className="text-blue-300 text-xs">
-                    {item.type === 'butterfly' ? '🦋→🐛' : '🐛'} Verfügbar: {item.quantity}
+                    🐛 Verfügbar: {item.quantity}
                   </p>
                 </CardContent>
               </Card>
