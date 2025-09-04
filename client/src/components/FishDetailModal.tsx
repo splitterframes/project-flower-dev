@@ -302,7 +302,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   <img 
                     src={fish.fishImageUrl}
                     alt={fish.fishName}
-                    className="w-[700px] h-[700px] object-contain mx-auto border-4 rounded-lg shadow-lg"
+                    className="w-[600px] h-[600px] object-contain mx-auto border-4 rounded-lg shadow-lg"
                     style={{
                       borderColor: getRarityColor(fish.fishRarity),
                       filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
@@ -313,7 +313,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                     }}
                   />
                   <div
-                    className="w-[700px] h-[700px] bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center text-9xl border-4 shadow-lg mx-auto"
+                    className="w-[600px] h-[600px] bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center text-8xl border-4 shadow-lg mx-auto"
                     style={{ 
                       display: 'none',
                       borderColor: getRarityColor(fish.fishRarity),
