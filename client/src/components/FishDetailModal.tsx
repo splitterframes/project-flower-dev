@@ -211,11 +211,11 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   const price = getFishPrice(fish.fishRarity);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-7xl w-full shadow-2xl">
 
         {/* Name and Rarity Header */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg mb-6">
+        <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg mb-6">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               {/* Name and Rarity */}
@@ -324,7 +324,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
             {/* Sell Status - Only for own fish */}
             {!readOnly && (
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
                 <CardContent className="p-4 text-center">
                   <div className="flex items-center justify-center mb-2">
                     <div className="relative">
@@ -364,7 +364,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
             {/* Sonnen Boost - Only for own fish and when not sellable yet */}
             {!readOnly && !canSell && timeRemaining > 0 && (
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
                 <CardContent className="p-3 text-center">
                   <div className="flex items-center justify-center mb-2">
                     <Zap className="h-4 w-4 mr-2 text-yellow-400" />
@@ -406,7 +406,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
             {/* Sell Price & Button - Only show for own fish */}
             {!readOnly && (
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
@@ -442,7 +442,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             )}
 
             {/* Exit Button */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+            <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
               <CardContent className="p-3">
                 <Button
                   onClick={onClose}
