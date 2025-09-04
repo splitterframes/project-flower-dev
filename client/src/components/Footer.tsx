@@ -6,7 +6,8 @@ import {
   Flower2,
   Trophy,
   Store,
-  Zap
+  Zap,
+  Waves
 } from "lucide-react";
 
 interface FooterProps {
@@ -17,6 +18,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   const navigationItems = [
     { id: "garten", label: "Garten", icon: Flower },
+    { id: "teich", label: "Teich", icon: Waves },
     { id: "markt", label: "Markt", icon: Store },
     { id: "inventar", label: "Inventar", icon: Package },
     { id: "bouquets", label: "Bouquets", icon: Flower2 },
