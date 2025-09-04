@@ -213,6 +213,7 @@ export const TeichView: React.FC = () => {
             butterflyImageUrl: butterfly?.butterflyImageUrl,
             butterflyRarity: butterfly?.butterflyRarity,
             butterflySpawnedAt: butterfly ? new Date(butterfly.spawnedAt) : undefined,
+            butterflyShrinking: false, // Will be set by lifecycle system
             hasSunSpawn: !!sunSpawn,
             sunSpawnAmount: sunSpawn?.sunAmount,
             sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined,
@@ -233,7 +234,7 @@ export const TeichView: React.FC = () => {
     }
   };
 
-  // Butterfly lifecycle system
+  // Butterfly lifecycle system with animation phases
   useEffect(() => {
     const processButterflies = () => {
       const now = Date.now();
@@ -241,16 +242,23 @@ export const TeichView: React.FC = () => {
         const spawnedAt = new Date(butterfly.spawnedAt).getTime();
         const timeElapsed = (now - spawnedAt) / 1000; // seconds
         
-        // Phase 1: Visible for 10 seconds
-        // Phase 2: Start shrinking after 10s, disappear after 40-100s total
+        // Phase 1: Normal size (0-30s)
+        // Phase 2: Start shrinking (30-40s) 
+        // Phase 3: Remove and spawn caterpillar (40s+)
         if (timeElapsed > 40) {
-          // Remove butterfly and spawn caterpillar
           removeButterflyAndSpawnCaterpillar(butterfly);
+        } else if (timeElapsed > 30) {
+          // Mark as shrinking but don't remove yet
+          setGardenFields(prev => prev.map(field => 
+            field.id === butterfly.fieldIndex + 1 
+              ? { ...field, butterflyShrinking: true }
+              : field
+          ));
         }
       });
     };
 
-    const butterflyInterval = setInterval(processButterflies, 2000);
+    const butterflyInterval = setInterval(processButterflies, 1000);
     return () => clearInterval(butterflyInterval);
   }, [fieldButterflies]);
 
@@ -955,7 +963,7 @@ export const TeichView: React.FC = () => {
                         butterflyImageUrl={field.butterflyImageUrl}
                         rarity={field.butterflyRarity as RarityTier}
                       >
-                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                        <div className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all duration-2000 ${field.butterflyShrinking ? 'scale-0 opacity-0' : 'scale-100 opacity-100 hover:scale-110'}`}>
                           <RarityImage
                             src={field.butterflyImageUrl}
                             alt={field.butterflyName || "Schmetterling"}

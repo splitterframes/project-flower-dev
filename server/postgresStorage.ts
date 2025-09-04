@@ -1204,6 +1204,48 @@ export class PostgresStorage implements IStorage {
     }
   }
 
+  private async addCaterpillarToInventory(userId: number, caterpillarId: number, caterpillarName: string, rarity: string, imageUrl: string): Promise<void> {
+    console.log(`🐛 Adding caterpillar ${caterpillarName} (${rarity}) to user ${userId} inventory`);
+    
+    try {
+      // Check if user already has this caterpillar type
+      const existingCaterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarId)
+        ));
+
+      if (existingCaterpillar.length > 0) {
+        // Update quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existingCaterpillar[0].quantity + 1 })
+          .where(eq(userCaterpillars.id, existingCaterpillar[0].id));
+        
+        console.log(`🐛 Updated caterpillar quantity: ${existingCaterpillar[0].quantity + 1}`);
+      } else {
+        // Add new caterpillar
+        await this.db
+          .insert(userCaterpillars)
+          .values({
+            userId,
+            caterpillarId,
+            caterpillarName,
+            caterpillarRarity: rarity,
+            caterpillarImageUrl: imageUrl,
+            quantity: 1
+          });
+        
+        console.log(`🐛 Added new caterpillar ${caterpillarName} to inventory`);
+      }
+    } catch (error) {
+      console.error('🐛 Database error adding caterpillar to inventory:', error);
+      throw error;
+    }
+  }
+
   private async getRandomCaterpillarByRarity(rarity: string) {
     // For now, return a mock caterpillar - later connect to real caterpillar data
     const caterpillarIds = {
