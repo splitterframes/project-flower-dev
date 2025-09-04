@@ -775,16 +775,16 @@ export const TeichView: React.FC = () => {
   };
 
   // Collect field caterpillar handler
-  const collectCaterpillar = async (fieldId: number) => {
+  const collectCaterpillar = async (fieldIndex: number) => {
     if (!user) return;
     
-    console.log('🐛 Attempting to collect caterpillar on field', fieldId - 1);
+    console.log('🐛 Attempting to collect caterpillar on field', fieldIndex);
     
     try {
       const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fieldIndex: fieldId - 1 })
+        body: JSON.stringify({ fieldIndex: fieldIndex })
       });
 
       if (response.ok) {
@@ -1110,7 +1110,7 @@ export const TeichView: React.FC = () => {
                       >
                         <div 
                           className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all hover:scale-110 animate-bounce-spawn"
-                          onClick={() => collectCaterpillar(field.id)}
+                          onClick={() => collectCaterpillar(field.id - 1)}
                           style={{
                             animation: 'bounce-spawn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards'
                           }}
