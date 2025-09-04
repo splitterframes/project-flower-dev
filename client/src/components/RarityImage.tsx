@@ -58,9 +58,13 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   };
 
   const handleImageError = () => {
-    // For butterflies, try fallback to 0.jpg before showing icon
+    // Try fallback to 0.jpg for different creature types before showing icon
     if (currentSrc.includes('Schmetterlinge') && !currentSrc.includes('0.jpg')) {
       setCurrentSrc('/Schmetterlinge/0.jpg');
+    } else if (currentSrc.includes('Fische') && !currentSrc.includes('0.jpg')) {
+      setCurrentSrc('/Fische/0.jpg');
+    } else if (currentSrc.includes('Raupen') && !currentSrc.includes('0.jpg')) {
+      setCurrentSrc('/Raupen/0.jpg');
     } else {
       setImageError(true);
     }
