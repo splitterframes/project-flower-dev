@@ -85,7 +85,7 @@ export const TeichView: React.FC = () => {
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
     return Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
-      isUnlocked: false,
+      isUnlocked: !isPondField(i + 1), // All non-pond fields are unlocked
       hasPlant: false,
       isPond: isPondField(i + 1)
     }));
@@ -134,7 +134,7 @@ export const TeichView: React.FC = () => {
         const updatedFields = Array.from({ length: 50 }, (_, i) => {
           const fieldId = i + 1;
           const fieldData = fieldsData.fields.find((f: any) => f.fieldIndex === i);
-          const isUnlocked = unlockedData.unlockedFields.some((f: any) => f.fieldIndex === i);
+          const isUnlocked = !isPondField(fieldId); // All non-pond fields are unlocked
           const placedBouquet = placedData.placedBouquets.find((b: any) => b.fieldIndex === i);
           const butterfly = butterflyData.fieldButterflies.find((b: any) => b.fieldIndex === i);
           const sunSpawn = sunSpawnsData.sunSpawns.find((s: any) => s.fieldIndex === i && s.isActive);
@@ -444,7 +444,7 @@ export const TeichView: React.FC = () => {
                       }
                     `}
                     style={{
-                      backgroundImage: field.isPond ? 'url("/Landschaft/wasser.png")' : 'url("/Landschaft/gras.png")',
+                      backgroundImage: field.isPond ? 'url("/attached_assets/generated_images/Peaceful_pond_water_surface_76b4a375.png")' : 'url("/Landschaft/gras.png")',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       minHeight: '44px',
@@ -452,13 +452,17 @@ export const TeichView: React.FC = () => {
                     }}
                     onClick={() => {
                       if (field.isPond) {
-                        showNotification('Teichfeld', 'Dies ist ein Teichfeld - hier können keine Pflanzen angebaut werden.', 'info');
+                        showNotification('Dies ist ein Teichfeld - hier können keine Pflanzen angebaut werden.', 'info', 'Teichfeld');
                         return;
                       }
                       
-                      if (!field.isUnlocked && isNextToUnlock) {
-                        unlockField(field.id);
-                      } else if (field.hasSunSpawn) {
+                      // For now, non-pond fields are unlocked but without function
+                      if (field.isUnlocked && !field.isPond) {
+                        showNotification('Diese Felder sind noch nicht funktional.', 'info', 'In Entwicklung');
+                        return;
+                      }
+                      
+                      if (field.hasSunSpawn) {
                         collectSun(field.id);
                       } else if (field.hasButterfly) {
                         collectButterfly(field.id);
@@ -481,10 +485,6 @@ export const TeichView: React.FC = () => {
                       }
                     }}
                   >
-                    {/* Field number overlay */}
-                    <div className="absolute top-0.5 left-0.5 text-xs text-white/60 font-mono">
-                      {field.id}
-                    </div>
 
                     {/* Pond indicator */}
                     {field.isPond && (
