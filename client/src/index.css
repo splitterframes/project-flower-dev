@@ -96,6 +96,15 @@
   100% { transform: rotate(0deg); }
 }
 
+/* Butterfly wiggle animation */
+@keyframes wiggle {
+  0% { transform: translateX(-2px) translateY(0px); }
+  25% { transform: translateX(2px) translateY(-1px); }
+  50% { transform: translateX(-1px) translateY(1px); }
+  75% { transform: translateX(1px) translateY(-2px); }
+  100% { transform: translateX(-2px) translateY(0px); }
+}
+
 #root {
   width: 100%;
   height: 100%;

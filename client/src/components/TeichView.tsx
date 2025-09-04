@@ -1029,8 +1029,8 @@ export const TeichView: React.FC = () => {
                       </Tooltip>
                     )}
 
-                    {/* Butterfly */}
-                    {field.hasButterfly && field.butterflyImageUrl && (
+                    {/* Butterfly - only show if no local animation running */}
+                    {field.hasButterfly && field.butterflyImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
                       <ButterflyHoverPreview
                         butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
@@ -1160,20 +1160,23 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Placed Butterfly Display */}
+                    {/* Placed Butterfly Display with Animations */}
                     {placedButterflies.find(b => b.fieldId === field.id) && (
                       <div
                         className={`absolute inset-0 rounded transition-all ${
                           placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
                             ? 'opacity-0 transform scale-0' 
-                            : 'opacity-100 transform scale-100'
+                            : 'opacity-100 transform scale-100 animate-wiggle'
                         }`}
                         style={{
                           backgroundImage: `url(${placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           border: `2px solid ${getButterflyBorderColor(placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity || 'common')}`,
-                          transitionDuration: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling ? '30000ms' : '200ms'
+                          transitionDuration: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling ? '10000ms' : '200ms',
+                          animation: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
+                            ? 'none' 
+                            : 'wiggle 0.8s ease-in-out infinite alternate'
                         }}
                       />
                     )}
