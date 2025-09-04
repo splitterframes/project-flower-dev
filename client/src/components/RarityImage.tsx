@@ -64,7 +64,14 @@ export const RarityImage: React.FC<RarityImageProps> = ({
     } else if (currentSrc.includes('Fische') && !currentSrc.includes('0.jpg')) {
       setCurrentSrc('/Fische/0.jpg');
     } else if (currentSrc.includes('Raupen') && !currentSrc.includes('0.jpg')) {
-      setCurrentSrc('/Raupen/0.jpg');
+      // First try padding single digit numbers (7.jpg -> 07.jpg)  
+      const match = currentSrc.match(/\/Raupen\/(\d+)\.jpg$/);
+      if (match && match[1].length === 1 && !currentSrc.includes('0' + match[1])) {
+        const paddedNumber = match[1].padStart(2, '0');
+        setCurrentSrc(`/Raupen/${paddedNumber}.jpg`);
+      } else {
+        setCurrentSrc('/Raupen/0.jpg');
+      }
     } else {
       setImageError(true);
     }

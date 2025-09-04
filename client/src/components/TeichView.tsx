@@ -1082,8 +1082,8 @@ export const TeichView: React.FC = () => {
                       </ButterflyHoverPreview>
                     )}
 
-                    {/* Field Caterpillar with Bounce Effect */}
-                    {field.hasCaterpillar && field.caterpillarImageUrl && (
+                    {/* Field Caterpillar with Bounce Effect - hide during butterfly animation */}
+                    {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
                       <CaterpillarHoverPreview
                         caterpillarId={field.caterpillarId!}
                         caterpillarName={field.caterpillarName!}

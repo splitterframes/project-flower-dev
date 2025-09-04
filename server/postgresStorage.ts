@@ -1415,7 +1415,7 @@ export class PostgresStorage implements IStorage {
     return {
       id: randomId,
       name: `Caterpillar ${randomId}`,
-      imageUrl: `/Raupen/${randomId}.jpg`
+      imageUrl: `/Raupen/${randomId.toString().padStart(2, '0')}.jpg`
     };
   }
 
