@@ -166,6 +166,88 @@ export const TeichView: React.FC = () => {
     isGrowing?: boolean;
   }[]>([]);
 
+  // State for spawning caterpillars with grow-in animation
+  const [spawnedCaterpillars, setSpawnedCaterpillars] = useState<{
+    id: number;
+    fieldId: number;
+    caterpillarImageUrl: string;
+    caterpillarName: string;
+    caterpillarRarity: string;
+    spawnedAt: Date;
+    isGrowingIn: boolean;
+  }[]>([]);
+
+  // Raritäts-Vererbungslogik 50-30-20
+  const inheritCaterpillarRarity = (parentRarity: string): string => {
+    const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    const currentIndex = rarities.indexOf(parentRarity);
+    
+    if (currentIndex === -1) return 'common';
+    
+    const roll = Math.random();
+    
+    if (roll < 0.5) {
+      // 50% same rarity
+      return parentRarity;
+    } else if (roll < 0.8) {
+      // 30% lower rarity  
+      return currentIndex > 0 ? rarities[currentIndex - 1] : rarities[0];
+    } else {
+      // 20% higher rarity
+      return currentIndex < rarities.length - 1 ? rarities[currentIndex + 1] : rarities[rarities.length - 1];
+    }
+  };
+
+  // Caterpillar spawning nach Burst
+  const spawnCaterpillarAfterBurst = async (fieldIndex: number, butterflyRarity: string) => {
+    if (!user) return;
+    
+    try {
+      console.log("🐛 CALLING API: Spawning caterpillar on field", fieldIndex);
+      const response = await fetch('/api/garden/spawn-caterpillar', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: fieldIndex,
+          parentRarity: butterflyRarity
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("🐛 SUCCESS: Caterpillar spawned!", result);
+        
+        // Lokale grow-in animation starten
+        const caterpillarAnimId = Date.now() + Math.random();
+        const inheritedRarity = inheritCaterpillarRarity(butterflyRarity);
+        
+        setSpawnedCaterpillars(prev => [...prev, {
+          id: caterpillarAnimId,
+          fieldId: fieldIndex + 1, // Convert back to 1-based
+          caterpillarImageUrl: result.caterpillar?.caterpillarImageUrl || '/Raupen/7.jpg',
+          caterpillarName: result.caterpillar?.caterpillarName || 'Spawned Caterpillar',
+          caterpillarRarity: inheritedRarity,
+          spawnedAt: new Date(),
+          isGrowingIn: true
+        }]);
+
+        // Nach grow-in animation (0.8s) entfernen und echte Daten laden
+        setTimeout(() => {
+          setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
+          fetchTeichData(); // Reload actual data
+        }, 800);
+        
+      } else {
+        console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
+      }
+    } catch (error) {
+      console.error('🐛 NETWORK ERROR spawning caterpillar:', error);
+    }
+  };
+
   const handleButterflyPlacement = (fieldId: number, butterfly: any) => {
     setSelectedField(fieldId);
     placeButterflyOnField(butterfly.id);
@@ -973,6 +1055,10 @@ export const TeichView: React.FC = () => {
                                     );
                                     setTimeout(() => {
                                       setPlacedButterflies(prev => prev.filter(b => b.id !== butterflyAnimId));
+                                      
+                                      // 🐛 SPAWN CATERPILLAR nach Burst mit entgegengesetzter Animation
+                                      console.log("🐛 SPAWNING: Caterpillar after butterfly burst!");
+                                      spawnCaterpillarAfterBurst(field.id - 1, butterfly.butterflyRarity);
                                     }, 600);
                                   }, 5000);
 
@@ -1063,9 +1149,28 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
+                    {/* Spawned caterpillars with grow-in animation */}
+                    {spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
+                      const caterpillar = spawnedCaterpillars.find(c => c.fieldId === field.id)!;
+                      return (
+                        <div 
+                          className={`absolute inset-0 flex items-center justify-center ${
+                            caterpillar.isGrowingIn ? 'animate-grow-in' : ''
+                          }`}
+                        >
+                          <RarityImage
+                            src={caterpillar.caterpillarImageUrl}
+                            alt={caterpillar.caterpillarName || "Spawned Caterpillar"}
+                            rarity={caterpillar.caterpillarRarity as RarityTier || "common"}
+                            size="medium"
+                            className="w-16 h-16"
+                          />
+                        </div>
+                      );
+                    })()}
 
-                    {/* Field Caterpillar with Bounce Effect - hide during butterfly animation AND local caterpillars */}
-                    {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && !placedCaterpillars.find(c => c.fieldId === field.id) && (
+                    {/* Field Caterpillar with Bounce Effect - hide during butterfly animation, local caterpillars AND spawned caterpillars */}
+                    {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && !placedCaterpillars.find(c => c.fieldId === field.id) && !spawnedCaterpillars.find(c => c.fieldId === field.id) && (
                       <CaterpillarHoverPreview
                         caterpillarId={field.caterpillarId!}
                         caterpillarName={field.caterpillarName!}
