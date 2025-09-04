@@ -6,6 +6,12 @@ This is a full-stack gaming application built with React, Express, and PostgreSQ
 
 Preferred communication style: Simple, everyday language.
 
+## CRITICAL: Storage Architecture Rule
+🚨 **PostgreSQL ONLY** - Never implement dual storage systems (PostgreSQL + Memory) again!
+- Memory storage was removed Sept 4, 2025 due to bugs, complexity, and sync issues
+- Only use `postgresStorage.ts` - never create alternative storage implementations
+- This prevents "function not found" bugs and maintains system reliability
+
 # System Architecture
 
 ## Frontend Architecture
@@ -21,13 +27,13 @@ Preferred communication style: Simple, everyday language.
 - **Language**: TypeScript with ES modules for consistency with frontend
 - **API Pattern**: RESTful endpoints with structured error handling
 - **Development**: Hot reload via Vite integration for seamless full-stack development
-- **Storage Strategy**: In-memory storage (MemStorage) for development with database abstraction layer
+- **Storage Strategy**: PostgreSQL-only architecture using Drizzle ORM (Memory storage removed permanently)
 
 ## Data Storage
 - **Database**: PostgreSQL configured via Drizzle ORM
 - **Schema Management**: Drizzle Kit for migrations and schema synchronization
 - **Connection**: Neon Database serverless connection for scalable PostgreSQL hosting
-- **Development Storage**: Memory-based storage implementation for rapid prototyping
+- **Production & Development**: Single PostgreSQL storage system for all environments
 
 ## Authentication & Authorization
 - **Authentication**: Simple username/password authentication with session-based state
