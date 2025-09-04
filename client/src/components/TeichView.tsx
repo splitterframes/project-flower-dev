@@ -167,32 +167,26 @@ export const TeichView: React.FC = () => {
     if (!user) return;
 
     try {
-      // Fetch only pond-specific data
-      const [caterpillarRes, userCaterpillarsRes, sunSpawnsRes] = await Promise.all([
+      // Fetch only pond-specific data (no sun spawns)
+      const [caterpillarRes, userCaterpillarsRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
-        fetch(`/api/user/${user.id}/caterpillars`),
-        fetch(`/api/garden/sun-spawns`)
+        fetch(`/api/user/${user.id}/caterpillars`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && sunSpawnsRes.ok) {
-        const [caterpillarData, userCaterpillarsData, sunSpawnsData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok) {
+        const [caterpillarData, userCaterpillarsData] = await Promise.all([
           caterpillarRes.json(),
-          userCaterpillarsRes.json(),
-          sunSpawnsRes.json()
+          userCaterpillarsRes.json()
         ]);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
-        console.log('🌊 Updating pond with sun spawns:', sunSpawnsData.sunSpawns);
 
-        // Update pond fields with only relevant data (caterpillars and sun spawns)
+        // Update pond fields with only caterpillars (no sun spawns in pond view)
         const updatedFields = gardenFields.map((field) => {
           const fieldIndex = field.id - 1;
           
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
-          
-          // Check for sun spawn
-          const sunSpawn = sunSpawnsData.sunSpawns.find((s: any) => s.fieldIndex === fieldIndex && s.userId === user.id && s.isActive);
 
           return {
             ...field,
@@ -224,9 +218,10 @@ export const TeichView: React.FC = () => {
             caterpillarImageUrl: caterpillar?.caterpillarImageUrl,
             caterpillarRarity: caterpillar?.caterpillarRarity,
             caterpillarSpawnedAt: caterpillar ? new Date(caterpillar.spawnedAt) : undefined,
-            hasSunSpawn: !!sunSpawn,
-            sunSpawnAmount: sunSpawn?.sunAmount,
-            sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined
+            // No sun spawns in pond view
+            hasSunSpawn: false,
+            sunSpawnAmount: undefined,
+            sunSpawnExpiresAt: undefined
           };
         });
 
@@ -237,7 +232,7 @@ export const TeichView: React.FC = () => {
         setPlacedBouquets([]);
         setFieldButterflies([]);
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
-        setSunSpawns(sunSpawnsData.sunSpawns);
+        setSunSpawns([]); // No sun spawns in pond view
         setUserButterflies([]);
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
       }
