@@ -1012,7 +1012,7 @@ export const TeichView: React.FC = () => {
                       // GRASFELD: Butterfly platzieren ODER Caterpillar einsammeln
                       if (!field.isPond) {
                         // Check if caterpillar is present on this field to collect
-                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldId === field.id - 1);
+                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id - 1);
                         
                         if (caterpillarOnField) {
                           console.log("🐛 Collecting caterpillar from grass field", field.id);
@@ -1090,12 +1090,38 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
-                    {/* Spawned caterpillars with grow-in animation */}
-                    {spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
+                    {/* Real Field Caterpillars from Database (PERMANENT - highest priority) */}
+                    {fieldCaterpillars
+                      .filter(c => c.fieldIndex === field.id - 1)
+                      .map(caterpillar => (
+                      <CaterpillarHoverPreview
+                        key={`real-caterpillar-${caterpillar.id}`}
+                        caterpillarId={caterpillar.caterpillarId}
+                        caterpillarName={caterpillar.caterpillarName}
+                        caterpillarImageUrl={caterpillar.caterpillarImageUrl}
+                        rarity={caterpillar.caterpillarRarity as RarityTier}
+                      >
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform z-30"
+                          onClick={() => collectCaterpillar(field.id - 1)}
+                        >
+                          <RarityImage
+                            src={caterpillar.caterpillarImageUrl}
+                            alt={caterpillar.caterpillarName || "Raupe"}
+                            rarity={caterpillar.caterpillarRarity as RarityTier || "common"}
+                            size="large"
+                            className="w-20 h-20"
+                          />
+                        </div>
+                      </CaterpillarHoverPreview>
+                    ))}
+
+                    {/* Temporary grow-in animation - ONLY show if NO permanent caterpillar exists */}
+                    {!fieldCaterpillars.find(c => c.fieldIndex === field.id - 1) && spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
                       const caterpillar = spawnedCaterpillars.find(c => c.fieldId === field.id)!;
                       return (
                         <div 
-                          className={`absolute inset-0 flex items-center justify-center ${
+                          className={`absolute inset-0 flex items-center justify-center z-10 ${
                             caterpillar.isGrowingIn ? 'animate-grow-in' : ''
                           }`}
                         >
