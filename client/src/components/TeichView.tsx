@@ -224,29 +224,8 @@ export const TeichView: React.FC = () => {
         const caterpillarAnimId = Date.now() + Math.random();
         const inheritedRarity = inheritCaterpillarRarity(butterflyRarity);
         
-        setSpawnedCaterpillars(prev => [...prev, {
-          id: caterpillarAnimId,
-          fieldId: fieldIndex + 1, // Convert back to 1-based
-          caterpillarImageUrl: result.caterpillar?.caterpillarImageUrl || '/Raupen/7.jpg',
-          caterpillarName: result.caterpillar?.caterpillarName || 'Spawned Caterpillar',
-          caterpillarRarity: result.caterpillar?.caterpillarRarity || inheritedRarity,
-          spawnedAt: new Date(),
-          isGrowingIn: true
-        }]);
-
-        // Sofort die echten Daten laden, während Animation läuft
-        fetchTeichData(); 
-        
-        // Nach grow-in animation (4s) die temporäre Animation sanft ausblenden
-        setTimeout(() => {
-          // Nochmal laden um sicherzustellen, dass echte Raupe da ist
-          fetchTeichData(); 
-          
-          // Animation sanft beenden ohne harten Sprung - permanente Raupe ist schon da
-          setTimeout(() => {
-            setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
-          }, 100);
-        }, 4000); // Genau nach 4s Animation
+        // Sofort die echten Daten laden - permanente Raupe erscheint direkt
+        fetchTeichData();
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
@@ -1120,25 +1099,6 @@ export const TeichView: React.FC = () => {
                       </CaterpillarHoverPreview>
                     ))}
 
-                    {/* Temporary grow-in animation - Show during spawn process */}
-                    {spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
-                      const caterpillar = spawnedCaterpillars.find(c => c.fieldId === field.id)!;
-                      return (
-                        <div 
-                          className={`absolute inset-0 flex items-center justify-center z-10 ${
-                            caterpillar.isGrowingIn ? 'animate-grow-in' : ''
-                          }`}
-                        >
-                          <RarityImage
-                            src={caterpillar.caterpillarImageUrl}
-                            alt={caterpillar.caterpillarName || "Spawned Caterpillar"}
-                            rarity={caterpillar.caterpillarRarity as RarityTier || "common"}
-                            size="large"
-                            className="w-full h-full"
-                          />
-                        </div>
-                      );
-                    })()}
 
                     {/* Field Caterpillar with Bounce Effect - hide during butterfly animation, local caterpillars AND spawned caterpillars */}
                     {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && !placedCaterpillars.find(c => c.fieldId === field.id) && !spawnedCaterpillars.find(c => c.fieldId === field.id) && (
