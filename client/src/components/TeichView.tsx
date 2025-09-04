@@ -204,10 +204,10 @@ export const TeichView: React.FC = () => {
       const randomField = pondFields[Math.floor(Math.random() * pondFields.length)];
       setShakingField(randomField);
       
-      // Stop shaking after 3 seconds
+      // Stop shaking after 6 seconds
       setTimeout(() => {
         setShakingField(null);
-      }, 3000);
+      }, 6000);
     };
 
     // Start first shake after random delay (20-40s)
@@ -478,7 +478,7 @@ export const TeichView: React.FC = () => {
                       backgroundPosition: 'center',
                       minHeight: '44px',
                       minWidth: '44px',
-                      animation: shakingField === field.id ? 'pond-wobble 3s ease-in-out infinite' : 'none'
+                      animation: shakingField === field.id ? 'pond-wobble 1.5s ease-in-out infinite' : 'none'
                     }}
                     onClick={() => {
                       if (field.isPond) {
