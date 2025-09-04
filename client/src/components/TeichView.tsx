@@ -311,8 +311,8 @@ export const TeichView: React.FC = () => {
           // Check for butterfly (only on grass fields)  
           const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex) : null;
           
-          // Check for field fish (only on pond fields)
-          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === fieldIndex) : null;
+          // Check for field fish (only on pond fields) - use field.id directly instead of fieldIndex
+          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === field.id) : null;
 
           return {
             ...field,
@@ -1318,7 +1318,7 @@ export const TeichView: React.FC = () => {
                               alt={field.fishName || "Fisch"}
                               rarity={field.fishRarity as RarityTier || "common"}
                               size="large"
-                              className="w-16 h-16"
+                              className="w-20 h-20"
                             />
                             <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
                               🐟
