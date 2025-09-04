@@ -135,6 +135,7 @@ export const TeichView: React.FC = () => {
   const [showButterflyModal, setShowButterflyModal] = useState(false);
   const [showFishModal, setShowFishModal] = useState(false);
   const [showFeedingDialog, setShowFeedingDialog] = useState(false);
+  const [isCollectingCaterpillar, setIsCollectingCaterpillar] = useState(false);
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
@@ -758,7 +759,6 @@ export const TeichView: React.FC = () => {
             if (caterpillarResponse.ok) {
               // Refresh data to show spawned caterpillar
               fetchTeichData();
-              showNotification('Raupe erschienen!', 'Ein Schmetterling hat eine Raupe hinterlassen!', 'success');
             }
           } catch (error) {
             console.error('Failed to spawn caterpillar:', error);
@@ -845,6 +845,7 @@ export const TeichView: React.FC = () => {
     if (!user) return;
     
     console.log('🐛 Attempting to collect caterpillar on field', fieldIndex);
+    setIsCollectingCaterpillar(true);
     
     try {
       const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
@@ -857,12 +858,19 @@ export const TeichView: React.FC = () => {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
         fetchTeichData();
+        
+        // Prevent butterfly dialog from opening for 1 second
+        setTimeout(() => {
+          setIsCollectingCaterpillar(false);
+        }, 1000);
       } else {
         const error = await response.json();
         console.error('Collection failed:', error);
+        setIsCollectingCaterpillar(false);
       }
     } catch (error) {
       console.error('Failed to collect caterpillar:', error);
+      setIsCollectingCaterpillar(false);
     }
   };
 
@@ -1079,11 +1087,13 @@ export const TeichView: React.FC = () => {
                           return; // Wichtig: Nach Raupe sammeln nicht weiter ausführen
                         }
                         
-                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da war)
-                        if (userButterflies.length > 0) {
+                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da war und nicht gerade sammelnd)
+                        if (!isCollectingCaterpillar && userButterflies.length > 0) {
                           console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
                           setSelectedField(field.id);
                           setShowButterflyModal(true);
+                        } else if (isCollectingCaterpillar) {
+                          console.log("🐛 Currently collecting caterpillar, skipping butterfly dialog");
                         } else {
                           showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
                         }
