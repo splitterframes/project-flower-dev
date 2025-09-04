@@ -97,6 +97,7 @@ export const TeichView: React.FC = () => {
   const [showSeedModal, setShowSeedModal] = useState(false);
   const [showBouquetModal, setShowBouquetModal] = useState(false);
   const [selectedField, setSelectedField] = useState<number | null>(null);
+  const [shakingField, setShakingField] = useState<number | null>(null);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
 
   const fetchGardenData = async () => {
@@ -186,6 +187,50 @@ export const TeichView: React.FC = () => {
     const interval = setInterval(fetchGardenData, 10000);
     return () => clearInterval(interval);
   }, [user]);
+
+  // Pond field shaking animation system
+  useEffect(() => {
+    const startShaking = () => {
+      // Get all pond field IDs (middle 8x3 area: rows 1-3, cols 1-8)
+      const pondFields: number[] = [];
+      for (let row = 1; row <= 3; row++) {
+        for (let col = 1; col <= 8; col++) {
+          const fieldId = row * 10 + col + 1;
+          pondFields.push(fieldId);
+        }
+      }
+      
+      // Select random pond field
+      const randomField = pondFields[Math.floor(Math.random() * pondFields.length)];
+      setShakingField(randomField);
+      
+      // Stop shaking after 3 seconds
+      setTimeout(() => {
+        setShakingField(null);
+      }, 3000);
+    };
+
+    // Start first shake after random delay (20-40s)
+    const getRandomInterval = () => Math.random() * 20000 + 20000; // 20-40 seconds
+    
+    let timeoutId = setTimeout(() => {
+      startShaking();
+      
+      // Set up recurring shaking with new random interval each time
+      const scheduleNext = () => {
+        timeoutId = setTimeout(() => {
+          startShaking();
+          scheduleNext(); // Schedule the next shake
+        }, getRandomInterval());
+      };
+      
+      scheduleNext();
+    }, getRandomInterval());
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const unlockField = async (fieldId: number) => {
     if (!user) return;
@@ -425,6 +470,7 @@ export const TeichView: React.FC = () => {
                             ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50' 
                             : 'border-slate-600 bg-slate-800 opacity-40'
                       }
+                      ${shakingField === field.id ? 'animate-bounce' : ''}
                     `}
                     style={{
                       backgroundImage: field.isPond ? 'url("/Landschaft/teich.png")' : 'url("/Landschaft/gras.png")',
