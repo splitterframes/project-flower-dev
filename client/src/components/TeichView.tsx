@@ -237,12 +237,16 @@ export const TeichView: React.FC = () => {
         // Sofort die echten Daten laden, während Animation läuft
         fetchTeichData(); 
         
-        // Nach grow-in animation (2.5s) die temporäre Animation entfernen - die echte Raupe sollte bereits geladen sein
+        // Nach grow-in animation (4s) die temporäre Animation entfernen - mehr Zeit für Daten-Load
         setTimeout(() => {
-          setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
           // Nochmal laden um sicherzustellen, dass echte Raupe da ist
           fetchTeichData(); 
-        }, 2500);
+          
+          // Weitere 0.5s warten, dann temporäre Animation entfernen
+          setTimeout(() => {
+            setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
+          }, 500);
+        }, 4000);
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
@@ -1116,8 +1120,8 @@ export const TeichView: React.FC = () => {
                       </CaterpillarHoverPreview>
                     ))}
 
-                    {/* Temporary grow-in animation - ONLY show if NO permanent caterpillar exists */}
-                    {!fieldCaterpillars.find(c => c.fieldIndex === field.id - 1) && spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
+                    {/* Temporary grow-in animation - Show during spawn process */}
+                    {spawnedCaterpillars.find(c => c.fieldId === field.id) && (() => {
                       const caterpillar = spawnedCaterpillars.find(c => c.fieldId === field.id)!;
                       return (
                         <div 
