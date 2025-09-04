@@ -234,11 +234,11 @@ export const TeichView: React.FC = () => {
           isGrowingIn: true
         }]);
 
-        // Nach grow-in animation (0.8s) entfernen und echte Daten laden
+        // Nach grow-in animation (1.5s) entfernen und echte Daten laden - Raupe bleibt dauerhaft auf dem Feld!
         setTimeout(() => {
           setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
-          fetchTeichData(); // Reload actual data
-        }, 800);
+          fetchTeichData(); // Reload actual data - Raupe ist jetzt dauerhaft auf dem Feld
+        }, 1500);
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
