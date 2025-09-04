@@ -1266,7 +1266,17 @@ export const TeichView: React.FC = () => {
                     {field.isPond && (
                       <div className="absolute top-0 left-0 bg-black/50 text-white text-xs p-1">
                         ID: {field.id}<br/>
-                        Progress: {field.feedingProgress || 0}
+                        Progress: {field.feedingProgress || 0}<br/>
+                        isPond: {field.isPond ? 'Y' : 'N'}
+                      </div>
+                    )}
+                    
+                    {/* DEBUG: Also show non-pond fields that have progress (these shouldn't exist!) */}
+                    {!field.isPond && field.feedingProgress && field.feedingProgress > 0 && (
+                      <div className="absolute top-0 left-0 bg-red-500 text-white text-xs p-1">
+                        FEHLER! ID: {field.id}<br/>
+                        Progress: {field.feedingProgress}<br/>
+                        isPond: {field.isPond ? 'Y' : 'N'}
                       </div>
                     )}
 
