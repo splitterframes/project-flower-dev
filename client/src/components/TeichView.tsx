@@ -783,6 +783,44 @@ export const TeichView: React.FC = () => {
     }
   };
 
+  const onFeedButterfly = async (butterflyId: number, fieldIndex: number) => {
+    if (!user) return;
+
+    try {
+      console.log('🦋→🐛 Converting butterfly to caterpillar for feeding fish on field', fieldIndex);
+      
+      const response = await fetch('/api/garden/feed-butterfly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          butterflyId,
+          fieldIndex: fieldIndex - 1 // Convert to 0-based index
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🦋 Butterfly feeding result:', result);
+        
+        if (result.fishCreated) {
+          showNotification('Fisch geboren!', `Ein ${result.fishName} wurde geboren! Seltenheit: ${result.fishRarity}`, 'success');
+        } else {
+          showNotification('Schmetterling → Raupe!', `Schmetterling zu Raupe konvertiert! Fütterung ${result.feedingCount}/3 abgeschlossen.`, 'success');
+        }
+        
+        fetchTeichData(); // Refresh field data
+        setShakingField(null); // Stop shaking after feeding
+      } else {
+        const error = await response.json();
+        showNotification('Fehler', error.message || 'Schmetterling-Fütterung fehlgeschlagen.', 'error');
+      }
+    } catch (error) {
+      console.error('🦋 Failed to feed butterfly:', error);
+      showNotification('Fehler', 'Netzwerkfehler beim Füttern mit Schmetterling.', 'error');
+    }
+  };
+
   const collectSun = async (fieldId: number) => {
     if (!user) return;
     
@@ -882,13 +920,13 @@ export const TeichView: React.FC = () => {
                       if (field.isPond) {
                         // TEICHFELD: Wackelnd → Fütterungs-Dialog, sonst Fish einsammeln
                         if (shakingField === field.id) {
-                          // Open feeding dialog if user has caterpillars
-                          if (userCaterpillars.length > 0) {
+                          // Open feeding dialog if user has caterpillars or butterflies
+                          if (userCaterpillars.length > 0 || userButterflies.length > 0) {
                             console.log("🐛 Opening feeding dialog for pond field", field.id);
                             setSelectedField(field.id);
                             setShowFeedingDialog(true);
                           } else {
-                            showNotification('Keine Raupen', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
+                            showNotification('Keine Futtermittel', 'Du hast keine Raupen oder Schmetterlinge zum Füttern im Inventar.', 'error');
                           }
                         } else {
                           // Check for fish to collect (placeholder - will implement fish detection)
@@ -1268,7 +1306,9 @@ export const TeichView: React.FC = () => {
             setSelectedField(null);
           }}
           caterpillars={userCaterpillars}
+          butterflies={userButterflies} 
           onFeedCaterpillar={onFeedCaterpillar}
+          onFeedButterfly={onFeedButterfly}
           fieldIndex={selectedField || 0}
         />
 
