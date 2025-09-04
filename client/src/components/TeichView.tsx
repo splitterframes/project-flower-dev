@@ -949,6 +949,19 @@ export const TeichView: React.FC = () => {
                     )}
 
 
+                    {/* Local placed butterflies in field size */}
+                    {placedButterflies.find(b => b.fieldId === field.id) && (
+                      <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                        <RarityImage
+                          src={placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl || ""}
+                          alt={placedButterflies.find(b => b.fieldId === field.id)?.butterflyName || "Schmetterling"}
+                          rarity={placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity as RarityTier || "common"}
+                          size="large"
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
+
                     {/* Database butterflies - only show if no local animation running */}
                     {field.hasButterfly && field.butterflyImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
                       <ButterflyHoverPreview
@@ -967,8 +980,8 @@ export const TeichView: React.FC = () => {
                             src={field.butterflyImageUrl}
                             alt={field.butterflyName || "Schmetterling"}
                             rarity={field.butterflyRarity as RarityTier || "common"}
-                            size="medium"
-                            className="w-16 h-16"
+                            size="large"
+                            className="w-full h-full"
                           />
                         </div>
                       </ButterflyHoverPreview>
