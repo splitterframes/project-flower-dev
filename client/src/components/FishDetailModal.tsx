@@ -333,43 +333,57 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                     🐟
                   </div>
                 </div>
-                
-                <div className="mt-4 text-sm text-blue-200">
-                  <p>Platziert: {new Date(fish.placedAt).toLocaleString('de-DE')}</p>
-                  <div className="flex items-center justify-center space-x-2 mt-2">
-                    <DollarSign className="h-4 w-4" />
-                    <span>Verkaufspreis: {price.toLocaleString()} Credits</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Right Side - Details */}
           <div className="flex-1 space-y-6">
+            
+            {/* Fish Info Card */}
+            <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
+              <CardContent className="p-6">
+                <div className="text-center space-y-3">
+                  <div className="text-sm text-blue-200">
+                    <p>Platziert: {new Date(fish.placedAt).toLocaleString('de-DE')}</p>
+                  </div>
+                  <div className="flex items-center justify-center space-x-2 text-blue-200">
+                    <DollarSign className="h-5 w-5" />
+                    <span className="text-lg font-semibold">Verkaufspreis: {price.toLocaleString()} Credits</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Sell Status - Only for own fish */}
             {!readOnly && (
-            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-600/50">
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center space-x-2 mb-3">
-                    <Clock className="h-5 w-5 text-blue-400" />
-                    <span className="text-lg font-semibold text-blue-300">Verkaufsstatus</span>
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="relative">
+                      <Clock className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
+                      {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                    </div>
+                    <span className="text-lg font-semibold">
+                      {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
+                    </span>
                   </div>
                   
-                  <div className={`text-lg font-bold mb-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                  <div className={`text-3xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
                     {formatTime(timeRemaining)}
                   </div>
                   
-                  <p className="text-sm text-slate-400 mb-4">
-                    Fische können nach 24 Stunden verkauft werden
-                  </p>
+                  <div className="text-sm text-slate-400 mb-4">
+                    {canSell 
+                      ? "Dieser Fisch kann jetzt verkauft werden!"
+                      : "Fische können nach 24 Stunden verkauft werden"
+                    }
+                  </div>
                   
                   <Button
                     onClick={handleSell}
                     disabled={!canSell || isSelling}
-                    className={`w-full ${
+                    className={`w-full py-3 text-lg font-semibold ${
                       canSell 
                         ? 'bg-green-600 hover:bg-green-700 text-white' 
                         : 'bg-slate-600 text-slate-400 cursor-not-allowed'
@@ -377,50 +391,48 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   >
                     {isSelling ? 'Verkaufe...' : canSell ? `Verkaufen für ${price.toLocaleString()} Credits` : 'Noch nicht verkaufbar'}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Sonnen Boost - Only for own fish and when not sellable yet */}
             {!readOnly && !canSell && timeRemaining > 0 && (
-              <Card className="bg-gradient-to-br from-yellow-900/20 to-orange-900/10 border-yellow-500/30">
-                <CardContent className="p-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center space-x-2 mb-3">
-                    <Zap className="h-5 w-5 text-yellow-400" />
-                    <span className="text-lg font-semibold text-yellow-300">Sonnen-Boost</span>
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <Zap className="h-6 w-6 mr-3 text-yellow-400" />
+                    <span className="text-lg font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
                   </div>
                   
-                  <p className="text-sm text-yellow-200 mb-3">
-                    Verkürze die Wartezeit mit Sonnen! (1 Sonne = 1 Minute)
-                  </p>
-                  
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Input
-                      type="number"
-                      min="1"
-                      max="1440"
-                      value={boostMinutes}
-                      onChange={(e) => setBoostMinutes(e.target.value)}
-                      placeholder="Minuten"
-                      className="bg-slate-800/50 border-yellow-500/50 text-white text-center"
-                    />
-                    <span className="text-yellow-300 text-sm">Min</span>
+                  <div className="text-sm text-slate-400 mb-4">
+                    Verkürze den Countdown mit Sonnen: 1 ☀️ = 1 Minute weniger
                   </div>
                   
-                  <p className="text-xs text-yellow-400 mb-3">
-                    Kosten: {parseInt(boostMinutes) || 0} Sonnen (Du hast: {suns})
-                  </p>
+                  <div className="flex gap-3 items-end mb-4">
+                    <div className="flex-1">
+                      <label className="text-sm text-slate-300 mb-1 block">Minuten</label>
+                      <Input
+                        type="number"
+                        value={boostMinutes}
+                        onChange={(e) => setBoostMinutes(e.target.value)}
+                        min="1"
+                        max="1440"
+                        className="bg-slate-800 border-slate-600 text-white"
+                      />
+                    </div>
+                    <div className="text-sm text-slate-400">
+                      Kosten: {parseInt(boostMinutes) || 0} ☀️<br/>
+                      Du hast: {suns} ☀️
+                    </div>
+                  </div>
                   
                   <Button
                     onClick={handleSunBoost}
                     disabled={isBoosting || suns < (parseInt(boostMinutes) || 0) || !boostMinutes}
-                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 text-lg font-semibold"
                   >
-                    {isBoosting ? 'Booste...' : `${parseInt(boostMinutes) || 0} Min für ${parseInt(boostMinutes) || 0} Sonnen`}
+                    {isBoosting ? 'Booste...' : `${parseInt(boostMinutes) || 0} Min für ${parseInt(boostMinutes) || 0} ☀️`}
                   </Button>
-                </div>
                 </CardContent>
               </Card>
             )}
