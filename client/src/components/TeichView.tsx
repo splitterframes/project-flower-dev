@@ -72,6 +72,8 @@ interface GardenField {
   sunSpawnAmount?: number;
   sunSpawnExpiresAt?: Date;
   isPond?: boolean; // New field for pond areas
+  // Pond feeding progress tracking
+  feedingProgress?: number; // 0-3: 0=none, 1=🐟, 2=🐠, 3=fish born
 }
 
 interface UserCaterpillar {
@@ -167,16 +169,18 @@ export const TeichView: React.FC = () => {
     if (!user) return;
 
     try {
-      // Fetch only pond-specific data (no sun spawns)
-      const [caterpillarRes, userCaterpillarsRes] = await Promise.all([
+      // Fetch pond-specific data including feeding progress
+      const [caterpillarRes, userCaterpillarsRes, pondProgressRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
-        fetch(`/api/user/${user.id}/caterpillars`)
+        fetch(`/api/user/${user.id}/caterpillars`),
+        fetch(`/api/user/${user.id}/pond-progress`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok) {
-        const [caterpillarData, userCaterpillarsData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok) {
+        const [caterpillarData, userCaterpillarsData, pondProgressData] = await Promise.all([
           caterpillarRes.json(),
-          userCaterpillarsRes.json()
+          userCaterpillarsRes.json(),
+          pondProgressRes.json()
         ]);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
@@ -221,7 +225,9 @@ export const TeichView: React.FC = () => {
             // No sun spawns in pond view
             hasSunSpawn: false,
             sunSpawnAmount: undefined,
-            sunSpawnExpiresAt: undefined
+            sunSpawnExpiresAt: undefined,
+            // Add feeding progress for pond fields
+            feedingProgress: field.isPond ? pondProgressData.pondProgress[fieldIndex] || 0 : 0
           };
         });
 
@@ -1186,6 +1192,21 @@ export const TeichView: React.FC = () => {
                           </CaterpillarHoverPreview>
                         </div>
                       ))}
+
+                    {/* Pond Feeding Progress Icons - only for pond fields */}
+                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        {field.feedingProgress === 1 && (
+                          <div className="text-2xl animate-pulse drop-shadow-lg">🐟</div>
+                        )}
+                        {field.feedingProgress === 2 && (
+                          <div className="text-3xl animate-bounce drop-shadow-lg">🐠</div>
+                        )}
+                        <div className="absolute -bottom-2 bg-blue-600/90 text-white text-xs px-2 py-1 rounded-full">
+                          {field.feedingProgress}/3 gefüttert
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                 );

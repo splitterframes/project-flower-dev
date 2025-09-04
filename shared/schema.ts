@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -301,6 +301,20 @@ export const fieldCaterpillars = pgTable("field_caterpillars", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Pond feeding progress tracking table
+export const pondFeedingProgress = pgTable("pond_feeding_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // Pond field index (11-38)
+  feedingCount: integer("feeding_count").default(0).notNull(), // 0-3 (3 creates fish)
+  lastFedAt: timestamp("last_fed_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+}, (table) => {
+  return {
+    userFieldIdx: uniqueIndex("user_field_feeding_idx").on(table.userId, table.fieldIndex)
+  };
+});
+
 // VIP Butterflies placed in exhibition frames  
 export const exhibitionVipButterflies = pgTable("exhibition_vip_butterflies", {
   id: serial("id").primaryKey(),
@@ -410,3 +424,4 @@ export type ChallengeDonation = typeof challengeDonations.$inferSelect;
 export type ChallengeReward = typeof challengeRewards.$inferSelect;
 export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
 export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldSchema>;
+export type PondFeedingProgress = typeof pondFeedingProgress.$inferSelect;
