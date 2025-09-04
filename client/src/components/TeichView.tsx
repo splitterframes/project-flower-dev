@@ -144,6 +144,7 @@ export const TeichView: React.FC = () => {
     caterpillarRarity: string;
     placedAt: Date;
     isShrinkling: boolean;
+    isGrowing?: boolean;
   }[]>([]);
 
   const fetchGardenData = async () => {
@@ -585,7 +586,7 @@ export const TeichView: React.FC = () => {
 
     // Check if butterfly quantity is available
     if (butterfly.quantity <= 0) {
-      showNotification('Dieser Schmetterling ist nicht mehr verfügbar.', 'error');
+      showNotification('Fehler', 'Dieser Schmetterling ist nicht mehr verfügbar.', 'error');
       return;
     }
 
@@ -619,11 +620,11 @@ export const TeichView: React.FC = () => {
       };
 
       setPlacedButterflies(prev => [...prev, newPlacedButterfly]);
-      showNotification(`${butterfly.butterflyName} wurde platziert!`, 'success');
+      showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
 
     } catch (error) {
       console.error('Failed to place butterfly:', error);
-      showNotification('Fehler beim Platzieren des Schmetterlings.', 'error');
+      showNotification('Fehler', 'Fehler beim Platzieren des Schmetterlings.', 'error');
     }
 
     setShowButterflyModal(false);
