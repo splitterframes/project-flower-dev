@@ -244,14 +244,14 @@ export const AquariumView: React.FC = () => {
               <img
                 src={fish.fishImageUrl}
                 alt={fish.fishName}
-                className="w-8 h-8 object-contain"
+                className="w-full h-full object-contain p-1"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling!.style.display = 'flex';
                 }}
               />
               <div
-                className="w-8 h-8 bg-gradient-to-br from-blue-500 to-teal-500 rounded flex items-center justify-center text-xs"
+                className="w-full h-full bg-gradient-to-br from-blue-500 to-teal-500 rounded flex items-center justify-center text-2xl"
                 style={{ display: 'none' }}
               >
                 🐟
