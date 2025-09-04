@@ -448,7 +448,6 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   onClick={onClose}
                   className="w-full text-sm font-bold py-2 rounded-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
                 >
-                  <X className="h-4 w-4 mr-2" />
                   Verlassen
                 </Button>
               </CardContent>
