@@ -3660,6 +3660,73 @@ export class PostgresStorage {
       return { success: false, message: 'Fehler beim Sammeln des Fisches' };
     }
   }
+
+  async getUserButterfly(userId: number, butterflyId: number): Promise<any | null> {
+    try {
+      console.log(`🦋 Getting butterfly ${butterflyId} for user ${userId}`);
+      
+      const butterfly = await this.db.select().from(userButterflies).where(
+        and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.id, butterflyId)
+        )
+      ).limit(1);
+      
+      if (butterfly.length === 0) {
+        console.log(`🦋 Butterfly ${butterflyId} not found for user ${userId}`);
+        return null;
+      }
+      
+      console.log(`🦋 Found butterfly: ${butterfly[0].butterflyName} (quantity: ${butterfly[0].quantity})`);
+      return butterfly[0];
+    } catch (error) {
+      console.error('🦋 Error getting user butterfly:', error);
+      return null;
+    }
+  }
+
+  async consumeButterfly(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🦋 Consuming butterfly ${butterflyId} for user ${userId}`);
+      
+      const butterfly = await this.db.select().from(userButterflies).where(
+        and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.id, butterflyId)
+        )
+      ).limit(1);
+      
+      if (butterfly.length === 0) {
+        return { success: false, message: 'Schmetterling nicht gefunden' };
+      }
+      
+      const butterflyData = butterfly[0];
+      
+      if (butterflyData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Schmetterlinge im Inventar' };
+      }
+
+      if (butterflyData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterflyData.quantity - 1 })
+          .where(eq(userButterflies.id, butterflyId));
+        console.log(`🦋 Reduced butterfly ${butterflyData.butterflyName} quantity to ${butterflyData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterflyId));
+        console.log(`🦋 Removed butterfly ${butterflyData.butterflyName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🦋 Error consuming butterfly:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
 }
 
 export const postgresStorage = new PostgresStorage();

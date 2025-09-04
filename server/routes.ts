@@ -926,17 +926,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       const data = placeButterflyOnFieldSchema.parse(req.body);
       
-      console.log(`🦋 Placing butterfly ${data.butterflyId} on field ${data.fieldIndex} for user ${userId}`);
+      console.log(`🦋 Processing butterfly animation for butterfly ${data.butterflyId} on field ${data.fieldIndex} for user ${userId}`);
 
-      const result = await storage.placeButterflyOnField(userId, data.fieldIndex, data.butterflyId);
+      // Check if user has this butterfly and reduce quantity
+      const butterfly = await storage.getUserButterfly(userId, data.butterflyId);
       
-      if (result.success) {
-        res.json({ message: 'Schmetterling erfolgreich platziert!', butterfly: result.butterfly });
+      if (!butterfly) {
+        return res.status(400).json({ message: "Schmetterling nicht gefunden" });
+      }
+
+      if (butterfly.quantity <= 0) {
+        return res.status(400).json({ message: "Nicht genügend Schmetterlinge im Inventar" });
+      }
+
+      // Reduce butterfly quantity (consume the butterfly for animation)
+      const consumeResult = await storage.consumeButterfly(userId, data.butterflyId);
+      
+      if (consumeResult.success) {
+        console.log(`🦋 Butterfly consumed successfully - animation will start on frontend`);
+        res.json({ message: 'Schmetterling-Animation gestartet!', butterfly: butterfly });
       } else {
-        res.status(400).json({ message: result.message });
+        res.status(400).json({ message: consumeResult.message });
       }
     } catch (error) {
-      console.error('🦋 Error placing butterfly:', error);
+      console.error('🦋 Error processing butterfly animation:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

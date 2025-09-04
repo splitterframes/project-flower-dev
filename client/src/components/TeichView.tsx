@@ -712,11 +712,58 @@ export const TeichView: React.FC = () => {
           )
         );
 
-        // 🦋 FIXED: Schmetterlinge bleiben dauerhaft auf dem Feld - keine automatische Entfernung mehr!
+        // 🦋 NEW: Schmetterling verschwindet automatisch und spawnt Raupe
+        // Add temporary visual butterfly that will disappear
+        const tempButterflyId = Date.now();
+        setPlacedButterflies(prev => [...prev, {
+          id: tempButterflyId,
+          fieldId: selectedField,
+          butterflyImageUrl: butterfly.butterflyImageUrl,
+          butterflyName: butterfly.butterflyName,
+          butterflyRarity: butterfly.butterflyRarity as RarityTier,
+          placedAt: new Date(),
+          isWiggling: true
+        }]);
 
-        // Refresh garden data to show placed butterfly
-        fetchTeichData();
-        // Bestätigungs-Notification entfernt - direkte Animation ohne weitere Dialoge
+        // Animate butterfly disappearing and spawn caterpillar after 3 seconds
+        setTimeout(async () => {
+          // Remove butterfly with burst animation
+          setPlacedButterflies(prev => 
+            prev.map(b => 
+              b.id === tempButterflyId 
+                ? { ...b, isWiggling: false, isBursting: true }
+                : b
+            )
+          );
+
+          // Remove butterfly completely after burst animation
+          setTimeout(() => {
+            setPlacedButterflies(prev => prev.filter(b => b.id !== tempButterflyId));
+          }, 1000);
+
+          // Spawn caterpillar on the field
+          try {
+            const caterpillarResponse = await fetch('/api/garden/spawn-caterpillar', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-user-id': user.id.toString()
+              },
+              body: JSON.stringify({
+                fieldIndex: selectedField - 1,
+                parentRarity: butterfly.butterflyRarity
+              })
+            });
+
+            if (caterpillarResponse.ok) {
+              // Refresh data to show spawned caterpillar
+              fetchTeichData();
+              showNotification('Raupe erschienen!', 'Ein Schmetterling hat eine Raupe hinterlassen!', 'success');
+            }
+          } catch (error) {
+            console.error('Failed to spawn caterpillar:', error);
+          }
+        }, 3000);
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');
