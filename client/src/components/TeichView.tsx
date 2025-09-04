@@ -445,9 +445,8 @@ export const TeichView: React.FC = () => {
                         return;
                       }
                       
-                      if (field.hasSunSpawn && !field.isPond) {
-                        collectSun(field.id);
-                      } else if (field.hasButterfly) {
+                      // No sun collection in TeichView
+                      if (field.hasButterfly) {
                         collectButterfly(field.id);
                       } else if (field.hasPlant && !field.isGrowing) {
                         harvestField(field.id);
@@ -476,8 +475,8 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Sun spawn - don't show in pond fields */}
-                    {field.hasSunSpawn && field.sunSpawnAmount && !field.isPond && (
+                    {/* No sun spawns in TeichView at all */}
+                    {false && field.hasSunSpawn && field.sunSpawnAmount && !field.isPond && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-yellow-400/20 rounded-lg border border-yellow-400/50 animate-pulse cursor-pointer hover:bg-yellow-400/30">
