@@ -1262,6 +1262,14 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
+                    {/* DEBUG: Show feeding progress info */}
+                    {field.isPond && (
+                      <div className="absolute top-0 left-0 bg-black/50 text-white text-xs p-1">
+                        ID: {field.id}<br/>
+                        Progress: {field.feedingProgress || 0}
+                      </div>
+                    )}
+
                   </div>
                 );
               })}
