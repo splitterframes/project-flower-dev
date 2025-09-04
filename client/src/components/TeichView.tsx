@@ -318,14 +318,14 @@ export const TeichView: React.FC = () => {
       
       // Set up shrinking for new butterflies only
       if (timeAlive < 1000) { // Only set up shrinking for new butterflies
-        // Wait 10 seconds before starting to shrink
+        // Wait 5 seconds of wiggling before starting to shrink
         const shrinkStartTimeout = setTimeout(() => {
           setPlacedButterflies(prev => 
             prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
           );
           
-          // Remove after shrinking animation (30-90 seconds) and spawn caterpillar
-          const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
+          // Remove after 10 seconds of shrinking and spawn caterpillar
+          const shrinkDuration = 10000; // 10 seconds
           const removeTimeout = setTimeout(() => {
             // Generate caterpillar with inherited rarity
             const caterpillarRarity = calculateCaterpillarRarity(butterfly.butterflyRarity as RarityTier);
@@ -348,6 +348,27 @@ export const TeichView: React.FC = () => {
             
             console.log(`🐛 Spawned caterpillar ${spawnedCaterpillar.caterpillarName} (${caterpillarRarity}) from butterfly ${butterfly.butterflyName} (${butterfly.butterflyRarity})`);
             
+            // Also spawn to database for persistence
+            fetch('/api/garden/spawn-caterpillar', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-user-id': user?.id.toString() || '1'
+              },
+              body: JSON.stringify({
+                fieldIndex: butterfly.fieldId - 1, // Convert to 0-based index  
+                parentRarity: butterfly.butterflyRarity
+              })
+            }).then(response => {
+              if (response.ok) {
+                console.log(`🐛 Database caterpillar spawn successful on field ${butterfly.fieldId - 1}`);
+              } else {
+                console.error('🐛 Database caterpillar spawn failed:', response.statusText);
+              }
+            }).catch(error => {
+              console.error('🐛 Failed to spawn caterpillar to database:', error);
+            });
+            
             // End growing effect after 2 seconds
             setTimeout(() => {
               setPlacedCaterpillars(prev => 
@@ -357,7 +378,7 @@ export const TeichView: React.FC = () => {
           }, shrinkDuration);
           
           intervals.push(removeTimeout);
-        }, 10000); // 10 seconds delay before shrinking starts
+        }, 5000); // 5 seconds wiggling before shrinking starts
         
         intervals.push(shrinkStartTimeout);
       }
