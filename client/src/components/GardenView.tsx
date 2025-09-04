@@ -619,7 +619,7 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`💧 ${data.message}`);
+        // Removed console.log to prevent duplicate notification display
         
         // Show beautiful toast with seed information
         if (data.seedDrop) {
