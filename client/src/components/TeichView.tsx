@@ -166,6 +166,11 @@ export const TeichView: React.FC = () => {
     isGrowing?: boolean;
   }[]>([]);
 
+  const handleButterflyPlacement = (fieldId: number, butterfly: any) => {
+    setSelectedField(fieldId);
+    placeButterflyOnField(butterfly.id);
+  };
+
   const fetchTeichData = async () => {
     if (!user) return;
 
@@ -923,9 +928,13 @@ export const TeichView: React.FC = () => {
                           console.log("🐛 Collecting caterpillar from grass field", field.id);
                           collectCaterpillar(field.id - 1);
                         } else {
-                          // Place butterfly on grass field
-                          setSelectedField(field.id);
-                          setShowButterflyModal(true);
+                          // Place first butterfly directly without modal
+                          if (userButterflies.length > 0) {
+                            const firstButterfly = userButterflies[0];
+                            handleButterflyPlacement(field.id, firstButterfly);
+                          } else {
+                            showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
+                          }
                         }
                         return;
                       }
