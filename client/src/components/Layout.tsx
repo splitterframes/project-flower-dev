@@ -11,6 +11,7 @@ import { InventoryView } from "./InventoryView";
 import { BouquetsView } from "./BouquetsView";
 import { FlowerpowerView } from "./FlowerpowerView";
 import { ExhibitionView } from "./ExhibitionView";
+import { AquariumView } from "./AquariumView";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,6 +56,8 @@ export const Layout: React.FC = () => {
         return <FlowerpowerView />;
       case "ausstellung":
         return <ExhibitionView />;
+      case "aquarium":
+        return <AquariumView />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":

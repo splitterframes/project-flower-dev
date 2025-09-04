@@ -7,7 +7,8 @@ import {
   Trophy,
   Store,
   Zap,
-  Waves
+  Waves,
+  Fish
 } from "lucide-react";
 
 interface FooterProps {
@@ -24,6 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
     { id: "bouquets", label: "Bouquets", icon: Flower2 },
     { id: "flowerpower", label: "Flowerpower", icon: Zap },
     { id: "ausstellung", label: "Ausstellung", icon: Trophy },
+    { id: "aquarium", label: "Aquarium", icon: Fish },
   ];
 
   return (

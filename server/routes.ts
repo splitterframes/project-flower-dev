@@ -1817,6 +1817,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ======================================
+  // AQUARIUM SYSTEM ROUTES
+  // ======================================
+
+  // Get user's aquarium tanks
+  app.get("/api/user/:id/aquarium-tanks", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const tanks = await storage.getAquariumTanks(userId);
+      res.json({ tanks });
+    } catch (error) {
+      console.error('Failed to get aquarium tanks:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user's aquarium fish
+  app.get("/api/user/:id/aquarium-fish", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const fish = await storage.getAquariumFish(userId);
+      res.json({ fish });
+    } catch (error) {
+      console.error('Failed to get aquarium fish:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Purchase aquarium tank
+  app.post("/api/aquarium/purchase-tank", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { tankNumber } = req.body;
+
+      if (!tankNumber || tankNumber < 1 || tankNumber > 10) {
+        return res.status(400).json({ message: "Ungültige Tank-Nummer" });
+      }
+
+      const result = await storage.purchaseAquariumTank(userId, tankNumber);
+      
+      if (result.success) {
+        res.json({ message: "Aquarium gekauft!", tank: result.tank });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to purchase aquarium tank:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Place fish in aquarium
+  app.post("/api/aquarium/place-fish", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { tankNumber, slotIndex, fishId } = req.body;
+
+      if (tankNumber === undefined || slotIndex === undefined || !fishId) {
+        return res.status(400).json({ message: "Fehlende Parameter" });
+      }
+
+      if (slotIndex < 0 || slotIndex >= 24) {
+        return res.status(400).json({ message: "Ungültiger Slot-Index" });
+      }
+
+      const result = await storage.placeAquariumFish(userId, tankNumber, slotIndex, fishId);
+      
+      if (result.success) {
+        res.json({ message: "Fisch im Aquarium platziert!" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to place aquarium fish:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remove fish from aquarium
+  app.delete("/api/aquarium/remove-fish", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { aquariumFishId } = req.body;
+
+      if (!aquariumFishId) {
+        return res.status(400).json({ message: "Fisch-ID fehlt" });
+      }
+
+      const result = await storage.removeAquariumFish(userId, aquariumFishId);
+      
+      if (result.success) {
+        res.json({ message: "Fisch aus Aquarium entfernt!" });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to remove aquarium fish:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get fish sell status (24h countdown)
+  app.get("/api/aquarium/fish/:fishId/sell-status", async (req, res) => {
+    try {
+      const fishId = parseInt(req.params.fishId);
+      const sellStatus = await storage.canSellAquariumFish(fishId);
+      
+      res.json({
+        canSell: sellStatus.canSell,
+        timeRemainingMs: sellStatus.timeRemainingMs
+      });
+    } catch (error) {
+      console.error('Failed to get fish sell status:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Sell aquarium fish
+  app.post("/api/aquarium/sell-fish", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { aquariumFishId } = req.body;
+
+      if (!aquariumFishId) {
+        return res.status(400).json({ message: "Fisch-ID fehlt" });
+      }
+
+      const result = await storage.sellAquariumFish(userId, aquariumFishId);
+      
+      if (result.success) {
+        res.json({ 
+          message: "Fisch verkauft!",
+          creditsEarned: result.creditsEarned
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to sell aquarium fish:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Apply sun boost to fish (reduce wait time)
+  app.post("/api/aquarium/sun-boost", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { aquariumFishId, minutes } = req.body;
+
+      if (!aquariumFishId || !minutes) {
+        return res.status(400).json({ message: "Fehlende Parameter" });
+      }
+
+      if (minutes < 1 || minutes > 1440) { // Max 24 hours
+        return res.status(400).json({ message: "Ungültige Minuten (1-1440)" });
+      }
+
+      const result = await storage.applyAquariumSunBoost(userId, aquariumFishId, minutes);
+      
+      if (result.success) {
+        res.json({ message: `${minutes} Minuten abgezogen!` });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to apply sun boost:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

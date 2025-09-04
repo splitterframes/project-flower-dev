@@ -264,6 +264,29 @@ export const userVipButterflies = pgTable("user_vip_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Aquarium tanks for fish displays (24 slots each)
+export const aquariumTanks = pgTable("aquarium_tanks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tankNumber: integer("tank_number").notNull(), // 1, 2, 3, etc.
+  purchasedAt: timestamp("purchased_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Fish placed in aquarium tanks (24 slots: 6x4 grid)
+export const aquariumFish = pgTable("aquarium_fish", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tankId: integer("tank_id").notNull().references(() => aquariumTanks.id),
+  slotIndex: integer("slot_index").notNull(), // 0-23 for 6x4 grid
+  fishId: integer("fish_id").notNull(),
+  fishName: text("fish_name").notNull(),
+  fishRarity: text("fish_rarity").notNull(),
+  fishImageUrl: text("fish_image_url").notNull(),
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Fish collection system
 export const userFish = pgTable("user_fish", {
   id: serial("id").primaryKey(),
@@ -463,3 +486,9 @@ export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerS
 export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldSchema>;
 export type PondFeedingProgress = typeof pondFeedingProgress.$inferSelect;
 export type FieldFish = typeof fieldFish.$inferSelect;
+
+// Aquarium types
+export type AquariumTank = typeof aquariumTanks.$inferSelect;
+export type NewAquariumTank = typeof aquariumTanks.$inferInsert;
+export type AquariumFish = typeof aquariumFish.$inferSelect;
+export type NewAquariumFish = typeof aquariumFish.$inferInsert;

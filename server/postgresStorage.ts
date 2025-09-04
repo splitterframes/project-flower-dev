@@ -28,6 +28,8 @@ import {
   sunSpawns,
   pondFeedingProgressTable,
   fieldFish,
+  aquariumTanks,
+  aquariumFish,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -59,6 +61,8 @@ import {
   type ChallengeDonation,
   type ChallengeReward,
   type DonateChallengeFlowerRequest,
+  type AquariumTank,
+  type AquariumFish,
   insertUserSchema
 } from "@shared/schema";
 import { eq, ilike, and, lt, gt, inArray, sql } from "drizzle-orm";
@@ -3748,6 +3752,403 @@ export class PostgresStorage {
       console.error('🦋 Error consuming butterfly:', error);
       return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
     }
+  }
+
+  // AQUARIUM SYSTEM METHODS
+  // ======================
+
+  async getAquariumTanks(userId: number): Promise<AquariumTank[]> {
+    try {
+      const tanks = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(eq(aquariumTanks.userId, userId))
+        .orderBy(aquariumTanks.tankNumber);
+      
+      console.log(`🐟 Found ${tanks.length} aquarium tanks for user ${userId}`);
+      return tanks;
+    } catch (error) {
+      console.error('🐟 Error getting aquarium tanks:', error);
+      return [];
+    }
+  }
+
+  async getAquariumFish(userId: number): Promise<AquariumFish[]> {
+    try {
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(eq(aquariumFish.userId, userId))
+        .orderBy(aquariumFish.tankId, aquariumFish.slotIndex);
+      
+      console.log(`🐟 Found ${fish.length} aquarium fish for user ${userId}`);
+      return fish;
+    } catch (error) {
+      console.error('🐟 Error getting aquarium fish:', error);
+      return [];
+    }
+  }
+
+  async purchaseAquariumTank(userId: number, tankNumber: number): Promise<{ success: boolean; message?: string; tank?: AquariumTank }> {
+    try {
+      console.log(`🐟 User ${userId} purchasing aquarium tank ${tankNumber}`);
+      
+      // Check if tank already exists
+      const existingTank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      if (existingTank.length > 0) {
+        return { success: false, message: 'Aquarium bereits gekauft!' };
+      }
+      
+      // Calculate cost: Tank 1 = 1000, Tank 2 = 2000, etc.
+      const cost = tankNumber * 1000;
+      
+      // Check user credits
+      const user = await this.getUser(userId);
+      if (!user || user.credits < cost) {
+        return { success: false, message: `Nicht genügend Credits! Benötigt: ${cost}` };
+      }
+      
+      // Deduct credits and create tank in transaction
+      await this.db.transaction(async (trx) => {
+        // Deduct credits
+        await trx
+          .update(users)
+          .set({ credits: user.credits - cost })
+          .where(eq(users.id, userId));
+        
+        // Create tank
+        await trx
+          .insert(aquariumTanks)
+          .values({
+            userId,
+            tankNumber
+          });
+      });
+      
+      console.log(`🐟 Tank ${tankNumber} purchased for ${cost} credits`);
+      
+      // Return the new tank
+      const newTank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      return { success: true, tank: newTank[0] };
+    } catch (error) {
+      console.error('🐟 Error purchasing aquarium tank:', error);
+      return { success: false, message: 'Datenbankfehler beim Kauf' };
+    }
+  }
+
+  async placeAquariumFish(userId: number, tankNumber: number, slotIndex: number, userFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Placing fish ${userFishId} in tank ${tankNumber}, slot ${slotIndex} for user ${userId}`);
+      
+      // Check if tank exists and belongs to user
+      const tank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      if (tank.length === 0) {
+        return { success: false, message: 'Aquarium nicht gefunden!' };
+      }
+      
+      // Check if slot is already occupied
+      const existingFish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.tankId, tank[0].id),
+          eq(aquariumFish.slotIndex, slotIndex)
+        ));
+      
+      if (existingFish.length > 0) {
+        return { success: false, message: 'Platz bereits belegt!' };
+      }
+      
+      // Check if user has the fish
+      const fish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.id, userFishId)
+        ));
+      
+      if (fish.length === 0 || fish[0].quantity <= 0) {
+        return { success: false, message: 'Fisch nicht im Inventar!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Place fish in aquarium and reduce inventory
+      await this.db.transaction(async (trx) => {
+        // Place fish in aquarium
+        await trx
+          .insert(aquariumFish)
+          .values({
+            userId,
+            tankId: tank[0].id,
+            slotIndex,
+            fishId: fishData.fishId,
+            fishName: fishData.fishName,
+            fishRarity: fishData.fishRarity,
+            fishImageUrl: fishData.fishImageUrl
+          });
+        
+        // Reduce fish quantity in inventory
+        if (fishData.quantity > 1) {
+          await trx
+            .update(userFish)
+            .set({ quantity: fishData.quantity - 1 })
+            .where(eq(userFish.id, userFishId));
+        } else {
+          await trx
+            .delete(userFish)
+            .where(eq(userFish.id, userFishId));
+        }
+      });
+      
+      console.log(`🐟 Fish ${fishData.fishName} placed in aquarium`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error placing aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Platzieren' };
+    }
+  }
+
+  async removeAquariumFish(userId: number, aquariumFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Removing aquarium fish ${aquariumFishId} for user ${userId}`);
+      
+      // Get the fish to remove
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Remove from aquarium and add back to inventory
+      await this.db.transaction(async (trx) => {
+        // Remove from aquarium
+        await trx
+          .delete(aquariumFish)
+          .where(eq(aquariumFish.id, aquariumFishId));
+        
+        // Add back to inventory
+        const existingFish = await trx
+          .select()
+          .from(userFish)
+          .where(and(
+            eq(userFish.userId, userId),
+            eq(userFish.fishId, fishData.fishId)
+          ));
+        
+        if (existingFish.length > 0) {
+          // Increase quantity
+          await trx
+            .update(userFish)
+            .set({ quantity: existingFish[0].quantity + 1 })
+            .where(eq(userFish.id, existingFish[0].id));
+        } else {
+          // Add new entry
+          await trx
+            .insert(userFish)
+            .values({
+              userId,
+              fishId: fishData.fishId,
+              fishName: fishData.fishName,
+              fishRarity: fishData.fishRarity,
+              fishImageUrl: fishData.fishImageUrl,
+              quantity: 1
+            });
+        }
+      });
+      
+      console.log(`🐟 Fish ${fishData.fishName} removed from aquarium and returned to inventory`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error removing aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Entfernen' };
+    }
+  }
+
+  async canSellAquariumFish(aquariumFishId: number): Promise<{ canSell: boolean; timeRemainingMs: number }> {
+    try {
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      if (fish.length === 0) {
+        return { canSell: false, timeRemainingMs: 0 };
+      }
+      
+      const placedTime = new Date(fish[0].placedAt).getTime();
+      const now = new Date().getTime();
+      const timeSincePlacement = now - placedTime;
+      
+      // Fish can be sold after 24 hours (vs 72 hours for butterflies)
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      const timeRemaining = TWENTY_FOUR_HOURS - timeSincePlacement;
+      
+      return {
+        canSell: timeRemaining <= 0,
+        timeRemainingMs: Math.max(0, timeRemaining)
+      };
+    } catch (error) {
+      console.error('🐟 Error checking fish sell status:', error);
+      return { canSell: false, timeRemainingMs: 0 };
+    }
+  }
+
+  async sellAquariumFish(userId: number, aquariumFishId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    try {
+      console.log(`🐟 Selling aquarium fish ${aquariumFishId} for user ${userId}`);
+      
+      // Check if fish can be sold
+      const sellStatus = await this.canSellAquariumFish(aquariumFishId);
+      if (!sellStatus.canSell) {
+        return { success: false, message: 'Fisch kann noch nicht verkauft werden!' };
+      }
+      
+      // Get the fish
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Calculate price (20% of butterfly prices)
+      const price = this.getFishSellPrice(fishData.fishRarity);
+      
+      // Remove fish and add credits
+      await this.db.transaction(async (trx) => {
+        // Remove fish from aquarium
+        await trx
+          .delete(aquariumFish)
+          .where(eq(aquariumFish.id, aquariumFishId));
+        
+        // Add credits to user
+        const user = await trx
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+        
+        if (user.length > 0) {
+          await trx
+            .update(users)
+            .set({ credits: user[0].credits + price })
+            .where(eq(users.id, userId));
+        }
+      });
+      
+      console.log(`🐟 Fish ${fishData.fishName} sold for ${price} credits`);
+      return { success: true, creditsEarned: price };
+    } catch (error) {
+      console.error('🐟 Error selling aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
+  }
+
+  async applyAquariumSunBoost(userId: number, aquariumFishId: number, minutes: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Applying ${minutes} minute sun boost to fish ${aquariumFishId} for user ${userId}`);
+      
+      const sunCost = minutes; // 1 sun = 1 minute
+      
+      // Check user suns
+      const user = await this.getUser(userId);
+      if (!user || user.suns < sunCost) {
+        return { success: false, message: 'Nicht genügend Sonnen!' };
+      }
+      
+      // Get the fish
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      const currentPlacedAt = new Date(fishData.placedAt);
+      const newPlacedAt = new Date(currentPlacedAt.getTime() - (minutes * 60 * 1000));
+      
+      // Update fish placement time and deduct suns
+      await this.db.transaction(async (trx) => {
+        // Update fish placed time
+        await trx
+          .update(aquariumFish)
+          .set({ placedAt: newPlacedAt })
+          .where(eq(aquariumFish.id, aquariumFishId));
+        
+        // Deduct suns
+        await trx
+          .update(users)
+          .set({ suns: user.suns - sunCost })
+          .where(eq(users.id, userId));
+      });
+      
+      console.log(`🐟 Applied ${minutes} minute boost to fish ${fishData.fishName}`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error applying sun boost:', error);
+      return { success: false, message: 'Datenbankfehler beim Boost' };
+    }
+  }
+
+  private getFishSellPrice(rarity: string): number {
+    // Fish prices are 20% of butterfly prices
+    const basePrice = (() => {
+      switch (rarity) {
+        case 'common': return 100;
+        case 'uncommon': return 300;
+        case 'rare': return 800;
+        case 'super-rare': return 2000;
+        case 'epic': return 5000;
+        case 'legendary': return 12000;
+        case 'mythical': return 30000;
+        default: return 100;
+      }
+    })();
+    
+    return Math.floor(basePrice * 0.2); // 20% of butterfly prices
   }
 }
 
