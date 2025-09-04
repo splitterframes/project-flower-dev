@@ -255,33 +255,21 @@ export const TeichView: React.FC = () => {
       if (butterfly.isShrinkling) return;
       
       const timeAlive = Date.now() - butterfly.placedAt.getTime();
-      const shrinkTime = Math.random() * 60000 + 30000; // 30-90 seconds
       
-      if (timeAlive >= shrinkTime) {
+      // Start shrinking immediately after placement
+      if (timeAlive < 1000) { // Only set up shrinking for new butterflies
         // Start shrinking immediately
         setPlacedButterflies(prev => 
           prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
         );
         
-        // Remove after shrinking animation (2 seconds)
-        setTimeout(() => {
+        // Remove after shrinking animation (30-90 seconds)
+        const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
+        const removeTimeout = setTimeout(() => {
           setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-        }, 2000);
-      } else {
-        // Schedule shrinking
-        const timeUntilShrink = shrinkTime - timeAlive;
-        const interval = setTimeout(() => {
-          setPlacedButterflies(prev => 
-            prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
-          );
-          
-          // Remove after shrinking animation
-          setTimeout(() => {
-            setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-          }, 2000);
-        }, timeUntilShrink);
+        }, shrinkDuration);
         
-        intervals.push(interval);
+        intervals.push(removeTimeout);
       }
     });
     
@@ -771,7 +759,7 @@ export const TeichView: React.FC = () => {
                     {/* Placed Butterfly Display */}
                     {placedButterflies.find(b => b.fieldId === field.id) && (
                       <div
-                        className={`absolute inset-0 rounded transition-all duration-2000 ${
+                        className={`absolute inset-0 rounded transition-all ${
                           placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
                             ? 'opacity-0 transform scale-0' 
                             : 'opacity-100 transform scale-100'
@@ -780,7 +768,8 @@ export const TeichView: React.FC = () => {
                           backgroundImage: `url(${placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
-                          border: `2px solid ${getButterflyBorderColor(placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity || 'common')}`
+                          border: `2px solid ${getButterflyBorderColor(placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity || 'common')}`,
+                          transitionDuration: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling ? '30000ms' : '200ms'
                         }}
                       />
                     )}
