@@ -1428,10 +1428,8 @@ export class MemStorage implements IStorage {
   async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
     const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
     
-    // For common/uncommon bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
-    const shouldGuaranteeSpawn = (bouquetRarity === 'common' || bouquetRarity === 'uncommon') && 
-                                currentSlot === totalSlots && 
-                                alreadySpawnedCount === 0;
+    // For all bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
+    const shouldGuaranteeSpawn = currentSlot === totalSlots && alreadySpawnedCount === 0;
     
     // Check if butterfly should spawn based on rarity (with guarantee logic)
     if (!shouldGuaranteeSpawn && !shouldSpawnButterfly(bouquetRarity, currentSlot, totalSlots)) {
