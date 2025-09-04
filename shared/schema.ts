@@ -342,6 +342,16 @@ export const pondFeedingProgress = pgTable("pond_feeding_progress", {
   };
 });
 
+// Fed caterpillars history for average rarity calculation  
+export const fedCaterpillars = pgTable("fed_caterpillars", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // Pond field index (11-38)
+  caterpillarId: integer("caterpillar_id").notNull(),
+  caterpillarRarity: text("caterpillar_rarity").notNull(),
+  fedAt: timestamp("fed_at").notNull().defaultNow(),
+});
+
 // VIP Butterflies placed in exhibition frames  
 export const exhibitionVipButterflies = pgTable("exhibition_vip_butterflies", {
   id: serial("id").primaryKey(),

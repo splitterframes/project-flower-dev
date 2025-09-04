@@ -3425,6 +3425,37 @@ export class PostgresStorage implements IStorage {
       throw error;
     }
   }
+
+  async spawnFishOnFieldWithRarity(userId: number, pondFieldIndex: number, caterpillarRarity: string): Promise<{ fishName: string, fishRarity: RarityTier }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId} based on caterpillar rarity: ${caterpillarRarity}`);
+      
+      // Use caterpillar rarity as basis for fish rarity (simplified average calculation)
+      const fishRarity = caterpillarRarity as RarityTier;
+      const fishData = await generateRandomFish(fishRarity);
+      
+      console.log(`🐟 Generated fish: ${fishData.name} (${fishRarity}) from caterpillar rarity (${caterpillarRarity}) - ID: ${fishData.id}`);
+      
+      // Spawn fish on field first (not directly in inventory)
+      await this.db.insert(fieldFish).values({
+        userId,
+        fieldIndex: pondFieldIndex,
+        fishId: fishData.id,
+        fishName: fishData.name,
+        fishRarity: fishRarity,
+        fishImageUrl: fishData.imageUrl,
+        spawnedAt: new Date(),
+        isShrinking: false
+      });
+      
+      console.log(`🐟 Successfully spawned ${fishData.name} (${fishRarity}) on pond field ${pondFieldIndex} based on caterpillar rarity`);
+      return { fishName: fishData.name, fishRarity: fishRarity };
+      
+    } catch (error) {
+      console.error('🐟 Error spawning fish on field with rarity:', error);
+      throw error;
+    }
+  }
   
   async getFieldFish(userId: number): Promise<any[]> {
     try {

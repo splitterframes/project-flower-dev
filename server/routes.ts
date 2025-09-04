@@ -441,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🐛 Feeding fish on field', fieldIndex, 'with caterpillar', caterpillarId);
 
-      // Get user's caterpillar to verify they have it
+      // Get user's caterpillar to verify they have it and get its rarity
       const userCaterpillars = await storage.getUserCaterpillars(userId);
       const caterpillarToUse = userCaterpillars.find(c => c.caterpillarId === caterpillarId);
       
@@ -462,8 +462,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (newProgress >= 3) {
         console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex);
-        // Create fish after 3 feedings - spawn on field first!
-        const fishResult = await storage.spawnFishOnField(userId, fieldIndex);
+        // Create fish after 3 feedings using caterpillar rarity as basis for fish rarity
+        const fishResult = await storage.spawnFishOnFieldWithRarity(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
         console.log('🐟 FISH SPAWNED SUCCESS:', fishResult);
         // Reset progress after fish is born - handled in updatePondFeedingProgress
         
