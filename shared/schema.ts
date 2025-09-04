@@ -249,6 +249,7 @@ export const fieldButterflies = pgTable("field_butterflies", {
   butterflyImageUrl: text("butterfly_image_url").notNull(),
   bouquetId: integer("bouquet_id").notNull().references(() => bouquets.id),
   spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
+  isShrinking: boolean("is_shrinking").notNull().default(false), // Backend managed shrinking state
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

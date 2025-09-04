@@ -88,6 +88,9 @@ export class PostgresStorage implements IStorage {
     
     // Initialize creature systems (Fish and Caterpillars)
     this.initializeCreaturesSystems();
+    
+    // Start butterfly lifecycle service
+    this.startButterflyLifecycleService();
   }
 
   private async initializeSeeds() {
@@ -2959,6 +2962,82 @@ export class PostgresStorage implements IStorage {
       console.log(`☀️ Cleaned up expired sun spawns`);
     } catch (error) {
       console.error('Error cleaning up expired suns:', error);
+    }
+  }
+
+  // Backend Butterfly Lifecycle Service - manages all butterfly lifecycles
+  private butterflyLifecycleInterval?: NodeJS.Timeout;
+
+  private startButterflyLifecycleService(): void {
+    console.log('🦋 Starting butterfly lifecycle service...');
+    
+    // Run every 5 seconds to manage butterfly lifecycles
+    this.butterflyLifecycleInterval = setInterval(async () => {
+      await this.processButterflyLifecycles();
+    }, 5000);
+  }
+
+  private async processButterflyLifecycles(): Promise<void> {
+    try {
+      const now = Date.now();
+      
+      // Get all field butterflies
+      const allFieldButterflies = await this.db
+        .select()
+        .from(fieldButterflies);
+
+      for (const butterfly of allFieldButterflies) {
+        const spawnedAt = new Date(butterfly.spawnedAt).getTime();
+        const timeElapsed = (now - spawnedAt) / 1000; // seconds
+
+        // Phase 1: Normal (0-30s)
+        // Phase 2: Start shrinking (30-40s) 
+        // Phase 3: Remove and spawn caterpillar (40s+)
+        
+        if (timeElapsed > 40) {
+          // Phase 3: Remove butterfly and spawn caterpillar
+          console.log(`🦋 LIFECYCLE: Removing butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
+          await this.removeButterflyAndSpawnCaterpillarBackend(butterfly);
+        } else if (timeElapsed > 30 && !butterfly.isShrinking) {
+          // Phase 2: Start shrinking animation
+          console.log(`🦋 LIFECYCLE: Starting shrinking for butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
+          await this.db
+            .update(fieldButterflies)
+            .set({ isShrinking: true })
+            .where(eq(fieldButterflies.id, butterfly.id));
+        }
+      }
+    } catch (error) {
+      console.error('🦋 Error in butterfly lifecycle service:', error);
+    }
+  }
+
+  private async removeButterflyAndSpawnCaterpillarBackend(butterfly: any): Promise<void> {
+    try {
+      // Remove butterfly from field
+      await this.db
+        .delete(fieldButterflies)
+        .where(eq(fieldButterflies.id, butterfly.id));
+
+      console.log(`🦋 BACKEND: Removed butterfly ${butterfly.butterflyName} from field ${butterfly.fieldIndex}`);
+
+      // Spawn caterpillar with rarity inheritance
+      const inheritedRarity = this.inheritCaterpillarRarity(butterfly.butterflyRarity);
+      const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
+
+      if (caterpillar) {
+        await this.addCaterpillarToInventory(
+          butterfly.userId, 
+          caterpillar.id, 
+          caterpillar.name, 
+          inheritedRarity, 
+          caterpillar.imageUrl
+        );
+        
+        console.log(`🐛 BACKEND: Spawned caterpillar ${caterpillar.name} (${inheritedRarity}) for user ${butterfly.userId}`);
+      }
+    } catch (error) {
+      console.error('🦋 BACKEND: Error removing butterfly and spawning caterpillar:', error);
     }
   }
 

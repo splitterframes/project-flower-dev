@@ -213,7 +213,7 @@ export const TeichView: React.FC = () => {
             butterflyImageUrl: butterfly?.butterflyImageUrl,
             butterflyRarity: butterfly?.butterflyRarity,
             butterflySpawnedAt: butterfly ? new Date(butterfly.spawnedAt) : undefined,
-            butterflyShrinking: false, // Will be set by lifecycle system
+            butterflyShrinking: butterfly?.isShrinking || false, // Backend managed
             hasSunSpawn: !!sunSpawn,
             sunSpawnAmount: sunSpawn?.sunAmount,
             sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined,
@@ -234,82 +234,8 @@ export const TeichView: React.FC = () => {
     }
   };
 
-  // Butterfly lifecycle system with animation phases
-  useEffect(() => {
-    const processButterflies = () => {
-      const now = Date.now();
-      fieldButterflies.forEach(butterfly => {
-        const spawnedAt = new Date(butterfly.spawnedAt).getTime();
-        const timeElapsed = (now - spawnedAt) / 1000; // seconds
-        
-        // Phase 1: Normal size (0-30s)
-        // Phase 2: Start shrinking (30-40s) 
-        // Phase 3: Remove and spawn caterpillar (40s+)
-        if (timeElapsed > 40) {
-          removeButterflyAndSpawnCaterpillar(butterfly);
-        } else if (timeElapsed > 30) {
-          // Mark as shrinking but don't remove yet
-          setGardenFields(prev => prev.map(field => 
-            field.id === butterfly.fieldIndex + 1 
-              ? { ...field, butterflyShrinking: true }
-              : field
-          ));
-        }
-      });
-    };
+  // Frontend only displays backend data - no lifecycle logic
 
-    const butterflyInterval = setInterval(processButterflies, 1000);
-    return () => clearInterval(butterflyInterval);
-  }, [fieldButterflies]);
-
-  const removeButterflyAndSpawnCaterpillar = async (butterfly: any) => {
-    if (!user) return;
-    
-    console.log(`🦋 Processing butterfly lifecycle for:`, { 
-      id: butterfly.id, 
-      fieldIndex: butterfly.fieldIndex, 
-      name: butterfly.butterflyName,
-      spawnedAt: butterfly.spawnedAt 
-    });
-    
-    try {
-      // Remove butterfly from backend
-      const removeRes = await fetch('/api/garden/remove-butterfly', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': user.id.toString()
-        },
-        body: JSON.stringify({
-          fieldIndex: butterfly.fieldIndex
-        })
-      });
-      
-      const removeResult = await removeRes.json();
-      console.log(`🦋 Remove butterfly result:`, removeResult);
-      
-      // Spawn caterpillar with rarity inheritance
-      const caterpillarRes = await fetch('/api/garden/spawn-caterpillar', {
-        method: 'POST', 
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id.toString()
-        },
-        body: JSON.stringify({
-          fieldIndex: butterfly.fieldIndex,
-          parentRarity: butterfly.butterflyRarity
-        })
-      });
-      
-      const caterpillarResult = await caterpillarRes.json();
-      console.log(`🐛 Spawn caterpillar result:`, caterpillarResult);
-      
-      // Refresh garden data
-      fetchGardenData();
-    } catch (error) {
-      console.error('Error in butterfly lifecycle:', error);
-    }
-  };
 
   useEffect(() => {
     fetchGardenData();
