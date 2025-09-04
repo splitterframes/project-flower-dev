@@ -3172,38 +3172,7 @@ export class PostgresStorage {
     }
   }
 
-  /**
-   * Update user's suns count
-   */
-  async updateUserSuns(userId: number, amount: number): Promise<User | undefined> {
-    try {
-      // Get current user to calculate new suns
-      const currentUsers = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-      
-      if (currentUsers.length === 0) {
-        return undefined;
-      }
-
-      const currentUser = currentUsers[0];
-      const currentSuns = currentUser.suns || 100; // Default to 100 if null - match other implementations
-      const newSuns = Math.max(0, currentSuns + amount);
-
-      const updatedUsers = await this.db
-        .update(users)
-        .set({ suns: newSuns })
-        .where(eq(users.id, userId))
-        .returning();
-        
-      return updatedUsers.length > 0 ? updatedUsers[0] : undefined;
-    } catch (error) {
-      console.error('Error updating user suns:', error);
-      return undefined;
-    }
-  }
+  // REMOVED: Duplicate updateUserSuns function (exists on line 437)
 
   /**
    * Get butterfly sell price for suns (direct sale from inventory)
