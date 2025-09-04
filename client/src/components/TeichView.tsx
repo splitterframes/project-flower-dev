@@ -649,6 +649,17 @@ export const TeichView: React.FC = () => {
           )
         );
 
+        // Add to placedButterflies for lifecycle animations  
+        setPlacedButterflies(prev => [...prev, {
+          id: Date.now() + Math.random(), // Unique ID
+          fieldId: selectedField,
+          butterflyImageUrl: butterfly.butterflyImageUrl,
+          butterflyName: butterfly.butterflyName,
+          butterflyRarity: butterfly.butterflyRarity,
+          placedAt: new Date(),
+          isShrinkling: false
+        }]);
+
         // Refresh garden data to show placed butterfly
         fetchTeichData();
         showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
