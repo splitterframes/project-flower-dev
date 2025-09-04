@@ -461,8 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3 });
 
       if (newProgress >= 3) {
-        // Create fish after 3 feedings
-        const fishResult = await storage.spawnRandomFish(userId, fieldIndex);
+        // Create fish after 3 feedings - spawn on field first!
+        const fishResult = await storage.spawnFishOnField(userId, fieldIndex);
         // Reset progress after fish is born - handled in updatePondFeedingProgress
         
         return res.json({
@@ -498,6 +498,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get pond progress error:', error);
       res.status(500).json({ message: 'Fehler beim Laden des Fütterungs-Fortschritts.' });
+    }
+  });
+
+  // Get field fish for user (fish spawned on pond fields)
+  app.get('/api/user/:userId/field-fish', async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+      const fieldFish = await storage.getFieldFish(parseInt(userId));
+      res.json({ fieldFish });
+    } catch (error) {
+      console.error('Get field fish error:', error);
+      res.status(500).json({ message: 'Fehler beim Laden der Teich-Fische.' });
+    }
+  });
+
+  // Collect field fish (move from field to inventory)
+  app.post('/api/garden/collect-field-fish', async (req, res) => {
+    try {
+      const { userId, fieldFishId } = req.body;
+      
+      if (!userId || !fieldFishId) {
+        return res.status(400).json({ message: 'User ID und Field Fish ID sind erforderlich.' });
+      }
+
+      const result = await storage.collectFieldFish(userId, fieldFishId);
+      
+      if (result.success) {
+        res.json({ message: 'Fisch erfolgreich gesammelt!' });
+      } else {
+        res.status(400).json({ message: result.message || 'Fehler beim Sammeln des Fisches.' });
+      }
+    } catch (error) {
+      console.error('Collect field fish error:', error);
+      res.status(500).json({ message: 'Fehler beim Sammeln des Fisches.' });
     }
   });
 

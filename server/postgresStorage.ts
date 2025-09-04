@@ -26,6 +26,7 @@ import {
   unlockedFields,
   sunSpawns,
   pondFeedingProgressTable,
+  fieldFish,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -3388,6 +3389,116 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error('🐟 Error getting user pond progress:', error);
       throw error;
+    }
+  }
+  
+  /**
+   * Field Fish system methods
+   */
+  async spawnFishOnField(userId: number, pondFieldIndex: number): Promise<{ fishName: string, fishRarity: RarityTier }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId}`);
+      
+      // Generate a random fish
+      const fishData = generateRandomFish();
+      const rarity = getFishRarity();
+      
+      console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id}`);
+      
+      // Spawn fish on field first (not directly in inventory)
+      await this.db.insert(fieldFish).values({
+        userId,
+        fieldIndex: pondFieldIndex,
+        fishId: fishData.id,
+        fishName: fishData.name,
+        fishRarity: rarity,
+        fishImageUrl: fishData.imageUrl,
+        spawnedAt: new Date(),
+        isShrinking: false
+      });
+      
+      console.log(`🐟 Successfully spawned ${fishData.name} (${rarity}) on pond field ${pondFieldIndex}`);
+      return { fishName: fishData.name, fishRarity: rarity };
+      
+    } catch (error) {
+      console.error('🐟 Error spawning fish on field:', error);
+      throw error;
+    }
+  }
+  
+  async getFieldFish(userId: number): Promise<any[]> {
+    try {
+      console.log(`🐟 Getting field fish for user: ${userId}`);
+      
+      const fieldFishList = await this.db.select().from(fieldFish).where(
+        eq(fieldFish.userId, userId)
+      );
+      
+      console.log(`🐟 Found field fish: ${fieldFishList.length}`);
+      return fieldFishList;
+    } catch (error) {
+      console.error('🐟 Error getting field fish:', error);
+      throw error;
+    }
+  }
+  
+  async collectFieldFish(userId: number, fieldFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Collecting field fish ${fieldFishId} for user ${userId}`);
+      
+      // Get the field fish data
+      const fieldFishData = await this.db.select().from(fieldFish).where(
+        and(
+          eq(fieldFish.id, fieldFishId),
+          eq(fieldFish.userId, userId)
+        )
+      ).limit(1);
+      
+      if (fieldFishData.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden' };
+      }
+      
+      const fish = fieldFishData[0];
+      
+      // Add to inventory
+      const existingFish = await this.db.select().from(userFish).where(
+        and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fish.fishId)
+        )
+      );
+
+      if (existingFish.length > 0) {
+        // Fish already exists, increment quantity
+        await this.db
+          .update(userFish)
+          .set({ 
+            quantity: existingFish[0].quantity + 1
+          })
+          .where(eq(userFish.id, existingFish[0].id));
+        console.log(`🐟 Incremented existing fish ${fish.fishName} quantity`);
+      } else {
+        // New fish, create inventory entry
+        await this.db.insert(userFish).values({
+          userId,
+          fishId: fish.fishId,
+          fishName: fish.fishName,
+          fishRarity: fish.fishRarity,
+          fishImageUrl: fish.fishImageUrl,
+          quantity: 1
+        });
+        console.log(`🐟 Created new fish inventory entry: ${fish.fishName}`);
+      }
+      
+      // Remove fish from field
+      await this.db.delete(fieldFish).where(eq(fieldFish.id, fieldFishId));
+      console.log(`🐟 Removed field fish from field ${fish.fieldIndex}`);
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error('🐟 Error collecting field fish:', error);
+      return { success: false, message: 'Fehler beim Sammeln des Fisches' };
     }
   }
 }

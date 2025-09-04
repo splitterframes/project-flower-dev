@@ -26,13 +26,44 @@ export function getExpectedFishRarity(): { name: string; percentage: number } {
     mythical: 1.3      // 1.3%
   };
   
-  // The most probable rarity is 'common' with highest percentage
-  const mostCommon = Object.entries(fishDistribution)
-    .sort(([,a], [,b]) => b - a)[0];
+  // Calculate weighted average based on rarity tier values
+  const rarityValues = {
+    common: 1,
+    uncommon: 2, 
+    rare: 3,
+    'super-rare': 4,
+    epic: 5,
+    legendary: 6,
+    mythical: 7
+  };
+  
+  let totalWeight = 0;
+  let weightedSum = 0;
+  
+  for (const [tier, percentage] of Object.entries(fishDistribution)) {
+    const tierValue = rarityValues[tier as keyof typeof rarityValues];
+    totalWeight += percentage;
+    weightedSum += tierValue * percentage;
+  }
+  
+  const averageValue = weightedSum / totalWeight;
+  
+  // Map average value back to closest rarity tier and percentage
+  const tiers = Object.keys(rarityValues) as Array<keyof typeof rarityValues>;
+  let closestTier = tiers[0];
+  let smallestDiff = Math.abs(rarityValues[tiers[0]] - averageValue);
+  
+  for (const tier of tiers) {
+    const diff = Math.abs(rarityValues[tier] - averageValue);
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      closestTier = tier;
+    }
+  }
   
   return {
-    name: RARITY_NAMES_DE[mostCommon[0]] || 'Häufig',
-    percentage: Math.round(mostCommon[1])
+    name: RARITY_NAMES_DE[closestTier as keyof typeof RARITY_NAMES_DE],
+    percentage: Math.round(fishDistribution[closestTier] * 10) / 10
   };
 }
 

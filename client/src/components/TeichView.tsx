@@ -31,7 +31,7 @@ import {
   Sun,
   Waves
 } from "lucide-react";
-import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
+import type { UserBouquet, PlacedBouquet, FieldButterfly, FieldFish } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GardenField {
@@ -125,6 +125,7 @@ export const TeichView: React.FC = () => {
   const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
   const [userCaterpillars, setUserCaterpillars] = useState<UserCaterpillar[]>([]);
   const [fieldButterflies, setFieldButterflies] = useState<FieldButterfly[]>([]);
+  const [fieldFish, setFieldFish] = useState<FieldFish[]>([]);
   const [fieldCaterpillars, setFieldCaterpillars] = useState<any[]>([]);
   const [showSeedModal, setShowSeedModal] = useState(false);
   const [showBouquetModal, setShowBouquetModal] = useState(false);
@@ -239,27 +240,63 @@ export const TeichView: React.FC = () => {
     setSelectedField(fieldId);
     placeButterflyOnField(butterfly.id);
   };
+  
+  // Handle field fish collection
+  const handleFieldFishClick = async (field: GardenField) => {
+    if (!user || !field.hasFish || !field.fishId) return;
+    
+    console.log(`🐟 Attempting to collect fish on field ${field.id}`);
+    
+    try {
+      const response = await fetch('/api/garden/collect-field-fish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          fieldFishId: field.fishId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🐟 Fisch erfolgreich gesammelt!');
+        toast.success(`${field.fishName} gesammelt!`);
+        
+        // Refresh data to show updated state
+        fetchTeichData();
+      } else {
+        const errorData = await response.json();
+        console.error('Field fish collection failed:', errorData);
+        toast.error(errorData.message || 'Fehler beim Sammeln des Fisches.');
+      }
+    } catch (error) {
+      console.error('Field fish collection error:', error);
+      toast.error('Fehler beim Sammeln des Fisches.');
+    }
+  };
 
   const fetchTeichData = async () => {
     if (!user) return;
 
     try {
       // Fetch pond-specific data including feeding progress
-      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes, fieldButterfliesRes] = await Promise.all([
+      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes, fieldButterfliesRes, fieldFishRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/user/${user.id}/caterpillars`),
         fetch(`/api/user/${user.id}/pond-progress`),
         fetch(`/api/user/${user.id}/butterflies`),
-        fetch(`/api/user/${user.id}/field-butterflies`)
+        fetch(`/api/user/${user.id}/field-butterflies`),
+        fetch(`/api/user/${user.id}/field-fish`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok && fieldButterfliesRes.ok) {
-        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData, fieldButterfliesData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok && fieldButterfliesRes.ok && fieldFishRes.ok) {
+        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData, fieldButterfliesData, fieldFishData] = await Promise.all([
           caterpillarRes.json(),
           userCaterpillarsRes.json(),
           pondProgressRes.json(),
           butterfliesRes.json(),
-          fieldButterfliesRes.json()
+          fieldButterfliesRes.json(),
+          fieldFishRes.json()
         ]);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
@@ -271,8 +308,11 @@ export const TeichView: React.FC = () => {
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
           
-          // Check for butterfly (only on grass fields)
+          // Check for butterfly (only on grass fields)  
           const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex) : null;
+          
+          // Check for field fish (only on pond fields)
+          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === fieldIndex) : null;
 
           return {
             ...field,
@@ -296,7 +336,12 @@ export const TeichView: React.FC = () => {
             butterflyId: butterfly ? butterfly.butterflyId : undefined,
             butterflyName: butterfly ? butterfly.butterflyName : undefined,
             butterflyImageUrl: butterfly ? butterfly.butterflyImageUrl : undefined,
-            butterflyRarity: undefined,
+            butterflyRarity: butterfly ? butterfly.butterflyRarity : undefined,
+            hasFish: !!fish,
+            fishId: fish ? fish.id : undefined,
+            fishName: fish ? fish.fishName : undefined,
+            fishImageUrl: fish ? fish.fishImageUrl : undefined,
+            fishRarity: fish ? fish.fishRarity : undefined,
             // Only keep caterpillar data for grass fields
             hasCaterpillar: !!caterpillar,
             caterpillarId: caterpillar?.caterpillarId,
@@ -319,6 +364,7 @@ export const TeichView: React.FC = () => {
         setUserBouquets([]);
         setPlacedBouquets([]);
         setFieldButterflies(fieldButterfliesData.fieldButterflies || []);
+        setFieldFish(fieldFishData.fieldFish || []);
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns([]); // No sun spawns in pond view
         setUserButterflies(butterfliesData.butterflies || []);
@@ -1253,6 +1299,34 @@ export const TeichView: React.FC = () => {
                           </FishHoverPreview>
                         </div>
                       ))}
+
+                    {/* Field Fish - Spawned from feeding (bouncing animation) */}
+                    {field.hasFish && (
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center cursor-pointer group animate-bounce z-30"
+                        onClick={() => handleFieldFishClick(field)}
+                      >
+                        <FishHoverPreview
+                          fishImageUrl={field.fishImageUrl!}
+                          fishName={field.fishName!}
+                          fishRarity={field.fishRarity as RarityTier}
+                          className="z-10"
+                        >
+                          <div className="relative transform group-hover:scale-110 transition-transform duration-200">
+                            <RarityImage 
+                              src={field.fishImageUrl!}
+                              alt={field.fishName || "Fisch"}
+                              rarity={field.fishRarity as RarityTier || "common"}
+                              size="large"
+                              className="w-16 h-16"
+                            />
+                            <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
+                              🐟
+                            </div>
+                          </div>
+                        </FishHoverPreview>
+                      </div>
+                    )}
 
                     {/* Local Caterpillars REMOVED - Only use database caterpillars */}
 

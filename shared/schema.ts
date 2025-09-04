@@ -289,6 +289,20 @@ export const pondFeedingProgressTable = pgTable("pond_feeding_progress", {
   uniqueUserField: uniqueIndex("unique_user_field_feeding").on(table.userId, table.fieldIndex)
 }));
 
+// Field Fish system - fish spawn on pond fields first, then can be collected
+export const fieldFish = pgTable("field_fish", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // Pond field index (11-38)
+  fishId: integer("fish_id").notNull(),
+  fishName: text("fish_name").notNull(),
+  fishRarity: text("fish_rarity").notNull(),
+  fishImageUrl: text("fish_image_url").notNull(),
+  spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
+  isShrinking: boolean("is_shrinking").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Caterpillar collection system  
 export const userCaterpillars = pgTable("user_caterpillars", {
   id: serial("id").primaryKey(),
@@ -438,3 +452,4 @@ export type ChallengeReward = typeof challengeRewards.$inferSelect;
 export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
 export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldSchema>;
 export type PondFeedingProgress = typeof pondFeedingProgress.$inferSelect;
+export type FieldFish = typeof fieldFish.$inferSelect;
