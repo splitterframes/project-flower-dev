@@ -812,7 +812,7 @@ export const TeichView: React.FC = () => {
         body: JSON.stringify({
           userId: user.id,
           caterpillarId,
-          fieldIndex: fieldIndex - 1 // Convert to 0-based index
+          fieldIndex: fieldIndex // Use field ID directly (1-based)
         })
       });
 
@@ -1262,23 +1262,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* DEBUG: Show feeding progress info */}
-                    {field.isPond && (
-                      <div className="absolute top-0 left-0 bg-black/50 text-white text-xs p-1">
-                        ID: {field.id}<br/>
-                        Progress: {field.feedingProgress || 0}<br/>
-                        isPond: {field.isPond ? 'Y' : 'N'}
-                      </div>
-                    )}
-                    
-                    {/* DEBUG: Also show non-pond fields that have progress (these shouldn't exist!) */}
-                    {!field.isPond && field.feedingProgress && field.feedingProgress > 0 && (
-                      <div className="absolute top-0 left-0 bg-red-500 text-white text-xs p-1">
-                        FEHLER! ID: {field.id}<br/>
-                        Progress: {field.feedingProgress}<br/>
-                        isPond: {field.isPond ? 'Y' : 'N'}
-                      </div>
-                    )}
 
                   </div>
                 );
