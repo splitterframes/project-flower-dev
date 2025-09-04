@@ -229,7 +229,7 @@ export const TeichView: React.FC = () => {
           fieldId: fieldIndex + 1, // Convert back to 1-based
           caterpillarImageUrl: result.caterpillar?.caterpillarImageUrl || '/Raupen/7.jpg',
           caterpillarName: result.caterpillar?.caterpillarName || 'Spawned Caterpillar',
-          caterpillarRarity: inheritedRarity,
+          caterpillarRarity: result.caterpillar?.caterpillarRarity || inheritedRarity,
           spawnedAt: new Date(),
           isGrowingIn: true
         }]);
@@ -237,16 +237,16 @@ export const TeichView: React.FC = () => {
         // Sofort die echten Daten laden, während Animation läuft
         fetchTeichData(); 
         
-        // Nach grow-in animation (4s) die temporäre Animation entfernen - mehr Zeit für Daten-Load
+        // Nach grow-in animation (4s) die temporäre Animation sanft ausblenden
         setTimeout(() => {
           // Nochmal laden um sicherzustellen, dass echte Raupe da ist
           fetchTeichData(); 
           
-          // Weitere 0.2s warten, dann temporäre Animation entfernen
+          // Animation sanft beenden ohne harten Sprung - permanente Raupe ist schon da
           setTimeout(() => {
             setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
-          }, 200);
-        }, 4100); // 4.1s - Animation vollständig abgeschlossen
+          }, 100);
+        }, 4000); // Genau nach 4s Animation
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
@@ -1106,7 +1106,7 @@ export const TeichView: React.FC = () => {
                         rarity={caterpillar.caterpillarRarity as RarityTier}
                       >
                         <div 
-                          className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform z-30"
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform z-30 animate-fade-in"
                           onClick={() => collectCaterpillar(field.id - 1)}
                         >
                           <RarityImage

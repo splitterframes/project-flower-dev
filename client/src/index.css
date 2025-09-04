@@ -155,6 +155,20 @@
   will-change: transform, opacity !important;
 }
 
+/* Sanftes Einblenden der permanenten Raupe */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-in forwards;
+}
+
 #root {
   width: 100%;
   height: 100%;
