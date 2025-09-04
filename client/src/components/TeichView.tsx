@@ -800,9 +800,11 @@ export const TeichView: React.FC = () => {
     try {
       const response = await fetch('/api/garden/collect-butterfly', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
         body: JSON.stringify({
-          userId: user.id,
           fieldIndex: fieldId - 1
         })
       });
@@ -1131,6 +1133,29 @@ export const TeichView: React.FC = () => {
                         </div>
                       );
                     })()}
+
+                    {/* Permanent field butterflies from database - BUG FIX: Show database butterflies! */}
+                    {field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && !field.isPond && (
+                      <ButterflyHoverPreview
+                        butterflyId={field.butterflyId!}
+                        butterflyName={field.butterflyName!}
+                        butterflyImageUrl={field.butterflyImageUrl!}
+                        rarity={field.butterflyRarity as RarityTier}
+                      >
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-all"
+                          onClick={() => collectButterfly(field.id)}
+                        >
+                          <RarityImage
+                            src={field.butterflyImageUrl!}
+                            alt={field.butterflyName || "Schmetterling"}
+                            rarity={field.butterflyRarity as RarityTier || "common"}
+                            size="large"
+                            className="w-full h-full"
+                          />
+                        </div>
+                      </ButterflyHoverPreview>
+                    )}
 
                     {/* Real Field Caterpillars from Database (PERMANENT - highest priority) */}
                     {fieldCaterpillars
