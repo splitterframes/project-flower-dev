@@ -1330,7 +1330,7 @@ export const TeichView: React.FC = () => {
                               alt={field.fishName || "Fisch"}
                               rarity={field.fishRarity as RarityTier || "common"}
                               size="large"
-                              className="w-20 h-20"
+                              className="w-full h-full"
                             />
                             <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
                               🐟
