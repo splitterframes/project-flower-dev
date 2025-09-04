@@ -242,11 +242,11 @@ export const TeichView: React.FC = () => {
           // Nochmal laden um sicherzustellen, dass echte Raupe da ist
           fetchTeichData(); 
           
-          // Weitere 0.5s warten, dann temporäre Animation entfernen
+          // Weitere 0.2s warten, dann temporäre Animation entfernen
           setTimeout(() => {
             setSpawnedCaterpillars(prev => prev.filter(c => c.id !== caterpillarAnimId));
-          }, 500);
-        }, 4000);
+          }, 200);
+        }, 4100); // 4.1s - Animation vollständig abgeschlossen
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);

@@ -129,25 +129,30 @@
   animation: burst 0.6s ease-out forwards;
 }
 
-/* Grow-in animation - umgekehrt zum Burst */
+/* Grow-in animation - deutlich sichtbar */
 @keyframes grow-in {
   0% { 
-    transform: scale(0);
-    opacity: 0;
+    transform: scale(0.05) !important;
+    opacity: 0.2 !important;
   }
-  50% { 
-    transform: scale(0.5);
-    opacity: 0.5;
+  30% { 
+    transform: scale(0.3) !important;
+    opacity: 0.6 !important;
+  }
+  70% { 
+    transform: scale(0.7) !important;
+    opacity: 0.8 !important;
   }
   100% { 
-    transform: scale(1);
-    opacity: 1;
+    transform: scale(1) !important;
+    opacity: 1 !important;
   }
 }
 
 .animate-grow-in {
-  animation: grow-in 3.8s ease-out forwards !important;
-  transform-origin: center !important;
+  animation: grow-in 4s ease-out forwards !important;
+  transform-origin: center center !important;
+  will-change: transform, opacity !important;
 }
 
 #root {
