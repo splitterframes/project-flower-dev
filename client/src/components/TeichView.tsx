@@ -790,7 +790,6 @@ export const TeichView: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
-        showNotification('Raupe gesammelt!', result.message, 'success');
         fetchTeichData();
       } else {
         const error = await response.json();
