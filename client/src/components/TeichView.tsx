@@ -9,6 +9,7 @@ import { useSuns } from "@/lib/stores/useSuns";
 import { useSunSpawns } from "@/lib/stores/useSunSpawns";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
+import { ButterflySelectionModal } from "./ButterflySelectionModal";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
@@ -99,31 +100,44 @@ export const TeichView: React.FC = () => {
   const [selectedField, setSelectedField] = useState<number | null>(null);
   const [shakingField, setShakingField] = useState<number | null>(null);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
+  const [showButterflyModal, setShowButterflyModal] = useState(false);
+  const [userButterflies, setUserButterflies] = useState<any[]>([]);
+  const [placedButterflies, setPlacedButterflies] = useState<{
+    id: number;
+    fieldId: number;
+    butterflyImageUrl: string;
+    butterflyName: string;
+    butterflyRarity: string;
+    placedAt: Date;
+    isShrinkling: boolean;
+  }[]>([]);
 
   const fetchGardenData = async () => {
     if (!user) return;
 
     try {
       // Fetch all data in parallel
-      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, sunSpawnsRes] = await Promise.all([
+      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, sunSpawnsRes, userButterfliesRes] = await Promise.all([
         fetch(`/api/garden/fields/${user.id}`),
         fetch(`/api/user/${user.id}/unlocked-fields`),
         fetch(`/api/user/${user.id}/seeds`),
         fetch(`/api/user/${user.id}/bouquets`),
         fetch(`/api/user/${user.id}/placed-bouquets`),
         fetch(`/api/user/${user.id}/field-butterflies`),
-        fetch(`/api/garden/sun-spawns`)
+        fetch(`/api/garden/sun-spawns`),
+        fetch(`/api/user/${user.id}/butterflies`)
       ]);
 
       if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok) {
-        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, sunSpawnsData] = await Promise.all([
+        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, sunSpawnsData, userButterfliesData] = await Promise.all([
           fieldsRes.json(),
           unlockedRes.json(),
           seedsRes.json(),
           bouquetsRes.json(),
           placedBouquetsRes.json(),
           butterflyRes.json(),
-          sunSpawnsRes.json()
+          sunSpawnsRes.json(),
+          userButterfliesRes.json()
         ]);
 
         console.log('Updating garden with planted fields:', fieldsData.fields);
@@ -176,6 +190,7 @@ export const TeichView: React.FC = () => {
         setPlacedBouquets(placedData.placedBouquets);
         setFieldButterflies(butterflyData.fieldButterflies);
         setSunSpawns(sunSpawnsData.sunSpawns);
+        setUserButterflies(userButterfliesData.butterflies || []);
       }
     } catch (error) {
       console.error('Failed to fetch garden data:', error);
@@ -231,6 +246,63 @@ export const TeichView: React.FC = () => {
       clearTimeout(timeoutId);
     };
   }, []);
+
+  // Butterfly shrinking system
+  useEffect(() => {
+    const intervals: NodeJS.Timeout[] = [];
+    
+    placedButterflies.forEach((butterfly) => {
+      if (butterfly.isShrinkling) return;
+      
+      const timeAlive = Date.now() - butterfly.placedAt.getTime();
+      const shrinkTime = Math.random() * 60000 + 30000; // 30-90 seconds
+      
+      if (timeAlive >= shrinkTime) {
+        // Start shrinking immediately
+        setPlacedButterflies(prev => 
+          prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
+        );
+        
+        // Remove after shrinking animation (2 seconds)
+        setTimeout(() => {
+          setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
+        }, 2000);
+      } else {
+        // Schedule shrinking
+        const timeUntilShrink = shrinkTime - timeAlive;
+        const interval = setTimeout(() => {
+          setPlacedButterflies(prev => 
+            prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
+          );
+          
+          // Remove after shrinking animation
+          setTimeout(() => {
+            setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
+          }, 2000);
+        }, timeUntilShrink);
+        
+        intervals.push(interval);
+      }
+    });
+    
+    return () => {
+      intervals.forEach(clearTimeout);
+    };
+  }, [placedButterflies]);
+
+  // Get butterfly border color based on rarity
+  const getButterflyBorderColor = (rarity: string) => {
+    switch (rarity.toLowerCase()) {
+      case 'common': return '#FFD700';
+      case 'uncommon': return '#00FF00';
+      case 'rare': return '#0066FF';
+      case 'super-rare': return '#00FFFF';
+      case 'epic': return '#9966FF';
+      case 'legendary': return '#FF8800';
+      case 'mythical': return '#FF0044';
+      default: return '#FFD700';
+    }
+  };
 
   const unlockField = async (fieldId: number) => {
     if (!user) return;
@@ -352,6 +424,59 @@ export const TeichView: React.FC = () => {
     }
 
     setShowBouquetModal(false);
+    setSelectedField(null);
+  };
+
+  const placeButterflyOnField = async (butterflyId: number) => {
+    if (!user || selectedField === null) return;
+
+    const butterfly = userButterflies.find(b => b.id === butterflyId);
+    if (!butterfly) return;
+
+    // Check if butterfly quantity is available
+    if (butterfly.quantity <= 0) {
+      showNotification('Dieser Schmetterling ist nicht mehr verfügbar.', 'error');
+      return;
+    }
+
+    // Check if field already has a placed butterfly
+    const existingButterfly = placedButterflies.find(b => b.fieldId === selectedField);
+    if (existingButterfly) {
+      showNotification('Auf diesem Feld ist bereits ein Schmetterling platziert.', 'info');
+      return;
+    }
+
+    try {
+      // Simulate consuming the butterfly from inventory
+      // In a real implementation, you'd make an API call to reduce quantity
+      setUserButterflies(prev => 
+        prev.map(b => 
+          b.id === butterflyId 
+            ? { ...b, quantity: Math.max(0, b.quantity - 1) }
+            : b
+        )
+      );
+
+      // Add butterfly to placed butterflies
+      const newPlacedButterfly = {
+        id: Date.now() + Math.random(), // Simple unique ID
+        fieldId: selectedField,
+        butterflyImageUrl: butterfly.butterflyImageUrl,
+        butterflyName: butterfly.butterflyName,
+        butterflyRarity: butterfly.butterflyRarity,
+        placedAt: new Date(),
+        isShrinkling: false
+      };
+
+      setPlacedButterflies(prev => [...prev, newPlacedButterfly]);
+      showNotification(`${butterfly.butterflyName} wurde platziert!`, 'success');
+
+    } catch (error) {
+      console.error('Failed to place butterfly:', error);
+      showNotification('Fehler beim Platzieren des Schmetterlings.', 'error');
+    }
+
+    setShowButterflyModal(false);
     setSelectedField(null);
   };
 
@@ -486,9 +611,10 @@ export const TeichView: React.FC = () => {
                         return;
                       }
                       
-                      // For now, non-pond fields are unlocked but without function
+                      // For now, non-pond fields can have butterflies placed
                       if (field.isUnlocked && !field.isPond) {
-                        showNotification('Diese Felder sind noch nicht funktional.', 'info', 'In Entwicklung');
+                        setSelectedField(field.id);
+                        setShowButterflyModal(true);
                         return;
                       }
                       
@@ -642,6 +768,22 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
+                    {/* Placed Butterfly Display */}
+                    {placedButterflies.find(b => b.fieldId === field.id) && (
+                      <div
+                        className={`absolute inset-0 rounded transition-all duration-2000 ${
+                          placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
+                            ? 'opacity-0 transform scale-0' 
+                            : 'opacity-100 transform scale-100'
+                        }`}
+                        style={{
+                          backgroundImage: `url(${placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          border: `2px solid ${getButterflyBorderColor(placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity || 'common')}`
+                        }}
+                      />
+                    )}
 
                   </div>
                 );
@@ -670,6 +812,18 @@ export const TeichView: React.FC = () => {
           }}
           userBouquets={userBouquets || []}
           onPlaceBouquet={placeBouquet}
+          fieldIndex={selectedField || 0}
+        />
+
+        {/* Butterfly Selection Modal */}
+        <ButterflySelectionModal
+          isOpen={showButterflyModal}
+          onClose={() => {
+            setShowButterflyModal(false);
+            setSelectedField(null);
+          }}
+          userButterflies={userButterflies}
+          onSelectButterfly={placeButterflyOnField}
           fieldIndex={selectedField || 0}
         />
       </TooltipProvider>
