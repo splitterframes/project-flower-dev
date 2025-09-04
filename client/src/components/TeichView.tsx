@@ -962,30 +962,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Database butterflies - only show if no local animation running */}
-                    {field.hasButterfly && field.butterflyImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
-                      <ButterflyHoverPreview
-                        butterflyId={field.butterflyId!}
-                        butterflyName={field.butterflyName!}
-                        butterflyImageUrl={field.butterflyImageUrl}
-                        rarity={field.butterflyRarity as RarityTier}
-                      >
-                        <div 
-                          className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all ${field.butterflyShrinking ? 'scale-0 opacity-0' : 'scale-100 opacity-100 hover:scale-110'}`}
-                          style={{
-                            transitionDuration: field.butterflyShrinking ? '20000ms' : '200ms' // 20s shrinking animation
-                          }}
-                        >
-                          <RarityImage
-                            src={field.butterflyImageUrl}
-                            alt={field.butterflyName || "Schmetterling"}
-                            rarity={field.butterflyRarity as RarityTier || "common"}
-                            size="large"
-                            className="w-full h-full"
-                          />
-                        </div>
-                      </ButterflyHoverPreview>
-                    )}
 
                     {/* Field Caterpillar with Bounce Effect - hide during butterfly animation AND local caterpillars */}
                     {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && !placedCaterpillars.find(c => c.fieldId === field.id) && (
