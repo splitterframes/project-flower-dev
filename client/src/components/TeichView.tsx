@@ -308,8 +308,13 @@ export const TeichView: React.FC = () => {
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
           
-          // Check for butterfly (only on grass fields)  
-          const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex) : null;
+          // Check for butterfly (only on grass fields) - BUG FIX: use field.id directly, not fieldIndex
+          const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === field.id) : null;
+          
+          // Debug logging for fields 20 and 30
+          if (field.id === 20 || field.id === 30) {
+            console.log(`🐛 FIXED Field ${field.id}: isPond=${field.isPond}, checking fieldIndex=${field.id}, butterfly=${butterfly ? butterfly.butterflyName : 'none'}`);
+          }
           
           // Check for field fish (only on pond fields) - use field.id directly instead of fieldIndex
           const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === field.id) : null;
@@ -1044,8 +1049,8 @@ export const TeichView: React.FC = () => {
                       
                       // GRASFELD: Butterfly platzieren ODER Caterpillar einsammeln
                       if (!field.isPond) {
-                        // Check if caterpillar is present on this field to collect
-                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id - 1);
+                        // Check if caterpillar is present on this field to collect  
+                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id);
                         
                         if (caterpillarOnField) {
                           console.log("🐛 Collecting caterpillar from grass field", field.id);
