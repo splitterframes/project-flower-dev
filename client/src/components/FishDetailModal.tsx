@@ -9,7 +9,7 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
 import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
-import { Clock, DollarSign, Zap, ChevronLeft, ChevronRight, Fish } from "lucide-react";
+import { Clock, DollarSign, Zap, ChevronLeft, ChevronRight, Fish, X } from "lucide-react";
 
 interface FishDetailProps {
   id: number;
@@ -212,39 +212,29 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-gradient-to-br from-slate-900 to-blue-950 border-blue-500/30">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold text-blue-300 flex items-center justify-center space-x-2">
-            <Fish className="h-6 w-6" />
-            <span>Fisch Details</span>
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-7xl w-full shadow-2xl">
+        <DialogHeader className="relative mb-4">
+          {/* Enhanced Header Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-t-lg -mx-6 -my-2"></div>
+          
+          <DialogTitle className="flex items-center text-white relative z-10">
+            <div className="relative">
+              <Fish className="h-6 w-6 mr-3 text-blue-400 animate-pulse" />
+              <div className="absolute inset-0 h-6 w-6 mr-3 text-blue-400 animate-ping opacity-30"></div>
+            </div>
+            <span className="text-lg font-bold bg-gradient-to-r from-blue-300 to-teal-300 bg-clip-text text-transparent">
+              🐟 Fisch-Details
+            </span>
           </DialogTitle>
           
-          {/* Navigation */}
-          {totalCount && totalCount > 1 && (
-            <div className="flex justify-between items-center mt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onPrevious}
-                disabled={!onPrevious}
-                className="text-blue-300 hover:text-white"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-blue-400">
-                {(currentIndex ?? 0) + 1} von {totalCount}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onNext}
-                disabled={!onNext}
-                className="text-blue-300 hover:text-white"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute right-4 top-4 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-full transition-all duration-200 z-10"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </DialogHeader>
 
         {/* Name and Rarity Header */}
