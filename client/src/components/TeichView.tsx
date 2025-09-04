@@ -793,11 +793,10 @@ export const TeichView: React.FC = () => {
         fetchTeichData();
       } else {
         const error = await response.json();
-        showNotification('Fehler', error.message || 'Raupe konnte nicht gesammelt werden.', 'error');
+        console.error('Collection failed:', error);
       }
     } catch (error) {
       console.error('Failed to collect caterpillar:', error);
-      showNotification('Fehler', 'Netzwerkfehler beim Sammeln der Raupe.', 'error');
     }
   };
 
