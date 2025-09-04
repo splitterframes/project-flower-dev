@@ -238,7 +238,7 @@ export function generateRandomButterfly(rarity: RarityTier): { id: number; name:
   
   return {
     id: butterflyId,
-    name: generateLatinButterflyName(butterflyId), // Use butterflyId as seed for consistent naming
+    name: generateGermanButterflyName(butterflyId), // Use butterflyId as seed for consistent naming
     imageUrl: `/Schmetterlinge/${butterflyId.toString().padStart(3, '0')}.jpg`
   };
 }
@@ -284,33 +284,68 @@ export function generateLatinFlowerName(seed?: number): string {
 }
 
 /**
- * Generate Latin-sounding butterfly names (2 words)
+ * Generate German butterfly names - Erweiterte Liste für 2000+ eindeutige Namen
  * @param seed - Optional seed for consistent naming based on ID
  */
-export function generateLatinButterflyName(seed?: number): string {
-  const prefixes = [
-    'Papilio', 'Lepidoptera', 'Morpho', 'Vanessa', 'Pieris', 'Monarch', 'Danaus', 'Heliconius', 'Nymphalis', 'Lycaena',
-    'Colias', 'Pontia', 'Anthocharis', 'Gonepteryx', 'Callophrys', 'Celastrina', 'Cupido', 'Plebejus', 'Polyommatus', 'Aricia'
+export function generateGermanButterflyName(seed?: number): string {
+  // Erweiterte deutsche Adjektive und Präfixes (45 Stück für 2000+ Kombinationen)
+  const adjectives = [
+    'Großer', 'Kleiner', 'Roter', 'Blauer', 'Goldener', 'Silberner', 'Weißer', 'Schwarzer',
+    'Grüner', 'Gelber', 'Violetter', 'Oranger', 'Brauner', 'Rosa', 'Türkiser', 'Purpurner',
+    'Dunkler', 'Heller', 'Bunter', 'Schillernder', 'Glänzender', 'Matter', 'Gestreifter', 'Gepunkteter',
+    'Königlicher', 'Kaiser', 'Fürsten', 'Herzog', 'Graf', 'Baron', 'Edler', 'Stolzer', 
+    'Majestätischer', 'Prächtiger', 'Eleganter', 'Zarter', 'Wilder', 'Seltener', 'Mystischer', 'Magischer',
+    'Tropischer', 'Exotischer', 'Nordischer', 'Südlicher', 'Östlicher', 'Westlicher', 'Alpiner'
   ];
   
-  const suffixes = [
-    'magnificus', 'splendidus', 'elegantia', 'celestis', 'mysticus', 'divinus', 'imperialis', 'regalis',
-    'luminous', 'radiatus', 'gloriosus', 'mirabilis', 'spectabilis', 'nobilis', 'perfectus', 'eternus',
-    'crystallinus', 'argenteus', 'aureus', 'diamanteus', 'volans', 'gracilis', 'delicatus', 'aereus'
+  // Deutsche Schmetterlings-Grundnamen (45 Stück)
+  const baseNames = [
+    'Falter', 'Fuchs', 'Bläuling', 'Weißling', 'Perlmuttfalter', 'Scheckenfalter', 'Mohrenfalter', 'Zipfelfalter',
+    'Augenfalter', 'Edelfalter', 'Ritterfalter', 'Tagfalter', 'Schwärmer', 'Segelfalter', 'Apollofalter', 'Schillerfalter',
+    'Glasflügler', 'Spanner', 'Eulenfalter', 'Bärenspinner', 'Widderchen', 'Zünsler', 'Wickler', 'Miniermotte',
+    'Schwalbenschwanz', 'Admiral', 'Distelfalter', 'Trauerfalter', 'Landkärtchen', 'C-Falter', 'Tagpfauenauge', 'Zitronenfalter',
+    'Kohlweißling', 'Aurorafalter', 'Hauhechelbläuling', 'Feuervogel', 'Kupferglanz', 'Himmelblau', 'Waldportier', 'Ochsenauge',
+    'Wiesenvögelchen', 'Mohrenfalter', 'Schachbrettfalter', 'Gelbwürfel', 'Rotfleck'
   ];
   
   if (seed !== undefined) {
     // Use seeded random for consistent names
-    const seededRandom = createSeededRandom(seed * 37); // Different multiplier for butterflies
-    const prefix = prefixes[Math.floor(seededRandom() * prefixes.length)];
-    const suffix = suffixes[Math.floor(seededRandom() * suffixes.length)];
-    return `${prefix} ${suffix}`;
+    const seededRandom = createSeededRandom(seed * 37); // Same multiplier as before for consistency
+    const adjective = adjectives[Math.floor(seededRandom() * adjectives.length)];
+    const baseName = baseNames[Math.floor(seededRandom() * baseNames.length)];
+    
+    // 10% Chance für "Deluxe", "Premium", "Spezial" etc. Suffix für mehr Variationen
+    const suffixChance = seededRandom();
+    if (suffixChance < 0.1) {
+      const specialSuffixes = ['Deluxe', 'Premium', 'Spezial', 'Royal', 'Imperial', 'Grand', 'Super'];
+      const suffix = specialSuffixes[Math.floor(seededRandom() * specialSuffixes.length)];
+      return `${adjective} ${baseName} ${suffix}`;
+    }
+    
+    return `${adjective} ${baseName}`;
   } else {
     // Fallback to regular random for backwards compatibility
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return `${prefix} ${suffix}`;
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const baseName = baseNames[Math.floor(Math.random() * baseNames.length)];
+    
+    if (Math.random() < 0.1) {
+      const specialSuffixes = ['Deluxe', 'Premium', 'Spezial', 'Royal', 'Imperial', 'Grand', 'Super'];
+      const suffix = specialSuffixes[Math.floor(Math.random() * specialSuffixes.length)];
+      return `${adjective} ${baseName} ${suffix}`;
+    }
+    
+    return `${adjective} ${baseName}`;
   }
+}
+
+/**
+ * Generate Latin-sounding butterfly names (2 words) - DEPRECATED, use German names
+ * @param seed - Optional seed for consistent naming based on ID
+ * @deprecated Use generateGermanButterflyName instead
+ */
+export function generateLatinButterflyName(seed?: number): string {
+  // Redirect to German names for consistency
+  return generateGermanButterflyName(seed);
 }
 
 /**

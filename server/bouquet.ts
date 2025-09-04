@@ -298,9 +298,9 @@ export async function generateRandomButterfly(rarity: RarityTier): Promise<Butte
   const availableIds = matchingIds.length > 0 ? matchingIds : AVAILABLE_BUTTERFLY_IDS.filter(id => id > 0);
   const butterflyId = availableIds[Math.floor(Math.random() * availableIds.length)];
   
-  // Generate consistent Latin name using butterflyId as seed
-  const { generateLatinButterflyName } = await import('../shared/rarity');
-  const name = generateLatinButterflyName(butterflyId);
+  // Generate consistent German name using butterflyId as seed
+  const { generateGermanButterflyName } = await import('../shared/rarity');
+  const name = generateGermanButterflyName(butterflyId);
 
   return {
     id: butterflyId,
