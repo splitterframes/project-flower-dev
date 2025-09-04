@@ -143,6 +143,7 @@ export const TeichView: React.FC = () => {
     butterflyName: string;
     butterflyRarity: string;
     placedAt: Date;
+    isWiggling: boolean;
     isShrinkling: boolean;
   }[]>([]);
   const [placedFish, setPlacedFish] = useState<{
@@ -589,16 +590,34 @@ export const TeichView: React.FC = () => {
           )
         );
 
-        // Add to placedButterflies for lifecycle animations  
+        // Add to placedButterflies for lifecycle animations
+        const butterflyId = Date.now() + Math.random(); // Unique ID
         setPlacedButterflies(prev => [...prev, {
-          id: Date.now() + Math.random(), // Unique ID
+          id: butterflyId,
           fieldId: selectedField,
           butterflyImageUrl: butterfly.butterflyImageUrl,
           butterflyName: butterfly.butterflyName,
           butterflyRarity: butterfly.butterflyRarity,
           placedAt: new Date(),
+          isWiggling: true,
           isShrinkling: false
         }]);
+
+        // Start 5-second wiggling, then shrinking animation
+        setTimeout(() => {
+          setPlacedButterflies(prev => 
+            prev.map(b => 
+              b.id === butterflyId 
+                ? { ...b, isWiggling: false, isShrinkling: true }
+                : b
+            )
+          );
+
+          // Remove after 0.5s shrinking animation
+          setTimeout(() => {
+            setPlacedButterflies(prev => prev.filter(b => b.id !== butterflyId));
+          }, 500);
+        }, 5000);
 
         // Refresh garden data to show placed butterfly
         fetchTeichData();
@@ -949,18 +968,27 @@ export const TeichView: React.FC = () => {
                     )}
 
 
-                    {/* Local placed butterflies in field size */}
-                    {placedButterflies.find(b => b.fieldId === field.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
-                        <RarityImage
-                          src={placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl || ""}
-                          alt={placedButterflies.find(b => b.fieldId === field.id)?.butterflyName || "Schmetterling"}
-                          rarity={placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity as RarityTier || "common"}
-                          size="large"
-                          className="w-full h-full"
-                        />
-                      </div>
-                    )}
+                    {/* Local placed butterflies with wiggle and shrink animations */}
+                    {placedButterflies.find(b => b.fieldId === field.id) && (() => {
+                      const butterfly = placedButterflies.find(b => b.fieldId === field.id)!;
+                      return (
+                        <div 
+                          className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-transform duration-500 ${
+                            butterfly.isWiggling ? 'animate-wiggle' : ''
+                          } ${
+                            butterfly.isShrinkling ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
+                          }`}
+                        >
+                          <RarityImage
+                            src={butterfly.butterflyImageUrl}
+                            alt={butterfly.butterflyName || "Schmetterling"}
+                            rarity={butterfly.butterflyRarity as RarityTier || "common"}
+                            size="large"
+                            className="w-full h-full"
+                          />
+                        </div>
+                      );
+                    })()}
 
 
                     {/* Field Caterpillar with Bounce Effect - hide during butterfly animation AND local caterpillars */}
