@@ -1324,10 +1324,22 @@ export class PostgresStorage implements IStorage {
     }
 
     try {
-      // Add caterpillar to user inventory with grow effect
+      // Add caterpillar to user inventory 
       await this.addCaterpillarToInventory(userId, caterpillar.id, caterpillar.name, inheritedRarity, caterpillar.imageUrl);
 
+      // ALSO place caterpillar permanently on the field (blocks field until collected)
+      await this.db.insert(fieldCaterpillars).values({
+        userId,
+        fieldIndex,
+        caterpillarId: caterpillar.id,
+        caterpillarName: caterpillar.name,
+        caterpillarRarity: inheritedRarity,
+        caterpillarImageUrl: caterpillar.imageUrl,
+        spawnedAt: new Date()
+      });
+
       console.log(`🐛 Successfully spawned caterpillar ${caterpillar.name} (${inheritedRarity}) from butterfly (${parentRarity})`);
+      console.log(`🐛 Caterpillar placed permanently on field ${fieldIndex} - blocks until user clicks to collect!`);
       return { success: true, caterpillar };
     } catch (error) {
       console.error('🐛 Error spawning caterpillar:', error);
