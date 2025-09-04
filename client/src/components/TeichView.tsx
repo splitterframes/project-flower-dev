@@ -308,8 +308,8 @@ export const TeichView: React.FC = () => {
             hasSunSpawn: false,
             sunSpawnAmount: undefined,
             sunSpawnExpiresAt: undefined,
-            // Add feeding progress for pond fields - disabled to remove "0" display
-            feedingProgress: undefined
+            // Add feeding progress for pond fields from API data
+            feedingProgress: field.isPond ? pondProgressData.pondProgress?.[i + 1] || 0 : undefined
           };
         });
 
@@ -1250,14 +1250,14 @@ export const TeichView: React.FC = () => {
 
                     {/* Local Caterpillars REMOVED - Only use database caterpillars */}
 
-                    {/* Pond Feeding Progress Icons - disabled to prevent "0" display */}
-                    {false && field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {/* Pond Feeding Progress Icons - Show fish symbols for feeding progress */}
+                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                         {field.feedingProgress === 1 && (
-                          <div className="text-6xl animate-pulse drop-shadow-lg">🐟</div>
+                          <div className="text-6xl animate-pulse drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(59,130,246,0.5)]">🐟</div>
                         )}
                         {field.feedingProgress === 2 && (
-                          <div className="text-6xl animate-bounce drop-shadow-lg">🐠</div>
+                          <div className="text-6xl animate-bounce drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(34,197,94,0.5)]">🐠</div>
                         )}
                       </div>
                     )}
