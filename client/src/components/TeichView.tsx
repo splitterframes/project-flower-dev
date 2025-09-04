@@ -351,9 +351,8 @@ export const TeichView: React.FC = () => {
               isGrowing: true // Start with growing effect
             };
             
-            // Remove butterfly and spawn caterpillar
+            // Remove butterfly only - database caterpillar will be loaded from API
             setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-            setPlacedCaterpillars(prev => [...prev, spawnedCaterpillar]);
             
             // Clear timers for this butterfly
             butterflyTimersRef.current.delete(butterfly.id);
@@ -1082,8 +1081,8 @@ export const TeichView: React.FC = () => {
                       </ButterflyHoverPreview>
                     )}
 
-                    {/* Field Caterpillar with Bounce Effect - hide during butterfly animation */}
-                    {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
+                    {/* Field Caterpillar with Bounce Effect - hide during butterfly animation AND local caterpillars */}
+                    {field.hasCaterpillar && field.caterpillarImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && !placedCaterpillars.find(c => c.fieldId === field.id) && (
                       <CaterpillarHoverPreview
                         caterpillarId={field.caterpillarId!}
                         caterpillarName={field.caterpillarName!}
@@ -1193,7 +1192,7 @@ export const TeichView: React.FC = () => {
                       <div
                         className={`absolute inset-0 rounded transition-all ${
                           placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
-                            ? 'opacity-0 transform scale-0' 
+                            ? 'opacity-30 transform scale-50' 
                             : 'opacity-100 transform scale-100 animate-wiggle'
                         }`}
                         style={{
@@ -1252,56 +1251,7 @@ export const TeichView: React.FC = () => {
                         </div>
                       ))}
 
-                    {/* Placed Caterpillars Display */}
-                    {placedCaterpillars
-                      .filter(caterpillar => caterpillar.fieldId === field.id)
-                      .map(caterpillar => (
-                        <div
-                          key={caterpillar.id}
-                          className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
-                            caterpillar.isGrowing 
-                              ? 'animate-bounce opacity-100 scale-125' 
-                              : caterpillar.isShrinkling 
-                                ? 'animate-pulse opacity-50 scale-75' 
-                                : 'opacity-100 scale-100'
-                          }`}
-                          style={{
-                            transform: caterpillar.isGrowing 
-                              ? 'scale(1.25)' 
-                              : caterpillar.isShrinkling 
-                                ? 'scale(0.7)' 
-                                : 'scale(1)',
-                            transition: 'all 0.5s ease-in-out'
-                          }}
-                        >
-                          <CaterpillarHoverPreview
-                            caterpillarImageUrl={caterpillar.caterpillarImageUrl}
-                            caterpillarName={caterpillar.caterpillarName}
-                            rarity={caterpillar.caterpillarRarity as RarityTier}
-                          >
-                            <div
-                              className="w-8 h-8 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform"
-                              style={{ borderColor: getCaterpillarBorderColor(caterpillar.caterpillarRarity) }}
-                            >
-                              <img
-                                src={caterpillar.caterpillarImageUrl}
-                                alt={caterpillar.caterpillarName}
-                                className="w-full h-full object-cover rounded-full"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling!.style.display = 'block';
-                                }}
-                              />
-                              <div
-                                className="w-full h-full bg-green-500 rounded-full flex items-center justify-center"
-                                style={{ display: 'none' }}
-                              >
-                                🐛
-                              </div>
-                            </div>
-                          </CaterpillarHoverPreview>
-                        </div>
-                      ))}
+                    {/* Local Caterpillars REMOVED - Only use database caterpillars */}
 
                     {/* Pond Feeding Progress Icons - disabled to prevent "0" display */}
                     {false && field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
