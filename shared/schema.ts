@@ -288,6 +288,19 @@ export const userCaterpillars = pgTable("user_caterpillars", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Caterpillars spawned on garden fields (from butterfly lifecycle)
+export const fieldCaterpillars = pgTable("field_caterpillars", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // 0-49 for the 50 garden fields
+  caterpillarId: integer("caterpillar_id").notNull(),
+  caterpillarName: text("caterpillar_name").notNull(),
+  caterpillarRarity: text("caterpillar_rarity").notNull(),
+  caterpillarImageUrl: text("caterpillar_image_url").notNull(),
+  spawnedAt: timestamp("spawned_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // VIP Butterflies placed in exhibition frames  
 export const exhibitionVipButterflies = pgTable("exhibition_vip_butterflies", {
   id: serial("id").primaryKey(),

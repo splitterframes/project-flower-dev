@@ -695,6 +695,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Field caterpillars endpoints
+  app.get("/api/user/:id/field-caterpillars", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log('🐛 Getting field caterpillars for user:', userId);
+      const fieldCaterpillars = await storage.getFieldCaterpillars(userId);
+      console.log('🐛 Found field caterpillars:', fieldCaterpillars.length);
+      res.json({ fieldCaterpillars });
+    } catch (error) {
+      console.error('🐛 Error getting field caterpillars:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Collect field caterpillar endpoint
+  app.post("/api/user/:id/collect-field-caterpillar", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { fieldIndex } = req.body;
+      console.log(`🐛 Collecting field caterpillar for user ${userId} on field ${fieldIndex}`);
+      const result = await storage.collectFieldCaterpillar(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Raupe erfolgreich eingesammelt!', caterpillar: result.caterpillar });
+      } else {
+        res.status(404).json({ message: 'Keine Raupe auf diesem Feld gefunden.' });
+      }
+    } catch (error) {
+      console.error('🐛 Error collecting field caterpillar:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get unlocked fields for a user
   app.get("/api/user/:id/unlocked-fields", async (req, res) => {
     try {

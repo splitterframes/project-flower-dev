@@ -13,6 +13,7 @@ import {
   userFish,
   userCaterpillars,
   fieldButterflies,
+  fieldCaterpillars,
   userVipButterflies,
   exhibitionFrames,
   exhibitionButterflies,
@@ -1068,6 +1069,79 @@ export class PostgresStorage implements IStorage {
       .where(eq(fieldButterflies.userId, userId));
     
     return result;
+  }
+
+  /**
+   * Get field caterpillars for a user
+   */
+  async getFieldCaterpillars(userId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(fieldCaterpillars)
+      .where(eq(fieldCaterpillars.userId, userId));
+    
+    return result;
+  }
+
+  /**
+   * Collect a field caterpillar (remove from field and add to inventory)
+   */
+  async collectFieldCaterpillar(userId: number, fieldIndex: number): Promise<{ success: boolean; caterpillar?: UserCaterpillar }> {
+    console.log(`🐛 Collecting field caterpillar for user ${userId} on field ${fieldIndex}`);
+    
+    // ATOMIC: Delete and return the caterpillar in one operation
+    const deletedCaterpillar = await this.db
+      .delete(fieldCaterpillars)
+      .where(and(eq(fieldCaterpillars.userId, userId), eq(fieldCaterpillars.fieldIndex, fieldIndex)))
+      .returning();
+
+    if (deletedCaterpillar.length === 0) {
+      console.log(`🐛 No caterpillar found on field ${fieldIndex} for user ${userId}`);
+      return { success: false };
+    }
+
+    const fieldCaterpillar = deletedCaterpillar[0];
+    console.log(`🐛 Found field caterpillar: ${fieldCaterpillar.caterpillarName} (ID: ${fieldCaterpillar.caterpillarId})`);
+    console.log(`🐛 Removed caterpillar from field ${fieldIndex}`);
+
+    // Add to user inventory
+    const existing = await this.db
+      .select()
+      .from(userCaterpillars)
+      .where(and(eq(userCaterpillars.userId, userId), eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId)));
+
+    let result: UserCaterpillar;
+    
+    try {
+      if (existing.length > 0) {
+        // Increase quantity
+        console.log(`🐛 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+        const updated = await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existing[0].quantity + 1 })
+          .where(and(eq(userCaterpillars.userId, userId), eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId)))
+          .returning();
+        result = updated[0];
+      } else {
+        // Add new caterpillar to inventory  
+        console.log(`🐛 Adding new caterpillar to inventory`);
+        const newCaterpillar = await this.db.insert(userCaterpillars).values({
+          userId,
+          caterpillarId: fieldCaterpillar.caterpillarId,
+          caterpillarName: fieldCaterpillar.caterpillarName,
+          caterpillarRarity: fieldCaterpillar.caterpillarRarity,
+          caterpillarImageUrl: fieldCaterpillar.caterpillarImageUrl,
+          quantity: 1
+        }).returning();
+        result = newCaterpillar[0];
+      }
+    } catch (error: any) {
+      console.error('🐛 Error adding caterpillar to inventory:', error);
+      return { success: false };
+    }
+
+    console.log(`🐛 Successfully collected caterpillar ${fieldCaterpillar.caterpillarName} for user ${userId}`);
+    return { success: true, caterpillar: result };
   }
 
   async placeButterflyOnField(userId: number, fieldIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string; butterfly?: any }> {
@@ -3021,23 +3095,25 @@ export class PostgresStorage implements IStorage {
 
       console.log(`🦋 BACKEND: Removed butterfly ${butterfly.butterflyName} from field ${butterfly.fieldIndex}`);
 
-      // Spawn caterpillar with rarity inheritance
+      // Spawn caterpillar ON THE SAME FIELD with rarity inheritance
       const inheritedRarity = this.inheritCaterpillarRarity(butterfly.butterflyRarity);
       const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
 
       if (caterpillar) {
-        await this.addCaterpillarToInventory(
-          butterfly.userId, 
-          caterpillar.id, 
-          caterpillar.name, 
-          inheritedRarity, 
-          caterpillar.imageUrl
-        );
+        // Spawn caterpillar on field instead of directly to inventory
+        await this.db.insert(fieldCaterpillars).values({
+          userId: butterfly.userId,
+          fieldIndex: butterfly.fieldIndex, // Same field where butterfly was!
+          caterpillarId: caterpillar.id,
+          caterpillarName: caterpillar.name,
+          caterpillarRarity: inheritedRarity,
+          caterpillarImageUrl: caterpillar.imageUrl
+        });
         
-        console.log(`🐛 BACKEND: Spawned caterpillar ${caterpillar.name} (${inheritedRarity}) for user ${butterfly.userId}`);
+        console.log(`🐛 BACKEND: Spawned field caterpillar ${caterpillar.name} (${inheritedRarity}) on field ${butterfly.fieldIndex} for user ${butterfly.userId}`);
       }
     } catch (error) {
-      console.error('🦋 BACKEND: Error removing butterfly and spawning caterpillar:', error);
+      console.error('🦋 BACKEND: Error removing butterfly and spawning field caterpillar:', error);
     }
   }
 

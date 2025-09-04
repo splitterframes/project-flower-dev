@@ -66,6 +66,7 @@ interface GardenField {
   caterpillarName?: string;
   caterpillarImageUrl?: string;
   caterpillarRarity?: string;
+  caterpillarSpawnedAt?: Date;
   hasSunSpawn?: boolean;
   sunSpawnAmount?: number;
   sunSpawnExpiresAt?: Date;
@@ -109,6 +110,7 @@ export const TeichView: React.FC = () => {
   const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
   const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
   const [fieldButterflies, setFieldButterflies] = useState<FieldButterfly[]>([]);
+  const [fieldCaterpillars, setFieldCaterpillars] = useState<any[]>([]);
   const [showSeedModal, setShowSeedModal] = useState(false);
   const [showBouquetModal, setShowBouquetModal] = useState(false);
   const [selectedField, setSelectedField] = useState<number | null>(null);
@@ -152,25 +154,27 @@ export const TeichView: React.FC = () => {
 
     try {
       // Fetch all data in parallel
-      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, sunSpawnsRes, userButterfliesRes] = await Promise.all([
+      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, caterpillarRes, sunSpawnsRes, userButterfliesRes] = await Promise.all([
         fetch(`/api/garden/fields/${user.id}`),
         fetch(`/api/user/${user.id}/unlocked-fields`),
         fetch(`/api/user/${user.id}/seeds`),
         fetch(`/api/user/${user.id}/bouquets`),
         fetch(`/api/user/${user.id}/placed-bouquets`),
         fetch(`/api/user/${user.id}/field-butterflies`),
+        fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/garden/sun-spawns`),
         fetch(`/api/user/${user.id}/butterflies`)
       ]);
 
-      if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok) {
-        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, sunSpawnsData, userButterfliesData] = await Promise.all([
+      if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok && butterflyRes.ok && caterpillarRes.ok && sunSpawnsRes.ok && userButterfliesRes.ok) {
+        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, caterpillarData, sunSpawnsData, userButterfliesData] = await Promise.all([
           fieldsRes.json(),
           unlockedRes.json(),
           seedsRes.json(),
           bouquetsRes.json(),
           placedBouquetsRes.json(),
           butterflyRes.json(),
+          caterpillarRes.json(),
           sunSpawnsRes.json(),
           userButterfliesRes.json()
         ]);
@@ -187,6 +191,7 @@ export const TeichView: React.FC = () => {
           const isUnlocked = !isPondField(fieldId); // All non-pond fields are unlocked
           const placedBouquet = placedData.placedBouquets.find((b: any) => b.fieldIndex === i);
           const butterfly = butterflyData.fieldButterflies.find((b: any) => b.fieldIndex === i);
+          const caterpillar = caterpillarData.fieldCaterpillars.find((c: any) => c.fieldIndex === i);
           const sunSpawn = sunSpawnsData.sunSpawns.find((s: any) => s.fieldIndex === i && s.isActive);
 
           return {
@@ -214,6 +219,12 @@ export const TeichView: React.FC = () => {
             butterflyRarity: butterfly?.butterflyRarity,
             butterflySpawnedAt: butterfly ? new Date(butterfly.spawnedAt) : undefined,
             butterflyShrinking: butterfly?.isShrinking || false, // Backend managed
+            hasCaterpillar: !!caterpillar,
+            caterpillarId: caterpillar?.caterpillarId,
+            caterpillarName: caterpillar?.caterpillarName,
+            caterpillarImageUrl: caterpillar?.caterpillarImageUrl,
+            caterpillarRarity: caterpillar?.caterpillarRarity,
+            caterpillarSpawnedAt: caterpillar ? new Date(caterpillar.spawnedAt) : undefined,
             hasSunSpawn: !!sunSpawn,
             sunSpawnAmount: sunSpawn?.sunAmount,
             sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined,
@@ -226,6 +237,7 @@ export const TeichView: React.FC = () => {
         setUserBouquets(bouquetsData.bouquets);
         setPlacedBouquets(placedData.placedBouquets);
         setFieldButterflies(butterflyData.fieldButterflies);
+        setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns(sunSpawnsData.sunSpawns);
         setUserButterflies(userButterfliesData.butterflies || []);
       }
@@ -673,9 +685,6 @@ export const TeichView: React.FC = () => {
 
   // Caterpillars spawn automatically when butterflies disappear, no manual placement
 
-  const collectCaterpillar = () => {
-    showNotification('Raupe gesammelt!', 'Die Raupe wurde erfolgreich gesammelt!', 'success');
-  };
 
   const collectButterfly = async (fieldId: number) => {
     if (!user) return;
@@ -704,6 +713,34 @@ export const TeichView: React.FC = () => {
     } catch (error) {
       console.error('Failed to collect butterfly:', error);
       showNotification('Fehler', 'Netzwerkfehler beim Sammeln des Schmetterlings.', 'error');
+    }
+  };
+
+  // Collect field caterpillar handler
+  const collectCaterpillar = async (fieldId: number) => {
+    if (!user) return;
+    
+    console.log('🐛 Attempting to collect caterpillar on field', fieldId - 1);
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldIndex: fieldId - 1 })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🐛 Raupe erfolgreich gesammelt!');
+        showNotification('Raupe gesammelt!', result.message, 'success');
+        fetchGardenData();
+      } else {
+        const error = await response.json();
+        showNotification('Fehler', error.message || 'Raupe konnte nicht gesammelt werden.', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to collect caterpillar:', error);
+      showNotification('Fehler', 'Netzwerkfehler beim Sammeln der Raupe.', 'error');
     }
   };
 
@@ -899,6 +936,29 @@ export const TeichView: React.FC = () => {
                           />
                         </div>
                       </ButterflyHoverPreview>
+                    )}
+
+                    {/* Field Caterpillar */}
+                    {field.hasCaterpillar && field.caterpillarImageUrl && (
+                      <CaterpillarHoverPreview
+                        caterpillarId={field.caterpillarId!}
+                        caterpillarName={field.caterpillarName!}
+                        caterpillarImageUrl={field.caterpillarImageUrl}
+                        rarity={field.caterpillarRarity as RarityTier}
+                      >
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                          onClick={() => collectCaterpillar(field.id)}
+                        >
+                          <RarityImage
+                            src={field.caterpillarImageUrl}
+                            alt={field.caterpillarName || "Raupe"}
+                            rarity={field.caterpillarRarity as RarityTier || "common"}
+                            size="medium"
+                            className="w-16 h-16"
+                          />
+                        </div>
+                      </CaterpillarHoverPreview>
                     )}
 
                     {/* Bouquet */}
