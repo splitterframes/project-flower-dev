@@ -845,7 +845,7 @@ export const TeichView: React.FC = () => {
     if (!user) return;
     
     console.log('🐛 Attempting to collect caterpillar on field', fieldIndex);
-    setIsCollectingCaterpillar(true);
+    // Blockierung wird bereits im onClick gesetzt
     
     try {
       const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
@@ -1083,6 +1083,7 @@ export const TeichView: React.FC = () => {
                         
                         if (caterpillarOnField) {
                           console.log("🐛 Attempting to collect caterpillar on field", field.id);
+                          setIsCollectingCaterpillar(true); // SOFORT blockieren
                           collectCaterpillar(field.id);
                           return; // Wichtig: Nach Raupe sammeln nicht weiter ausführen
                         }
