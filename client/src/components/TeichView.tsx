@@ -1069,25 +1069,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ULTRA-SIMPLE: Only database butterflies, server handles lifecycle */}
-                    {field.hasButterfly && field.butterflyImageUrl && (
-                      <ButterflyHoverPreview
-                        butterflyId={field.butterflyId!}
-                        butterflyName={field.butterflyName!}
-                        butterflyImageUrl={field.butterflyImageUrl}
-                        rarity={field.butterflyRarity as RarityTier}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 animate-wiggle">
-                          <RarityImage
-                            src={field.butterflyImageUrl}
-                            alt={field.butterflyName || "Schmetterling"}
-                            rarity={field.butterflyRarity as RarityTier || "common"}
-                            size="medium"
-                            className="w-16 h-16"
-                          />
-                        </div>
-                      </ButterflyHoverPreview>
-                    )}
 
                     {/* Placed Fish Display */}
                     {placedFish
