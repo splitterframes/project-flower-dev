@@ -928,10 +928,74 @@ export const TeichView: React.FC = () => {
                           console.log("🐛 Collecting caterpillar from grass field", field.id);
                           collectCaterpillar(field.id - 1);
                         } else {
-                          // Place first butterfly directly without modal
+                          // DIREKT PLATZIEREN ohne Modal oder state updates
                           if (userButterflies.length > 0) {
-                            const firstButterfly = userButterflies[0];
-                            handleButterflyPlacement(field.id, firstButterfly);
+                            const butterfly = userButterflies[0];
+                            console.log("🦋 DIRECT PLACEMENT: Placing butterfly directly on field", field.id);
+                            
+                            // Direkt platzieren ohne komplizierte state updates
+                            (async () => {
+                              try {
+                                const response = await fetch('/api/garden/place-butterfly', {
+                                  method: 'POST',
+                                  headers: { 
+                                    'Content-Type': 'application/json',
+                                    'x-user-id': user.id.toString()
+                                  },
+                                  body: JSON.stringify({
+                                    fieldIndex: field.id - 1,
+                                    butterflyId: butterfly.id
+                                  })
+                                });
+
+                                if (response.ok) {
+                                  // Animation starten
+                                  const butterflyAnimId = Date.now() + Math.random();
+                                  setPlacedButterflies(prev => [...prev, {
+                                    id: butterflyAnimId,
+                                    fieldId: field.id,
+                                    butterflyImageUrl: butterfly.butterflyImageUrl,
+                                    butterflyName: butterfly.butterflyName,
+                                    butterflyRarity: butterfly.butterflyRarity,
+                                    placedAt: new Date(),
+                                    isWiggling: true,
+                                    isBursting: false
+                                  }]);
+
+                                  // 5s wackeln → burst animation
+                                  setTimeout(() => {
+                                    setPlacedButterflies(prev => 
+                                      prev.map(b => 
+                                        b.id === butterflyAnimId 
+                                          ? { ...b, isWiggling: false, isBursting: true }
+                                          : b
+                                      )
+                                    );
+                                    setTimeout(() => {
+                                      setPlacedButterflies(prev => prev.filter(b => b.id !== butterflyAnimId));
+                                    }, 600);
+                                  }, 5000);
+
+                                  // Update inventory
+                                  setUserButterflies(prev => 
+                                    prev.map(b => 
+                                      b.id === butterfly.id 
+                                        ? { ...b, quantity: Math.max(0, b.quantity - 1) }
+                                        : b
+                                    )
+                                  );
+                                  
+                                  fetchTeichData();
+                                  console.log("🦋 SUCCESS: Direct butterfly placement worked!");
+                                } else {
+                                  const error = await response.json();
+                                  showNotification('Fehler', error.message || 'Schmetterling konnte nicht platziert werden.', 'error');
+                                }
+                              } catch (error) {
+                                console.error('Failed to place butterfly:', error);
+                                showNotification('Fehler', 'Netzwerkfehler beim Platzieren.', 'error');
+                              }
+                            })();
                           } else {
                             showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
                           }
