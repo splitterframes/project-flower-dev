@@ -498,8 +498,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
       }
 
-      // Use storage's strategic tracking method that handles both progress and average calculation
-      const result = await storage.updatePondFeedingProgressWithTracking(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+      // CRITICAL FIX: Store caterpillar rarity in fed_caterpillars for ALL feedings (1st, 2nd, 3rd)
+      // This ensures feedFishWithCaterpillar can always find all 3 caterpillars
+      await storage.addFedCaterpillar(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+      
+      // Update pond progress normally  
+      const result = await storage.updatePondFeedingProgress(userId, fieldIndex);
       console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: result, fishCreated: result >= 3, caterpillarRarity: caterpillarToUse.caterpillarRarity });
 
       if (result >= 3) {

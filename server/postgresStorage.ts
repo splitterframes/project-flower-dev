@@ -3462,6 +3462,26 @@ export class PostgresStorage {
     }
   }
 
+  async addFedCaterpillar(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<void> {
+    try {
+      console.log(`🐟 Adding fed caterpillar to PostgreSQL: user ${userId}, field ${fieldIndex}, rarity ${caterpillarRarity}`);
+      
+      await this.db.insert(fedCaterpillarsTable).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        caterpillarId: 0, // Not used for fish feeding tracking
+        caterpillarRarity: caterpillarRarity,
+        fedAt: new Date()
+      });
+      
+      console.log(`🐟 Successfully stored fed caterpillar for field ${fieldIndex}`);
+      
+    } catch (error) {
+      console.error('🐟 Error adding fed caterpillar:', error);
+      throw error;
+    }
+  }
+
   async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
     try {
       console.log(`🐟 Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
