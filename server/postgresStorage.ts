@@ -3340,6 +3340,21 @@ export class PostgresStorage implements IStorage {
       return { success: false, message: "Fehler beim Verkauf des Schmetterlings" };
     }
   }
+
+  // Enhanced system: Spawn butterfly on a garden field with slot-based guarantee system
+  async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+    const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
+    
+    // For all bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
+    const shouldGuaranteeSpawn = currentSlot === totalSlots && alreadySpawnedCount === 0;
+    
+    // Check if butterfly should spawn based on rarity (with guarantee logic)
+    if (!shouldGuaranteeSpawn && !shouldSpawnButterfly(bouquetRarity, currentSlot, totalSlots)) {
+      return { success: false };
+    }
+
+    return this.spawnButterflyOnField(userId, bouquetId, bouquetRarity);
+  }
 }
 
 export const postgresStorage = new PostgresStorage();
