@@ -3815,22 +3815,20 @@ export class PostgresStorage {
         return { success: false, message: `Nicht genügend Credits! Benötigt: ${cost}` };
       }
       
-      // Deduct credits and create tank in transaction
-      await this.db.transaction(async (trx) => {
-        // Deduct credits
-        await trx
-          .update(users)
-          .set({ credits: user.credits - cost })
-          .where(eq(users.id, userId));
-        
-        // Create tank
-        await trx
-          .insert(aquariumTanks)
-          .values({
-            userId,
-            tankNumber
-          });
-      });
+      // Deduct credits and create tank (no transaction needed for Neon)
+      // Deduct credits first
+      await this.db
+        .update(users)
+        .set({ credits: user.credits - cost })
+        .where(eq(users.id, userId));
+      
+      // Create tank
+      await this.db
+        .insert(aquariumTanks)
+        .values({
+          userId,
+          tankNumber
+        });
       
       console.log(`🐟 Tank ${tankNumber} purchased for ${cost} credits`);
       
@@ -3895,33 +3893,31 @@ export class PostgresStorage {
       
       const fishData = fish[0];
       
-      // Place fish in aquarium and reduce inventory
-      await this.db.transaction(async (trx) => {
-        // Place fish in aquarium
-        await trx
-          .insert(aquariumFish)
-          .values({
-            userId,
-            tankId: tank[0].id,
-            slotIndex,
-            fishId: fishData.fishId,
-            fishName: fishData.fishName,
-            fishRarity: fishData.fishRarity,
-            fishImageUrl: fishData.fishImageUrl
-          });
-        
-        // Reduce fish quantity in inventory
-        if (fishData.quantity > 1) {
-          await trx
-            .update(userFish)
-            .set({ quantity: fishData.quantity - 1 })
-            .where(eq(userFish.id, userFishId));
-        } else {
-          await trx
-            .delete(userFish)
-            .where(eq(userFish.id, userFishId));
-        }
-      });
+      // Place fish in aquarium and reduce inventory (no transaction for Neon)
+      // Place fish in aquarium first
+      await this.db
+        .insert(aquariumFish)
+        .values({
+          userId,
+          tankId: tank[0].id,
+          slotIndex,
+          fishId: fishData.fishId,
+          fishName: fishData.fishName,
+          fishRarity: fishData.fishRarity,
+          fishImageUrl: fishData.fishImageUrl
+        });
+      
+      // Reduce fish quantity in inventory
+      if (fishData.quantity > 1) {
+        await this.db
+          .update(userFish)
+          .set({ quantity: fishData.quantity - 1 })
+          .where(eq(userFish.id, userFishId));
+      } else {
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, userFishId));
+      }
       
       console.log(`🐟 Fish ${fishData.fishName} placed in aquarium`);
       return { success: true };
@@ -3950,42 +3946,40 @@ export class PostgresStorage {
       
       const fishData = fish[0];
       
-      // Remove from aquarium and add back to inventory
-      await this.db.transaction(async (trx) => {
-        // Remove from aquarium
-        await trx
-          .delete(aquariumFish)
-          .where(eq(aquariumFish.id, aquariumFishId));
-        
-        // Add back to inventory
-        const existingFish = await trx
-          .select()
-          .from(userFish)
-          .where(and(
-            eq(userFish.userId, userId),
-            eq(userFish.fishId, fishData.fishId)
-          ));
-        
-        if (existingFish.length > 0) {
-          // Increase quantity
-          await trx
-            .update(userFish)
-            .set({ quantity: existingFish[0].quantity + 1 })
-            .where(eq(userFish.id, existingFish[0].id));
-        } else {
-          // Add new entry
-          await trx
-            .insert(userFish)
-            .values({
-              userId,
-              fishId: fishData.fishId,
-              fishName: fishData.fishName,
-              fishRarity: fishData.fishRarity,
-              fishImageUrl: fishData.fishImageUrl,
-              quantity: 1
-            });
-        }
-      });
+      // Remove from aquarium and add back to inventory (no transaction for Neon)
+      // Remove from aquarium first
+      await this.db
+        .delete(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Add back to inventory
+      const existingFish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fishData.fishId)
+        ));
+      
+      if (existingFish.length > 0) {
+        // Increase quantity
+        await this.db
+          .update(userFish)
+          .set({ quantity: existingFish[0].quantity + 1 })
+          .where(eq(userFish.id, existingFish[0].id));
+      } else {
+        // Add new entry
+        await this.db
+          .insert(userFish)
+          .values({
+            userId,
+            fishId: fishData.fishId,
+            fishName: fishData.fishName,
+            fishRarity: fishData.fishRarity,
+            fishImageUrl: fishData.fishImageUrl,
+            quantity: 1
+          });
+      }
       
       console.log(`🐟 Fish ${fishData.fishName} removed from aquarium and returned to inventory`);
       return { success: true };
@@ -4052,26 +4046,24 @@ export class PostgresStorage {
       // Calculate price (20% of butterfly prices)
       const price = this.getFishSellPrice(fishData.fishRarity);
       
-      // Remove fish and add credits
-      await this.db.transaction(async (trx) => {
-        // Remove fish from aquarium
-        await trx
-          .delete(aquariumFish)
-          .where(eq(aquariumFish.id, aquariumFishId));
-        
-        // Add credits to user
-        const user = await trx
-          .select()
-          .from(users)
+      // Remove fish and add credits (no transaction for Neon)
+      // Remove fish from aquarium first
+      await this.db
+        .delete(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Add credits to user
+      const user = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (user.length > 0) {
+        await this.db
+          .update(users)
+          .set({ credits: user[0].credits + price })
           .where(eq(users.id, userId));
-        
-        if (user.length > 0) {
-          await trx
-            .update(users)
-            .set({ credits: user[0].credits + price })
-            .where(eq(users.id, userId));
-        }
-      });
+      }
       
       console.log(`🐟 Fish ${fishData.fishName} sold for ${price} credits`);
       return { success: true, creditsEarned: price };
@@ -4110,20 +4102,18 @@ export class PostgresStorage {
       const currentPlacedAt = new Date(fishData.placedAt);
       const newPlacedAt = new Date(currentPlacedAt.getTime() - (minutes * 60 * 1000));
       
-      // Update fish placement time and deduct suns
-      await this.db.transaction(async (trx) => {
-        // Update fish placed time
-        await trx
-          .update(aquariumFish)
-          .set({ placedAt: newPlacedAt })
-          .where(eq(aquariumFish.id, aquariumFishId));
-        
-        // Deduct suns
-        await trx
-          .update(users)
-          .set({ suns: user.suns - sunCost })
-          .where(eq(users.id, userId));
-      });
+      // Update fish placement time and deduct suns (no transaction for Neon)
+      // Update fish placed time first
+      await this.db
+        .update(aquariumFish)
+        .set({ placedAt: newPlacedAt })
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Deduct suns
+      await this.db
+        .update(users)
+        .set({ suns: user.suns - sunCost })
+        .where(eq(users.id, userId));
       
       console.log(`🐟 Applied ${minutes} minute boost to fish ${fishData.fishName}`);
       return { success: true };
