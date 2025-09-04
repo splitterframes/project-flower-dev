@@ -258,6 +258,30 @@ export const userVipButterflies = pgTable("user_vip_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Fish collection system
+export const userFish = pgTable("user_fish", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fishId: integer("fish_id").notNull(),
+  fishName: text("fish_name").notNull(),
+  fishRarity: text("fish_rarity").notNull(),
+  fishImageUrl: text("fish_image_url").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Caterpillar collection system  
+export const userCaterpillars = pgTable("user_caterpillars", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  caterpillarId: integer("caterpillar_id").notNull(),
+  caterpillarName: text("caterpillar_name").notNull(),
+  caterpillarRarity: text("caterpillar_rarity").notNull(),
+  caterpillarImageUrl: text("caterpillar_image_url").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // VIP Butterflies placed in exhibition frames  
 export const exhibitionVipButterflies = pgTable("exhibition_vip_butterflies", {
   id: serial("id").primaryKey(),
@@ -352,6 +376,8 @@ export type PlacedBouquet = typeof placedBouquets.$inferSelect;
 export type UserButterfly = typeof userButterflies.$inferSelect;
 export type FieldButterfly = typeof fieldButterflies.$inferSelect;
 export type UserVipButterfly = typeof userVipButterflies.$inferSelect;
+export type UserFish = typeof userFish.$inferSelect;
+export type UserCaterpillar = typeof userCaterpillars.$inferSelect;
 export type ExhibitionFrame = typeof exhibitionFrames.$inferSelect;
 export type ExhibitionButterfly = typeof exhibitionButterflies.$inferSelect;
 export type ExhibitionVipButterfly = typeof exhibitionVipButterflies.$inferSelect;

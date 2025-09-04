@@ -653,6 +653,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fish collection endpoints
+  app.get("/api/user/:id/fish", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log('🐟 Getting fish for user:', userId);
+      const fish = await storage.getUserFish(userId);
+      console.log('🐟 Found fish:', fish.length);
+      res.json({ fish });
+    } catch (error) {
+      console.error('🐟 Error getting fish:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Caterpillar collection endpoints
+  app.get("/api/user/:id/caterpillars", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log('🐛 Getting caterpillars for user:', userId);
+      const caterpillars = await storage.getUserCaterpillars(userId);
+      console.log('🐛 Found caterpillars:', caterpillars.length);
+      res.json({ caterpillars });
+    } catch (error) {
+      console.error('🐛 Error getting caterpillars:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get butterflies on garden fields
   app.get("/api/user/:id/field-butterflies", async (req, res) => {
     try {

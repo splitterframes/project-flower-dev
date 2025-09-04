@@ -314,6 +314,77 @@ export function generateLatinButterflyName(seed?: number): string {
 }
 
 /**
+ * Generate Latin-sounding fish names (2 words)
+ * @param seed - Optional seed for consistent naming based on ID
+ */
+export function generateLatinFishName(seed?: number): string {
+  const prefixes = [
+    'Aquaticus', 'Ichthys', 'Piscis', 'Oceanus', 'Marinus', 'Fluvialis',
+    'Lacustris', 'Cyprinius', 'Salmo', 'Thunnus', 'Gadus', 'Pleuronectes',
+    'Hippocampus', 'Syngnathus', 'Acanthurus', 'Pomacanthus', 'Chaetodon',
+    'Balistes', 'Monacanthus', 'Tetradon', 'Diodon', 'Antennarius',
+    'Scorpaena', 'Pterois', 'Sebastes', 'Epinephelus', 'Mycteroperca'
+  ];
+  
+  const suffixes = [
+    'aquatilis', 'marinus', 'profundus', 'crystallinus', 'argenteus',
+    'aureus', 'splendidus', 'magnificus', 'elegans', 'gracilis',
+    'velocis', 'agilis', 'natans', 'fluctuans', 'undulans',
+    'iridescens', 'scintillans', 'brillans', 'lucidus', 'clarus',
+    'tropicalis', 'exoticus', 'rarus', 'preciosus', 'mirabilis'
+  ];
+  
+  if (seed !== undefined) {
+    // Use seeded random for consistent names
+    const seededRandom = createSeededRandom(seed * 43); // Different multiplier for fish
+    const prefix = prefixes[Math.floor(seededRandom() * prefixes.length)];
+    const suffix = suffixes[Math.floor(seededRandom() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  } else {
+    // Fallback to regular random
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  }
+}
+
+/**
+ * Generate Latin-sounding caterpillar names (2 words)
+ * @param seed - Optional seed for consistent naming based on ID
+ */
+export function generateLatinCaterpillarName(seed?: number): string {
+  const prefixes = [
+    'Larva', 'Chenille', 'Eruca', 'Vermis', 'Bruca', 'Manduca',
+    'Sphinx', 'Laothoe', 'Smerinthus', 'Paonias', 'Ceratomia',
+    'Dolba', 'Lapara', 'Pachysphinx', 'Amphion', 'Hemaris',
+    'Proserpinus', 'Euproserpinus', 'Aellopos', 'Cautethia',
+    'Kloneus', 'Nyceryx', 'Perigonia', 'Pseudosphinx', 'Isognathus'
+  ];
+  
+  const suffixes = [
+    'viridis', 'maculatus', 'striatus', 'fasciatus', 'punctatus',
+    'lineatus', 'variegatus', 'coloratus', 'ornatus', 'decoratus',
+    'elegans', 'gracilis', 'robustus', 'magnus', 'minor',
+    'terrestris', 'foliaceus', 'herbivorus', 'vorax', 'rapidus',
+    'lentus', 'hibernicus', 'aestivalis', 'vernalis', 'autumnalis',
+    'nocturnus', 'diurnus', 'crepuscularis', 'silvanus', 'campestris'
+  ];
+  
+  if (seed !== undefined) {
+    // Use seeded random for consistent names
+    const seededRandom = createSeededRandom(seed * 47); // Different multiplier for caterpillars
+    const prefix = prefixes[Math.floor(seededRandom() * prefixes.length)];
+    const suffix = suffixes[Math.floor(seededRandom() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  } else {
+    // Fallback to regular random
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return `${prefix} ${suffix}`;
+  }
+}
+
+/**
  * Get numeric index for rarity tier (useful for calculations)
  */
 export function getRarityTierIndex(rarity: RarityTier): number {

@@ -10,7 +10,9 @@ import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/r
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
-import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly } from "@shared/schema";
+import { FishHoverPreview } from "./FishHoverPreview";
+import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
+import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly, UserFish, UserCaterpillar } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
   const { user } = useAuth();
@@ -21,6 +23,8 @@ export const InventoryView: React.FC = () => {
   const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
   const [myButterflies, setMyButterflies] = useState<UserButterfly[]>([]);
   const [myVipButterflies, setMyVipButterflies] = useState<UserVipButterfly[]>([]);
+  const [myFish, setMyFish] = useState<UserFish[]>([]);
+  const [myCaterpillars, setMyCaterpillars] = useState<UserCaterpillar[]>([]);
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -55,6 +59,14 @@ export const InventoryView: React.FC = () => {
 
   const getButterflyesByRarity = (rarity: string) => {
     return myButterflies.filter(butterfly => butterfly.butterflyRarity === rarity);
+  };
+
+  const getFishByRarity = (rarity: string) => {
+    return myFish.filter(fish => fish.fishRarity === rarity);
+  };
+
+  const getCaterpillarsByRarity = (rarity: string) => {
+    return myCaterpillars.filter(caterpillar => caterpillar.caterpillarRarity === rarity);
   };
 
   const getBouquetsByRarity = (rarity: string) => {
@@ -198,6 +210,79 @@ export const InventoryView: React.FC = () => {
     }
   };
 
+  // Fish and Caterpillar Card Components
+  const FishCard = ({ fish, getBorderColor }: { fish: any; getBorderColor: (rarity: RarityTier) => string }) => (
+    <div
+      className="bg-slate-900 rounded-lg p-3 border-2"
+      style={{ borderColor: getBorderColor(fish.fishRarity as RarityTier) }}
+    >
+      <div className="flex items-center space-x-3">
+        <FishHoverPreview
+          fishImageUrl={fish.fishImageUrl}
+          fishName={fish.fishName}
+          rarity={fish.fishRarity as RarityTier}
+        >
+          <RarityImage 
+            src={fish.fishImageUrl}
+            alt={fish.fishName}
+            rarity={fish.fishRarity as RarityTier}
+            size="medium"
+            className="w-12 h-12"
+          />
+        </FishHoverPreview>
+        <div className="flex-1">
+          <h4 className="font-bold text-white text-sm">{fish.fishName}</h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs ${getRarityColor(fish.fishRarity as RarityTier)}`}>
+              {getRarityDisplayName(fish.fishRarity as RarityTier)}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
+            x{fish.quantity}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const CaterpillarCard = ({ caterpillar, getBorderColor }: { caterpillar: any; getBorderColor: (rarity: RarityTier) => string }) => (
+    <div
+      className="bg-slate-900 rounded-lg p-3 border-2"
+      style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
+    >
+      <div className="flex items-center space-x-3">
+        <CaterpillarHoverPreview
+          caterpillarImageUrl={caterpillar.caterpillarImageUrl}
+          caterpillarName={caterpillar.caterpillarName}
+          rarity={caterpillar.caterpillarRarity as RarityTier}
+        >
+          <RarityImage 
+            src={caterpillar.caterpillarImageUrl}
+            alt={caterpillar.caterpillarName}
+            rarity={caterpillar.caterpillarRarity as RarityTier}
+            size="medium"
+            className="w-12 h-12"
+          />
+        </CaterpillarHoverPreview>
+        <div className="flex-1">
+          <h4 className="font-bold text-white text-sm">{caterpillar.caterpillarName}</h4>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs ${getRarityColor(caterpillar.caterpillarRarity as RarityTier)}`}>
+              {getRarityDisplayName(caterpillar.caterpillarRarity as RarityTier)}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
+            x{caterpillar.quantity}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const ButterflyCard = ({ butterfly, getBorderColor }: { butterfly: any; getBorderColor: (rarity: RarityTier) => string }) => (
     <div
       className="bg-slate-900 rounded-lg p-3 border-2"
@@ -319,6 +404,8 @@ export const InventoryView: React.FC = () => {
       fetchMyBouquets();
       fetchMyButterflies();
       fetchMyVipButterflies(); // Initial VIP fetch
+      fetchMyFish();
+      fetchMyCaterpillars();
     }
   }, [user]);
 
@@ -329,6 +416,8 @@ export const InventoryView: React.FC = () => {
     const interval = setInterval(() => {
       fetchMyButterflies();
       fetchMyVipButterflies();
+      fetchMyFish();
+      fetchMyCaterpillars();
     }, 15000);
     
     return () => clearInterval(interval);
@@ -383,6 +472,32 @@ export const InventoryView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch my butterflies:', error);
+    }
+  };
+
+  const fetchMyFish = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/fish`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyFish(data.fish || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my fish:', error);
+    }
+  };
+
+  const fetchMyCaterpillars = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/caterpillars`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyCaterpillars(data.caterpillars || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my caterpillars:', error);
     }
   };
 
@@ -641,6 +756,118 @@ export const InventoryView: React.FC = () => {
                   <VipButterflyCard key={vipButterfly.id} vipButterfly={vipButterfly} />
                 ))}
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Fish Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-blue-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Package className="h-5 w-5 mr-2 text-blue-400" />
+              <span className="text-lg font-semibold text-blue-300">
+                Fische 🐟 ({myFish.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myFish.length === 0 ? (
+              <div className="text-center py-12 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 rounded-lg"></div>
+                <div className="relative z-10">
+                  <div className="relative mb-6">
+                    <Package className="h-16 w-16 text-blue-400 mx-auto animate-bounce" />
+                    <div className="absolute inset-0 h-16 w-16 mx-auto text-blue-400 animate-ping opacity-20"></div>
+                  </div>
+                  <p className="text-slate-300 text-xl mb-3">🐟 Noch keine Fische gesammelt</p>
+                  <p className="text-slate-400 text-lg">Fische können im Teich gefunden werden</p>
+                </div>
+              </div>
+            ) : (
+              <Accordion type="multiple" className="w-full space-y-2">
+                {rarities.map((rarity) => {
+                  const fishInRarity = getFishByRarity(rarity);
+                  if (fishInRarity.length === 0) return null;
+                  
+                  return (
+                    <AccordionItem key={rarity} value={rarity} className="border border-slate-600 rounded-lg bg-slate-800/50">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`font-semibold ${getRarityColorClass(rarity)}`}>
+                            {getRarityLabel(rarity)}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            {fishInRarity.reduce((sum, fish) => sum + fish.quantity, 0)} Fische
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {fishInRarity.map((fish) => (
+                            <FishCard key={fish.id} fish={fish} getBorderColor={getBorderColor} />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Caterpillars Section */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-green-500/30 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center">
+              <Bug className="h-5 w-5 mr-2 text-green-400" />
+              <span className="text-lg font-semibold text-green-300">
+                Raupen 🐛 ({myCaterpillars.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myCaterpillars.length === 0 ? (
+              <div className="text-center py-12 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 rounded-lg"></div>
+                <div className="relative z-10">
+                  <div className="relative mb-6">
+                    <Bug className="h-16 w-16 text-green-400 mx-auto animate-bounce" />
+                    <div className="absolute inset-0 h-16 w-16 mx-auto text-green-400 animate-ping opacity-20"></div>
+                  </div>
+                  <p className="text-slate-300 text-xl mb-3">🐛 Noch keine Raupen gesammelt</p>
+                  <p className="text-slate-400 text-lg">Raupen können im Teich gefunden werden</p>
+                </div>
+              </div>
+            ) : (
+              <Accordion type="multiple" className="w-full space-y-2">
+                {rarities.map((rarity) => {
+                  const caterpillarsInRarity = getCaterpillarsByRarity(rarity);
+                  if (caterpillarsInRarity.length === 0) return null;
+                  
+                  return (
+                    <AccordionItem key={rarity} value={rarity} className="border border-slate-600 rounded-lg bg-slate-800/50">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`font-semibold ${getRarityColorClass(rarity)}`}>
+                            {getRarityLabel(rarity)}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            {caterpillarsInRarity.reduce((sum, caterpillar) => sum + caterpillar.quantity, 0)} Raupen
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {caterpillarsInRarity.map((caterpillar) => (
+                            <CaterpillarCard key={caterpillar.id} caterpillar={caterpillar} getBorderColor={getBorderColor} />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             )}
           </CardContent>
         </Card>

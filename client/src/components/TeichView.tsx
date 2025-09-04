@@ -10,9 +10,13 @@ import { useSunSpawns } from "@/lib/stores/useSunSpawns";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { ButterflySelectionModal } from "./ButterflySelectionModal";
+import { FishSelectionModal } from "./FishSelectionModal";
+import { CaterpillarSelectionModal } from "./CaterpillarSelectionModal";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
+import { FishHoverPreview } from "./FishHoverPreview";
+import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
 import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
@@ -52,6 +56,16 @@ interface GardenField {
   butterflyName?: string;
   butterflyImageUrl?: string;
   butterflyRarity?: string;
+  hasFish?: boolean;
+  fishId?: number;
+  fishName?: string;
+  fishImageUrl?: string;
+  fishRarity?: string;
+  hasCaterpillar?: boolean;
+  caterpillarId?: number;
+  caterpillarName?: string;
+  caterpillarImageUrl?: string;
+  caterpillarRarity?: string;
   hasSunSpawn?: boolean;
   sunSpawnAmount?: number;
   sunSpawnExpiresAt?: Date;
@@ -101,6 +115,8 @@ export const TeichView: React.FC = () => {
   const [shakingField, setShakingField] = useState<number | null>(null);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
+  const [showFishModal, setShowFishModal] = useState(false);
+  const [showCaterpillarModal, setShowCaterpillarModal] = useState(false);
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
     id: number;
@@ -108,6 +124,24 @@ export const TeichView: React.FC = () => {
     butterflyImageUrl: string;
     butterflyName: string;
     butterflyRarity: string;
+    placedAt: Date;
+    isShrinkling: boolean;
+  }[]>([]);
+  const [placedFish, setPlacedFish] = useState<{
+    id: number;
+    fieldId: number;
+    fishImageUrl: string;
+    fishName: string;
+    fishRarity: string;
+    placedAt: Date;
+    isShrinkling: boolean;
+  }[]>([]);
+  const [placedCaterpillars, setPlacedCaterpillars] = useState<{
+    id: number;
+    fieldId: number;
+    caterpillarImageUrl: string;
+    caterpillarName: string;
+    caterpillarRarity: string;
     placedAt: Date;
     isShrinkling: boolean;
   }[]>([]);
@@ -282,8 +316,106 @@ export const TeichView: React.FC = () => {
     };
   }, [placedButterflies]);
 
+  // Fish shrinking system
+  useEffect(() => {
+    const intervals: NodeJS.Timeout[] = [];
+    
+    placedFish.forEach((fish) => {
+      if (fish.isShrinkling) return;
+      
+      const timeAlive = Date.now() - fish.placedAt.getTime();
+      
+      // Set up shrinking for new fish only
+      if (timeAlive < 1000) { // Only set up shrinking for new fish
+        // Wait 10 seconds before starting to shrink
+        const shrinkStartTimeout = setTimeout(() => {
+          setPlacedFish(prev => 
+            prev.map(f => f.id === fish.id ? { ...f, isShrinkling: true } : f)
+          );
+          
+          // Remove after shrinking animation (30-90 seconds)
+          const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
+          const removeTimeout = setTimeout(() => {
+            setPlacedFish(prev => prev.filter(f => f.id !== fish.id));
+          }, shrinkDuration);
+          
+          intervals.push(removeTimeout);
+        }, 10000); // 10 seconds delay before shrinking starts
+        
+        intervals.push(shrinkStartTimeout);
+      }
+    });
+    
+    return () => {
+      intervals.forEach(clearTimeout);
+    };
+  }, [placedFish]);
+
+  // Caterpillar shrinking system
+  useEffect(() => {
+    const intervals: NodeJS.Timeout[] = [];
+    
+    placedCaterpillars.forEach((caterpillar) => {
+      if (caterpillar.isShrinkling) return;
+      
+      const timeAlive = Date.now() - caterpillar.placedAt.getTime();
+      
+      // Set up shrinking for new caterpillars only
+      if (timeAlive < 1000) { // Only set up shrinking for new caterpillars
+        // Wait 10 seconds before starting to shrink
+        const shrinkStartTimeout = setTimeout(() => {
+          setPlacedCaterpillars(prev => 
+            prev.map(c => c.id === caterpillar.id ? { ...c, isShrinkling: true } : c)
+          );
+          
+          // Remove after shrinking animation (30-90 seconds)
+          const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
+          const removeTimeout = setTimeout(() => {
+            setPlacedCaterpillars(prev => prev.filter(c => c.id !== caterpillar.id));
+          }, shrinkDuration);
+          
+          intervals.push(removeTimeout);
+        }, 10000); // 10 seconds delay before shrinking starts
+        
+        intervals.push(shrinkStartTimeout);
+      }
+    });
+    
+    return () => {
+      intervals.forEach(clearTimeout);
+    };
+  }, [placedCaterpillars]);
+
   // Get butterfly border color based on rarity
   const getButterflyBorderColor = (rarity: string) => {
+    switch (rarity.toLowerCase()) {
+      case 'common': return '#FFD700';
+      case 'uncommon': return '#00FF00';
+      case 'rare': return '#0066FF';
+      case 'super-rare': return '#00FFFF';
+      case 'epic': return '#9966FF';
+      case 'legendary': return '#FF8800';
+      case 'mythical': return '#FF0044';
+      default: return '#FFD700';
+    }
+  };
+
+  // Get fish border color based on rarity
+  const getFishBorderColor = (rarity: string) => {
+    switch (rarity.toLowerCase()) {
+      case 'common': return '#FFD700';
+      case 'uncommon': return '#00FF00';
+      case 'rare': return '#0066FF';
+      case 'super-rare': return '#00FFFF';
+      case 'epic': return '#9966FF';
+      case 'legendary': return '#FF8800';
+      case 'mythical': return '#FF0044';
+      default: return '#FFD700';
+    }
+  };
+
+  // Get caterpillar border color based on rarity
+  const getCaterpillarBorderColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
       case 'common': return '#FFD700';
       case 'uncommon': return '#00FF00';
@@ -472,6 +604,60 @@ export const TeichView: React.FC = () => {
     setSelectedField(null);
   };
 
+  // Fish placement and collection functions
+  const handleFishSelection = async (fishId: number, fishImageUrl: string, fishName: string, rarity: RarityTier) => {
+    if (!user || selectedField === null) return;
+    
+    const fieldIndex = selectedField - 1;
+    
+    // Add to local state immediately for visual feedback
+    setPlacedFish(prev => [...prev, {
+      id: Date.now(), // Temporary ID
+      fieldId: selectedField,
+      fishImageUrl,
+      fishName,
+      fishRarity: rarity,
+      placedAt: new Date(),
+      isShrinkling: false
+    }]);
+
+    setShowFishModal(false);
+    setSelectedField(null);
+    
+    showNotification('Fisch platziert!', `${fishName} schwimmt im Teich umher!`, 'success');
+  };
+
+  const collectFish = () => {
+    showNotification('Fisch gesammelt!', 'Der Fisch wurde erfolgreich gesammelt!', 'success');
+  };
+
+  // Caterpillar placement and collection functions  
+  const handleCaterpillarSelection = async (caterpillarId: number, caterpillarImageUrl: string, caterpillarName: string, rarity: RarityTier) => {
+    if (!user || selectedField === null) return;
+    
+    const fieldIndex = selectedField - 1;
+    
+    // Add to local state immediately for visual feedback
+    setPlacedCaterpillars(prev => [...prev, {
+      id: Date.now(), // Temporary ID
+      fieldId: selectedField,
+      caterpillarImageUrl,
+      caterpillarName,
+      caterpillarRarity: rarity,
+      placedAt: new Date(),
+      isShrinkling: false
+    }]);
+
+    setShowCaterpillarModal(false);
+    setSelectedField(null);
+    
+    showNotification('Raupe platziert!', `${caterpillarName} erkundet das Teichufer!`, 'success');
+  };
+
+  const collectCaterpillar = () => {
+    showNotification('Raupe gesammelt!', 'Die Raupe wurde erfolgreich gesammelt!', 'success');
+  };
+
   const collectButterfly = async (fieldId: number) => {
     if (!user) return;
     
@@ -599,7 +785,28 @@ export const TeichView: React.FC = () => {
                     }}
                     onClick={() => {
                       if (field.isPond) {
-                        showNotification('Dies ist ein Teichfeld - hier können keine Pflanzen angebaut werden.', 'info', 'Teichfeld');
+                        // Check for placed fish or caterpillars
+                        const placedFishOnField = placedFish.find(f => f.fieldId === field.id);
+                        const placedCaterpillarOnField = placedCaterpillars.find(c => c.fieldId === field.id);
+                        
+                        if (placedFishOnField) {
+                          // Remove fish and collect it
+                          setPlacedFish(prev => prev.filter(f => f.id !== placedFishOnField.id));
+                          collectFish();
+                        } else if (placedCaterpillarOnField) {
+                          // Remove caterpillar and collect it
+                          setPlacedCaterpillars(prev => prev.filter(c => c.id !== placedCaterpillarOnField.id));
+                          collectCaterpillar();
+                        } else {
+                          // Open selection modal for pond creatures
+                          setSelectedField(field.id);
+                          // Randomly show fish or caterpillar modal
+                          if (Math.random() < 0.5) {
+                            setShowFishModal(true);
+                          } else {
+                            setShowCaterpillarModal(true);
+                          }
+                        }
                         return;
                       }
                       
@@ -778,6 +985,92 @@ export const TeichView: React.FC = () => {
                       />
                     )}
 
+                    {/* Placed Fish Display */}
+                    {placedFish
+                      .filter(fish => fish.fieldId === field.id)
+                      .map(fish => (
+                        <div
+                          key={fish.id}
+                          className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+                            fish.isShrinkling ? 'animate-pulse opacity-50 scale-75' : 'opacity-100 scale-100'
+                          }`}
+                          style={{
+                            transform: fish.isShrinkling ? 'scale(0.7)' : 'scale(1)',
+                            transition: 'all 0.5s ease-in-out'
+                          }}
+                        >
+                          <FishHoverPreview
+                            fishImageUrl={fish.fishImageUrl}
+                            fishName={fish.fishName}
+                            rarity={fish.fishRarity as RarityTier}
+                          >
+                            <div
+                              className="w-8 h-8 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform"
+                              style={{ borderColor: getFishBorderColor(fish.fishRarity) }}
+                            >
+                              <img
+                                src={fish.fishImageUrl}
+                                alt={fish.fishName}
+                                className="w-full h-full object-cover rounded-full"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling!.style.display = 'block';
+                                }}
+                              />
+                              <div
+                                className="w-full h-full bg-blue-500 rounded-full flex items-center justify-center"
+                                style={{ display: 'none' }}
+                              >
+                                🐟
+                              </div>
+                            </div>
+                          </FishHoverPreview>
+                        </div>
+                      ))}
+
+                    {/* Placed Caterpillars Display */}
+                    {placedCaterpillars
+                      .filter(caterpillar => caterpillar.fieldId === field.id)
+                      .map(caterpillar => (
+                        <div
+                          key={caterpillar.id}
+                          className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+                            caterpillar.isShrinkling ? 'animate-pulse opacity-50 scale-75' : 'opacity-100 scale-100'
+                          }`}
+                          style={{
+                            transform: caterpillar.isShrinkling ? 'scale(0.7)' : 'scale(1)',
+                            transition: 'all 0.5s ease-in-out'
+                          }}
+                        >
+                          <CaterpillarHoverPreview
+                            caterpillarImageUrl={caterpillar.caterpillarImageUrl}
+                            caterpillarName={caterpillar.caterpillarName}
+                            rarity={caterpillar.caterpillarRarity as RarityTier}
+                          >
+                            <div
+                              className="w-8 h-8 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform"
+                              style={{ borderColor: getCaterpillarBorderColor(caterpillar.caterpillarRarity) }}
+                            >
+                              <img
+                                src={caterpillar.caterpillarImageUrl}
+                                alt={caterpillar.caterpillarName}
+                                className="w-full h-full object-cover rounded-full"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling!.style.display = 'block';
+                                }}
+                              />
+                              <div
+                                className="w-full h-full bg-green-500 rounded-full flex items-center justify-center"
+                                style={{ display: 'none' }}
+                              >
+                                🐛
+                              </div>
+                            </div>
+                          </CaterpillarHoverPreview>
+                        </div>
+                      ))}
+
                   </div>
                 );
               })}
@@ -818,6 +1111,26 @@ export const TeichView: React.FC = () => {
           userButterflies={userButterflies}
           onSelectButterfly={placeButterflyOnField}
           fieldIndex={selectedField || 0}
+        />
+
+        {/* Fish Selection Modal */}
+        <FishSelectionModal
+          isOpen={showFishModal}
+          onClose={() => {
+            setShowFishModal(false);
+            setSelectedField(null);
+          }}
+          onFishSelected={handleFishSelection}
+        />
+
+        {/* Caterpillar Selection Modal */}
+        <CaterpillarSelectionModal
+          isOpen={showCaterpillarModal}
+          onClose={() => {
+            setShowCaterpillarModal(false);
+            setSelectedField(null);
+          }}
+          onCaterpillarSelected={handleCaterpillarSelection}
         />
       </TooltipProvider>
     </div>

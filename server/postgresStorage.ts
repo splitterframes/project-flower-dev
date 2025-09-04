@@ -10,6 +10,8 @@ import {
   bouquetRecipes,
   placedBouquets,
   userButterflies,
+  userFish,
+  userCaterpillars,
   fieldButterflies,
   userVipButterflies,
   exhibitionFrames,
@@ -37,6 +39,8 @@ import {
   type BouquetRecipe,
   type PlacedBouquet,
   type UserButterfly,
+  type UserFish,
+  type UserCaterpillar,
   type FieldButterfly,
   type UserVipButterfly,
   type ExhibitionFrame,
@@ -58,6 +62,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
+import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity } from './creatures';
 import type { IStorage } from './storage';
 
 /**
@@ -80,6 +85,9 @@ export class PostgresStorage implements IStorage {
     
     // Initialize starter fields for existing users
     this.initializeStarterFields();
+    
+    // Initialize creature systems (Fish and Caterpillars)
+    this.initializeCreaturesSystems();
   }
 
   private async initializeSeeds() {
@@ -139,6 +147,118 @@ export class PostgresStorage implements IStorage {
       console.error('Error initializing starter fields:', error);
       // This is OK if table doesn't exist yet
     }
+  }
+
+  private async initializeCreaturesSystems() {
+    try {
+      console.log('🌊 Initializing Fish and Caterpillar systems...');
+      await initializeCreatureSystems();
+      console.log('🌊 Creature systems initialization complete');
+    } catch (error) {
+      console.error('Failed to initialize creature systems:', error);
+    }
+  }
+
+  // ==================== FISH MANAGEMENT ====================
+
+  async addFishToUser(userId: number, fishId: number): Promise<UserFish | null> {
+    try {
+      const fishData = await generateRandomFish(getFishRarity(fishId));
+      
+      // Check if user already has this fish
+      const existingFish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fishData.id)
+        ));
+      
+      if (existingFish.length > 0) {
+        // Update quantity
+        const [updatedFish] = await this.db
+          .update(userFish)
+          .set({ quantity: existingFish[0].quantity + 1 })
+          .where(eq(userFish.id, existingFish[0].id))
+          .returning();
+        return updatedFish;
+      } else {
+        // Add new fish
+        const [newFish] = await this.db
+          .insert(userFish)
+          .values({
+            userId,
+            fishId: fishData.id,
+            fishName: fishData.name,
+            fishRarity: getFishRarity(fishData.id),
+            fishImageUrl: fishData.imageUrl,
+            quantity: 1
+          })
+          .returning();
+        return newFish;
+      }
+    } catch (error) {
+      console.error('Failed to add fish to user:', error);
+      return null;
+    }
+  }
+
+  async getUserFish(userId: number): Promise<UserFish[]> {
+    return await this.db
+      .select()
+      .from(userFish)
+      .where(eq(userFish.userId, userId));
+  }
+
+  // ==================== CATERPILLAR MANAGEMENT ====================
+
+  async addCaterpillarToUser(userId: number, caterpillarId: number): Promise<UserCaterpillar | null> {
+    try {
+      const caterpillarData = await generateRandomCaterpillar(getCaterpillarRarity(caterpillarId));
+      
+      // Check if user already has this caterpillar
+      const existingCaterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarData.id)
+        ));
+      
+      if (existingCaterpillar.length > 0) {
+        // Update quantity
+        const [updatedCaterpillar] = await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existingCaterpillar[0].quantity + 1 })
+          .where(eq(userCaterpillars.id, existingCaterpillar[0].id))
+          .returning();
+        return updatedCaterpillar;
+      } else {
+        // Add new caterpillar
+        const [newCaterpillar] = await this.db
+          .insert(userCaterpillars)
+          .values({
+            userId,
+            caterpillarId: caterpillarData.id,
+            caterpillarName: caterpillarData.name,
+            caterpillarRarity: getCaterpillarRarity(caterpillarData.id),
+            caterpillarImageUrl: caterpillarData.imageUrl,
+            quantity: 1
+          })
+          .returning();
+        return newCaterpillar;
+      }
+    } catch (error) {
+      console.error('Failed to add caterpillar to user:', error);
+      return null;
+    }
+  }
+
+  async getUserCaterpillars(userId: number): Promise<UserCaterpillar[]> {
+    return await this.db
+      .select()
+      .from(userCaterpillars)
+      .where(eq(userCaterpillars.userId, userId));
   }
 
   // User methods
