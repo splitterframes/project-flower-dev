@@ -89,10 +89,5 @@ app.use((req, res, next) => {
       challengeManager.start();
     });
 
-    // Start butterfly lifecycle system  
-    import('./butterflyLifecycle.js').then(({ butterflyLifecycle }) => {
-      butterflyLifecycle.start();
-      log('🐛 Butterfly lifecycle system initialized');
-    });
   });
 })();

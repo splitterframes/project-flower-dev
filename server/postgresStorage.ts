@@ -91,7 +91,6 @@ export class PostgresStorage implements IStorage {
     this.initializeCreaturesSystems();
     
     // Start butterfly lifecycle service
-    this.startButterflyLifecycleService();
   }
 
   private async initializeSeeds() {
@@ -3137,99 +3136,6 @@ export class PostgresStorage implements IStorage {
     }
   }
 
-  // Backend Butterfly Lifecycle Service - manages all butterfly lifecycles
-  private butterflyLifecycleInterval?: NodeJS.Timeout;
-
-  private startButterflyLifecycleService(): void {
-    console.log('🦋 Starting butterfly lifecycle service...');
-    
-    // Run every 5 seconds to manage butterfly lifecycles
-    this.butterflyLifecycleInterval = setInterval(async () => {
-      await this.processButterflyLifecycles();
-    }, 5000);
-  }
-
-  private async processButterflyLifecycles(): Promise<void> {
-    try {
-      const now = Date.now();
-      
-      // Get all field butterflies
-      const allFieldButterflies = await this.db
-        .select()
-        .from(fieldButterflies);
-
-      for (const butterfly of allFieldButterflies) {
-        const spawnedAt = new Date(butterfly.spawnedAt).getTime();
-        const timeElapsed = (now - spawnedAt) / 1000; // seconds
-
-        // Phase 1: Normal (0-5s) - Butterfly stays full size
-        // Phase 2: Start shrinking (5-25s) - Butterfly shrinks over 20 seconds
-        // Phase 3: Remove and spawn caterpillar (25s+)
-        
-        if (timeElapsed > 25) {
-          // Phase 3: Remove butterfly and spawn caterpillar
-          console.log(`🦋 LIFECYCLE: Removing butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
-          await this.removeButterflyAndSpawnCaterpillarBackend(butterfly);
-        } else if (timeElapsed > 5 && !butterfly.isShrinking) {
-          // Phase 2: Start shrinking animation
-          console.log(`🦋 LIFECYCLE: Starting shrinking for butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
-          await this.db
-            .update(fieldButterflies)
-            .set({ isShrinking: true })
-            .where(eq(fieldButterflies.id, butterfly.id));
-        }
-      }
-    } catch (error) {
-      console.error('🦋 Error in butterfly lifecycle service:', error);
-    }
-  }
-
-  private async removeButterflyAndSpawnCaterpillarBackend(butterfly: any): Promise<void> {
-    try {
-      // Remove butterfly from field
-      await this.db
-        .delete(fieldButterflies)
-        .where(eq(fieldButterflies.id, butterfly.id));
-
-      console.log(`🦋 BACKEND: Removed butterfly ${butterfly.butterflyName} from field ${butterfly.fieldIndex}`);
-
-      // Spawn caterpillar ON A RANDOM POND FIELD with rarity inheritance
-      const inheritedRarity = this.inheritCaterpillarRarity(butterfly.butterflyRarity);
-      const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
-
-      if (caterpillar) {
-        // Find a random pond field for caterpillar spawning
-        const pondFieldIndex = this.getRandomPondField();
-        
-        // Spawn caterpillar on random pond field instead of same field as butterfly
-        await this.db.insert(fieldCaterpillars).values({
-          userId: butterfly.userId,
-          fieldIndex: pondFieldIndex, // Random pond field!
-          caterpillarId: caterpillar.id,
-          caterpillarName: caterpillar.name,
-          caterpillarRarity: inheritedRarity,
-          caterpillarImageUrl: caterpillar.imageUrl
-        });
-        
-        console.log(`🐛 BACKEND: Spawned field caterpillar ${caterpillar.name} (${inheritedRarity}) on pond field ${pondFieldIndex} for user ${butterfly.userId}`);
-      }
-    } catch (error) {
-      console.error('🦋 BACKEND: Error removing butterfly and spawning field caterpillar:', error);
-    }
-  }
-
-  /**
-   * Get a random pond field for caterpillar spawning
-   */
-  private getRandomPondField(): number {
-    const pondFields: number[] = [];
-    for (let i = 0; i < 50; i++) {
-      if (this.isPondField(i)) {
-        pondFields.push(i);
-      }
-    }
-    return pondFields[Math.floor(Math.random() * pondFields.length)];
-  }
 
   /**
    * Check for active sun on specific field
