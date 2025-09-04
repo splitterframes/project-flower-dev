@@ -163,78 +163,61 @@ export const TeichView: React.FC = () => {
     isGrowing?: boolean;
   }[]>([]);
 
-  const fetchGardenData = async () => {
+  const fetchTeichData = async () => {
     if (!user) return;
 
     try {
-      // Fetch all data in parallel
-      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, caterpillarRes, sunSpawnsRes, userButterfliesRes, userCaterpillarsRes] = await Promise.all([
-        fetch(`/api/garden/fields/${user.id}`),
-        fetch(`/api/user/${user.id}/unlocked-fields`),
-        fetch(`/api/user/${user.id}/seeds`),
-        fetch(`/api/user/${user.id}/bouquets`),
-        fetch(`/api/user/${user.id}/placed-bouquets`),
-        fetch(`/api/user/${user.id}/field-butterflies`),
+      // Fetch only pond-specific data
+      const [caterpillarRes, userCaterpillarsRes, sunSpawnsRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
-        fetch(`/api/garden/sun-spawns`),
-        fetch(`/api/user/${user.id}/butterflies`),
-        fetch(`/api/user/${user.id}/caterpillars`)
+        fetch(`/api/user/${user.id}/caterpillars`),
+        fetch(`/api/garden/sun-spawns`)
       ]);
 
-      if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok && butterflyRes.ok && caterpillarRes.ok && sunSpawnsRes.ok && userButterfliesRes.ok && userCaterpillarsRes.ok) {
-        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, caterpillarData, sunSpawnsData, userButterfliesData, userCaterpillarsData] = await Promise.all([
-          fieldsRes.json(),
-          unlockedRes.json(),
-          seedsRes.json(),
-          bouquetsRes.json(),
-          placedBouquetsRes.json(),
-          butterflyRes.json(),
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && sunSpawnsRes.ok) {
+        const [caterpillarData, userCaterpillarsData, sunSpawnsData] = await Promise.all([
           caterpillarRes.json(),
-          sunSpawnsRes.json(),
-          userButterfliesRes.json(),
-          userCaterpillarsRes.json()
+          userCaterpillarsRes.json(),
+          sunSpawnsRes.json()
         ]);
 
-        console.log('Updating garden with planted fields:', fieldsData.fields);
-        console.log('Updating garden with placed bouquets:', placedData.placedBouquets);
-        console.log('Updating garden with field butterflies:', butterflyData.fieldButterflies);
-        console.log('Updating garden with sun spawns:', sunSpawnsData.sunSpawns);
+        console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
+        console.log('🌊 Updating pond with sun spawns:', sunSpawnsData.sunSpawns);
 
-        // Update garden fields with all data
-        const updatedFields = Array.from({ length: 50 }, (_, i) => {
-          const fieldId = i + 1;
-          const fieldData = fieldsData.fields.find((f: any) => f.fieldIndex === i);
-          const isUnlocked = !isPondField(fieldId); // All non-pond fields are unlocked
-          const placedBouquet = placedData.placedBouquets.find((b: any) => b.fieldIndex === i);
-          const butterfly = butterflyData.fieldButterflies.find((b: any) => b.fieldIndex === i);
-          const caterpillar = caterpillarData.fieldCaterpillars.find((c: any) => c.fieldIndex === i);
-          const sunSpawn = sunSpawnsData.sunSpawns.find((s: any) => s.fieldIndex === i && s.isActive);
+        // Update pond fields with only relevant data (caterpillars and sun spawns)
+        const updatedFields = gardenFields.map((field) => {
+          const fieldIndex = field.id - 1;
+          
+          // Check for caterpillar (only on grass fields)
+          const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
+          
+          // Check for sun spawn
+          const sunSpawn = sunSpawnsData.sunSpawns.find((s: any) => s.fieldIndex === fieldIndex && s.userId === user.id && s.isActive);
 
           return {
-            id: fieldId,
-            isUnlocked,
-            hasPlant: !!fieldData,
-            plantType: fieldData ? 'seed' : undefined,
-            isGrowing: fieldData ? !fieldData.isGrown : false,
-            plantedAt: fieldData ? new Date(fieldData.plantedAt) : undefined,
-            growthTimeSeconds: fieldData ? getGrowthTime(fieldData.seedRarity) : undefined,
-            seedRarity: fieldData?.seedRarity,
-            flowerId: fieldData?.flowerId,
-            flowerName: fieldData?.flowerName,
-            flowerImageUrl: fieldData?.flowerImageUrl,
-            hasBouquet: !!placedBouquet,
-            bouquetId: placedBouquet?.bouquetId,
-            bouquetName: placedBouquet?.bouquetName,
-            bouquetRarity: placedBouquet?.bouquetRarity,
-            bouquetPlacedAt: placedBouquet ? new Date(placedBouquet.placedAt) : undefined,
-            bouquetExpiresAt: placedBouquet ? new Date(placedBouquet.expiresAt) : undefined,
-            hasButterfly: !!butterfly,
-            butterflyId: butterfly?.butterflyId,
-            butterflyName: butterfly?.butterflyName,
-            butterflyImageUrl: butterfly?.butterflyImageUrl,
-            butterflyRarity: butterfly?.butterflyRarity,
-            butterflySpawnedAt: butterfly ? new Date(butterfly.spawnedAt) : undefined,
-            butterflyShrinking: butterfly?.isShrinking || false, // Backend managed
+            ...field,
+            // Clear all garden-related properties for pond view
+            hasPlant: false,
+            plantType: undefined,
+            isGrowing: false,
+            plantedAt: undefined,
+            growthTimeSeconds: undefined,
+            seedRarity: undefined,
+            flowerId: undefined,
+            flowerName: undefined,
+            flowerImageUrl: undefined,
+            hasBouquet: false,
+            bouquetId: undefined,
+            bouquetName: undefined,
+            bouquetRarity: undefined,
+            bouquetPlacedAt: undefined,
+            bouquetExpiresAt: undefined,
+            hasButterfly: false,
+            butterflyId: undefined,
+            butterflyName: undefined,
+            butterflyImageUrl: undefined,
+            butterflyRarity: undefined,
+            // Only keep caterpillar data for grass fields
             hasCaterpillar: !!caterpillar,
             caterpillarId: caterpillar?.caterpillarId,
             caterpillarName: caterpillar?.caterpillarName,
@@ -243,19 +226,19 @@ export const TeichView: React.FC = () => {
             caterpillarSpawnedAt: caterpillar ? new Date(caterpillar.spawnedAt) : undefined,
             hasSunSpawn: !!sunSpawn,
             sunSpawnAmount: sunSpawn?.sunAmount,
-            sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined,
-            isPond: isPondField(fieldId)
+            sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined
           };
         });
 
         setGardenFields(updatedFields);
-        setUserSeeds(seedsData.seeds);
-        setUserBouquets(bouquetsData.bouquets);
-        setPlacedBouquets(placedData.placedBouquets);
-        setFieldButterflies(butterflyData.fieldButterflies);
+        // Clear garden-specific data for pond view
+        setUserSeeds([]);
+        setUserBouquets([]);
+        setPlacedBouquets([]);
+        setFieldButterflies([]);
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns(sunSpawnsData.sunSpawns);
-        setUserButterflies(userButterfliesData.butterflies || []);
+        setUserButterflies([]);
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
       }
     } catch (error) {
@@ -267,8 +250,8 @@ export const TeichView: React.FC = () => {
 
 
   useEffect(() => {
-    fetchGardenData();
-    const interval = setInterval(fetchGardenData, 10000);
+    fetchTeichData();
+    const interval = setInterval(fetchTeichData, 10000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -509,7 +492,7 @@ export const TeichView: React.FC = () => {
 
       if (response.ok) {
         updateCredits(credits - cost);
-        fetchGardenData();
+        fetchTeichData();
         showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${cost} Credits freigeschaltet.`, 'success');
       } else {
         const error = await response.json();
@@ -537,7 +520,7 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchGardenData();
+        fetchTeichData();
         showNotification('Samen gepflanzt!', 'Der Samen wurde erfolgreich gepflanzt.', 'success');
       } else {
         const error = await response.json();
@@ -570,7 +553,7 @@ export const TeichView: React.FC = () => {
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
         showNotification('Blume geerntet!', 'Die Blume wurde erfolgreich geerntet.', 'success');
-        fetchGardenData();
+        fetchTeichData();
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Blume konnte nicht geerntet werden.', 'error');
@@ -597,7 +580,7 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchGardenData();
+        fetchTeichData();
         showNotification('Bouquet platziert!', 'Das Bouquet wurde erfolgreich platziert.', 'success');
       } else {
         const error = await response.json();
@@ -657,7 +640,7 @@ export const TeichView: React.FC = () => {
         );
 
         // Refresh garden data to show placed butterfly
-        fetchGardenData();
+        fetchTeichData();
         showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
       } else {
         const error = await response.json();
@@ -722,7 +705,7 @@ export const TeichView: React.FC = () => {
         const result = await response.json();
         console.log('🦋 Schmetterling erfolgreich gesammelt!');
         showNotification('Schmetterling gesammelt!', result.message, 'success');
-        fetchGardenData();
+        fetchTeichData();
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Schmetterling konnte nicht gesammelt werden.', 'error');
@@ -750,7 +733,7 @@ export const TeichView: React.FC = () => {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
         showNotification('Raupe gesammelt!', result.message, 'success');
-        fetchGardenData();
+        fetchTeichData();
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Raupe konnte nicht gesammelt werden.', 'error');
@@ -787,7 +770,7 @@ export const TeichView: React.FC = () => {
           showNotification('Fisch gefüttert!', `Fütterung ${result.feedingCount}/3 abgeschlossen.`, 'success');
         }
         
-        fetchGardenData(); // Refresh field data
+        fetchTeichData(); // Refresh field data
         setShakingField(null); // Stop shaking after feeding
       } else {
         const error = await response.json();
@@ -828,7 +811,7 @@ export const TeichView: React.FC = () => {
         showNotification('Sonnen gesammelt!', result.message, 'success');
         
         // Refresh garden data to sync with server
-        fetchGardenData();
+        fetchTeichData();
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Sonnen konnten nicht gesammelt werden.', 'error');
