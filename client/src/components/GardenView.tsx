@@ -779,7 +779,7 @@ export const GardenView: React.FC = () => {
           'X-User-Id': user.id.toString()
         },
         body: JSON.stringify({
-          fieldIndex: selectedFieldIndex,
+          fieldIndex: selectedFieldIndex - 1, // Convert 1-based to 0-based index
           butterflyId: butterflyId
         })
       });
