@@ -400,7 +400,7 @@ export const BouquetsView: React.FC = () => {
               <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt oben</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
               {myCreatedRecipes
                 .sort((a, b) => {
                   // Sortiere nach Kompatibilität: Rezepte mit den meisten verfügbaren Blumen zuerst
