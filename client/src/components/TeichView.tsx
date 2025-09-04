@@ -307,7 +307,82 @@ export const TeichView: React.FC = () => {
     };
   }, []);
 
-  // ULTRA-SIMPLE SYSTEM: Server-driven lifecycle only!
+  // ULTRA-SIMPLE: 5 Sekunden Schmetterling → Raupe System
+  const [placedButterflyTimers, setPlacedButterflyTimers] = useState<Map<number, NodeJS.Timeout>>(new Map());
+
+  // Simple butterfly to caterpillar transformation
+  useEffect(() => {
+    gardenFields.forEach((field) => {
+      // Only handle grass fields with butterflies
+      if (field.isPond || !field.hasButterfly) return;
+      
+      // Skip if already has timer
+      if (placedButterflyTimers.has(field.id)) return;
+
+      console.log(`🦋 SIMPLE: Starting 5s timer for butterfly on field ${field.id}`);
+      
+      // 5 seconds → spawn caterpillar
+      const timer = setTimeout(() => {
+        console.log(`🦋 SIMPLE: 5 seconds up! Spawning caterpillar on field ${field.id}`);
+        
+        // Spawn caterpillar via API
+        fetch('/api/garden/spawn-caterpillar', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': user?.id.toString() || '1'
+          },
+          body: JSON.stringify({
+            fieldIndex: field.id - 1, // Convert to 0-based
+            parentRarity: field.butterflyRarity
+          })
+        }).then(response => {
+          if (response.ok) {
+            console.log(`🐛 SIMPLE: Caterpillar spawned on field ${field.id - 1}`);
+            
+            // Remove butterfly from database
+            return fetch('/api/garden/remove-butterfly', {
+              method: 'POST', 
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': user?.id.toString() || '1'
+              },
+              body: JSON.stringify({
+                fieldIndex: field.id - 1
+              })
+            });
+          }
+        }).then(response => {
+          if (response?.ok) {
+            console.log(`🦋 SIMPLE: Butterfly removed from field ${field.id - 1}`);
+          }
+        }).catch(error => {
+          console.error('🦋 SIMPLE: Lifecycle failed:', error);
+        });
+        
+        // Clean up timer
+        setPlacedButterflyTimers(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(field.id);
+          return newMap;
+        });
+      }, 5000); // 5 seconds!
+      
+      // Store timer
+      setPlacedButterflyTimers(prev => {
+        const newMap = new Map(prev);
+        newMap.set(field.id, timer);
+        return newMap;
+      });
+    });
+  }, [gardenFields.map(f => f.hasButterfly ? f.id : 0).join(',')]);
+
+  // Cleanup timers
+  useEffect(() => {
+    return () => {
+      placedButterflyTimers.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   // Fish shrinking system
   useEffect(() => {
