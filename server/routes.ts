@@ -428,8 +428,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // In-memory storage for caterpillar rarity tracking (per user/field)
+  const fedCaterpillarRarities: Map<string, string[]> = new Map();
+
+  // Helper function to create key for tracking
+  function getFedCaterpillarsKey(userId: number, fieldIndex: number): string {
+    return `${userId}-${fieldIndex}`;
+  }
+
+  // Helper function to calculate average rarity from fed caterpillars
+  function calculateAverageRarity(rarities: string[]): string {
+    const rarityValues: Record<string, number> = {
+      'common': 0,
+      'uncommon': 1, 
+      'rare': 2,
+      'super-rare': 3,
+      'epic': 4,
+      'legendary': 5,
+      'mythical': 6
+    };
+    
+    const valueToRarity: string[] = [
+      'common',
+      'uncommon', 
+      'rare',
+      'super-rare',
+      'epic',
+      'legendary',
+      'mythical'
+    ];
+    
+    // Calculate average numeric value
+    const totalValue = rarities.reduce((sum, rarity) => {
+      return sum + (rarityValues[rarity] || 0);
+    }, 0);
+    
+    const averageValue = Math.round(totalValue / rarities.length);
+    const clampedValue = Math.max(0, Math.min(6, averageValue));
+    
+    return valueToRarity[clampedValue];
+  }
+
   // Feed fish with caterpillar endpoint
-  // Database-backed feeding progress tracking
+  // In-memory caterpillar rarity tracking for strategic gameplay
 
   app.post('/api/garden/feed-fish', async (req, res) => {
     try {
@@ -456,16 +497,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
       }
 
-      // Track feeding progress in database AND store caterpillar rarity for average calculation  
-      const newProgress = await storage.updatePondFeedingProgressWithTracking(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+      // STRATEGIC TRACKING: Store caterpillar rarity for average calculation
+      const key = getFedCaterpillarsKey(userId, fieldIndex);
+      let rarities = fedCaterpillarRarities.get(key) || [];
+      rarities.push(caterpillarToUse.caterpillarRarity);
+      fedCaterpillarRarities.set(key, rarities);
+      
+      console.log(`🐟 Fed caterpillar rarities for field ${fieldIndex}:`, rarities);
+      
+      // Track feeding progress in database normally
+      const newProgress = await storage.updatePondFeedingProgress(userId, fieldIndex);
       console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3, caterpillarRarity: caterpillarToUse.caterpillarRarity });
 
       if (newProgress >= 3) {
         console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex, 'with average rarity from all 3 fed caterpillars');
-        // Create fish after 3 feedings using AVERAGE rarity of all 3 fed caterpillars
-        const fishResult = await storage.spawnFishOnFieldWithAverageRarity(userId, fieldIndex);
+        
+        // Calculate average rarity from all fed caterpillars
+        const averageRarity = calculateAverageRarity(rarities);
+        console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+        
+        // Create fish with calculated average rarity
+        const fishResult = await storage.spawnFishOnFieldWithRarity(userId, fieldIndex, averageRarity);
         console.log('🐟 FISH SPAWNED SUCCESS:', fishResult);
-        // Reset progress after fish is born - handled in updatePondFeedingProgress
+        
+        // Clean up stored rarities after fish creation
+        fedCaterpillarRarities.delete(key);
+        console.log(`🐟 Cleaned up stored caterpillar rarities for field ${fieldIndex}`);
         
         return res.json({
           feedingCount: 3,
