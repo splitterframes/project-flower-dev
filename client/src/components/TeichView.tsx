@@ -309,7 +309,7 @@ export const TeichView: React.FC = () => {
             sunSpawnAmount: undefined,
             sunSpawnExpiresAt: undefined,
             // Add feeding progress for pond fields from API data
-            feedingProgress: field.isPond ? pondProgressData.pondProgress?.[i + 1] || 0 : undefined
+            feedingProgress: field.isPond ? pondProgressData.pondProgress?.[field.id] || 0 : undefined
           };
         });
 
