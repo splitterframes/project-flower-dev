@@ -288,8 +288,8 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
         </Card>
 
         {/* Main Content: Large Image left, Details right */}
-        <div className="flex gap-8 min-h-[800px]">
-          {/* Left Side - Large Fish Image (700x700) */}
+        <div className="flex gap-6 min-h-[650px]">
+          {/* Left Side - Large Fish Image (600x600) */}
           <div className="flex-shrink-0">
             <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg relative overflow-hidden">
               <div 
@@ -297,7 +297,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                 style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
               />
               
-              <CardContent className="p-6 relative z-10 text-center">
+              <CardContent className="p-4 relative z-10 text-center">
                 <div className="relative">
                   <img 
                     src={fish.fishImageUrl}
@@ -328,18 +328,18 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
           </div>
 
           {/* Right Side - Details */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-3">
             
             {/* Fish Info Card */}
             <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg">
-              <CardContent className="p-6">
-                <div className="text-center space-y-3">
-                  <div className="text-sm text-blue-200">
+              <CardContent className="p-3">
+                <div className="text-center space-y-2">
+                  <div className="text-xs text-blue-200">
                     <p>Platziert: {new Date(fish.placedAt).toLocaleString('de-DE')}</p>
                   </div>
                   <div className="flex items-center justify-center space-x-2 text-blue-200">
-                    <DollarSign className="h-5 w-5" />
-                    <span className="text-lg font-semibold">Verkaufspreis: {price.toLocaleString()} Credits</span>
+                    <DollarSign className="h-4 w-4" />
+                    <span className="text-sm font-semibold">Verkaufspreis: {price.toLocaleString()} Credits</span>
                   </div>
                 </div>
               </CardContent>
@@ -348,22 +348,22 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             {/* Sell Status - Only for own fish */}
             {!readOnly && (
               <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-4">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center mb-2">
                     <div className="relative">
-                      <Clock className={`h-6 w-6 mr-3 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
-                      {!canSell && <div className="absolute inset-0 h-6 w-6 mr-3 text-orange-400 animate-ping opacity-30"></div>}
+                      <Clock className={`h-5 w-5 mr-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`} />
+                      {!canSell && <div className="absolute inset-0 h-5 w-5 mr-2 text-orange-400 animate-ping opacity-30"></div>}
                     </div>
-                    <span className="text-lg font-semibold">
+                    <span className="text-sm font-semibold">
                       {canSell ? "Verkaufsbereit!" : "Verkaufs-Countdown"}
                     </span>
                   </div>
                   
-                  <div className={`text-3xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
+                  <div className={`text-xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
                     {formatTime(timeRemaining)}
                   </div>
                   
-                  <div className="text-sm text-slate-400 mb-4">
+                  <div className="text-xs text-slate-400 mb-3">
                     {canSell 
                       ? "Dieser Fisch kann jetzt verkauft werden!"
                       : "Fische können nach 24 Stunden verkauft werden"
@@ -373,7 +373,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   <Button
                     onClick={handleSell}
                     disabled={!canSell || isSelling}
-                    className={`w-full py-3 text-lg font-semibold ${
+                    className={`w-full py-2 text-sm font-semibold ${
                       canSell 
                         ? 'bg-green-600 hover:bg-green-700 text-white' 
                         : 'bg-slate-600 text-slate-400 cursor-not-allowed'
@@ -388,38 +388,38 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             {/* Sonnen Boost - Only for own fish and when not sellable yet */}
             {!readOnly && !canSell && timeRemaining > 0 && (
               <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-4">
-                    <Zap className="h-6 w-6 mr-3 text-yellow-400" />
-                    <span className="text-lg font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
+                <CardContent className="p-3 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Zap className="h-4 w-4 mr-2 text-yellow-400" />
+                    <span className="text-sm font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
                   </div>
                   
-                  <div className="text-sm text-slate-400 mb-4">
-                    Verkürze den Countdown mit Sonnen: 1 ☀️ = 1 Minute weniger
+                  <div className="text-xs text-slate-400 mb-3">
+                    Verkürze den Countdown: 1 ☀️ = 1 Minute weniger
                   </div>
                   
-                  <div className="flex gap-3 items-end mb-4">
+                  <div className="flex gap-2 items-end mb-3">
                     <div className="flex-1">
-                      <label className="text-sm text-slate-300 mb-1 block">Minuten</label>
                       <Input
                         type="number"
                         value={boostMinutes}
                         onChange={(e) => setBoostMinutes(e.target.value)}
                         min="1"
                         max="1440"
-                        className="bg-slate-800 border-slate-600 text-white"
+                        placeholder="Min"
+                        className="bg-slate-800 border-slate-600 text-white text-sm h-8"
                       />
                     </div>
-                    <div className="text-sm text-slate-400">
+                    <div className="text-xs text-slate-400">
                       Kosten: {parseInt(boostMinutes) || 0} ☀️<br/>
-                      Du hast: {suns} ☀️
+                      Hast: {suns} ☀️
                     </div>
                   </div>
                   
                   <Button
                     onClick={handleSunBoost}
                     disabled={isBoosting || suns < (parseInt(boostMinutes) || 0) || !boostMinutes}
-                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 text-lg font-semibold"
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 text-sm font-semibold"
                   >
                     {isBoosting ? 'Booste...' : `${parseInt(boostMinutes) || 0} Min für ${parseInt(boostMinutes) || 0} ☀️`}
                   </Button>
@@ -430,13 +430,13 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             {/* Sell Price & Button - Only show for own fish */}
             {!readOnly && (
               <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <Coins className="h-6 w-6 mr-3 text-blue-400" />
-                      <span className="text-lg font-semibold">Verkaufspreis:</span>
+                      <Coins className="h-4 w-4 mr-2 text-blue-400" />
+                      <span className="text-sm font-semibold">Verkaufspreis:</span>
                     </div>
-                    <Badge className="bg-gradient-to-r from-blue-600 to-teal-600 text-white text-lg px-4 py-2 font-bold">
+                    <Badge className="bg-gradient-to-r from-blue-600 to-teal-600 text-white text-sm px-2 py-1 font-bold">
                       {price} Credits
                     </Badge>
                   </div>
@@ -444,14 +444,14 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   <Button
                     onClick={handleSell}
                     disabled={!canSell || isSelling}
-                    className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
+                    className={`w-full text-sm font-bold py-3 rounded-lg transition-all duration-300 ${
                       canSell 
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg' 
                         : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
                     }`}
                   >
                     <div className="flex items-center justify-center">
-                      <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
+                      <Coins className={`h-4 w-4 mr-2 ${canSell ? 'animate-bounce' : ''}`} />
                       {isSelling 
                         ? "Verkaufe..." 
                         : canSell 
@@ -466,12 +466,12 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
             {/* Exit Button */}
             <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
-              <CardContent className="p-6">
+              <CardContent className="p-3">
                 <Button
                   onClick={onClose}
-                  className="w-full text-lg font-bold py-4 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
+                  className="w-full text-sm font-bold py-2 rounded-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
                 >
-                  <X className="h-5 w-5 mr-3" />
+                  <X className="h-4 w-4 mr-2" />
                   Verlassen
                 </Button>
               </CardContent>
