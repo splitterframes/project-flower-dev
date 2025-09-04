@@ -3432,6 +3432,87 @@ export class PostgresStorage implements IStorage {
   private getFedCaterpillarsKey(userId: number, fieldIndex: number): string {
     return `${userId}-${fieldIndex}`;
   }
+  
+  // Calculate average rarity from array of rarity strings
+  private calculateAverageRarity(rarities: string[]): string {
+    const rarityValues: Record<string, number> = {
+      'common': 0,
+      'uncommon': 1, 
+      'rare': 2,
+      'super-rare': 3,
+      'epic': 4,
+      'legendary': 5,
+      'mythical': 6
+    };
+    
+    const valueToRarity = [
+      'common',
+      'uncommon', 
+      'rare',
+      'super-rare',
+      'epic',
+      'legendary',
+      'mythical'
+    ];
+    
+    // Calculate average numeric value
+    const totalValue = rarities.reduce((sum, rarity) => {
+      return sum + (rarityValues[rarity] || 0);
+    }, 0);
+    
+    const averageValue = Math.round(totalValue / rarities.length);
+    const clampedValue = Math.max(0, Math.min(6, averageValue));
+    
+    return valueToRarity[clampedValue];
+  }
+
+  // Get current average rarity of fed caterpillars for a field
+  async getCurrentFeedingAverageRarity(userId: number, fieldIndex: number): Promise<string> {
+    const key = this.getFedCaterpillarsKey(userId, fieldIndex);
+    const rarities = this.fedCaterpillarRarities.get(key) || [];
+    
+    if (rarities.length === 0) {
+      return 'common'; // Default if no caterpillars fed yet
+    }
+    
+    return this.calculateAverageRarity(rarities);
+  }
+  
+  // Complete fish feeding with caterpillar - handles average calculation and fish creation
+  async feedFishWithCaterpillar(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<any> {
+    try {
+      // Get stored rarities for average calculation
+      const key = this.getFedCaterpillarsKey(userId, fieldIndex);
+      const rarities = this.fedCaterpillarRarities.get(key) || [];
+      
+      if (rarities.length < 3) {
+        throw new Error(`Not enough caterpillars fed (${rarities.length}/3)`);
+      }
+      
+      // Calculate average rarity
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+      
+      // Spawn fish with calculated average rarity
+      const fishResult = await this.spawnFishOnField(userId, fieldIndex, averageRarity);
+      console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
+      
+      // Clean up stored rarities after fish creation
+      this.fedCaterpillarRarities.delete(key);
+      console.log(`🐟 Cleaned up stored caterpillar rarities for field ${fieldIndex}`);
+      
+      return {
+        feedingCount: 3,
+        fishCreated: true,
+        fishName: fishResult.fishName,
+        fishRarity: fishResult.fishRarity
+      };
+      
+    } catch (error) {
+      console.error('🐟 Error in feedFishWithCaterpillar:', error);
+      throw error;
+    }
+  }
 
   async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
     try {

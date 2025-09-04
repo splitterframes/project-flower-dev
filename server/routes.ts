@@ -470,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Feed fish with caterpillar endpoint
-  // In-memory caterpillar rarity tracking for strategic gameplay
+  // Uses storage's strategic tracking system
 
   app.post('/api/garden/feed-fish', async (req, res) => {
     try {
@@ -497,49 +497,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
       }
 
-      // STRATEGIC TRACKING: Store caterpillar rarity for average calculation
-      const key = getFedCaterpillarsKey(userId, fieldIndex);
-      let rarities = fedCaterpillarRarities.get(key) || [];
-      rarities.push(caterpillarToUse.caterpillarRarity);
-      fedCaterpillarRarities.set(key, rarities);
-      
-      console.log(`🐟 Fed caterpillar rarities for field ${fieldIndex}:`, rarities);
-      
-      // Track feeding progress in database normally
-      const newProgress = await storage.updatePondFeedingProgress(userId, fieldIndex);
-      console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3, caterpillarRarity: caterpillarToUse.caterpillarRarity });
+      // Use storage's strategic tracking method that handles both progress and average calculation
+      const result = await storage.updatePondFeedingProgressWithTracking(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+      console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: result, fishCreated: result >= 3, caterpillarRarity: caterpillarToUse.caterpillarRarity });
 
-      if (newProgress >= 3) {
-        console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex, 'with average rarity from all 3 fed caterpillars');
+      if (result >= 3) {
+        console.log('🐟 THIRD FEEDING: Fish will be created by storage method');
         
-        // Calculate average rarity from all fed caterpillars
-        const averageRarity = calculateAverageRarity(rarities);
-        console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+        // The storage method will handle fish creation with average rarity - we get the result
+        const feedingResult = await storage.feedFishWithCaterpillar(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
         
-        // SAUBERE LÖSUNG: Verwende die erweiterte bestehende Methode mit berechneter Rarität
-        const fishResult = await storage.spawnFishOnField(userId, fieldIndex, averageRarity);
-        console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
-        
-        // Clean up stored rarities after fish creation
-        fedCaterpillarRarities.delete(key);
-        console.log(`🐟 Cleaned up stored caterpillar rarities for field ${fieldIndex}`);
-        
-        return res.json({
-          feedingCount: 3,
-          fishCreated: true,
-          fishName: fishResult.fishName,
-          fishRarity: fishResult.fishRarity
-        });
+        return res.json(feedingResult);
       } else {
-        // Show current average rarity of fed caterpillars so far
-        const currentAverageRarity = calculateAverageRarity(rarities);
-        console.log(`🐟 Current average rarity after feeding ${rarities.length} caterpillars: ${currentAverageRarity}`);
+        // Return current average rarity from storage's tracking
+        const currentAverageRarity = await storage.getCurrentFeedingAverageRarity(userId, fieldIndex);
         
         return res.json({
-          feedingCount: newProgress,
+          feedingCount: result,
           fishCreated: false,
           fishName: `Fisch ${Math.floor(Math.random() * 15) + 1}`,
-          fishRarity: currentAverageRarity // Show current average, not always 'common'
+          fishRarity: currentAverageRarity
         });
       }
 
