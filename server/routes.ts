@@ -516,9 +516,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const averageRarity = calculateAverageRarity(rarities);
         console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
         
-        // Create fish with calculated average rarity
-        const fishResult = await storage.spawnFishOnFieldWithRarity(userId, fieldIndex, averageRarity);
-        console.log('🐟 FISH SPAWNED SUCCESS:', fishResult);
+        // SAUBERE LÖSUNG: Verwende die erweiterte bestehende Methode mit berechneter Rarität
+        const fishResult = await storage.spawnFishOnField(userId, fieldIndex, averageRarity);
+        console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
         
         // Clean up stored rarities after fish creation
         fedCaterpillarRarities.delete(key);

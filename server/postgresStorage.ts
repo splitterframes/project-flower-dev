@@ -3395,12 +3395,12 @@ export class PostgresStorage implements IStorage {
   /**
    * Field Fish system methods
    */
-  async spawnFishOnField(userId: number, pondFieldIndex: number): Promise<{ fishName: string, fishRarity: RarityTier }> {
+  async spawnFishOnField(userId: number, pondFieldIndex: number, customRarity?: string): Promise<{ fishName: string, fishRarity: RarityTier }> {
     try {
-      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId}`);
+      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId}${customRarity ? ` with custom rarity: ${customRarity}` : ''}`);
       
-      // Generate a random fish with proper rarity
-      const rarity = getRandomCreatureRarity(); // Get random rarity first
+      // Use custom rarity if provided, otherwise generate random
+      const rarity = (customRarity as RarityTier) || getRandomCreatureRarity();
       const fishData = await generateRandomFish(rarity);
       
       console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id}`);
