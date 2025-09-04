@@ -337,8 +337,7 @@ export class PostgresStorage implements IStorage {
         await this.db
           .update(userFish)
           .set({ 
-            quantity: existingFish[0].quantity + 1,
-            lastCaughtAt: new Date()
+            quantity: existingFish[0].quantity + 1
           })
           .where(eq(userFish.id, existingFish[0].id));
         console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
@@ -350,9 +349,7 @@ export class PostgresStorage implements IStorage {
           fishName: fishData.name,
           fishRarity: rarity,
           fishImageUrl: fishData.imageUrl,
-          quantity: 1,
-          lastCaughtAt: new Date(),
-          createdAt: new Date()
+          quantity: 1
         });
         console.log(`🐟 Created new fish entry: ${fishData.name} (${rarity})`);
       }
