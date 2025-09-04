@@ -21,7 +21,6 @@ export const BouquetsView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showBouquetCreation, setShowBouquetCreation] = useState(false);
   const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
-  const [expandedBouquet, setExpandedBouquet] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -385,7 +384,7 @@ export const BouquetsView: React.FC = () => {
             <div className="flex items-center">
               <Gift className="h-5 w-5 mr-2 text-purple-400" />
               <span className="text-lg font-semibold text-purple-300">
-                Meine Bouquets
+                Meine Bouquet-Rezepte
               </span>
             </div>
             <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
@@ -488,43 +487,11 @@ export const BouquetsView: React.FC = () => {
                                 );
                               }
                             })()}
-                            
-                            <Button
-                              onClick={async () => {
-                                const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
-                                setExpandedBouquet(newExpanded);
-                              }}
-                              variant="outline"
-                              size="sm"
-                              className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
-                            >
-                              {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
-                            </Button>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Recipe Display */}
-                    {expandedBouquet === recipe.bouquetId && (
-                      <div className="mt-4 pt-4 border-t border-purple-400/20">
-                        <BouquetRecipeDisplay 
-                          bouquetId={recipe.bouquetId} 
-                          recipe={{
-                            id: 0,
-                            bouquetId: recipe.bouquetId,
-                            flowerId1: recipe.flowerId1,
-                            flowerId2: recipe.flowerId2,
-                            flowerId3: recipe.flowerId3,
-                            createdAt: new Date()
-                          }}
-                          userFlowers={myFlowers}
-                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
-                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, recipe.bouquetName, false)
-                          }
-                        />
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}
