@@ -21,6 +21,7 @@ export const BouquetsView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showBouquetCreation, setShowBouquetCreation] = useState(false);
   const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
+  const [expandedBouquet, setExpandedBouquet] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -330,47 +331,25 @@ export const BouquetsView: React.FC = () => {
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-lg p-4 border border-purple-400/30">
-                  <div className="flex items-center mb-3">
-                    <Heart className="h-5 w-5 text-purple-400 mr-2" />
-                    <h4 className="text-white font-semibold text-sm">🌸 Erstellung</h4>
-                  </div>
-                  <ul className="text-slate-300 space-y-1 text-sm">
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
-                      3 Blumen auswählen
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
-                      30 Credits Kosten
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-yellow-400" />
-                      AI Namen + Ins Inventar
-                    </li>
-                  </ul>
+              <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-lg p-4 border border-purple-400/30 max-w-md mx-auto">
+                <div className="flex items-center mb-3">
+                  <Heart className="h-5 w-5 text-purple-400 mr-2" />
+                  <h4 className="text-white font-semibold text-sm">🌸 Erstellung</h4>
                 </div>
-                <div className="bg-gradient-to-br from-blue-800/40 to-cyan-800/40 rounded-lg p-4 border border-blue-400/30">
-                  <div className="flex items-center mb-3">
-                    <Sparkles className="h-5 w-5 text-blue-400 mr-2" />
-                    <h4 className="text-white font-semibold text-sm">🦋 Verwendung</h4>
-                  </div>
-                  <ul className="text-slate-300 space-y-1 text-sm">
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
-                      Im Garten platzieren
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
-                      Schmetterlinge anlocken
-                    </li>
-                    <li className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-cyan-400" />
-                      Samen als Belohnung
-                    </li>
-                  </ul>
-                </div>
+                <ul className="text-slate-300 space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    3 Blumen auswählen
+                  </li>
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    30 Credits Kosten
+                  </li>
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    AI Namen + Ins Inventar
+                  </li>
+                </ul>
               </div>
             </div>
           )}
@@ -451,10 +430,6 @@ export const BouquetsView: React.FC = () => {
                               <Star className="h-3 w-3 mr-1" />
                               {getRarityDisplayName((recipe.bouquetRarity || "common") as RarityTier)}
                             </Badge>
-                            <Badge className="bg-blue-500/20 text-blue-400 border border-blue-400/30 px-2 py-1 text-sm">
-                              <Palette className="h-3 w-3 mr-1" />
-                              Rezept
-                            </Badge>
                           </div>
                           <div className="flex items-center gap-2">
                             {/* Kompatibilitäts-Anzeige */}
@@ -487,10 +462,43 @@ export const BouquetsView: React.FC = () => {
                                 );
                               }
                             })()}
+                            
+                            <Button
+                              onClick={async () => {
+                                const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
+                                setExpandedBouquet(newExpanded);
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
+                            >
+                              {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
+                            </Button>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Recipe Display */}
+                    {expandedBouquet === recipe.bouquetId && (
+                      <div className="mt-4 pt-4 border-t border-purple-400/20">
+                        <BouquetRecipeDisplay 
+                          bouquetId={recipe.bouquetId} 
+                          recipe={{
+                            id: 0,
+                            bouquetId: recipe.bouquetId,
+                            flowerId1: recipe.flowerId1,
+                            flowerId2: recipe.flowerId2,
+                            flowerId3: recipe.flowerId3,
+                            createdAt: new Date()
+                          }}
+                          userFlowers={myFlowers}
+                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
+                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, recipe.bouquetName, false)
+                          }
+                        />
+                      </div>
+                    )}
 
                   </CardContent>
                 </Card>
