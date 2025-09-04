@@ -1099,8 +1099,8 @@ export const TeichView: React.FC = () => {
                             src={caterpillar.caterpillarImageUrl}
                             alt={caterpillar.caterpillarName || "Spawned Caterpillar"}
                             rarity={caterpillar.caterpillarRarity as RarityTier || "common"}
-                            size="medium"
-                            className="w-16 h-16"
+                            size="large"
+                            className="w-20 h-20"
                           />
                         </div>
                       );
@@ -1125,8 +1125,8 @@ export const TeichView: React.FC = () => {
                             src={field.caterpillarImageUrl}
                             alt={field.caterpillarName || "Raupe"}
                             rarity={field.caterpillarRarity as RarityTier || "common"}
-                            size="medium"
-                            className="w-16 h-16"
+                            size="large"
+                            className="w-20 h-20"
                           />
                         </div>
                       </CaterpillarHoverPreview>
