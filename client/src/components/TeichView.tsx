@@ -938,7 +938,7 @@ export const TeichView: React.FC = () => {
                       </ButterflyHoverPreview>
                     )}
 
-                    {/* Field Caterpillar */}
+                    {/* Field Caterpillar with Bounce Effect */}
                     {field.hasCaterpillar && field.caterpillarImageUrl && (
                       <CaterpillarHoverPreview
                         caterpillarId={field.caterpillarId!}
@@ -947,8 +947,11 @@ export const TeichView: React.FC = () => {
                         rarity={field.caterpillarRarity as RarityTier}
                       >
                         <div 
-                          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all hover:scale-110 animate-bounce-spawn"
                           onClick={() => collectCaterpillar(field.id)}
+                          style={{
+                            animation: 'bounce-spawn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards'
+                          }}
                         >
                           <RarityImage
                             src={field.caterpillarImageUrl}

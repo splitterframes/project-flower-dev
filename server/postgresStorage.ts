@@ -3064,15 +3064,15 @@ export class PostgresStorage implements IStorage {
         const spawnedAt = new Date(butterfly.spawnedAt).getTime();
         const timeElapsed = (now - spawnedAt) / 1000; // seconds
 
-        // Phase 1: Normal (0-30s)
-        // Phase 2: Start shrinking (30-40s) 
-        // Phase 3: Remove and spawn caterpillar (40s+)
+        // Phase 1: Normal (0-5s) - Butterfly stays full size
+        // Phase 2: Start shrinking (5-25s) - Butterfly shrinks over 20 seconds
+        // Phase 3: Remove and spawn caterpillar (25s+)
         
-        if (timeElapsed > 40) {
+        if (timeElapsed > 25) {
           // Phase 3: Remove butterfly and spawn caterpillar
           console.log(`🦋 LIFECYCLE: Removing butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
           await this.removeButterflyAndSpawnCaterpillarBackend(butterfly);
-        } else if (timeElapsed > 30 && !butterfly.isShrinking) {
+        } else if (timeElapsed > 5 && !butterfly.isShrinking) {
           // Phase 2: Start shrinking animation
           console.log(`🦋 LIFECYCLE: Starting shrinking for butterfly ${butterfly.butterflyName} (${timeElapsed.toFixed(1)}s old)`);
           await this.db
