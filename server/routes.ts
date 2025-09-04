@@ -510,14 +510,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return res.json(feedingResult);
       } else {
-        // DON'T calculate average until 3 caterpillars - just show feeding progress
-        console.log(`🐟 Feeding progress: ${result}/3 caterpillars fed to field ${fieldIndex}`);
+        // SHOW current average rarity so player can plan strategically!
+        const currentAverageRarity = await storage.getCurrentFeedingAverageRarity(userId, fieldIndex);
+        console.log(`🐟 Feeding progress: ${result}/3 caterpillars → current average: ${currentAverageRarity}`);
         
         return res.json({
           feedingCount: result,
           fishCreated: false,
           fishName: `Fisch ${Math.floor(Math.random() * 15) + 1}`,
-          fishRarity: caterpillarToUse.caterpillarRarity // Show current caterpillar rarity, not average
+          fishRarity: currentAverageRarity // Show current AVERAGE for strategic planning
         });
       }
 
