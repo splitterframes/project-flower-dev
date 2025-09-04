@@ -473,8 +473,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Uses storage's strategic tracking system
 
   app.post('/api/garden/feed-fish', async (req, res) => {
+    let userId: number | undefined, caterpillarId: number | undefined, fieldIndex: number | undefined;
     try {
-      const { userId, caterpillarId, fieldIndex } = req.body;
+      ({ userId, caterpillarId, fieldIndex } = req.body);
 
       if (!userId || !caterpillarId || fieldIndex === undefined) {
         return res.status(400).json({ message: 'Missing required parameters' });

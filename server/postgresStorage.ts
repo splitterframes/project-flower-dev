@@ -58,7 +58,7 @@ import {
   type ChallengeDonation,
   type ChallengeReward,
   type DonateChallengeFlowerRequest,
-  type InsertUser
+  insertUserSchema
 } from "@shared/schema";
 import { eq, ilike, and, lt, gt, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -66,13 +66,12 @@ import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
-import type { IStorage } from './storage';
 
 /**
  * PostgreSQL-only Storage Implementation
  * Direct database operations without memory caching
  */
-export class PostgresStorage implements IStorage {
+export class PostgresStorage {
   private db: any;
 
   constructor() {
@@ -382,7 +381,7 @@ export class PostgresStorage implements IStorage {
     return result[0] as User | undefined;
   }
 
-  async createUser(user: InsertUser): Promise<User> {
+  async createUser(user: typeof users.$inferInsert): Promise<User> {
     const result = await this.db.insert(users).values(user).returning();
     const newUser = result[0] as User;
     
@@ -2967,29 +2966,6 @@ export class PostgresStorage implements IStorage {
     }
   }
 
-  async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
-    // Check if user already has this seed type
-    const existingSeed = await this.db
-      .select()
-      .from(userSeeds)
-      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)))
-      .limit(1);
-
-    if (existingSeed.length > 0) {
-      // Update quantity
-      await this.db
-        .update(userSeeds)
-        .set({ quantity: existingSeed[0].quantity + quantity })
-        .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
-    } else {
-      // Insert new seed
-      await this.db.insert(userSeeds).values({
-        userId,
-        seedId,
-        quantity
-      });
-    }
-  }
 
   /**
    * Get the time when the first exhibition butterfly was placed for a user
@@ -3433,38 +3409,6 @@ export class PostgresStorage implements IStorage {
     return `${userId}-${fieldIndex}`;
   }
   
-  // Calculate average rarity from array of rarity strings
-  private calculateAverageRarity(rarities: string[]): string {
-    const rarityValues: Record<string, number> = {
-      'common': 0,
-      'uncommon': 1, 
-      'rare': 2,
-      'super-rare': 3,
-      'epic': 4,
-      'legendary': 5,
-      'mythical': 6
-    };
-    
-    const valueToRarity = [
-      'common',
-      'uncommon', 
-      'rare',
-      'super-rare',
-      'epic',
-      'legendary',
-      'mythical'
-    ];
-    
-    // Calculate average numeric value
-    const totalValue = rarities.reduce((sum, rarity) => {
-      return sum + (rarityValues[rarity] || 0);
-    }, 0);
-    
-    const averageValue = Math.round(totalValue / rarities.length);
-    const clampedValue = Math.max(0, Math.min(6, averageValue));
-    
-    return valueToRarity[clampedValue];
-  }
 
   // Get current average rarity of fed caterpillars for a field
   async getCurrentFeedingAverageRarity(userId: number, fieldIndex: number): Promise<string> {
