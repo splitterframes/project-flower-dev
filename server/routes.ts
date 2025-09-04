@@ -428,6 +428,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Feed fish with caterpillar endpoint
+  app.post('/api/garden/feed-fish', async (req, res) => {
+    try {
+      const { userId, caterpillarId, fieldIndex } = req.body;
+
+      if (!userId || !caterpillarId || fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      console.log('🐛 Feeding fish on field', fieldIndex, 'with caterpillar', caterpillarId);
+
+      // Get user's caterpillar to verify they have it
+      const userCaterpillars = await storage.getUserCaterpillars(userId);
+      const caterpillarToUse = userCaterpillars.find(c => c.caterpillarId === caterpillarId);
+      
+      if (!caterpillarToUse || caterpillarToUse.quantity <= 0) {
+        return res.status(400).json({ message: 'Du hast keine Raupen dieses Typs im Inventar.' });
+      }
+
+      // Remove one caterpillar from inventory
+      const removed = await storage.removeCaterpillarFromUser(userId, caterpillarId, 1);
+      
+      if (!removed) {
+        return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
+      }
+
+      // For now, create fish directly after 1 feeding (simplified)
+      const fishResult = await storage.spawnRandomFish(userId, fieldIndex);
+      
+      return res.json({
+        feedingCount: 1,
+        fishCreated: true,
+        fishName: fishResult.fishName,
+        fishRarity: fishResult.fishRarity
+      });
+
+    } catch (error) {
+      console.error('Feed fish error:', error);
+      res.status(500).json({ message: 'Fehler beim Füttern der Fische.' });
+    }
+  });
+
   app.get("/api/garden/fields/:userId", async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);

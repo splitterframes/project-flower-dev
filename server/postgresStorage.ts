@@ -265,6 +265,78 @@ export class PostgresStorage implements IStorage {
       .where(eq(userCaterpillars.userId, userId));
   }
 
+  async removeCaterpillarFromUser(userId: number, caterpillarId: number, quantity: number = 1): Promise<boolean> {
+    try {
+      console.log(`🐛 Removing ${quantity} of caterpillar ${caterpillarId} from user ${userId}`);
+      
+      // Find the user's caterpillar
+      const [userCaterpillar] = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarId)
+        ));
+
+      if (!userCaterpillar) {
+        console.log('🐛 Caterpillar not found in user inventory');
+        return false;
+      }
+
+      if (userCaterpillar.quantity < quantity) {
+        console.log('🐛 Not enough caterpillars in inventory');
+        return false;
+      }
+
+      if (userCaterpillar.quantity === quantity) {
+        // Remove the entire entry
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, userCaterpillar.id));
+        console.log('🐛 Removed entire caterpillar entry');
+      } else {
+        // Decrease quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: userCaterpillar.quantity - quantity })
+          .where(eq(userCaterpillars.id, userCaterpillar.id));
+        console.log(`🐛 Decreased caterpillar quantity by ${quantity}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to remove caterpillar from user:', error);
+      return false;
+    }
+  }
+
+  async spawnRandomFish(userId: number, fieldIndex: number): Promise<{ fishName: string; fishRarity: string }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${fieldIndex} for user ${userId}`);
+      
+      // Get a random fish (simplified version for now)
+      const fishId = Math.floor(Math.random() * 15) + 1; // 1-15 fish images
+      const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+      const fishRarity = rarities[Math.floor(Math.random() * rarities.length)];
+      
+      // Generate fish name based on ID
+      const fishName = `Fisch ${fishId}`;
+      
+      console.log(`🐟 Successfully spawned ${fishName} (${fishRarity}) on field ${fieldIndex}`);
+      
+      return {
+        fishName,
+        fishRarity
+      };
+    } catch (error) {
+      console.error('Failed to spawn random fish:', error);
+      return {
+        fishName: 'Unknown Fish',
+        fishRarity: 'common'
+      };
+    }
+  }
+
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const result = await this.db.select().from(users).where(eq(users.id, id));

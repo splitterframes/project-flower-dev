@@ -11,6 +11,7 @@ import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { ButterflySelectionModal } from "./ButterflySelectionModal";
 import { FishSelectionModal } from "./FishSelectionModal";
+import { FeedingDialog } from "./FeedingDialog";
 // CaterpillarSelectionModal import removed - they spawn automatically
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
@@ -73,6 +74,17 @@ interface GardenField {
   isPond?: boolean; // New field for pond areas
 }
 
+interface UserCaterpillar {
+  id: number;
+  userId: number;
+  caterpillarId: number;
+  caterpillarName: string;
+  caterpillarRarity: string;
+  caterpillarImageUrl: string;
+  quantity: number;
+  createdAt: string;
+}
+
 interface UserSeed {
   id: number;
   seedId: number;
@@ -109,6 +121,7 @@ export const TeichView: React.FC = () => {
 
   const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
   const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
+  const [userCaterpillars, setUserCaterpillars] = useState<UserCaterpillar[]>([]);
   const [fieldButterflies, setFieldButterflies] = useState<FieldButterfly[]>([]);
   const [fieldCaterpillars, setFieldCaterpillars] = useState<any[]>([]);
   const [showSeedModal, setShowSeedModal] = useState(false);
@@ -118,6 +131,7 @@ export const TeichView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
   const [showFishModal, setShowFishModal] = useState(false);
+  const [showFeedingDialog, setShowFeedingDialog] = useState(false);
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
@@ -154,7 +168,7 @@ export const TeichView: React.FC = () => {
 
     try {
       // Fetch all data in parallel
-      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, caterpillarRes, sunSpawnsRes, userButterfliesRes] = await Promise.all([
+      const [fieldsRes, unlockedRes, seedsRes, bouquetsRes, placedBouquetsRes, butterflyRes, caterpillarRes, sunSpawnsRes, userButterfliesRes, userCaterpillarsRes] = await Promise.all([
         fetch(`/api/garden/fields/${user.id}`),
         fetch(`/api/user/${user.id}/unlocked-fields`),
         fetch(`/api/user/${user.id}/seeds`),
@@ -163,11 +177,12 @@ export const TeichView: React.FC = () => {
         fetch(`/api/user/${user.id}/field-butterflies`),
         fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/garden/sun-spawns`),
-        fetch(`/api/user/${user.id}/butterflies`)
+        fetch(`/api/user/${user.id}/butterflies`),
+        fetch(`/api/user/${user.id}/caterpillars`)
       ]);
 
-      if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok && butterflyRes.ok && caterpillarRes.ok && sunSpawnsRes.ok && userButterfliesRes.ok) {
-        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, caterpillarData, sunSpawnsData, userButterfliesData] = await Promise.all([
+      if (fieldsRes.ok && unlockedRes.ok && seedsRes.ok && bouquetsRes.ok && butterflyRes.ok && caterpillarRes.ok && sunSpawnsRes.ok && userButterfliesRes.ok && userCaterpillarsRes.ok) {
+        const [fieldsData, unlockedData, seedsData, bouquetsData, placedData, butterflyData, caterpillarData, sunSpawnsData, userButterfliesData, userCaterpillarsData] = await Promise.all([
           fieldsRes.json(),
           unlockedRes.json(),
           seedsRes.json(),
@@ -176,7 +191,8 @@ export const TeichView: React.FC = () => {
           butterflyRes.json(),
           caterpillarRes.json(),
           sunSpawnsRes.json(),
-          userButterfliesRes.json()
+          userButterfliesRes.json(),
+          userCaterpillarsRes.json()
         ]);
 
         console.log('Updating garden with planted fields:', fieldsData.fields);
@@ -240,6 +256,7 @@ export const TeichView: React.FC = () => {
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns(sunSpawnsData.sunSpawns);
         setUserButterflies(userButterfliesData.butterflies || []);
+        setUserCaterpillars(userCaterpillarsData.caterpillars || []);
       }
     } catch (error) {
       console.error('Failed to fetch garden data:', error);
@@ -744,6 +761,44 @@ export const TeichView: React.FC = () => {
     }
   };
 
+  const onFeedCaterpillar = async (caterpillarId: number, fieldIndex: number) => {
+    if (!user) return;
+
+    try {
+      console.log('🐛 Feeding caterpillar to fish on field', fieldIndex);
+      
+      const response = await fetch('/api/garden/feed-fish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          caterpillarId,
+          fieldIndex: fieldIndex - 1 // Convert to 0-based index
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🐟 Fish feeding result:', result);
+        
+        if (result.fishCreated) {
+          showNotification('Fisch geboren!', `Ein ${result.fishName} wurde geboren! Seltenheit: ${result.fishRarity}`, 'success');
+        } else {
+          showNotification('Fisch gefüttert!', `Fütterung ${result.feedingCount}/3 abgeschlossen.`, 'success');
+        }
+        
+        fetchGardenData(); // Refresh field data
+        setShakingField(null); // Stop shaking after feeding
+      } else {
+        const error = await response.json();
+        showNotification('Fehler', error.message || 'Fütterung fehlgeschlagen.', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to feed caterpillar:', error);
+      showNotification('Fehler', 'Netzwerkfehler beim Füttern.', 'error');
+    }
+  };
+
   const collectSun = async (fieldId: number) => {
     if (!user) return;
     
@@ -806,7 +861,7 @@ export const TeichView: React.FC = () => {
                 <Waves className="h-6 w-6 text-blue-400" />
               </div>
               <div className="text-xs text-slate-400">
-                Garten: Samen • Teich: Fish • Rechts: Bouquet
+                Grasfelder: Butterflies • Teichfelder: Fish füttern
               </div>
             </CardTitle>
           </CardHeader>
@@ -841,44 +896,37 @@ export const TeichView: React.FC = () => {
                     }}
                     onClick={() => {
                       if (field.isPond) {
-                        // Check for placed fish or caterpillars
-                        const placedFishOnField = placedFish.find(f => f.fieldId === field.id);
-                        const placedCaterpillarOnField = placedCaterpillars.find(c => c.fieldId === field.id);
-                        
-                        if (placedFishOnField) {
-                          // Remove fish and collect it
-                          setPlacedFish(prev => prev.filter(f => f.id !== placedFishOnField.id));
-                          collectFish();
-                        } else if (placedCaterpillarOnField) {
-                          // Remove caterpillar and collect it
-                          setPlacedCaterpillars(prev => prev.filter(c => c.id !== placedCaterpillarOnField.id));
-                          collectCaterpillar();
+                        // TEICHFELD: Wackelnd → Fütterungs-Dialog, sonst Fish einsammeln
+                        if (shakingField === field.id) {
+                          // Open feeding dialog if user has caterpillars
+                          if (userCaterpillars.length > 0) {
+                            console.log("🐛 Opening feeding dialog for pond field", field.id);
+                            setSelectedField(field.id);
+                            setShowFeedingDialog(true);
+                          } else {
+                            showNotification('Keine Raupen', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
+                          }
                         } else {
-                          // Open fish selection modal only (caterpillars spawn automatically)
-                          setSelectedField(field.id);
-                          setShowFishModal(true);
+                          // Check for fish to collect (placeholder - will implement fish detection)
+                          console.log("🐟 Check for fish on pond field", field.id);
                         }
                         return;
                       }
                       
-                      // For now, non-pond fields can have butterflies placed
-                      if (field.isUnlocked && !field.isPond) {
-                        setSelectedField(field.id);
-                        setShowButterflyModal(true);
+                      // GRASFELD: Butterfly platzieren ODER Caterpillar einsammeln
+                      if (!field.isPond) {
+                        // Check if caterpillar is present on this field to collect
+                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldId === field.id - 1);
+                        
+                        if (caterpillarOnField) {
+                          console.log("🐛 Collecting caterpillar from grass field", field.id);
+                          collectCaterpillar(field.id - 1);
+                        } else {
+                          // Place butterfly on grass field
+                          setSelectedField(field.id);
+                          setShowButterflyModal(true);
+                        }
                         return;
-                      }
-                      
-                      // No sun collection in TeichView
-                      if (field.hasButterfly) {
-                        collectButterfly(field.id);
-                      } else if (field.hasPlant && !field.isGrowing) {
-                        harvestField(field.id);
-                      } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.isPond) {
-                        setSelectedField(field.id);
-                        setShowSeedModal(true);
-                      } else if (field.isUnlocked && !field.hasBouquet && !field.hasPlant && !field.isPond) {
-                        setSelectedField(field.id);
-                        setShowBouquetModal(true);
                       }
                     }}
                     onContextMenu={(e) => {
@@ -1211,6 +1259,18 @@ export const TeichView: React.FC = () => {
             setSelectedField(null);
           }}
           onFishSelected={handleFishSelection}
+        />
+
+        {/* Feeding Dialog */}
+        <FeedingDialog
+          isOpen={showFeedingDialog}
+          onClose={() => {
+            setShowFeedingDialog(false);
+            setSelectedField(null);
+          }}
+          caterpillars={userCaterpillars}
+          onFeedCaterpillar={onFeedCaterpillar}
+          fieldIndex={selectedField || 0}
         />
 
         {/* Caterpillar Selection Modal removed - they spawn automatically */}
