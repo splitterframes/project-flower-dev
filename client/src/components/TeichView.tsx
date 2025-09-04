@@ -873,10 +873,10 @@ export const TeichView: React.FC = () => {
                         collectButterfly(field.id);
                       } else if (field.hasPlant && !field.isGrowing) {
                         harvestField(field.id);
-                      } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet) {
+                      } else if (field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.isPond) {
                         setSelectedField(field.id);
                         setShowSeedModal(true);
-                      } else if (field.isUnlocked && !field.hasBouquet && !field.hasPlant) {
+                      } else if (field.isUnlocked && !field.hasBouquet && !field.hasPlant && !field.isPond) {
                         setSelectedField(field.id);
                         setShowBouquetModal(true);
                       }
