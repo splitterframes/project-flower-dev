@@ -307,59 +307,36 @@ export const TeichView: React.FC = () => {
     };
   }, []);
 
-  // Butterfly lifecycle timers - store timers globally to prevent cleanup
-  const butterflyTimersRef = useRef<Map<number, NodeJS.Timeout[]>>(new Map());
+  // SIMPLE NEW BUTTERFLY LIFECYCLE SYSTEM - Database Only
+  const butterflyLifecycleTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const [butterflyPhases, setButterflyPhases] = useState<Map<number, 'wiggle' | 'shrink'>>(new Map());
 
-  // Butterfly lifecycle management
   useEffect(() => {
-    placedButterflies.forEach((butterfly) => {
-      // Skip if already has timers or is shrinking
-      if (butterflyTimersRef.current.has(butterfly.id) || butterfly.isShrinkling) return;
-      
-      const timeAlive = Date.now() - butterfly.placedAt.getTime();
-      
-      // Set up lifecycle for new butterflies only
-      if (timeAlive < 1000) {
-        const timers: NodeJS.Timeout[] = [];
+    // Track database butterflies for lifecycle
+    gardenFields.forEach((field) => {
+      if (field.hasButterfly && field.butterflyImageUrl && !butterflyLifecycleTimers.current.has(field.id)) {
+        console.log(`🦋 NEW SYSTEM: Starting lifecycle for butterfly on field ${field.id}`);
         
-        console.log(`🦋 Starting lifecycle for butterfly ${butterfly.id}: 5s wiggle → 10s shrink → caterpillar`);
+        // Set initial wiggle phase
+        setButterflyPhases(prev => new Map(prev).set(field.id, 'wiggle'));
         
-        // Phase 1: Wait 5 seconds of wiggling before starting to shrink
-        const shrinkStartTimeout = setTimeout(() => {
-          console.log(`🦋 Butterfly ${butterfly.id} starting shrink phase`);
-          setPlacedButterflies(prev => 
-            prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
-          );
+        // Start lifecycle timer
+        const lifecycleTimer = setTimeout(() => {
+          console.log(`🦋 NEW SYSTEM: Field ${field.id} → shrink phase`);
+          setButterflyPhases(prev => new Map(prev).set(field.id, 'shrink'));
           
-          // Phase 2: Remove after 10 seconds of shrinking and spawn caterpillar
-          const shrinkDuration = 10000; // 10 seconds
-          const removeTimeout = setTimeout(() => {
-            console.log(`🦋 Butterfly ${butterfly.id} completing lifecycle → spawning caterpillar`);
+          // After 10 more seconds: spawn caterpillar
+          const spawnTimer = setTimeout(() => {
+            console.log(`🦋 NEW SYSTEM: Field ${field.id} → spawning caterpillar`);
             
-            // Generate caterpillar with inherited rarity
-            const caterpillarRarity = calculateCaterpillarRarity(butterfly.butterflyRarity as RarityTier);
-            const caterpillarId = Math.floor(Math.random() * 20) + 1; // Random caterpillar 1-20
+            // Remove from phases
+            setButterflyPhases(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(field.id);
+              return newMap;
+            });
             
-            const spawnedCaterpillar = {
-              id: Date.now() + Math.random(), // Unique ID
-              fieldId: butterfly.fieldId,
-              caterpillarImageUrl: `/Raupen/${caterpillarId.toString().padStart(2, '0')}.jpg`,
-              caterpillarName: generateLatinCaterpillarName(caterpillarId),
-              caterpillarRarity: caterpillarRarity,
-              placedAt: new Date(),
-              isShrinkling: false,
-              isGrowing: true // Start with growing effect
-            };
-            
-            // Remove butterfly only - database caterpillar will be loaded from API
-            setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-            
-            // Clear timers for this butterfly
-            butterflyTimersRef.current.delete(butterfly.id);
-            
-            console.log(`🐛 Spawned caterpillar ${spawnedCaterpillar.caterpillarName} (${caterpillarRarity}) from butterfly ${butterfly.butterflyName} (${butterfly.butterflyRarity})`);
-            
-            // 1. Spawn caterpillar to database 
+            // Spawn caterpillar to database
             fetch('/api/garden/spawn-caterpillar', {
               method: 'POST',
               headers: { 
@@ -367,14 +344,14 @@ export const TeichView: React.FC = () => {
                 'x-user-id': user?.id.toString() || '1'
               },
               body: JSON.stringify({
-                fieldIndex: butterfly.fieldId - 1, // Convert to 0-based index  
-                parentRarity: butterfly.butterflyRarity
+                fieldIndex: field.id - 1, // Convert to 0-based
+                parentRarity: field.butterflyRarity
               })
             }).then(response => {
               if (response.ok) {
-                console.log(`🐛 Database caterpillar spawn successful on field ${butterfly.fieldId - 1}`);
+                console.log(`🐛 NEW SYSTEM: Caterpillar spawned on field ${field.id - 1}`);
                 
-                // 2. Remove database butterfly after successful caterpillar spawn
+                // Remove butterfly from database
                 return fetch('/api/garden/remove-butterfly', {
                   method: 'POST',
                   headers: { 
@@ -382,56 +359,54 @@ export const TeichView: React.FC = () => {
                     'x-user-id': user?.id.toString() || '1'
                   },
                   body: JSON.stringify({
-                    fieldIndex: butterfly.fieldId - 1 // Convert to 0-based index
+                    fieldIndex: field.id - 1
                   })
                 });
               } else {
-                console.error('🐛 Database caterpillar spawn failed:', response.statusText);
                 throw new Error('Caterpillar spawn failed');
               }
             }).then(response => {
               if (response?.ok) {
-                console.log(`🦋 Database butterfly removed successfully from field ${butterfly.fieldId - 1}`);
-              } else {
-                console.error('🦋 Database butterfly removal failed:', response?.statusText);
+                console.log(`🦋 NEW SYSTEM: Butterfly removed from field ${field.id - 1}`);
               }
             }).catch(error => {
-              console.error('🐛 Failed butterfly lifecycle (spawn caterpillar + remove butterfly):', error);
+              console.error('🦋 NEW SYSTEM: Lifecycle failed:', error);
             });
             
-            // End growing effect after 2 seconds
-            setTimeout(() => {
-              setPlacedCaterpillars(prev => 
-                prev.map(c => c.id === spawnedCaterpillar.id ? { ...c, isGrowing: false } : c)
-              );
-            }, 2000);
-          }, shrinkDuration);
+            butterflyLifecycleTimers.current.delete(field.id);
+          }, 10000); // 10 seconds shrink phase
           
-          timers.push(removeTimeout);
-        }, 5000); // 5 seconds wiggling before shrinking starts
+        }, 5000); // 5 seconds wiggle phase
         
-        timers.push(shrinkStartTimeout);
-        butterflyTimersRef.current.set(butterfly.id, timers);
+        butterflyLifecycleTimers.current.set(field.id, lifecycleTimer);
       }
     });
-
+    
     // Cleanup timers for removed butterflies
-    const currentButterflyIds = new Set(placedButterflies.map(b => b.id));
-    for (const [butterflyId, timers] of butterflyTimersRef.current.entries()) {
-      if (!currentButterflyIds.has(butterflyId)) {
-        timers.forEach(clearTimeout);
-        butterflyTimersRef.current.delete(butterflyId);
+    const currentButterflyFields = new Set(
+      gardenFields.filter(f => f.hasButterfly).map(f => f.id)
+    );
+    
+    for (const [fieldId, timer] of butterflyLifecycleTimers.current.entries()) {
+      if (!currentButterflyFields.has(fieldId)) {
+        clearTimeout(timer);
+        butterflyLifecycleTimers.current.delete(fieldId);
+        setButterflyPhases(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(fieldId);
+          return newMap;
+        });
       }
     }
-  }, [placedButterflies]);
+  }, [gardenFields.map(f => f.hasButterfly ? f.id : null).join(',')]);
 
-  // Cleanup all butterfly timers on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      for (const timers of butterflyTimersRef.current.values()) {
-        timers.forEach(clearTimeout);
+      for (const timer of butterflyLifecycleTimers.current.values()) {
+        clearTimeout(timer);
       }
-      butterflyTimersRef.current.clear();
+      butterflyLifecycleTimers.current.clear();
     };
   }, []);
 
@@ -1206,25 +1181,33 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Placed Butterfly Display with Animations */}
-                    {placedButterflies.find(b => b.fieldId === field.id) && (
-                      <div
-                        className={`absolute inset-0 rounded transition-all ${
-                          placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
-                            ? 'opacity-30 transform scale-50' 
-                            : 'opacity-100 transform scale-100 animate-wiggle'
-                        }`}
-                        style={{
-                          backgroundImage: `url(${placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          border: `2px solid ${getButterflyBorderColor(placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity || 'common')}`,
-                          transitionDuration: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling ? '10000ms' : '200ms',
-                          animation: placedButterflies.find(b => b.fieldId === field.id)?.isShrinkling 
-                            ? 'none' 
-                            : 'wiggle 0.8s ease-in-out infinite alternate'
-                        }}
-                      />
+                    {/* NEW SIMPLE BUTTERFLY SYSTEM - Database with Phases */}
+                    {field.hasButterfly && field.butterflyImageUrl && (
+                      <ButterflyHoverPreview
+                        butterflyId={field.butterflyId!}
+                        butterflyName={field.butterflyName!}
+                        butterflyImageUrl={field.butterflyImageUrl}
+                        rarity={field.butterflyRarity as RarityTier}
+                      >
+                        <div 
+                          className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all ${
+                            butterflyPhases.get(field.id) === 'shrink' 
+                              ? 'opacity-30 transform scale-50' 
+                              : 'scale-100 opacity-100 hover:scale-110 animate-wiggle'
+                          }`}
+                          style={{
+                            transitionDuration: butterflyPhases.get(field.id) === 'shrink' ? '10000ms' : '200ms'
+                          }}
+                        >
+                          <RarityImage
+                            src={field.butterflyImageUrl}
+                            alt={field.butterflyName || "Schmetterling"}
+                            rarity={field.butterflyRarity as RarityTier || "common"}
+                            size="medium"
+                            className="w-16 h-16"
+                          />
+                        </div>
+                      </ButterflyHoverPreview>
                     )}
 
                     {/* Placed Fish Display */}
