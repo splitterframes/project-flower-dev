@@ -83,6 +83,7 @@ export interface IStorage {
   
   // Butterfly management methods
   spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }>;
+  spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }>;
   collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }>;
   
   // Exhibition methods
@@ -1423,14 +1424,26 @@ export class MemStorage implements IStorage {
     };
   }
 
-  // New system: Spawn butterfly on a garden field
-  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+  // Enhanced system: Spawn butterfly on a garden field with slot-based guarantee system
+  async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
     const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
     
-    // Check if butterfly should spawn based on rarity
-    if (!shouldSpawnButterfly(bouquetRarity)) {
+    // For common/uncommon bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
+    const shouldGuaranteeSpawn = (bouquetRarity === 'common' || bouquetRarity === 'uncommon') && 
+                                currentSlot === totalSlots && 
+                                alreadySpawnedCount === 0;
+    
+    // Check if butterfly should spawn based on rarity (with guarantee logic)
+    if (!shouldGuaranteeSpawn && !shouldSpawnButterfly(bouquetRarity, currentSlot, totalSlots)) {
       return { success: false };
     }
+
+    return this.spawnButterflyOnField(userId, bouquetId, bouquetRarity);
+  }
+
+  // New system: Spawn butterfly on a garden field  
+  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+    const { generateRandomButterfly } = await import('./bouquet');
 
     // Find an available field (not occupied by plants or other butterflies)
     const occupiedFields = new Set<number>();

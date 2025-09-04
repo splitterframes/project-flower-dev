@@ -333,8 +333,17 @@ export function getRandomSpawnInterval(): number {
 }
 
 // Check if a bouquet should spawn a butterfly
-export function shouldSpawnButterfly(rarity: RarityTier): boolean {
+export function shouldSpawnButterfly(rarity: RarityTier, attemptNumber?: number, totalAttempts?: number): boolean {
   const probability = getButterflySpawnProbability(rarity);
+  
+  // Guarantee minimum spawns for lower rarities to prevent frustrating "zero spawn" scenarios
+  if (attemptNumber && totalAttempts) {
+    // For common/uncommon: guarantee at least 1 spawn if this is the last attempt
+    if ((rarity === 'common' || rarity === 'uncommon') && attemptNumber === totalAttempts) {
+      return true; // Force spawn on final attempt if none spawned yet
+    }
+  }
+  
   return Math.random() < probability;
 }
 

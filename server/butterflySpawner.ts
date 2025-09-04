@@ -93,10 +93,13 @@ export class ButterflySpawner {
             // Use the rarity stored in the placed bouquet
             const rarity = (placedBouquet as any).bouquetRarity as RarityTier || 'common';
             
-            const result = await storage.spawnButterflyOnField(
+            const result = await storage.spawnButterflyOnFieldWithSlot(
               user.id, 
               placedBouquet.bouquetId, 
-              rarity
+              rarity,
+              currentSlot,
+              4, // total attempts
+              butterflyCount // already spawned count
             );
             
             if (result.success) {
