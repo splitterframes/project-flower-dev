@@ -859,10 +859,10 @@ export const TeichView: React.FC = () => {
         console.log('🐛 Raupe erfolgreich gesammelt!');
         fetchTeichData();
         
-        // Prevent butterfly dialog from opening for 1 second
+        // Prevent butterfly dialog from opening for 1.5 seconds
         setTimeout(() => {
           setIsCollectingCaterpillar(false);
-        }, 1000);
+        }, 1500);
       } else {
         const error = await response.json();
         console.error('Collection failed:', error);
@@ -1093,7 +1093,7 @@ export const TeichView: React.FC = () => {
                           setSelectedField(field.id);
                           setShowButterflyModal(true);
                         } else if (isCollectingCaterpillar) {
-                          console.log("🐛 Currently collecting caterpillar, skipping butterfly dialog");
+                          console.log("🐛 Currently collecting caterpillar, skipping butterfly dialog for", field.id);
                         } else {
                           showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
                         }
