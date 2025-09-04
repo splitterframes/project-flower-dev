@@ -86,7 +86,9 @@ export const GardenView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showSeedSelection, setShowSeedSelection] = useState(false);
   const [showBouquetSelection, setShowBouquetSelection] = useState(false);
+  const [showButterflyModal, setShowButterflyModal] = useState(false);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
+  const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [harvestingField, setHarvestingField] = useState<number | null>(null);
   const [harvestedFields, setHarvestedFields] = useState<Set<number>>(new Set());
@@ -106,6 +108,7 @@ export const GardenView: React.FC = () => {
         await fetchPlacedBouquets();
         await fetchFieldButterflies();
         await fetchSunSpawns();
+        await fetchUserButterflies();
       };
       fetchAllData();
     }
@@ -141,6 +144,19 @@ export const GardenView: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const fetchUserButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserButterflies(data.butterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user butterflies:', error);
+    }
+  };
 
   const fetchUnlockedFields = async () => {
     if (!user) return;
@@ -748,6 +764,45 @@ export const GardenView: React.FC = () => {
         return newSet;
       });
     }
+  };
+
+  const placeButterflyOnField = async (butterflyId: number) => {
+    if (!user) return;
+
+    try {
+      console.log(`🦋 Placing butterfly ${butterflyId} on field ${selectedFieldIndex} for user ${user.id}`);
+      
+      const response = await fetch('/api/garden/place-butterfly', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: selectedFieldIndex,
+          butterflyId: butterflyId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🦋 Butterfly placed successfully!', data.message);
+        
+        // Refresh data to show the placed butterfly
+        await fetchFieldButterflies();
+        await fetchUserButterflies();
+        
+        showNotification('Schmetterling platziert!', data.message, 'success');
+      } else {
+        const error = await response.json();
+        showNotification('Fehler beim Platzieren', error.message || 'Schmetterling konnte nicht platziert werden.', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to place butterfly:', error);
+      showNotification('Fehler beim Platzieren', 'Fehler beim Platzieren des Schmetterlings.', 'error');
+    }
+
+    setShowButterflyModal(false);
   };
 
 
