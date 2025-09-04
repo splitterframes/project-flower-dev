@@ -247,54 +247,109 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
           )}
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Fish Image and Info */}
-          <Card className="bg-gradient-to-br from-blue-900/30 to-teal-900/20 border-blue-500/30">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div 
-                  className="w-24 h-24 mx-auto mb-3 rounded-lg border-4 p-2 bg-gradient-to-br from-blue-900/20 to-blue-700/10"
-                  style={{ borderColor: getRarityColor(fish.fishRarity) }}
+        {/* Name and Rarity Header */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              {/* Name and Rarity */}
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-bold text-white">{fish.fishName}</h3>
+                <Badge 
+                  className="text-base font-bold px-3 py-1"
+                  style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
                 >
-                  <img
+                  <Fish className="h-4 w-4 mr-2" />
+                  {getRarityDisplayName(fish.fishRarity)}
+                </Badge>
+              </div>
+
+              {/* Navigation Controls */}
+              {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-slate-400">
+                    Fisch {currentIndex + 1} von {totalCount}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={onPrevious}
+                      disabled={currentIndex === 0}
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Zurück
+                    </Button>
+                    
+                    <Button
+                      onClick={onNext}
+                      disabled={currentIndex === totalCount - 1}
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
+                    >
+                      Weiter
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Main Content: Large Image left, Details right */}
+        <div className="flex gap-8 min-h-[800px]">
+          {/* Left Side - Large Fish Image (700x700) */}
+          <div className="flex-shrink-0">
+            <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg relative overflow-hidden">
+              <div 
+                className="absolute inset-0 rounded-lg opacity-20"
+                style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
+              />
+              
+              <CardContent className="p-6 relative z-10 text-center">
+                <div className="relative">
+                  <img 
                     src={fish.fishImageUrl}
                     alt={fish.fishName}
-                    className="w-full h-full object-contain"
+                    className="w-[700px] h-[700px] object-contain mx-auto border-4 rounded-lg shadow-lg"
+                    style={{
+                      borderColor: getRarityColor(fish.fishRarity),
+                      filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
+                    }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       e.currentTarget.nextElementSibling!.style.display = 'flex';
                     }}
                   />
                   <div
-                    className="w-full h-full bg-gradient-to-br from-blue-500 to-teal-500 rounded flex items-center justify-center text-2xl"
-                    style={{ display: 'none' }}
+                    className="w-[700px] h-[700px] bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center text-9xl border-4 shadow-lg mx-auto"
+                    style={{ 
+                      display: 'none',
+                      borderColor: getRarityColor(fish.fishRarity),
+                      filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
+                    }}
                   >
                     🐟
                   </div>
                 </div>
                 
-                <h3 className="font-bold text-lg text-white mb-2">{fish.fishName}</h3>
-                
-                <Badge 
-                  className="mb-3 text-sm px-3 py-1"
-                  style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
-                >
-                  {getRarityDisplayName(fish.fishRarity)}
-                </Badge>
-                
-                <div className="text-sm text-blue-200 space-y-1">
+                <div className="mt-4 text-sm text-blue-200">
                   <p>Platziert: {new Date(fish.placedAt).toLocaleString('de-DE')}</p>
-                  <div className="flex items-center justify-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2 mt-2">
                     <DollarSign className="h-4 w-4" />
                     <span>Verkaufspreis: {price.toLocaleString()} Credits</span>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Sell Status - Only for own fish */}
-          {!readOnly && (
+          {/* Right Side - Details */}
+          <div className="flex-1 space-y-6">
+
+            {/* Sell Status - Only for own fish */}
+            {!readOnly && (
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-600/50">
               <CardContent className="p-4">
                 <div className="text-center">
@@ -327,10 +382,10 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             </Card>
           )}
 
-          {/* Sonnen Boost - Only for own fish and when not sellable yet */}
-          {!readOnly && !canSell && timeRemaining > 0 && (
-            <Card className="bg-gradient-to-br from-yellow-900/20 to-orange-900/10 border-yellow-500/30">
-              <CardContent className="p-4">
+            {/* Sonnen Boost - Only for own fish and when not sellable yet */}
+            {!readOnly && !canSell && timeRemaining > 0 && (
+              <Card className="bg-gradient-to-br from-yellow-900/20 to-orange-900/10 border-yellow-500/30">
+                <CardContent className="p-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center space-x-2 mb-3">
                     <Zap className="h-5 w-5 text-yellow-400" />
@@ -366,9 +421,10 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                     {isBoosting ? 'Booste...' : `${parseInt(boostMinutes) || 0} Min für ${parseInt(boostMinutes) || 0} Sonnen`}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
