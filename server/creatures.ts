@@ -151,6 +151,26 @@ export async function generateRandomFish(rarity: RarityTier): Promise<FishData> 
   };
 }
 
+// Generate random fish using proper distribution
+export async function generateRandomFishByDistribution(rarity: RarityTier): Promise<FishData> {
+  return generateRandomFish(rarity);
+}
+
+// Get random rarity based on distribution
+export function getRandomRarity(): RarityTier {
+  const random = Math.random();
+  let cumulativeWeight = 0;
+  
+  for (const [rarity, percentage] of Object.entries(FISH_RARITY_DISTRIBUTION_PERCENT) as [RarityTier, number][]) {
+    cumulativeWeight += percentage;
+    if (random <= cumulativeWeight) {
+      return rarity;
+    }
+  }
+  
+  return 'common'; // Fallback
+}
+
 // ==================== CATERPILLAR SYSTEM ====================
 
 // Generate all available caterpillar IDs dynamically from Raupen folder

@@ -313,19 +313,55 @@ export class PostgresStorage implements IStorage {
     try {
       console.log(`🐟 Spawning fish on field ${fieldIndex} for user ${userId}`);
       
-      // Get a random fish (simplified version for now)
-      const fishId = Math.floor(Math.random() * 15) + 1; // 1-15 fish images
-      const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
-      const fishRarity = rarities[Math.floor(Math.random() * rarities.length)];
+      // Import creatures system for proper fish generation
+      const { generateRandomFishByDistribution, getRandomRarity } = await import('./creatures');
+      const { RARITY_NAMES_DE } = await import('../shared/rarity');
       
-      // Generate fish name based on ID
-      const fishName = `Fisch ${fishId}`;
+      // Get random rarity based on proper distribution
+      const rarity = getRandomRarity();
       
-      console.log(`🐟 Successfully spawned ${fishName} (${fishRarity}) on field ${fieldIndex}`);
+      // Generate fish with correct rarity distribution
+      const fishData = await generateRandomFishByDistribution(rarity);
+      
+      // Add fish to user inventory
+      const existingFish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fishData.id)
+        ));
+
+      if (existingFish.length > 0) {
+        // Fish already exists, increment quantity
+        await this.db
+          .update(userFish)
+          .set({ 
+            quantity: existingFish[0].quantity + 1,
+            lastCaughtAt: new Date()
+          })
+          .where(eq(userFish.id, existingFish[0].id));
+        console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
+      } else {
+        // New fish, create entry
+        await this.db.insert(userFish).values({
+          userId,
+          fishId: fishData.id,
+          fishName: fishData.name,
+          fishRarity: rarity,
+          fishImageUrl: fishData.imageUrl,
+          quantity: 1,
+          lastCaughtAt: new Date(),
+          createdAt: new Date()
+        });
+        console.log(`🐟 Created new fish entry: ${fishData.name} (${rarity})`);
+      }
+      
+      console.log(`🐟 Successfully spawned and saved ${fishData.name} (${rarity}) to user ${userId} inventory`);
       
       return {
-        fishName,
-        fishRarity
+        fishName: fishData.name,
+        fishRarity: rarity
       };
     } catch (error) {
       console.error('Failed to spawn random fish:', error);
