@@ -505,7 +505,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (result >= 3) {
         console.log('🐟 THIRD FEEDING: Fish will be created by storage method');
         
-        // The storage method will handle fish creation with average rarity - we get the result
+        // CRITICAL FIX: feedFishWithCaterpillar expects the 3rd rarity to already be in storage
+        // But updatePondFeedingProgressWithTracking already added it! So we're good.
         const feedingResult = await storage.feedFishWithCaterpillar(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
         
         return res.json(feedingResult);

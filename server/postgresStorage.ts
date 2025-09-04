@@ -14,6 +14,7 @@ import {
   userCaterpillars,
   fieldButterflies,
   fieldCaterpillars,
+  fedCaterpillars as fedCaterpillarsTable,
   userVipButterflies,
   exhibitionFrames,
   exhibitionButterflies,
@@ -3371,37 +3372,54 @@ export class PostgresStorage {
     }
   }
 
-  // In-memory storage for fed caterpillar rarities (per user/field)
-  private fedCaterpillarRarities: Map<string, string[]> = new Map();
-
-  private getFedCaterpillarsKey(userId: number, fieldIndex: number): string {
-    return `${userId}-${fieldIndex}`;
-  }
+  // REMOVED: In-memory storage - using PostgreSQL-only storage per replit.md requirements
   
 
-  // Get current average rarity of fed caterpillars for a field
+  // Get current average rarity of fed caterpillars for a field from PostgreSQL
   async getCurrentFeedingAverageRarity(userId: number, fieldIndex: number): Promise<string> {
-    const key = this.getFedCaterpillarsKey(userId, fieldIndex);
-    const rarities = this.fedCaterpillarRarities.get(key) || [];
-    
-    console.log(`🐟 DEBUG: Getting average for field ${fieldIndex}, stored rarities:`, rarities);
-    
-    if (rarities.length === 0) {
-      console.log(`🐟 DEBUG: No rarities stored, returning 'common'`);
-      return 'common'; // Default if no caterpillars fed yet
+    try {
+      // Get fed caterpillars from PostgreSQL for this field
+      const fedCaterpillars = await this.db
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ))
+        .orderBy(fedCaterpillarsTable.fedAt);
+      
+      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      console.log(`🐟 DEBUG: Getting average for field ${fieldIndex}, PostgreSQL rarities:`, rarities);
+      
+      if (rarities.length === 0) {
+        console.log(`🐟 DEBUG: No rarities in PostgreSQL, returning 'common'`);
+        return 'common'; // Default if no caterpillars fed yet
+      }
+      
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 DEBUG: Calculated average from [${rarities.join(', ')}] = ${averageRarity}`);
+      return averageRarity;
+    } catch (error) {
+      console.error('🐟 Error getting current feeding average rarity:', error);
+      return 'common';
     }
-    
-    const averageRarity = this.calculateAverageRarity(rarities);
-    console.log(`🐟 DEBUG: Calculated average from [${rarities.join(', ')}] = ${averageRarity}`);
-    return averageRarity;
   }
   
   // Complete fish feeding with caterpillar - handles average calculation and fish creation
   async feedFishWithCaterpillar(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<any> {
     try {
-      // Get stored rarities for average calculation
-      const key = this.getFedCaterpillarsKey(userId, fieldIndex);
-      const rarities = this.fedCaterpillarRarities.get(key) || [];
+      // Get fed caterpillars from PostgreSQL for this field
+      const fedCaterpillars = await this.db
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ))
+        .orderBy(fedCaterpillarsTable.fedAt);
+      
+      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      console.log(`🐟 Fed caterpillar rarities from PostgreSQL for field ${fieldIndex}:`, rarities);
       
       if (rarities.length < 3) {
         throw new Error(`Not enough caterpillars fed (${rarities.length}/3)`);
@@ -3415,9 +3433,14 @@ export class PostgresStorage {
       const fishResult = await this.spawnFishOnField(userId, fieldIndex, averageRarity);
       console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
       
-      // Clean up stored rarities after fish creation
-      this.fedCaterpillarRarities.delete(key);
-      console.log(`🐟 Cleaned up stored caterpillar rarities for field ${fieldIndex}`);
+      // Clean up fed caterpillars from PostgreSQL after fish creation
+      await this.db
+        .delete(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ));
+      console.log(`🐟 Cleaned up fed caterpillars from PostgreSQL for field ${fieldIndex}`);
       
       return {
         feedingCount: 3,
@@ -3436,22 +3459,34 @@ export class PostgresStorage {
     try {
       console.log(`🐟 Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
       
-      // Store caterpillar rarity for average calculation
-      const key = this.getFedCaterpillarsKey(userId, fieldIndex);
-      let rarities = this.fedCaterpillarRarities.get(key) || [];
-      console.log(`🐟 DEBUG: Existing rarities for field ${fieldIndex}:`, rarities);
-      rarities.push(caterpillarRarity);
-      this.fedCaterpillarRarities.set(key, rarities);
+      // Store caterpillar rarity in PostgreSQL fedCaterpillars table
+      await this.db.insert(fedCaterpillarsTable).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        caterpillarId: 0, // Not used for fish feeding, only for tracking
+        caterpillarRarity: caterpillarRarity,
+        fedAt: new Date()
+      });
       
-      console.log(`🐟 Fed caterpillar rarities for field ${fieldIndex}:`, rarities);
-      console.log(`🐟 DEBUG: Storage key used: "${key}"`);
+      // Get current fed caterpillars count from PostgreSQL
+      const fedCaterpillars = await this.db
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ));
+      
+      const feedingCount = fedCaterpillars.length;
+      console.log(`🐟 Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
+      console.log(`🐟 Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
       
       // Update feeding progress normally
       const newProgress = await this.updatePondFeedingProgress(userId, fieldIndex);
       
-      // If fish is created (3 feedings), clean up stored rarities after use
+      // If fish is created (3 feedings), log that we're ready
       if (newProgress >= 3) {
-        console.log(`🐟 Fish will be created, rarities ready for average:`, rarities);
+        console.log(`🐟 Fish will be created, rarities ready for average:`, fedCaterpillars.map(c => c.caterpillarRarity));
       }
       
       return newProgress;
