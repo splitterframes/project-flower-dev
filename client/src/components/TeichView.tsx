@@ -596,14 +596,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Empty unlocked field */}
-                    {field.isUnlocked && !field.hasPlant && !field.hasBouquet && !field.hasSunSpawn && !field.hasButterfly && !field.isPond && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-slate-500">
-                          <Shovel className="h-5 w-5" />
-                        </div>
-                      </div>
-                    )}
 
                   </div>
                 );
