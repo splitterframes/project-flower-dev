@@ -1444,25 +1444,9 @@ export class PostgresStorage {
   }
 
   private async getRandomCaterpillarByRarity(rarity: string) {
-    // For now, return a mock caterpillar - later connect to real caterpillar data
-    const caterpillarIds = {
-      'common': Array.from({length: 5}, (_, i) => i + 1),
-      'uncommon': Array.from({length: 3}, (_, i) => i + 6),
-      'rare': Array.from({length: 2}, (_, i) => i + 9),
-      'super-rare': [11, 12],
-      'epic': [13],
-      'legendary': [14],
-      'mythical': [15]
-    };
-    
-    const availableIds = caterpillarIds[rarity as keyof typeof caterpillarIds] || caterpillarIds.common;
-    const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
-    
-    return {
-      id: randomId,
-      name: `Caterpillar ${randomId}`,
-      imageUrl: `/Raupen/${randomId}.jpg`
-    };
+    // Use the professional system from creatures.ts with beautiful Latin names!
+    const { generateRandomCaterpillar } = await import('./creatures');
+    return await generateRandomCaterpillar(rarity as any);
   }
 
   private mapRarityToNumber(rarity: string): number {
