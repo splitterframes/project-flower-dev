@@ -94,10 +94,12 @@ class SunSpawner {
           }
           console.log(`☀️ User ${user.username} unlock fields:`, unlockFieldIndices);
           
-          // Find inactive fields (not unlocked, not unlock fields)
+          // Find inactive fields (not unlocked, not unlock fields, not pond fields - suns only in garden)
           const inactiveFields: number[] = [];
           for (let fieldIndex = 0; fieldIndex < 50; fieldIndex++) {
-            if (!unlockedFieldIndices.includes(fieldIndex) && !unlockFieldIndices.includes(fieldIndex)) {
+            if (!unlockedFieldIndices.includes(fieldIndex) && 
+                !unlockFieldIndices.includes(fieldIndex) &&
+                !storage.isPondField(fieldIndex)) {
               inactiveFields.push(fieldIndex);
             }
           }

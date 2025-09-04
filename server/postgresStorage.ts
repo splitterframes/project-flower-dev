@@ -3107,26 +3107,42 @@ export class PostgresStorage implements IStorage {
 
       console.log(`🦋 BACKEND: Removed butterfly ${butterfly.butterflyName} from field ${butterfly.fieldIndex}`);
 
-      // Spawn caterpillar ON THE SAME FIELD with rarity inheritance
+      // Spawn caterpillar ON A RANDOM POND FIELD with rarity inheritance
       const inheritedRarity = this.inheritCaterpillarRarity(butterfly.butterflyRarity);
       const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
 
       if (caterpillar) {
-        // Spawn caterpillar on field instead of directly to inventory
+        // Find a random pond field for caterpillar spawning
+        const pondFieldIndex = this.getRandomPondField();
+        
+        // Spawn caterpillar on random pond field instead of same field as butterfly
         await this.db.insert(fieldCaterpillars).values({
           userId: butterfly.userId,
-          fieldIndex: butterfly.fieldIndex, // Same field where butterfly was!
+          fieldIndex: pondFieldIndex, // Random pond field!
           caterpillarId: caterpillar.id,
           caterpillarName: caterpillar.name,
           caterpillarRarity: inheritedRarity,
           caterpillarImageUrl: caterpillar.imageUrl
         });
         
-        console.log(`🐛 BACKEND: Spawned field caterpillar ${caterpillar.name} (${inheritedRarity}) on field ${butterfly.fieldIndex} for user ${butterfly.userId}`);
+        console.log(`🐛 BACKEND: Spawned field caterpillar ${caterpillar.name} (${inheritedRarity}) on pond field ${pondFieldIndex} for user ${butterfly.userId}`);
       }
     } catch (error) {
       console.error('🦋 BACKEND: Error removing butterfly and spawning field caterpillar:', error);
     }
+  }
+
+  /**
+   * Get a random pond field for caterpillar spawning
+   */
+  private getRandomPondField(): number {
+    const pondFields: number[] = [];
+    for (let i = 0; i < 50; i++) {
+      if (this.isPondField(i)) {
+        pondFields.push(i);
+      }
+    }
+    return pondFields[Math.floor(Math.random() * pondFields.length)];
   }
 
   /**
