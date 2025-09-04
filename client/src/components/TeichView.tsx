@@ -230,8 +230,8 @@ export const TeichView: React.FC = () => {
             hasSunSpawn: false,
             sunSpawnAmount: undefined,
             sunSpawnExpiresAt: undefined,
-            // Add feeding progress for pond fields
-            feedingProgress: field.isPond ? pondProgressData.pondProgress[fieldIndex] || 0 : 0
+            // Add feeding progress for pond fields - disabled to remove "0" display
+            feedingProgress: undefined
           };
         });
 
@@ -1235,8 +1235,8 @@ export const TeichView: React.FC = () => {
                         </div>
                       ))}
 
-                    {/* Pond Feeding Progress Icons - only for pond fields */}
-                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
+                    {/* Pond Feeding Progress Icons - disabled to prevent "0" display */}
+                    {false && field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         {field.feedingProgress === 1 && (
                           <div className="text-6xl animate-pulse drop-shadow-lg">🐟</div>
