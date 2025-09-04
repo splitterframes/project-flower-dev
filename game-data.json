@@ -20,7 +20,7 @@
         "password": "test123",
         "credits": 1000,
         "suns": 100,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-03T16:54:00.987Z",
         "createdAt": "2025-09-03T16:54:00.987Z",
         "updatedAt": "2025-09-03T16:54:00.987Z"
       }
@@ -46,7 +46,7 @@
         "password": "test123",
         "credits": 1000,
         "suns": 100,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-03T16:54:22.021Z",
         "createdAt": "2025-09-03T16:54:22.021Z",
         "updatedAt": "2025-09-03T16:54:22.021Z"
       }
@@ -59,7 +59,7 @@
         "password": "1",
         "credits": 20000,
         "suns": 100,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-02T14:25:42.638Z",
         "createdAt": "2025-09-02T14:25:42.638Z",
         "updatedAt": "2025-09-02T14:25:42.638Z"
       }
@@ -72,7 +72,7 @@
         "password": "1",
         "credits": 1000,
         "suns": 60,
-        "lastPassiveIncomeAt": null,
+        "lastPassiveIncomeAt": "2025-09-03T16:52:51.313Z",
         "createdAt": "2025-09-03T16:52:51.313Z",
         "updatedAt": "2025-09-03T16:52:51.313Z"
       }
@@ -294,6 +294,16 @@
         "quantity": 7,
         "createdAt": "2025-09-02T14:51:04.030Z"
       }
+    ],
+    [
+      14,
+      {
+        "id": 14,
+        "userId": 2,
+        "seedId": 5,
+        "quantity": 0,
+        "createdAt": "2025-09-03T22:49:43.810Z"
+      }
     ]
   ],
   "marketListings": [],
@@ -496,6 +506,146 @@
         "flowerName": "Splendida radiatus",
         "flowerRarity": "rare",
         "flowerImageUrl": "/Blumen/134.jpg"
+      }
+    ],
+    [
+      36,
+      {
+        "id": 36,
+        "userId": 2,
+        "flowerId": 161,
+        "rarity": 5,
+        "quantity": 1,
+        "createdAt": "2025-09-04T05:15:34.744Z",
+        "flowerName": "Stella divinus",
+        "flowerRarity": "epic",
+        "flowerImageUrl": "/Blumen/161.jpg"
+      }
+    ],
+    [
+      37,
+      {
+        "id": 37,
+        "userId": 2,
+        "flowerId": 105,
+        "rarity": 3,
+        "quantity": 2,
+        "createdAt": "2025-09-04T05:30:44.117Z",
+        "flowerName": "Purpura argenteus",
+        "flowerRarity": "rare",
+        "flowerImageUrl": "/Blumen/105.jpg"
+      }
+    ],
+    [
+      38,
+      {
+        "id": 38,
+        "userId": 2,
+        "flowerId": 119,
+        "rarity": 3,
+        "quantity": 1,
+        "createdAt": "2025-09-04T05:30:46.913Z",
+        "flowerName": "Elegans eternus",
+        "flowerRarity": "rare",
+        "flowerImageUrl": "/Blumen/119.jpg"
+      }
+    ],
+    [
+      40,
+      {
+        "id": 40,
+        "userId": 2,
+        "flowerId": 91,
+        "rarity": 2,
+        "quantity": 1,
+        "createdAt": "2025-09-04T05:30:48.322Z",
+        "flowerName": "Rubra radiatus",
+        "flowerRarity": "uncommon",
+        "flowerImageUrl": "/Blumen/91.jpg"
+      }
+    ],
+    [
+      42,
+      {
+        "id": 42,
+        "userId": 2,
+        "flowerId": 5,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-04T12:44:06.756Z",
+        "flowerName": "Mystica celestis",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/5.jpg"
+      }
+    ],
+    [
+      45,
+      {
+        "id": 45,
+        "userId": 2,
+        "flowerId": 48,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-04T13:11:15.080Z",
+        "flowerName": "Luna imperialis",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/48.jpg"
+      }
+    ],
+    [
+      46,
+      {
+        "id": 46,
+        "userId": 2,
+        "flowerId": 7,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-04T13:12:39.450Z",
+        "flowerName": "Corona eternus",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/7.jpg"
+      }
+    ],
+    [
+      43,
+      {
+        "id": 43,
+        "userId": 2,
+        "flowerId": 31,
+        "rarity": 1,
+        "quantity": 3,
+        "createdAt": "2025-09-04T12:46:21.241Z",
+        "flowerName": "Rubra mirabilis",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/31.jpg"
+      }
+    ],
+    [
+      44,
+      {
+        "id": 44,
+        "userId": 2,
+        "flowerId": 35,
+        "rarity": 1,
+        "quantity": 2,
+        "createdAt": "2025-09-04T13:05:09.829Z",
+        "flowerName": "Corona aureus",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/35.jpg"
+      }
+    ],
+    [
+      47,
+      {
+        "id": 47,
+        "userId": 2,
+        "flowerId": 40,
+        "rarity": 1,
+        "quantity": 1,
+        "createdAt": "2025-09-04T13:55:32.515Z",
+        "flowerName": "Divina mirabilis",
+        "flowerRarity": "common",
+        "flowerImageUrl": "/Blumen/40.jpg"
       }
     ]
   ],
@@ -729,6 +879,39 @@
         "imageUrl": "/Blumen/bouquet.jpg",
         "createdByUserId": 2,
         "createdAt": "2025-09-03T21:58:54.017Z"
+      }
+    ],
+    [
+      24,
+      {
+        "id": 24,
+        "name": "Schlichte Schönheit",
+        "rarity": "common",
+        "imageUrl": "/Blumen/bouquet.jpg",
+        "createdByUserId": 2,
+        "createdAt": "2025-09-03T22:00:52.965Z"
+      }
+    ],
+    [
+      25,
+      {
+        "id": 25,
+        "name": "Gast1",
+        "rarity": "common",
+        "imageUrl": "/Blumen/bouquet.jpg",
+        "createdByUserId": 2,
+        "createdAt": "2025-09-04T12:18:21.255Z"
+      }
+    ],
+    [
+      26,
+      {
+        "id": 26,
+        "name": "Zeitlos",
+        "rarity": "uncommon",
+        "imageUrl": "/Blumen/bouquet.jpg",
+        "createdByUserId": 2,
+        "createdAt": "2025-09-04T13:05:55.457Z"
       }
     ]
   ],
@@ -989,6 +1172,39 @@
         "flowerId3": 52,
         "createdAt": "2025-09-03T21:58:54.040Z"
       }
+    ],
+    [
+      23,
+      {
+        "id": 23,
+        "bouquetId": 24,
+        "flowerId1": 25,
+        "flowerId2": 38,
+        "flowerId3": 14,
+        "createdAt": "2025-09-03T22:00:52.991Z"
+      }
+    ],
+    [
+      24,
+      {
+        "id": 24,
+        "bouquetId": 25,
+        "flowerId1": 7,
+        "flowerId2": 11,
+        "flowerId3": 25,
+        "createdAt": "2025-09-04T12:18:21.279Z"
+      }
+    ],
+    [
+      25,
+      {
+        "id": 25,
+        "bouquetId": 26,
+        "flowerId1": 43,
+        "flowerId2": 76,
+        "flowerId3": 72,
+        "createdAt": "2025-09-04T13:05:55.481Z"
+      }
     ]
   ],
   "placedBouquets": [],
@@ -1001,7 +1217,7 @@
         "butterflyId": 547,
         "rarity": null,
         "quantity": 1,
-        "collectedAt": "2025-09-03 20:36:06.932654",
+        "collectedAt": "2025-09-03T20:36:06.932Z",
         "butterflyName": "Butterfly #547",
         "butterflyRarity": null,
         "butterflyImageUrl": "/Schmetterlinge/547.jpg"
@@ -14572,6 +14788,5742 @@
         "earnedAt": "2025-09-03T21:59:30.163Z",
         "createdAt": "2025-09-03T21:59:30.163Z"
       }
+    ],
+    [
+      1219,
+      {
+        "id": 1219,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:44:23.938Z",
+        "createdAt": "2025-09-04T06:44:23.938Z"
+      }
+    ],
+    [
+      1220,
+      {
+        "id": 1220,
+        "userId": 2,
+        "amount": 213,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:51:20.414Z",
+        "createdAt": "2025-09-04T07:51:20.414Z"
+      }
+    ],
+    [
+      1369,
+      {
+        "id": 1369,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:20:11.845Z",
+        "createdAt": "2025-09-04T10:20:11.845Z"
+      }
+    ],
+    [
+      1372,
+      {
+        "id": 1372,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:23:11.835Z",
+        "createdAt": "2025-09-04T10:23:11.835Z"
+      }
+    ],
+    [
+      1387,
+      {
+        "id": 1387,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:38:11.852Z",
+        "createdAt": "2025-09-04T10:38:11.852Z"
+      }
+    ],
+    [
+      1390,
+      {
+        "id": 1390,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:41:21.712Z",
+        "createdAt": "2025-09-04T10:41:21.712Z"
+      }
+    ],
+    [
+      1395,
+      {
+        "id": 1395,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:45:29.962Z",
+        "createdAt": "2025-09-04T10:45:29.962Z"
+      }
+    ],
+    [
+      1397,
+      {
+        "id": 1397,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:47:26.568Z",
+        "createdAt": "2025-09-04T10:47:26.568Z"
+      }
+    ],
+    [
+      1401,
+      {
+        "id": 1401,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:51:56.343Z",
+        "createdAt": "2025-09-04T10:51:56.343Z"
+      }
+    ],
+    [
+      1404,
+      {
+        "id": 1404,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:54:56.296Z",
+        "createdAt": "2025-09-04T10:54:56.296Z"
+      }
+    ],
+    [
+      1497,
+      {
+        "id": 1497,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:27:18.654Z",
+        "createdAt": "2025-09-04T12:27:18.654Z"
+      }
+    ],
+    [
+      1509,
+      {
+        "id": 1509,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:38:55.188Z",
+        "createdAt": "2025-09-04T12:38:55.188Z"
+      }
+    ],
+    [
+      1530,
+      {
+        "id": 1530,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:59:38.526Z",
+        "createdAt": "2025-09-04T12:59:38.526Z"
+      }
+    ],
+    [
+      1534,
+      {
+        "id": 1534,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:03:03.548Z",
+        "createdAt": "2025-09-04T13:03:03.548Z"
+      }
+    ],
+    [
+      1536,
+      {
+        "id": 1536,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:05:30.511Z",
+        "createdAt": "2025-09-04T13:05:30.511Z"
+      }
+    ],
+    [
+      1543,
+      {
+        "id": 1543,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:12:30.498Z",
+        "createdAt": "2025-09-04T13:12:30.498Z"
+      }
+    ],
+    [
+      1549,
+      {
+        "id": 1549,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:18:08.827Z",
+        "createdAt": "2025-09-04T13:18:08.827Z"
+      }
+    ],
+    [
+      1551,
+      {
+        "id": 1551,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:20:08.886Z",
+        "createdAt": "2025-09-04T13:20:08.886Z"
+      }
+    ],
+    [
+      1558,
+      {
+        "id": 1558,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:27:25.165Z",
+        "createdAt": "2025-09-04T13:27:25.165Z"
+      }
+    ],
+    [
+      1559,
+      {
+        "id": 1559,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:28:51.150Z",
+        "createdAt": "2025-09-04T13:28:51.150Z"
+      }
+    ],
+    [
+      1568,
+      {
+        "id": 1568,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:37:46.927Z",
+        "createdAt": "2025-09-04T13:37:46.927Z"
+      }
+    ],
+    [
+      1569,
+      {
+        "id": 1569,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:38:46.874Z",
+        "createdAt": "2025-09-04T13:38:46.874Z"
+      }
+    ],
+    [
+      1221,
+      {
+        "id": 1221,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:52:11.866Z",
+        "createdAt": "2025-09-04T07:52:11.866Z"
+      }
+    ],
+    [
+      1224,
+      {
+        "id": 1224,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:55:11.860Z",
+        "createdAt": "2025-09-04T07:55:11.860Z"
+      }
+    ],
+    [
+      1225,
+      {
+        "id": 1225,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:56:11.837Z",
+        "createdAt": "2025-09-04T07:56:11.837Z"
+      }
+    ],
+    [
+      1236,
+      {
+        "id": 1236,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:07:11.805Z",
+        "createdAt": "2025-09-04T08:07:11.805Z"
+      }
+    ],
+    [
+      1239,
+      {
+        "id": 1239,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:10:11.949Z",
+        "createdAt": "2025-09-04T08:10:11.949Z"
+      }
+    ],
+    [
+      1246,
+      {
+        "id": 1246,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:17:11.868Z",
+        "createdAt": "2025-09-04T08:17:11.868Z"
+      }
+    ],
+    [
+      1259,
+      {
+        "id": 1259,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:30:11.827Z",
+        "createdAt": "2025-09-04T08:30:11.827Z"
+      }
+    ],
+    [
+      1370,
+      {
+        "id": 1370,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:21:11.897Z",
+        "createdAt": "2025-09-04T10:21:11.897Z"
+      }
+    ],
+    [
+      1373,
+      {
+        "id": 1373,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:24:11.849Z",
+        "createdAt": "2025-09-04T10:24:11.849Z"
+      }
+    ],
+    [
+      1500,
+      {
+        "id": 1500,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:30:18.605Z",
+        "createdAt": "2025-09-04T12:30:18.605Z"
+      }
+    ],
+    [
+      1507,
+      {
+        "id": 1507,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:36:59.121Z",
+        "createdAt": "2025-09-04T12:36:59.121Z"
+      }
+    ],
+    [
+      1523,
+      {
+        "id": 1523,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:52:24.022Z",
+        "createdAt": "2025-09-04T12:52:24.022Z"
+      }
+    ],
+    [
+      1525,
+      {
+        "id": 1525,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:54:24.066Z",
+        "createdAt": "2025-09-04T12:54:24.066Z"
+      }
+    ],
+    [
+      1222,
+      {
+        "id": 1222,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:53:11.868Z",
+        "createdAt": "2025-09-04T07:53:11.868Z"
+      }
+    ],
+    [
+      1223,
+      {
+        "id": 1223,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:54:11.879Z",
+        "createdAt": "2025-09-04T07:54:11.879Z"
+      }
+    ],
+    [
+      1226,
+      {
+        "id": 1226,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:57:11.842Z",
+        "createdAt": "2025-09-04T07:57:11.842Z"
+      }
+    ],
+    [
+      1229,
+      {
+        "id": 1229,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:00:11.861Z",
+        "createdAt": "2025-09-04T08:00:11.861Z"
+      }
+    ],
+    [
+      1230,
+      {
+        "id": 1230,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:01:11.842Z",
+        "createdAt": "2025-09-04T08:01:11.842Z"
+      }
+    ],
+    [
+      1233,
+      {
+        "id": 1233,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:04:11.827Z",
+        "createdAt": "2025-09-04T08:04:11.827Z"
+      }
+    ],
+    [
+      1379,
+      {
+        "id": 1379,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:30:11.838Z",
+        "createdAt": "2025-09-04T10:30:11.838Z"
+      }
+    ],
+    [
+      1380,
+      {
+        "id": 1380,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:31:11.839Z",
+        "createdAt": "2025-09-04T10:31:11.839Z"
+      }
+    ],
+    [
+      1381,
+      {
+        "id": 1381,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:32:11.840Z",
+        "createdAt": "2025-09-04T10:32:11.840Z"
+      }
+    ],
+    [
+      1386,
+      {
+        "id": 1386,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:37:11.929Z",
+        "createdAt": "2025-09-04T10:37:11.929Z"
+      }
+    ],
+    [
+      1503,
+      {
+        "id": 1503,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:33:18.655Z",
+        "createdAt": "2025-09-04T12:33:18.655Z"
+      }
+    ],
+    [
+      1527,
+      {
+        "id": 1527,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:56:24.066Z",
+        "createdAt": "2025-09-04T12:56:24.066Z"
+      }
+    ],
+    [
+      1528,
+      {
+        "id": 1528,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:57:24.057Z",
+        "createdAt": "2025-09-04T12:57:24.057Z"
+      }
+    ],
+    [
+      1529,
+      {
+        "id": 1529,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:58:24.093Z",
+        "createdAt": "2025-09-04T12:58:24.093Z"
+      }
+    ],
+    [
+      1540,
+      {
+        "id": 1540,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:09:30.528Z",
+        "createdAt": "2025-09-04T13:09:30.528Z"
+      }
+    ],
+    [
+      1544,
+      {
+        "id": 1544,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:13:30.520Z",
+        "createdAt": "2025-09-04T13:13:30.520Z"
+      }
+    ],
+    [
+      1545,
+      {
+        "id": 1545,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:14:30.524Z",
+        "createdAt": "2025-09-04T13:14:30.524Z"
+      }
+    ],
+    [
+      1555,
+      {
+        "id": 1555,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:24:25.163Z",
+        "createdAt": "2025-09-04T13:24:25.163Z"
+      }
+    ],
+    [
+      1563,
+      {
+        "id": 1563,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:32:46.903Z",
+        "createdAt": "2025-09-04T13:32:46.903Z"
+      }
+    ],
+    [
+      1573,
+      {
+        "id": 1573,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:42:46.858Z",
+        "createdAt": "2025-09-04T13:42:46.858Z"
+      }
+    ],
+    [
+      1575,
+      {
+        "id": 1575,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:44:46.871Z",
+        "createdAt": "2025-09-04T13:44:46.871Z"
+      }
+    ],
+    [
+      1227,
+      {
+        "id": 1227,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:58:11.781Z",
+        "createdAt": "2025-09-04T07:58:11.781Z"
+      }
+    ],
+    [
+      1228,
+      {
+        "id": 1228,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T07:59:11.836Z",
+        "createdAt": "2025-09-04T07:59:11.836Z"
+      }
+    ],
+    [
+      1388,
+      {
+        "id": 1388,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:39:11.837Z",
+        "createdAt": "2025-09-04T10:39:11.837Z"
+      }
+    ],
+    [
+      1526,
+      {
+        "id": 1526,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:55:24.020Z",
+        "createdAt": "2025-09-04T12:55:24.020Z"
+      }
+    ],
+    [
+      1533,
+      {
+        "id": 1533,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:02:06.714Z",
+        "createdAt": "2025-09-04T13:02:06.714Z"
+      }
+    ],
+    [
+      1541,
+      {
+        "id": 1541,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:10:30.501Z",
+        "createdAt": "2025-09-04T13:10:30.501Z"
+      }
+    ],
+    [
+      1552,
+      {
+        "id": 1552,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:21:25.168Z",
+        "createdAt": "2025-09-04T13:21:25.168Z"
+      }
+    ],
+    [
+      1231,
+      {
+        "id": 1231,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:02:11.775Z",
+        "createdAt": "2025-09-04T08:02:11.775Z"
+      }
+    ],
+    [
+      1232,
+      {
+        "id": 1232,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:03:11.825Z",
+        "createdAt": "2025-09-04T08:03:11.825Z"
+      }
+    ],
+    [
+      1391,
+      {
+        "id": 1391,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:42:21.697Z",
+        "createdAt": "2025-09-04T10:42:21.697Z"
+      }
+    ],
+    [
+      1394,
+      {
+        "id": 1394,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:45:17.497Z",
+        "createdAt": "2025-09-04T10:45:17.497Z"
+      }
+    ],
+    [
+      1411,
+      {
+        "id": 1411,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:01:56.308Z",
+        "createdAt": "2025-09-04T11:01:56.308Z"
+      }
+    ],
+    [
+      1418,
+      {
+        "id": 1418,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:09:02.899Z",
+        "createdAt": "2025-09-04T11:09:02.899Z"
+      }
+    ],
+    [
+      1424,
+      {
+        "id": 1424,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:15:13.499Z",
+        "createdAt": "2025-09-04T11:15:13.499Z"
+      }
+    ],
+    [
+      1531,
+      {
+        "id": 1531,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:00:38.554Z",
+        "createdAt": "2025-09-04T13:00:38.554Z"
+      }
+    ],
+    [
+      1532,
+      {
+        "id": 1532,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:01:38.492Z",
+        "createdAt": "2025-09-04T13:01:38.492Z"
+      }
+    ],
+    [
+      1546,
+      {
+        "id": 1546,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:15:30.528Z",
+        "createdAt": "2025-09-04T13:15:30.528Z"
+      }
+    ],
+    [
+      1547,
+      {
+        "id": 1547,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:16:12.186Z",
+        "createdAt": "2025-09-04T13:16:12.186Z"
+      }
+    ],
+    [
+      1554,
+      {
+        "id": 1554,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:23:25.149Z",
+        "createdAt": "2025-09-04T13:23:25.149Z"
+      }
+    ],
+    [
+      1234,
+      {
+        "id": 1234,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:05:11.826Z",
+        "createdAt": "2025-09-04T08:05:11.826Z"
+      }
+    ],
+    [
+      1235,
+      {
+        "id": 1235,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:06:11.836Z",
+        "createdAt": "2025-09-04T08:06:11.836Z"
+      }
+    ],
+    [
+      1237,
+      {
+        "id": 1237,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:08:11.868Z",
+        "createdAt": "2025-09-04T08:08:11.868Z"
+      }
+    ],
+    [
+      1242,
+      {
+        "id": 1242,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:13:11.834Z",
+        "createdAt": "2025-09-04T08:13:11.834Z"
+      }
+    ],
+    [
+      1244,
+      {
+        "id": 1244,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:15:11.796Z",
+        "createdAt": "2025-09-04T08:15:11.796Z"
+      }
+    ],
+    [
+      1254,
+      {
+        "id": 1254,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:25:11.815Z",
+        "createdAt": "2025-09-04T08:25:11.815Z"
+      }
+    ],
+    [
+      1398,
+      {
+        "id": 1398,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:48:43.233Z",
+        "createdAt": "2025-09-04T10:48:43.233Z"
+      }
+    ],
+    [
+      1407,
+      {
+        "id": 1407,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:57:56.385Z",
+        "createdAt": "2025-09-04T10:57:56.385Z"
+      }
+    ],
+    [
+      1416,
+      {
+        "id": 1416,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:07:08.450Z",
+        "createdAt": "2025-09-04T11:07:08.450Z"
+      }
+    ],
+    [
+      1535,
+      {
+        "id": 1535,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:04:03.589Z",
+        "createdAt": "2025-09-04T13:04:03.589Z"
+      }
+    ],
+    [
+      1539,
+      {
+        "id": 1539,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:08:30.558Z",
+        "createdAt": "2025-09-04T13:08:30.558Z"
+      }
+    ],
+    [
+      1542,
+      {
+        "id": 1542,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:11:30.509Z",
+        "createdAt": "2025-09-04T13:11:30.509Z"
+      }
+    ],
+    [
+      1238,
+      {
+        "id": 1238,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:09:11.831Z",
+        "createdAt": "2025-09-04T08:09:11.831Z"
+      }
+    ],
+    [
+      1241,
+      {
+        "id": 1241,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:12:11.803Z",
+        "createdAt": "2025-09-04T08:12:11.803Z"
+      }
+    ],
+    [
+      1245,
+      {
+        "id": 1245,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:16:11.861Z",
+        "createdAt": "2025-09-04T08:16:11.861Z"
+      }
+    ],
+    [
+      1247,
+      {
+        "id": 1247,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:18:11.861Z",
+        "createdAt": "2025-09-04T08:18:11.861Z"
+      }
+    ],
+    [
+      1257,
+      {
+        "id": 1257,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:28:11.863Z",
+        "createdAt": "2025-09-04T08:28:11.863Z"
+      }
+    ],
+    [
+      1260,
+      {
+        "id": 1260,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:31:11.799Z",
+        "createdAt": "2025-09-04T08:31:11.799Z"
+      }
+    ],
+    [
+      1261,
+      {
+        "id": 1261,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:32:11.843Z",
+        "createdAt": "2025-09-04T08:32:11.843Z"
+      }
+    ],
+    [
+      1400,
+      {
+        "id": 1400,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:50:43.221Z",
+        "createdAt": "2025-09-04T10:50:43.221Z"
+      }
+    ],
+    [
+      1406,
+      {
+        "id": 1406,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:56:56.291Z",
+        "createdAt": "2025-09-04T10:56:56.291Z"
+      }
+    ],
+    [
+      1408,
+      {
+        "id": 1408,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:58:56.301Z",
+        "createdAt": "2025-09-04T10:58:56.301Z"
+      }
+    ],
+    [
+      1409,
+      {
+        "id": 1409,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:59:56.379Z",
+        "createdAt": "2025-09-04T10:59:56.379Z"
+      }
+    ],
+    [
+      1417,
+      {
+        "id": 1417,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:08:07.228Z",
+        "createdAt": "2025-09-04T11:08:07.228Z"
+      }
+    ],
+    [
+      1553,
+      {
+        "id": 1553,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:22:25.167Z",
+        "createdAt": "2025-09-04T13:22:25.167Z"
+      }
+    ],
+    [
+      1565,
+      {
+        "id": 1565,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:34:46.951Z",
+        "createdAt": "2025-09-04T13:34:46.951Z"
+      }
+    ],
+    [
+      1566,
+      {
+        "id": 1566,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:35:46.915Z",
+        "createdAt": "2025-09-04T13:35:46.915Z"
+      }
+    ],
+    [
+      1574,
+      {
+        "id": 1574,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:43:46.911Z",
+        "createdAt": "2025-09-04T13:43:46.911Z"
+      }
+    ],
+    [
+      1582,
+      {
+        "id": 1582,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:52:03.758Z",
+        "createdAt": "2025-09-04T13:52:03.758Z"
+      }
+    ],
+    [
+      1240,
+      {
+        "id": 1240,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:11:11.843Z",
+        "createdAt": "2025-09-04T08:11:11.843Z"
+      }
+    ],
+    [
+      1243,
+      {
+        "id": 1243,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:14:11.874Z",
+        "createdAt": "2025-09-04T08:14:11.874Z"
+      }
+    ],
+    [
+      1250,
+      {
+        "id": 1250,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:21:11.901Z",
+        "createdAt": "2025-09-04T08:21:11.901Z"
+      }
+    ],
+    [
+      1253,
+      {
+        "id": 1253,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:24:11.816Z",
+        "createdAt": "2025-09-04T08:24:11.816Z"
+      }
+    ],
+    [
+      1255,
+      {
+        "id": 1255,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:26:11.855Z",
+        "createdAt": "2025-09-04T08:26:11.855Z"
+      }
+    ],
+    [
+      1258,
+      {
+        "id": 1258,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:29:11.887Z",
+        "createdAt": "2025-09-04T08:29:11.887Z"
+      }
+    ],
+    [
+      1410,
+      {
+        "id": 1410,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:00:56.321Z",
+        "createdAt": "2025-09-04T11:00:56.321Z"
+      }
+    ],
+    [
+      1556,
+      {
+        "id": 1556,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:25:25.126Z",
+        "createdAt": "2025-09-04T13:25:25.126Z"
+      }
+    ],
+    [
+      1562,
+      {
+        "id": 1562,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:31:46.939Z",
+        "createdAt": "2025-09-04T13:31:46.939Z"
+      }
+    ],
+    [
+      1564,
+      {
+        "id": 1564,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:33:46.899Z",
+        "createdAt": "2025-09-04T13:33:46.899Z"
+      }
+    ],
+    [
+      1577,
+      {
+        "id": 1577,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:46:46.854Z",
+        "createdAt": "2025-09-04T13:46:46.854Z"
+      }
+    ],
+    [
+      1580,
+      {
+        "id": 1580,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:49:08.758Z",
+        "createdAt": "2025-09-04T13:49:08.758Z"
+      }
+    ],
+    [
+      1583,
+      {
+        "id": 1583,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:53:03.796Z",
+        "createdAt": "2025-09-04T13:53:03.796Z"
+      }
+    ],
+    [
+      1248,
+      {
+        "id": 1248,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:19:11.895Z",
+        "createdAt": "2025-09-04T08:19:11.895Z"
+      }
+    ],
+    [
+      1249,
+      {
+        "id": 1249,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:20:11.827Z",
+        "createdAt": "2025-09-04T08:20:11.827Z"
+      }
+    ],
+    [
+      1251,
+      {
+        "id": 1251,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:22:11.814Z",
+        "createdAt": "2025-09-04T08:22:11.814Z"
+      }
+    ],
+    [
+      1256,
+      {
+        "id": 1256,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:27:11.871Z",
+        "createdAt": "2025-09-04T08:27:11.871Z"
+      }
+    ],
+    [
+      1413,
+      {
+        "id": 1413,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:04:08.449Z",
+        "createdAt": "2025-09-04T11:04:08.449Z"
+      }
+    ],
+    [
+      1422,
+      {
+        "id": 1422,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:13:02.941Z",
+        "createdAt": "2025-09-04T11:13:02.941Z"
+      }
+    ],
+    [
+      1429,
+      {
+        "id": 1429,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:19:55.020Z",
+        "createdAt": "2025-09-04T11:19:55.020Z"
+      }
+    ],
+    [
+      1434,
+      {
+        "id": 1434,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:24:50.860Z",
+        "createdAt": "2025-09-04T11:24:50.860Z"
+      }
+    ],
+    [
+      1557,
+      {
+        "id": 1557,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:26:25.141Z",
+        "createdAt": "2025-09-04T13:26:25.141Z"
+      }
+    ],
+    [
+      1570,
+      {
+        "id": 1570,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:39:46.884Z",
+        "createdAt": "2025-09-04T13:39:46.884Z"
+      }
+    ],
+    [
+      1571,
+      {
+        "id": 1571,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:40:46.857Z",
+        "createdAt": "2025-09-04T13:40:46.857Z"
+      }
+    ],
+    [
+      1572,
+      {
+        "id": 1572,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:41:46.885Z",
+        "createdAt": "2025-09-04T13:41:46.885Z"
+      }
+    ],
+    [
+      1576,
+      {
+        "id": 1576,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:45:46.900Z",
+        "createdAt": "2025-09-04T13:45:46.900Z"
+      }
+    ],
+    [
+      1579,
+      {
+        "id": 1579,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:48:46.931Z",
+        "createdAt": "2025-09-04T13:48:46.931Z"
+      }
+    ],
+    [
+      1584,
+      {
+        "id": 1584,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:54:27.262Z",
+        "createdAt": "2025-09-04T13:54:27.262Z"
+      }
+    ],
+    [
+      1252,
+      {
+        "id": 1252,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:23:11.831Z",
+        "createdAt": "2025-09-04T08:23:11.831Z"
+      }
+    ],
+    [
+      1420,
+      {
+        "id": 1420,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:11:02.884Z",
+        "createdAt": "2025-09-04T11:11:02.884Z"
+      }
+    ],
+    [
+      1423,
+      {
+        "id": 1423,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:14:13.493Z",
+        "createdAt": "2025-09-04T11:14:13.493Z"
+      }
+    ],
+    [
+      1578,
+      {
+        "id": 1578,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:47:46.901Z",
+        "createdAt": "2025-09-04T13:47:46.901Z"
+      }
+    ],
+    [
+      1581,
+      {
+        "id": 1581,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:51:03.759Z",
+        "createdAt": "2025-09-04T13:51:03.759Z"
+      }
+    ],
+    [
+      1585,
+      {
+        "id": 1585,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:55:27.278Z",
+        "createdAt": "2025-09-04T13:55:27.278Z"
+      }
+    ],
+    [
+      1262,
+      {
+        "id": 1262,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:33:11.826Z",
+        "createdAt": "2025-09-04T08:33:11.826Z"
+      }
+    ],
+    [
+      1267,
+      {
+        "id": 1267,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:38:11.818Z",
+        "createdAt": "2025-09-04T08:38:11.818Z"
+      }
+    ],
+    [
+      1286,
+      {
+        "id": 1286,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:57:11.878Z",
+        "createdAt": "2025-09-04T08:57:11.878Z"
+      }
+    ],
+    [
+      1287,
+      {
+        "id": 1287,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:58:11.852Z",
+        "createdAt": "2025-09-04T08:58:11.852Z"
+      }
+    ],
+    [
+      1289,
+      {
+        "id": 1289,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:00:11.793Z",
+        "createdAt": "2025-09-04T09:00:11.793Z"
+      }
+    ],
+    [
+      1293,
+      {
+        "id": 1293,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:04:11.852Z",
+        "createdAt": "2025-09-04T09:04:11.852Z"
+      }
+    ],
+    [
+      1302,
+      {
+        "id": 1302,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:13:11.879Z",
+        "createdAt": "2025-09-04T09:13:11.879Z"
+      }
+    ],
+    [
+      1305,
+      {
+        "id": 1305,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:16:11.880Z",
+        "createdAt": "2025-09-04T09:16:11.880Z"
+      }
+    ],
+    [
+      1307,
+      {
+        "id": 1307,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:18:11.856Z",
+        "createdAt": "2025-09-04T09:18:11.856Z"
+      }
+    ],
+    [
+      1317,
+      {
+        "id": 1317,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:28:11.872Z",
+        "createdAt": "2025-09-04T09:28:11.872Z"
+      }
+    ],
+    [
+      1421,
+      {
+        "id": 1421,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:12:02.883Z",
+        "createdAt": "2025-09-04T11:12:02.883Z"
+      }
+    ],
+    [
+      1426,
+      {
+        "id": 1426,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:17:13.516Z",
+        "createdAt": "2025-09-04T11:17:13.516Z"
+      }
+    ],
+    [
+      1428,
+      {
+        "id": 1428,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:19:13.491Z",
+        "createdAt": "2025-09-04T11:19:13.491Z"
+      }
+    ],
+    [
+      1263,
+      {
+        "id": 1263,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:34:11.933Z",
+        "createdAt": "2025-09-04T08:34:11.933Z"
+      }
+    ],
+    [
+      1269,
+      {
+        "id": 1269,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:40:11.849Z",
+        "createdAt": "2025-09-04T08:40:11.849Z"
+      }
+    ],
+    [
+      1272,
+      {
+        "id": 1272,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:43:11.852Z",
+        "createdAt": "2025-09-04T08:43:11.852Z"
+      }
+    ],
+    [
+      1275,
+      {
+        "id": 1275,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:46:11.853Z",
+        "createdAt": "2025-09-04T08:46:11.853Z"
+      }
+    ],
+    [
+      1281,
+      {
+        "id": 1281,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:52:11.850Z",
+        "createdAt": "2025-09-04T08:52:11.850Z"
+      }
+    ],
+    [
+      1425,
+      {
+        "id": 1425,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:16:13.488Z",
+        "createdAt": "2025-09-04T11:16:13.488Z"
+      }
+    ],
+    [
+      1427,
+      {
+        "id": 1427,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:18:13.533Z",
+        "createdAt": "2025-09-04T11:18:13.533Z"
+      }
+    ],
+    [
+      1432,
+      {
+        "id": 1432,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:22:50.892Z",
+        "createdAt": "2025-09-04T11:22:50.892Z"
+      }
+    ],
+    [
+      1264,
+      {
+        "id": 1264,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:35:11.889Z",
+        "createdAt": "2025-09-04T08:35:11.889Z"
+      }
+    ],
+    [
+      1270,
+      {
+        "id": 1270,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:41:11.856Z",
+        "createdAt": "2025-09-04T08:41:11.856Z"
+      }
+    ],
+    [
+      1273,
+      {
+        "id": 1273,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:44:11.870Z",
+        "createdAt": "2025-09-04T08:44:11.870Z"
+      }
+    ],
+    [
+      1274,
+      {
+        "id": 1274,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:45:11.819Z",
+        "createdAt": "2025-09-04T08:45:11.819Z"
+      }
+    ],
+    [
+      1430,
+      {
+        "id": 1430,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:20:50.865Z",
+        "createdAt": "2025-09-04T11:20:50.865Z"
+      }
+    ],
+    [
+      1433,
+      {
+        "id": 1433,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:23:50.869Z",
+        "createdAt": "2025-09-04T11:23:50.869Z"
+      }
+    ],
+    [
+      1438,
+      {
+        "id": 1438,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:28:50.860Z",
+        "createdAt": "2025-09-04T11:28:50.860Z"
+      }
+    ],
+    [
+      1265,
+      {
+        "id": 1265,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:36:11.865Z",
+        "createdAt": "2025-09-04T08:36:11.865Z"
+      }
+    ],
+    [
+      1268,
+      {
+        "id": 1268,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:39:11.882Z",
+        "createdAt": "2025-09-04T08:39:11.882Z"
+      }
+    ],
+    [
+      1280,
+      {
+        "id": 1280,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:51:11.863Z",
+        "createdAt": "2025-09-04T08:51:11.863Z"
+      }
+    ],
+    [
+      1431,
+      {
+        "id": 1431,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:21:50.952Z",
+        "createdAt": "2025-09-04T11:21:50.952Z"
+      }
+    ],
+    [
+      1436,
+      {
+        "id": 1436,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:26:50.899Z",
+        "createdAt": "2025-09-04T11:26:50.899Z"
+      }
+    ],
+    [
+      1266,
+      {
+        "id": 1266,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:37:11.916Z",
+        "createdAt": "2025-09-04T08:37:11.916Z"
+      }
+    ],
+    [
+      1437,
+      {
+        "id": 1437,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:27:50.890Z",
+        "createdAt": "2025-09-04T11:27:50.890Z"
+      }
+    ],
+    [
+      1271,
+      {
+        "id": 1271,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:42:11.909Z",
+        "createdAt": "2025-09-04T08:42:11.909Z"
+      }
+    ],
+    [
+      1276,
+      {
+        "id": 1276,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:47:11.881Z",
+        "createdAt": "2025-09-04T08:47:11.881Z"
+      }
+    ],
+    [
+      1278,
+      {
+        "id": 1278,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:49:11.867Z",
+        "createdAt": "2025-09-04T08:49:11.867Z"
+      }
+    ],
+    [
+      1284,
+      {
+        "id": 1284,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:55:11.828Z",
+        "createdAt": "2025-09-04T08:55:11.828Z"
+      }
+    ],
+    [
+      1285,
+      {
+        "id": 1285,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:56:11.850Z",
+        "createdAt": "2025-09-04T08:56:11.850Z"
+      }
+    ],
+    [
+      1294,
+      {
+        "id": 1294,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:05:11.899Z",
+        "createdAt": "2025-09-04T09:05:11.899Z"
+      }
+    ],
+    [
+      1296,
+      {
+        "id": 1296,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:07:11.827Z",
+        "createdAt": "2025-09-04T09:07:11.827Z"
+      }
+    ],
+    [
+      1299,
+      {
+        "id": 1299,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:10:11.854Z",
+        "createdAt": "2025-09-04T09:10:11.854Z"
+      }
+    ],
+    [
+      1301,
+      {
+        "id": 1301,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:12:11.924Z",
+        "createdAt": "2025-09-04T09:12:11.924Z"
+      }
+    ],
+    [
+      1306,
+      {
+        "id": 1306,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:17:11.892Z",
+        "createdAt": "2025-09-04T09:17:11.892Z"
+      }
+    ],
+    [
+      1311,
+      {
+        "id": 1311,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:22:11.898Z",
+        "createdAt": "2025-09-04T09:22:11.898Z"
+      }
+    ],
+    [
+      1312,
+      {
+        "id": 1312,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:23:11.897Z",
+        "createdAt": "2025-09-04T09:23:11.897Z"
+      }
+    ],
+    [
+      1320,
+      {
+        "id": 1320,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:31:11.915Z",
+        "createdAt": "2025-09-04T09:31:11.915Z"
+      }
+    ],
+    [
+      1321,
+      {
+        "id": 1321,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:32:11.880Z",
+        "createdAt": "2025-09-04T09:32:11.880Z"
+      }
+    ],
+    [
+      1333,
+      {
+        "id": 1333,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:44:11.894Z",
+        "createdAt": "2025-09-04T09:44:11.894Z"
+      }
+    ],
+    [
+      1343,
+      {
+        "id": 1343,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:54:11.901Z",
+        "createdAt": "2025-09-04T09:54:11.901Z"
+      }
+    ],
+    [
+      1346,
+      {
+        "id": 1346,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:57:11.895Z",
+        "createdAt": "2025-09-04T09:57:11.895Z"
+      }
+    ],
+    [
+      1347,
+      {
+        "id": 1347,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:58:11.866Z",
+        "createdAt": "2025-09-04T09:58:11.866Z"
+      }
+    ],
+    [
+      1349,
+      {
+        "id": 1349,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:00:11.867Z",
+        "createdAt": "2025-09-04T10:00:11.867Z"
+      }
+    ],
+    [
+      1354,
+      {
+        "id": 1354,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:05:11.896Z",
+        "createdAt": "2025-09-04T10:05:11.896Z"
+      }
+    ],
+    [
+      1439,
+      {
+        "id": 1439,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:29:50.858Z",
+        "createdAt": "2025-09-04T11:29:50.858Z"
+      }
+    ],
+    [
+      1445,
+      {
+        "id": 1445,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:35:50.863Z",
+        "createdAt": "2025-09-04T11:35:50.863Z"
+      }
+    ],
+    [
+      1450,
+      {
+        "id": 1450,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:40:50.870Z",
+        "createdAt": "2025-09-04T11:40:50.870Z"
+      }
+    ],
+    [
+      1452,
+      {
+        "id": 1452,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:42:50.935Z",
+        "createdAt": "2025-09-04T11:42:50.935Z"
+      }
+    ],
+    [
+      1456,
+      {
+        "id": 1456,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:46:50.843Z",
+        "createdAt": "2025-09-04T11:46:50.843Z"
+      }
+    ],
+    [
+      1457,
+      {
+        "id": 1457,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:47:50.893Z",
+        "createdAt": "2025-09-04T11:47:50.893Z"
+      }
+    ],
+    [
+      1462,
+      {
+        "id": 1462,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:52:50.882Z",
+        "createdAt": "2025-09-04T11:52:50.882Z"
+      }
+    ],
+    [
+      1466,
+      {
+        "id": 1466,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:56:50.872Z",
+        "createdAt": "2025-09-04T11:56:50.872Z"
+      }
+    ],
+    [
+      1481,
+      {
+        "id": 1481,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:11:50.889Z",
+        "createdAt": "2025-09-04T12:11:50.889Z"
+      }
+    ],
+    [
+      1486,
+      {
+        "id": 1486,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:16:38.421Z",
+        "createdAt": "2025-09-04T12:16:38.421Z"
+      }
+    ],
+    [
+      1489,
+      {
+        "id": 1489,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:19:38.412Z",
+        "createdAt": "2025-09-04T12:19:38.412Z"
+      }
+    ],
+    [
+      1492,
+      {
+        "id": 1492,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:21:33.784Z",
+        "createdAt": "2025-09-04T12:21:33.784Z"
+      }
+    ],
+    [
+      1494,
+      {
+        "id": 1494,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:24:18.639Z",
+        "createdAt": "2025-09-04T12:24:18.639Z"
+      }
+    ],
+    [
+      1515,
+      {
+        "id": 1515,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:44:25.917Z",
+        "createdAt": "2025-09-04T12:44:25.917Z"
+      }
+    ],
+    [
+      1519,
+      {
+        "id": 1519,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:48:05.489Z",
+        "createdAt": "2025-09-04T12:48:05.489Z"
+      }
+    ],
+    [
+      1277,
+      {
+        "id": 1277,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:48:11.866Z",
+        "createdAt": "2025-09-04T08:48:11.866Z"
+      }
+    ],
+    [
+      1279,
+      {
+        "id": 1279,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:50:11.892Z",
+        "createdAt": "2025-09-04T08:50:11.892Z"
+      }
+    ],
+    [
+      1300,
+      {
+        "id": 1300,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:11:11.880Z",
+        "createdAt": "2025-09-04T09:11:11.880Z"
+      }
+    ],
+    [
+      1309,
+      {
+        "id": 1309,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:20:11.885Z",
+        "createdAt": "2025-09-04T09:20:11.885Z"
+      }
+    ],
+    [
+      1315,
+      {
+        "id": 1315,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:26:11.901Z",
+        "createdAt": "2025-09-04T09:26:11.901Z"
+      }
+    ],
+    [
+      1319,
+      {
+        "id": 1319,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:30:11.876Z",
+        "createdAt": "2025-09-04T09:30:11.876Z"
+      }
+    ],
+    [
+      1322,
+      {
+        "id": 1322,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:33:11.864Z",
+        "createdAt": "2025-09-04T09:33:11.864Z"
+      }
+    ],
+    [
+      1323,
+      {
+        "id": 1323,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:34:11.876Z",
+        "createdAt": "2025-09-04T09:34:11.876Z"
+      }
+    ],
+    [
+      1326,
+      {
+        "id": 1326,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:37:11.877Z",
+        "createdAt": "2025-09-04T09:37:11.877Z"
+      }
+    ],
+    [
+      1340,
+      {
+        "id": 1340,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:51:11.824Z",
+        "createdAt": "2025-09-04T09:51:11.824Z"
+      }
+    ],
+    [
+      1350,
+      {
+        "id": 1350,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:01:11.896Z",
+        "createdAt": "2025-09-04T10:01:11.896Z"
+      }
+    ],
+    [
+      1355,
+      {
+        "id": 1355,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:06:11.876Z",
+        "createdAt": "2025-09-04T10:06:11.876Z"
+      }
+    ],
+    [
+      1356,
+      {
+        "id": 1356,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:07:11.906Z",
+        "createdAt": "2025-09-04T10:07:11.906Z"
+      }
+    ],
+    [
+      1357,
+      {
+        "id": 1357,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:08:11.873Z",
+        "createdAt": "2025-09-04T10:08:11.873Z"
+      }
+    ],
+    [
+      1364,
+      {
+        "id": 1364,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:15:11.894Z",
+        "createdAt": "2025-09-04T10:15:11.894Z"
+      }
+    ],
+    [
+      1367,
+      {
+        "id": 1367,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:18:11.871Z",
+        "createdAt": "2025-09-04T10:18:11.871Z"
+      }
+    ],
+    [
+      1371,
+      {
+        "id": 1371,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:22:11.871Z",
+        "createdAt": "2025-09-04T10:22:11.871Z"
+      }
+    ],
+    [
+      1374,
+      {
+        "id": 1374,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:25:11.869Z",
+        "createdAt": "2025-09-04T10:25:11.869Z"
+      }
+    ],
+    [
+      1375,
+      {
+        "id": 1375,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:26:11.899Z",
+        "createdAt": "2025-09-04T10:26:11.899Z"
+      }
+    ],
+    [
+      1384,
+      {
+        "id": 1384,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:35:11.825Z",
+        "createdAt": "2025-09-04T10:35:11.825Z"
+      }
+    ],
+    [
+      1385,
+      {
+        "id": 1385,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:36:11.829Z",
+        "createdAt": "2025-09-04T10:36:11.829Z"
+      }
+    ],
+    [
+      1393,
+      {
+        "id": 1393,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:44:17.560Z",
+        "createdAt": "2025-09-04T10:44:17.560Z"
+      }
+    ],
+    [
+      1403,
+      {
+        "id": 1403,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:53:56.279Z",
+        "createdAt": "2025-09-04T10:53:56.279Z"
+      }
+    ],
+    [
+      1412,
+      {
+        "id": 1412,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:02:56.400Z",
+        "createdAt": "2025-09-04T11:02:56.400Z"
+      }
+    ],
+    [
+      1435,
+      {
+        "id": 1435,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:25:50.876Z",
+        "createdAt": "2025-09-04T11:25:50.876Z"
+      }
+    ],
+    [
+      1440,
+      {
+        "id": 1440,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:30:50.873Z",
+        "createdAt": "2025-09-04T11:30:50.873Z"
+      }
+    ],
+    [
+      1453,
+      {
+        "id": 1453,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:43:50.870Z",
+        "createdAt": "2025-09-04T11:43:50.870Z"
+      }
+    ],
+    [
+      1454,
+      {
+        "id": 1454,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:44:50.847Z",
+        "createdAt": "2025-09-04T11:44:50.847Z"
+      }
+    ],
+    [
+      1455,
+      {
+        "id": 1455,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:45:50.891Z",
+        "createdAt": "2025-09-04T11:45:50.891Z"
+      }
+    ],
+    [
+      1471,
+      {
+        "id": 1471,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:01:50.883Z",
+        "createdAt": "2025-09-04T12:01:50.883Z"
+      }
+    ],
+    [
+      1472,
+      {
+        "id": 1472,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:02:50.891Z",
+        "createdAt": "2025-09-04T12:02:50.891Z"
+      }
+    ],
+    [
+      1482,
+      {
+        "id": 1482,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:12:09.322Z",
+        "createdAt": "2025-09-04T12:12:09.322Z"
+      }
+    ],
+    [
+      1282,
+      {
+        "id": 1282,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:53:11.842Z",
+        "createdAt": "2025-09-04T08:53:11.842Z"
+      }
+    ],
+    [
+      1283,
+      {
+        "id": 1283,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:54:11.853Z",
+        "createdAt": "2025-09-04T08:54:11.853Z"
+      }
+    ],
+    [
+      1295,
+      {
+        "id": 1295,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:06:11.875Z",
+        "createdAt": "2025-09-04T09:06:11.875Z"
+      }
+    ],
+    [
+      1316,
+      {
+        "id": 1316,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:27:11.848Z",
+        "createdAt": "2025-09-04T09:27:11.848Z"
+      }
+    ],
+    [
+      1318,
+      {
+        "id": 1318,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:29:11.889Z",
+        "createdAt": "2025-09-04T09:29:11.889Z"
+      }
+    ],
+    [
+      1334,
+      {
+        "id": 1334,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:45:11.886Z",
+        "createdAt": "2025-09-04T09:45:11.886Z"
+      }
+    ],
+    [
+      1337,
+      {
+        "id": 1337,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:48:11.972Z",
+        "createdAt": "2025-09-04T09:48:11.972Z"
+      }
+    ],
+    [
+      1344,
+      {
+        "id": 1344,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:55:11.873Z",
+        "createdAt": "2025-09-04T09:55:11.873Z"
+      }
+    ],
+    [
+      1345,
+      {
+        "id": 1345,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:56:11.908Z",
+        "createdAt": "2025-09-04T09:56:11.908Z"
+      }
+    ],
+    [
+      1348,
+      {
+        "id": 1348,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:59:11.860Z",
+        "createdAt": "2025-09-04T09:59:11.860Z"
+      }
+    ],
+    [
+      1441,
+      {
+        "id": 1441,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:31:50.879Z",
+        "createdAt": "2025-09-04T11:31:50.879Z"
+      }
+    ],
+    [
+      1458,
+      {
+        "id": 1458,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:48:50.913Z",
+        "createdAt": "2025-09-04T11:48:50.913Z"
+      }
+    ],
+    [
+      1459,
+      {
+        "id": 1459,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:49:50.853Z",
+        "createdAt": "2025-09-04T11:49:50.853Z"
+      }
+    ],
+    [
+      1463,
+      {
+        "id": 1463,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:53:50.891Z",
+        "createdAt": "2025-09-04T11:53:50.891Z"
+      }
+    ],
+    [
+      1465,
+      {
+        "id": 1465,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:55:50.865Z",
+        "createdAt": "2025-09-04T11:55:50.865Z"
+      }
+    ],
+    [
+      1474,
+      {
+        "id": 1474,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:04:50.915Z",
+        "createdAt": "2025-09-04T12:04:50.915Z"
+      }
+    ],
+    [
+      1480,
+      {
+        "id": 1480,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:10:50.864Z",
+        "createdAt": "2025-09-04T12:10:50.864Z"
+      }
+    ],
+    [
+      1483,
+      {
+        "id": 1483,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:13:04.731Z",
+        "createdAt": "2025-09-04T12:13:04.731Z"
+      }
+    ],
+    [
+      1484,
+      {
+        "id": 1484,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:14:38.400Z",
+        "createdAt": "2025-09-04T12:14:38.400Z"
+      }
+    ],
+    [
+      1490,
+      {
+        "id": 1490,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:19:47.353Z",
+        "createdAt": "2025-09-04T12:19:47.353Z"
+      }
+    ],
+    [
+      1499,
+      {
+        "id": 1499,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:29:18.632Z",
+        "createdAt": "2025-09-04T12:29:18.632Z"
+      }
+    ],
+    [
+      1505,
+      {
+        "id": 1505,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:35:18.736Z",
+        "createdAt": "2025-09-04T12:35:18.736Z"
+      }
+    ],
+    [
+      1506,
+      {
+        "id": 1506,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:36:18.659Z",
+        "createdAt": "2025-09-04T12:36:18.659Z"
+      }
+    ],
+    [
+      1508,
+      {
+        "id": 1508,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:37:55.176Z",
+        "createdAt": "2025-09-04T12:37:55.176Z"
+      }
+    ],
+    [
+      1512,
+      {
+        "id": 1512,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:41:29.958Z",
+        "createdAt": "2025-09-04T12:41:29.958Z"
+      }
+    ],
+    [
+      1513,
+      {
+        "id": 1513,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:42:25.895Z",
+        "createdAt": "2025-09-04T12:42:25.895Z"
+      }
+    ],
+    [
+      1520,
+      {
+        "id": 1520,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:49:05.490Z",
+        "createdAt": "2025-09-04T12:49:05.490Z"
+      }
+    ],
+    [
+      1521,
+      {
+        "id": 1521,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:50:24.100Z",
+        "createdAt": "2025-09-04T12:50:24.100Z"
+      }
+    ],
+    [
+      1522,
+      {
+        "id": 1522,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:51:24.071Z",
+        "createdAt": "2025-09-04T12:51:24.071Z"
+      }
+    ],
+    [
+      1524,
+      {
+        "id": 1524,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:53:24.104Z",
+        "createdAt": "2025-09-04T12:53:24.104Z"
+      }
+    ],
+    [
+      1537,
+      {
+        "id": 1537,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:06:30.528Z",
+        "createdAt": "2025-09-04T13:06:30.528Z"
+      }
+    ],
+    [
+      1538,
+      {
+        "id": 1538,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:07:30.510Z",
+        "createdAt": "2025-09-04T13:07:30.510Z"
+      }
+    ],
+    [
+      1548,
+      {
+        "id": 1548,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:17:08.817Z",
+        "createdAt": "2025-09-04T13:17:08.817Z"
+      }
+    ],
+    [
+      1550,
+      {
+        "id": 1550,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:19:08.823Z",
+        "createdAt": "2025-09-04T13:19:08.823Z"
+      }
+    ],
+    [
+      1560,
+      {
+        "id": 1560,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:29:46.884Z",
+        "createdAt": "2025-09-04T13:29:46.884Z"
+      }
+    ],
+    [
+      1561,
+      {
+        "id": 1561,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:30:46.897Z",
+        "createdAt": "2025-09-04T13:30:46.897Z"
+      }
+    ],
+    [
+      1567,
+      {
+        "id": 1567,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T13:36:46.875Z",
+        "createdAt": "2025-09-04T13:36:46.875Z"
+      }
+    ],
+    [
+      1288,
+      {
+        "id": 1288,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T08:59:11.826Z",
+        "createdAt": "2025-09-04T08:59:11.826Z"
+      }
+    ],
+    [
+      1442,
+      {
+        "id": 1442,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:32:50.869Z",
+        "createdAt": "2025-09-04T11:32:50.869Z"
+      }
+    ],
+    [
+      1448,
+      {
+        "id": 1448,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:38:50.878Z",
+        "createdAt": "2025-09-04T11:38:50.878Z"
+      }
+    ],
+    [
+      1451,
+      {
+        "id": 1451,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:41:50.868Z",
+        "createdAt": "2025-09-04T11:41:50.868Z"
+      }
+    ],
+    [
+      1460,
+      {
+        "id": 1460,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:50:50.867Z",
+        "createdAt": "2025-09-04T11:50:50.867Z"
+      }
+    ],
+    [
+      1461,
+      {
+        "id": 1461,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:51:50.879Z",
+        "createdAt": "2025-09-04T11:51:50.879Z"
+      }
+    ],
+    [
+      1464,
+      {
+        "id": 1464,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:54:50.885Z",
+        "createdAt": "2025-09-04T11:54:50.885Z"
+      }
+    ],
+    [
+      1467,
+      {
+        "id": 1467,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:57:50.891Z",
+        "createdAt": "2025-09-04T11:57:50.891Z"
+      }
+    ],
+    [
+      1469,
+      {
+        "id": 1469,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:59:50.913Z",
+        "createdAt": "2025-09-04T11:59:50.913Z"
+      }
+    ],
+    [
+      1478,
+      {
+        "id": 1478,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:08:50.878Z",
+        "createdAt": "2025-09-04T12:08:50.878Z"
+      }
+    ],
+    [
+      1290,
+      {
+        "id": 1290,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:01:11.899Z",
+        "createdAt": "2025-09-04T09:01:11.899Z"
+      }
+    ],
+    [
+      1291,
+      {
+        "id": 1291,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:02:11.848Z",
+        "createdAt": "2025-09-04T09:02:11.848Z"
+      }
+    ],
+    [
+      1298,
+      {
+        "id": 1298,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:09:11.883Z",
+        "createdAt": "2025-09-04T09:09:11.883Z"
+      }
+    ],
+    [
+      1303,
+      {
+        "id": 1303,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:14:11.881Z",
+        "createdAt": "2025-09-04T09:14:11.881Z"
+      }
+    ],
+    [
+      1304,
+      {
+        "id": 1304,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:15:11.868Z",
+        "createdAt": "2025-09-04T09:15:11.868Z"
+      }
+    ],
+    [
+      1310,
+      {
+        "id": 1310,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:21:11.881Z",
+        "createdAt": "2025-09-04T09:21:11.881Z"
+      }
+    ],
+    [
+      1314,
+      {
+        "id": 1314,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:25:11.859Z",
+        "createdAt": "2025-09-04T09:25:11.859Z"
+      }
+    ],
+    [
+      1331,
+      {
+        "id": 1331,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:42:11.901Z",
+        "createdAt": "2025-09-04T09:42:11.901Z"
+      }
+    ],
+    [
+      1332,
+      {
+        "id": 1332,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:43:11.915Z",
+        "createdAt": "2025-09-04T09:43:11.915Z"
+      }
+    ],
+    [
+      1335,
+      {
+        "id": 1335,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:46:11.873Z",
+        "createdAt": "2025-09-04T09:46:11.873Z"
+      }
+    ],
+    [
+      1336,
+      {
+        "id": 1336,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:47:11.876Z",
+        "createdAt": "2025-09-04T09:47:11.876Z"
+      }
+    ],
+    [
+      1338,
+      {
+        "id": 1338,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:49:11.869Z",
+        "createdAt": "2025-09-04T09:49:11.869Z"
+      }
+    ],
+    [
+      1443,
+      {
+        "id": 1443,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:33:50.894Z",
+        "createdAt": "2025-09-04T11:33:50.894Z"
+      }
+    ],
+    [
+      1444,
+      {
+        "id": 1444,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:34:50.852Z",
+        "createdAt": "2025-09-04T11:34:50.852Z"
+      }
+    ],
+    [
+      1292,
+      {
+        "id": 1292,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:03:11.847Z",
+        "createdAt": "2025-09-04T09:03:11.847Z"
+      }
+    ],
+    [
+      1297,
+      {
+        "id": 1297,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:08:11.834Z",
+        "createdAt": "2025-09-04T09:08:11.834Z"
+      }
+    ],
+    [
+      1308,
+      {
+        "id": 1308,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:19:11.880Z",
+        "createdAt": "2025-09-04T09:19:11.880Z"
+      }
+    ],
+    [
+      1313,
+      {
+        "id": 1313,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:24:11.828Z",
+        "createdAt": "2025-09-04T09:24:11.828Z"
+      }
+    ],
+    [
+      1325,
+      {
+        "id": 1325,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:36:11.915Z",
+        "createdAt": "2025-09-04T09:36:11.915Z"
+      }
+    ],
+    [
+      1328,
+      {
+        "id": 1328,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:39:11.932Z",
+        "createdAt": "2025-09-04T09:39:11.932Z"
+      }
+    ],
+    [
+      1446,
+      {
+        "id": 1446,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:36:50.885Z",
+        "createdAt": "2025-09-04T11:36:50.885Z"
+      }
+    ],
+    [
+      1449,
+      {
+        "id": 1449,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:39:50.839Z",
+        "createdAt": "2025-09-04T11:39:50.839Z"
+      }
+    ],
+    [
+      1468,
+      {
+        "id": 1468,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:58:50.889Z",
+        "createdAt": "2025-09-04T11:58:50.889Z"
+      }
+    ],
+    [
+      1324,
+      {
+        "id": 1324,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:35:11.873Z",
+        "createdAt": "2025-09-04T09:35:11.873Z"
+      }
+    ],
+    [
+      1327,
+      {
+        "id": 1327,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:38:11.880Z",
+        "createdAt": "2025-09-04T09:38:11.880Z"
+      }
+    ],
+    [
+      1329,
+      {
+        "id": 1329,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:40:11.898Z",
+        "createdAt": "2025-09-04T09:40:11.898Z"
+      }
+    ],
+    [
+      1330,
+      {
+        "id": 1330,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:41:11.928Z",
+        "createdAt": "2025-09-04T09:41:11.928Z"
+      }
+    ],
+    [
+      1339,
+      {
+        "id": 1339,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:50:11.888Z",
+        "createdAt": "2025-09-04T09:50:11.888Z"
+      }
+    ],
+    [
+      1447,
+      {
+        "id": 1447,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:37:50.872Z",
+        "createdAt": "2025-09-04T11:37:50.872Z"
+      }
+    ],
+    [
+      1341,
+      {
+        "id": 1341,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:52:11.867Z",
+        "createdAt": "2025-09-04T09:52:11.867Z"
+      }
+    ],
+    [
+      1342,
+      {
+        "id": 1342,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T09:53:11.893Z",
+        "createdAt": "2025-09-04T09:53:11.893Z"
+      }
+    ],
+    [
+      1351,
+      {
+        "id": 1351,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:02:12.024Z",
+        "createdAt": "2025-09-04T10:02:12.024Z"
+      }
+    ],
+    [
+      1362,
+      {
+        "id": 1362,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:13:11.876Z",
+        "createdAt": "2025-09-04T10:13:11.876Z"
+      }
+    ],
+    [
+      1363,
+      {
+        "id": 1363,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:14:11.933Z",
+        "createdAt": "2025-09-04T10:14:11.933Z"
+      }
+    ],
+    [
+      1470,
+      {
+        "id": 1470,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:00:50.905Z",
+        "createdAt": "2025-09-04T12:00:50.905Z"
+      }
+    ],
+    [
+      1473,
+      {
+        "id": 1473,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:03:50.922Z",
+        "createdAt": "2025-09-04T12:03:50.922Z"
+      }
+    ],
+    [
+      1475,
+      {
+        "id": 1475,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:05:50.886Z",
+        "createdAt": "2025-09-04T12:05:50.886Z"
+      }
+    ],
+    [
+      1476,
+      {
+        "id": 1476,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:06:50.890Z",
+        "createdAt": "2025-09-04T12:06:50.890Z"
+      }
+    ],
+    [
+      1352,
+      {
+        "id": 1352,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:03:11.896Z",
+        "createdAt": "2025-09-04T10:03:11.896Z"
+      }
+    ],
+    [
+      1353,
+      {
+        "id": 1353,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:04:11.899Z",
+        "createdAt": "2025-09-04T10:04:11.899Z"
+      }
+    ],
+    [
+      1360,
+      {
+        "id": 1360,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:11:11.910Z",
+        "createdAt": "2025-09-04T10:11:11.910Z"
+      }
+    ],
+    [
+      1361,
+      {
+        "id": 1361,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:12:11.925Z",
+        "createdAt": "2025-09-04T10:12:11.925Z"
+      }
+    ],
+    [
+      1365,
+      {
+        "id": 1365,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:16:11.864Z",
+        "createdAt": "2025-09-04T10:16:11.864Z"
+      }
+    ],
+    [
+      1477,
+      {
+        "id": 1477,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:07:50.886Z",
+        "createdAt": "2025-09-04T12:07:50.886Z"
+      }
+    ],
+    [
+      1108,
+      {
+        "id": 1108,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:00:29.686Z",
+        "createdAt": "2025-09-03T22:00:29.686Z"
+      }
+    ],
+    [
+      1109,
+      {
+        "id": 1109,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:01:29.783Z",
+        "createdAt": "2025-09-03T22:01:29.783Z"
+      }
+    ],
+    [
+      1110,
+      {
+        "id": 1110,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:02:29.752Z",
+        "createdAt": "2025-09-03T22:02:29.752Z"
+      }
+    ],
+    [
+      1111,
+      {
+        "id": 1111,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:03:29.759Z",
+        "createdAt": "2025-09-03T22:03:29.759Z"
+      }
+    ],
+    [
+      1112,
+      {
+        "id": 1112,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:04:29.787Z",
+        "createdAt": "2025-09-03T22:04:29.787Z"
+      }
+    ],
+    [
+      1113,
+      {
+        "id": 1113,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:05:29.793Z",
+        "createdAt": "2025-09-03T22:05:29.793Z"
+      }
+    ],
+    [
+      1114,
+      {
+        "id": 1114,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:06:29.757Z",
+        "createdAt": "2025-09-03T22:06:29.757Z"
+      }
+    ],
+    [
+      1115,
+      {
+        "id": 1115,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:07:29.771Z",
+        "createdAt": "2025-09-03T22:07:29.771Z"
+      }
+    ],
+    [
+      1116,
+      {
+        "id": 1116,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:08:29.883Z",
+        "createdAt": "2025-09-03T22:08:29.883Z"
+      }
+    ],
+    [
+      1117,
+      {
+        "id": 1117,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:09:29.883Z",
+        "createdAt": "2025-09-03T22:09:29.883Z"
+      }
+    ],
+    [
+      1118,
+      {
+        "id": 1118,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:10:29.798Z",
+        "createdAt": "2025-09-03T22:10:29.798Z"
+      }
+    ],
+    [
+      1119,
+      {
+        "id": 1119,
+        "userId": 2,
+        "amount": 127,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:49:39.412Z",
+        "createdAt": "2025-09-03T22:49:39.412Z"
+      }
+    ],
+    [
+      1120,
+      {
+        "id": 1120,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:50:33.484Z",
+        "createdAt": "2025-09-03T22:50:33.484Z"
+      }
+    ],
+    [
+      1121,
+      {
+        "id": 1121,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:51:33.487Z",
+        "createdAt": "2025-09-03T22:51:33.487Z"
+      }
+    ],
+    [
+      1122,
+      {
+        "id": 1122,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:52:33.488Z",
+        "createdAt": "2025-09-03T22:52:33.488Z"
+      }
+    ],
+    [
+      1123,
+      {
+        "id": 1123,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:53:33.503Z",
+        "createdAt": "2025-09-03T22:53:33.503Z"
+      }
+    ],
+    [
+      1124,
+      {
+        "id": 1124,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:54:33.539Z",
+        "createdAt": "2025-09-03T22:54:33.539Z"
+      }
+    ],
+    [
+      1125,
+      {
+        "id": 1125,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:55:33.525Z",
+        "createdAt": "2025-09-03T22:55:33.525Z"
+      }
+    ],
+    [
+      1126,
+      {
+        "id": 1126,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:56:33.570Z",
+        "createdAt": "2025-09-03T22:56:33.570Z"
+      }
+    ],
+    [
+      1127,
+      {
+        "id": 1127,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:57:33.565Z",
+        "createdAt": "2025-09-03T22:57:33.565Z"
+      }
+    ],
+    [
+      1128,
+      {
+        "id": 1128,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:58:33.556Z",
+        "createdAt": "2025-09-03T22:58:33.556Z"
+      }
+    ],
+    [
+      1129,
+      {
+        "id": 1129,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T22:59:33.618Z",
+        "createdAt": "2025-09-03T22:59:33.618Z"
+      }
+    ],
+    [
+      1130,
+      {
+        "id": 1130,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-03T23:00:33.584Z",
+        "createdAt": "2025-09-03T23:00:33.584Z"
+      }
+    ],
+    [
+      1131,
+      {
+        "id": 1131,
+        "userId": 2,
+        "amount": 1193,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:15:30.570Z",
+        "createdAt": "2025-09-04T05:15:30.570Z"
+      }
+    ],
+    [
+      1132,
+      {
+        "id": 1132,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:16:26.613Z",
+        "createdAt": "2025-09-04T05:16:26.613Z"
+      }
+    ],
+    [
+      1133,
+      {
+        "id": 1133,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:17:26.599Z",
+        "createdAt": "2025-09-04T05:17:26.599Z"
+      }
+    ],
+    [
+      1134,
+      {
+        "id": 1134,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:18:26.647Z",
+        "createdAt": "2025-09-04T05:18:26.647Z"
+      }
+    ],
+    [
+      1135,
+      {
+        "id": 1135,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:19:26.590Z",
+        "createdAt": "2025-09-04T05:19:26.590Z"
+      }
+    ],
+    [
+      1136,
+      {
+        "id": 1136,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:20:26.633Z",
+        "createdAt": "2025-09-04T05:20:26.633Z"
+      }
+    ],
+    [
+      1137,
+      {
+        "id": 1137,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:21:26.626Z",
+        "createdAt": "2025-09-04T05:21:26.626Z"
+      }
+    ],
+    [
+      1138,
+      {
+        "id": 1138,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:22:26.639Z",
+        "createdAt": "2025-09-04T05:22:26.639Z"
+      }
+    ],
+    [
+      1139,
+      {
+        "id": 1139,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:23:26.575Z",
+        "createdAt": "2025-09-04T05:23:26.575Z"
+      }
+    ],
+    [
+      1140,
+      {
+        "id": 1140,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:24:26.616Z",
+        "createdAt": "2025-09-04T05:24:26.616Z"
+      }
+    ],
+    [
+      1141,
+      {
+        "id": 1141,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:25:26.632Z",
+        "createdAt": "2025-09-04T05:25:26.632Z"
+      }
+    ],
+    [
+      1142,
+      {
+        "id": 1142,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:26:26.599Z",
+        "createdAt": "2025-09-04T05:26:26.599Z"
+      }
+    ],
+    [
+      1143,
+      {
+        "id": 1143,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:27:26.725Z",
+        "createdAt": "2025-09-04T05:27:26.725Z"
+      }
+    ],
+    [
+      1144,
+      {
+        "id": 1144,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:28:26.595Z",
+        "createdAt": "2025-09-04T05:28:26.595Z"
+      }
+    ],
+    [
+      1145,
+      {
+        "id": 1145,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:29:26.637Z",
+        "createdAt": "2025-09-04T05:29:26.637Z"
+      }
+    ],
+    [
+      1146,
+      {
+        "id": 1146,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:30:26.618Z",
+        "createdAt": "2025-09-04T05:30:26.618Z"
+      }
+    ],
+    [
+      1147,
+      {
+        "id": 1147,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:31:26.652Z",
+        "createdAt": "2025-09-04T05:31:26.652Z"
+      }
+    ],
+    [
+      1148,
+      {
+        "id": 1148,
+        "userId": 2,
+        "amount": 9,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:34:15.661Z",
+        "createdAt": "2025-09-04T05:34:15.661Z"
+      }
+    ],
+    [
+      1149,
+      {
+        "id": 1149,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:35:12.313Z",
+        "createdAt": "2025-09-04T05:35:12.313Z"
+      }
+    ],
+    [
+      1150,
+      {
+        "id": 1150,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:36:12.313Z",
+        "createdAt": "2025-09-04T05:36:12.313Z"
+      }
+    ],
+    [
+      1151,
+      {
+        "id": 1151,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:37:12.323Z",
+        "createdAt": "2025-09-04T05:37:12.323Z"
+      }
+    ],
+    [
+      1152,
+      {
+        "id": 1152,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:38:13.297Z",
+        "createdAt": "2025-09-04T05:38:13.297Z"
+      }
+    ],
+    [
+      1153,
+      {
+        "id": 1153,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:39:18.041Z",
+        "createdAt": "2025-09-04T05:39:18.041Z"
+      }
+    ],
+    [
+      1154,
+      {
+        "id": 1154,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:40:18.170Z",
+        "createdAt": "2025-09-04T05:40:18.170Z"
+      }
+    ],
+    [
+      1155,
+      {
+        "id": 1155,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:41:17.970Z",
+        "createdAt": "2025-09-04T05:41:17.970Z"
+      }
+    ],
+    [
+      1156,
+      {
+        "id": 1156,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:42:17.979Z",
+        "createdAt": "2025-09-04T05:42:17.979Z"
+      }
+    ],
+    [
+      1157,
+      {
+        "id": 1157,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:43:17.960Z",
+        "createdAt": "2025-09-04T05:43:17.960Z"
+      }
+    ],
+    [
+      1158,
+      {
+        "id": 1158,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:44:18.070Z",
+        "createdAt": "2025-09-04T05:44:18.070Z"
+      }
+    ],
+    [
+      1159,
+      {
+        "id": 1159,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:45:17.982Z",
+        "createdAt": "2025-09-04T05:45:17.982Z"
+      }
+    ],
+    [
+      1160,
+      {
+        "id": 1160,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:46:17.987Z",
+        "createdAt": "2025-09-04T05:46:17.987Z"
+      }
+    ],
+    [
+      1161,
+      {
+        "id": 1161,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:47:17.971Z",
+        "createdAt": "2025-09-04T05:47:17.971Z"
+      }
+    ],
+    [
+      1162,
+      {
+        "id": 1162,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:48:17.985Z",
+        "createdAt": "2025-09-04T05:48:17.985Z"
+      }
+    ],
+    [
+      1163,
+      {
+        "id": 1163,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:49:18.017Z",
+        "createdAt": "2025-09-04T05:49:18.017Z"
+      }
+    ],
+    [
+      1164,
+      {
+        "id": 1164,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:50:11.757Z",
+        "createdAt": "2025-09-04T05:50:11.757Z"
+      }
+    ],
+    [
+      1165,
+      {
+        "id": 1165,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:51:07.944Z",
+        "createdAt": "2025-09-04T05:51:07.944Z"
+      }
+    ],
+    [
+      1166,
+      {
+        "id": 1166,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:52:07.943Z",
+        "createdAt": "2025-09-04T05:52:07.943Z"
+      }
+    ],
+    [
+      1167,
+      {
+        "id": 1167,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:53:08.078Z",
+        "createdAt": "2025-09-04T05:53:08.078Z"
+      }
+    ],
+    [
+      1168,
+      {
+        "id": 1168,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:54:08.009Z",
+        "createdAt": "2025-09-04T05:54:08.009Z"
+      }
+    ],
+    [
+      1169,
+      {
+        "id": 1169,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:55:07.922Z",
+        "createdAt": "2025-09-04T05:55:07.922Z"
+      }
+    ],
+    [
+      1170,
+      {
+        "id": 1170,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:56:07.975Z",
+        "createdAt": "2025-09-04T05:56:07.975Z"
+      }
+    ],
+    [
+      1171,
+      {
+        "id": 1171,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:57:07.969Z",
+        "createdAt": "2025-09-04T05:57:07.969Z"
+      }
+    ],
+    [
+      1172,
+      {
+        "id": 1172,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:58:07.984Z",
+        "createdAt": "2025-09-04T05:58:07.984Z"
+      }
+    ],
+    [
+      1173,
+      {
+        "id": 1173,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T05:59:07.931Z",
+        "createdAt": "2025-09-04T05:59:07.931Z"
+      }
+    ],
+    [
+      1174,
+      {
+        "id": 1174,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:00:07.926Z",
+        "createdAt": "2025-09-04T06:00:07.926Z"
+      }
+    ],
+    [
+      1175,
+      {
+        "id": 1175,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:01:07.930Z",
+        "createdAt": "2025-09-04T06:01:07.930Z"
+      }
+    ],
+    [
+      1176,
+      {
+        "id": 1176,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:02:07.990Z",
+        "createdAt": "2025-09-04T06:02:07.990Z"
+      }
+    ],
+    [
+      1191,
+      {
+        "id": 1191,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:17:16.125Z",
+        "createdAt": "2025-09-04T06:17:16.125Z"
+      }
+    ],
+    [
+      1358,
+      {
+        "id": 1358,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:09:11.905Z",
+        "createdAt": "2025-09-04T10:09:11.905Z"
+      }
+    ],
+    [
+      1359,
+      {
+        "id": 1359,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:10:11.915Z",
+        "createdAt": "2025-09-04T10:10:11.915Z"
+      }
+    ],
+    [
+      1376,
+      {
+        "id": 1376,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:27:11.889Z",
+        "createdAt": "2025-09-04T10:27:11.889Z"
+      }
+    ],
+    [
+      1479,
+      {
+        "id": 1479,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:09:50.897Z",
+        "createdAt": "2025-09-04T12:09:50.897Z"
+      }
+    ],
+    [
+      1495,
+      {
+        "id": 1495,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:25:18.607Z",
+        "createdAt": "2025-09-04T12:25:18.607Z"
+      }
+    ],
+    [
+      1498,
+      {
+        "id": 1498,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:28:18.612Z",
+        "createdAt": "2025-09-04T12:28:18.612Z"
+      }
+    ],
+    [
+      1502,
+      {
+        "id": 1502,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:32:18.641Z",
+        "createdAt": "2025-09-04T12:32:18.641Z"
+      }
+    ],
+    [
+      1504,
+      {
+        "id": 1504,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:34:18.694Z",
+        "createdAt": "2025-09-04T12:34:18.694Z"
+      }
+    ],
+    [
+      1177,
+      {
+        "id": 1177,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:03:08.003Z",
+        "createdAt": "2025-09-04T06:03:08.003Z"
+      }
+    ],
+    [
+      1186,
+      {
+        "id": 1186,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:12:08.030Z",
+        "createdAt": "2025-09-04T06:12:08.030Z"
+      }
+    ],
+    [
+      1202,
+      {
+        "id": 1202,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:27:23.946Z",
+        "createdAt": "2025-09-04T06:27:23.946Z"
+      }
+    ],
+    [
+      1207,
+      {
+        "id": 1207,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:32:24.031Z",
+        "createdAt": "2025-09-04T06:32:24.031Z"
+      }
+    ],
+    [
+      1213,
+      {
+        "id": 1213,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:38:23.887Z",
+        "createdAt": "2025-09-04T06:38:23.887Z"
+      }
+    ],
+    [
+      1216,
+      {
+        "id": 1216,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:41:23.993Z",
+        "createdAt": "2025-09-04T06:41:23.993Z"
+      }
+    ],
+    [
+      1366,
+      {
+        "id": 1366,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:17:11.955Z",
+        "createdAt": "2025-09-04T10:17:11.955Z"
+      }
+    ],
+    [
+      1382,
+      {
+        "id": 1382,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:33:11.835Z",
+        "createdAt": "2025-09-04T10:33:11.835Z"
+      }
+    ],
+    [
+      1383,
+      {
+        "id": 1383,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:34:11.827Z",
+        "createdAt": "2025-09-04T10:34:11.827Z"
+      }
+    ],
+    [
+      1485,
+      {
+        "id": 1485,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:15:38.445Z",
+        "createdAt": "2025-09-04T12:15:38.445Z"
+      }
+    ],
+    [
+      1493,
+      {
+        "id": 1493,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:22:42.341Z",
+        "createdAt": "2025-09-04T12:22:42.341Z"
+      }
+    ],
+    [
+      1501,
+      {
+        "id": 1501,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:31:18.694Z",
+        "createdAt": "2025-09-04T12:31:18.694Z"
+      }
+    ],
+    [
+      1510,
+      {
+        "id": 1510,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:39:55.102Z",
+        "createdAt": "2025-09-04T12:39:55.102Z"
+      }
+    ],
+    [
+      1511,
+      {
+        "id": 1511,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:40:55.096Z",
+        "createdAt": "2025-09-04T12:40:55.096Z"
+      }
+    ],
+    [
+      1514,
+      {
+        "id": 1514,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:43:25.920Z",
+        "createdAt": "2025-09-04T12:43:25.920Z"
+      }
+    ],
+    [
+      1516,
+      {
+        "id": 1516,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:45:25.895Z",
+        "createdAt": "2025-09-04T12:45:25.895Z"
+      }
+    ],
+    [
+      1517,
+      {
+        "id": 1517,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:46:10.110Z",
+        "createdAt": "2025-09-04T12:46:10.110Z"
+      }
+    ],
+    [
+      1518,
+      {
+        "id": 1518,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:47:05.533Z",
+        "createdAt": "2025-09-04T12:47:05.533Z"
+      }
+    ],
+    [
+      1178,
+      {
+        "id": 1178,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:04:07.986Z",
+        "createdAt": "2025-09-04T06:04:07.986Z"
+      }
+    ],
+    [
+      1179,
+      {
+        "id": 1179,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:05:08.015Z",
+        "createdAt": "2025-09-04T06:05:08.015Z"
+      }
+    ],
+    [
+      1180,
+      {
+        "id": 1180,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:06:07.956Z",
+        "createdAt": "2025-09-04T06:06:07.956Z"
+      }
+    ],
+    [
+      1181,
+      {
+        "id": 1181,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:07:08.069Z",
+        "createdAt": "2025-09-04T06:07:08.069Z"
+      }
+    ],
+    [
+      1182,
+      {
+        "id": 1182,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:08:08.033Z",
+        "createdAt": "2025-09-04T06:08:08.033Z"
+      }
+    ],
+    [
+      1183,
+      {
+        "id": 1183,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:09:08.008Z",
+        "createdAt": "2025-09-04T06:09:08.008Z"
+      }
+    ],
+    [
+      1184,
+      {
+        "id": 1184,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:10:07.962Z",
+        "createdAt": "2025-09-04T06:10:07.962Z"
+      }
+    ],
+    [
+      1185,
+      {
+        "id": 1185,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:11:07.924Z",
+        "createdAt": "2025-09-04T06:11:07.924Z"
+      }
+    ],
+    [
+      1187,
+      {
+        "id": 1187,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:13:16.234Z",
+        "createdAt": "2025-09-04T06:13:16.234Z"
+      }
+    ],
+    [
+      1188,
+      {
+        "id": 1188,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:14:16.193Z",
+        "createdAt": "2025-09-04T06:14:16.193Z"
+      }
+    ],
+    [
+      1189,
+      {
+        "id": 1189,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:15:16.216Z",
+        "createdAt": "2025-09-04T06:15:16.216Z"
+      }
+    ],
+    [
+      1190,
+      {
+        "id": 1190,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:16:16.115Z",
+        "createdAt": "2025-09-04T06:16:16.115Z"
+      }
+    ],
+    [
+      1192,
+      {
+        "id": 1192,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:18:16.130Z",
+        "createdAt": "2025-09-04T06:18:16.130Z"
+      }
+    ],
+    [
+      1193,
+      {
+        "id": 1193,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:19:16.122Z",
+        "createdAt": "2025-09-04T06:19:16.122Z"
+      }
+    ],
+    [
+      1194,
+      {
+        "id": 1194,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:20:16.144Z",
+        "createdAt": "2025-09-04T06:20:16.144Z"
+      }
+    ],
+    [
+      1195,
+      {
+        "id": 1195,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:21:08.421Z",
+        "createdAt": "2025-09-04T06:21:08.421Z"
+      }
+    ],
+    [
+      1196,
+      {
+        "id": 1196,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:22:08.293Z",
+        "createdAt": "2025-09-04T06:22:08.293Z"
+      }
+    ],
+    [
+      1197,
+      {
+        "id": 1197,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:23:08.304Z",
+        "createdAt": "2025-09-04T06:23:08.304Z"
+      }
+    ],
+    [
+      1198,
+      {
+        "id": 1198,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:24:08.252Z",
+        "createdAt": "2025-09-04T06:24:08.252Z"
+      }
+    ],
+    [
+      1199,
+      {
+        "id": 1199,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:24:27.488Z",
+        "createdAt": "2025-09-04T06:24:27.488Z"
+      }
+    ],
+    [
+      1200,
+      {
+        "id": 1200,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:25:23.841Z",
+        "createdAt": "2025-09-04T06:25:23.841Z"
+      }
+    ],
+    [
+      1201,
+      {
+        "id": 1201,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:26:23.871Z",
+        "createdAt": "2025-09-04T06:26:23.871Z"
+      }
+    ],
+    [
+      1203,
+      {
+        "id": 1203,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:28:23.890Z",
+        "createdAt": "2025-09-04T06:28:23.890Z"
+      }
+    ],
+    [
+      1204,
+      {
+        "id": 1204,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:29:23.967Z",
+        "createdAt": "2025-09-04T06:29:23.967Z"
+      }
+    ],
+    [
+      1205,
+      {
+        "id": 1205,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:30:23.854Z",
+        "createdAt": "2025-09-04T06:30:23.854Z"
+      }
+    ],
+    [
+      1206,
+      {
+        "id": 1206,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:31:23.919Z",
+        "createdAt": "2025-09-04T06:31:23.919Z"
+      }
+    ],
+    [
+      1208,
+      {
+        "id": 1208,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:33:23.910Z",
+        "createdAt": "2025-09-04T06:33:23.910Z"
+      }
+    ],
+    [
+      1209,
+      {
+        "id": 1209,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:34:23.911Z",
+        "createdAt": "2025-09-04T06:34:23.911Z"
+      }
+    ],
+    [
+      1210,
+      {
+        "id": 1210,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:35:23.879Z",
+        "createdAt": "2025-09-04T06:35:23.879Z"
+      }
+    ],
+    [
+      1211,
+      {
+        "id": 1211,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:36:23.927Z",
+        "createdAt": "2025-09-04T06:36:23.927Z"
+      }
+    ],
+    [
+      1212,
+      {
+        "id": 1212,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:37:23.918Z",
+        "createdAt": "2025-09-04T06:37:23.918Z"
+      }
+    ],
+    [
+      1214,
+      {
+        "id": 1214,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:39:23.878Z",
+        "createdAt": "2025-09-04T06:39:23.878Z"
+      }
+    ],
+    [
+      1215,
+      {
+        "id": 1215,
+        "userId": 2,
+        "amount": 6,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:40:23.872Z",
+        "createdAt": "2025-09-04T06:40:23.872Z"
+      }
+    ],
+    [
+      1217,
+      {
+        "id": 1217,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:42:23.912Z",
+        "createdAt": "2025-09-04T06:42:23.912Z"
+      }
+    ],
+    [
+      1218,
+      {
+        "id": 1218,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T06:43:23.932Z",
+        "createdAt": "2025-09-04T06:43:23.932Z"
+      }
+    ],
+    [
+      1368,
+      {
+        "id": 1368,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:19:11.861Z",
+        "createdAt": "2025-09-04T10:19:11.861Z"
+      }
+    ],
+    [
+      1377,
+      {
+        "id": 1377,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:28:11.858Z",
+        "createdAt": "2025-09-04T10:28:11.858Z"
+      }
+    ],
+    [
+      1378,
+      {
+        "id": 1378,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:29:11.836Z",
+        "createdAt": "2025-09-04T10:29:11.836Z"
+      }
+    ],
+    [
+      1389,
+      {
+        "id": 1389,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:40:12.077Z",
+        "createdAt": "2025-09-04T10:40:12.077Z"
+      }
+    ],
+    [
+      1392,
+      {
+        "id": 1392,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:43:20.881Z",
+        "createdAt": "2025-09-04T10:43:20.881Z"
+      }
+    ],
+    [
+      1396,
+      {
+        "id": 1396,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:46:26.466Z",
+        "createdAt": "2025-09-04T10:46:26.466Z"
+      }
+    ],
+    [
+      1399,
+      {
+        "id": 1399,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:49:43.216Z",
+        "createdAt": "2025-09-04T10:49:43.216Z"
+      }
+    ],
+    [
+      1402,
+      {
+        "id": 1402,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:52:56.290Z",
+        "createdAt": "2025-09-04T10:52:56.290Z"
+      }
+    ],
+    [
+      1405,
+      {
+        "id": 1405,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T10:55:56.295Z",
+        "createdAt": "2025-09-04T10:55:56.295Z"
+      }
+    ],
+    [
+      1414,
+      {
+        "id": 1414,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:05:08.479Z",
+        "createdAt": "2025-09-04T11:05:08.479Z"
+      }
+    ],
+    [
+      1415,
+      {
+        "id": 1415,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:06:08.456Z",
+        "createdAt": "2025-09-04T11:06:08.456Z"
+      }
+    ],
+    [
+      1419,
+      {
+        "id": 1419,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T11:10:02.901Z",
+        "createdAt": "2025-09-04T11:10:02.901Z"
+      }
+    ],
+    [
+      1487,
+      {
+        "id": 1487,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:17:38.442Z",
+        "createdAt": "2025-09-04T12:17:38.442Z"
+      }
+    ],
+    [
+      1488,
+      {
+        "id": 1488,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:18:38.431Z",
+        "createdAt": "2025-09-04T12:18:38.431Z"
+      }
+    ],
+    [
+      1491,
+      {
+        "id": 1491,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:20:43.855Z",
+        "createdAt": "2025-09-04T12:20:43.855Z"
+      }
+    ],
+    [
+      1496,
+      {
+        "id": 1496,
+        "userId": 2,
+        "amount": 3,
+        "sourceType": "exhibition",
+        "sourceDetails": "14 butterflies, 191cr/h",
+        "earnedAt": "2025-09-04T12:26:18.735Z",
+        "createdAt": "2025-09-04T12:26:18.735Z"
+      }
     ]
   ],
   "exhibitionFrameLikes": [],
@@ -14593,5 +20545,5 @@
     "currentPassiveIncomeId": 1,
     "currentFrameLikeId": 1
   },
-  "savedAt": "2025-09-03T22:10:48.813Z"
+  "savedAt": "2025-09-04T13:57:16.252Z"
 }

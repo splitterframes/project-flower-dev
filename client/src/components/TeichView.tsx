@@ -924,13 +924,13 @@ export const TeichView: React.FC = () => {
                       if (field.isPond) {
                         // TEICHFELD: Wackelnd → Fütterungs-Dialog, sonst Fish einsammeln
                         if (shakingField === field.id) {
-                          // Open feeding dialog if user has caterpillars or butterflies
-                          if (userCaterpillars.length > 0 || userButterflies.length > 0) {
+                          // Open feeding dialog if user has caterpillars (only caterpillars can feed fish)
+                          if (userCaterpillars.length > 0) {
                             console.log("🐛 Opening feeding dialog for pond field", field.id);
                             setSelectedField(field.id);
                             setShowFeedingDialog(true);
                           } else {
-                            showNotification('Keine Futtermittel', 'Du hast keine Raupen oder Schmetterlinge zum Füttern im Inventar.', 'error');
+                            showNotification('Keine Futtermittel', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
                           }
                         } else {
                           // Check for fish to collect (placeholder - will implement fish detection)
@@ -1043,8 +1043,8 @@ export const TeichView: React.FC = () => {
                       </CaterpillarHoverPreview>
                     )}
 
-                    {/* Bouquet */}
-                    {field.hasBouquet && (
+                    {/* Bouquet - disabled in TeichView */}
+                    {false && field.hasBouquet && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <RarityImage
                           src="/Blumen/Bouquet.jpg"
@@ -1307,9 +1307,7 @@ export const TeichView: React.FC = () => {
             setSelectedField(null);
           }}
           caterpillars={userCaterpillars}
-          butterflies={userButterflies} 
           onFeedCaterpillar={onFeedCaterpillar}
-          onFeedButterfly={onFeedButterfly}
           fieldIndex={selectedField || 0}
         />
 
