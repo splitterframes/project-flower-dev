@@ -9,7 +9,7 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
 import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
-import { Clock, DollarSign, Zap, ChevronLeft, ChevronRight, Fish, X } from "lucide-react";
+import { Clock, DollarSign, Zap, ChevronLeft, ChevronRight, Fish, X, Coins } from "lucide-react";
 
 interface FishDetailProps {
   id: number;
@@ -426,6 +426,56 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                 </CardContent>
               </Card>
             )}
+
+            {/* Sell Price & Button - Only show for own fish */}
+            {!readOnly && (
+              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Coins className="h-6 w-6 mr-3 text-blue-400" />
+                      <span className="text-lg font-semibold">Verkaufspreis:</span>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-blue-600 to-teal-600 text-white text-lg px-4 py-2 font-bold">
+                      {price} Credits
+                    </Badge>
+                  </div>
+
+                  <Button
+                    onClick={handleSell}
+                    disabled={!canSell || isSelling}
+                    className={`w-full text-lg font-bold py-6 rounded-xl transition-all duration-300 ${
+                      canSell 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105 shadow-lg' 
+                        : 'bg-gradient-to-r from-slate-600 to-slate-700 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Coins className={`h-6 w-6 mr-3 ${canSell ? 'animate-bounce' : ''}`} />
+                      {isSelling 
+                        ? "Verkaufe..." 
+                        : canSell 
+                          ? `💰 Für ${price} Credits verkaufen`
+                          : "🕐 Noch nicht verkaufbar"
+                      }
+                    </div>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Exit Button */}
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg">
+              <CardContent className="p-6">
+                <Button
+                  onClick={onClose}
+                  className="w-full text-lg font-bold py-4 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 transition-all duration-300"
+                >
+                  <X className="h-5 w-5 mr-3" />
+                  Verlassen
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </DialogContent>
