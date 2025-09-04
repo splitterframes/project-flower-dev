@@ -456,14 +456,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Fehler beim Entfernen der Raupe aus dem Inventar.' });
       }
 
-      // Track feeding progress in database
-      const newProgress = await storage.updatePondFeedingProgress(userId, fieldIndex);
-      console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3 });
+      // Track feeding progress in database AND store caterpillar rarity for average calculation  
+      const newProgress = await storage.updatePondFeedingProgressWithTracking(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+      console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3, caterpillarRarity: caterpillarToUse.caterpillarRarity });
 
       if (newProgress >= 3) {
-        console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex);
-        // Create fish after 3 feedings using caterpillar rarity as basis for fish rarity
-        const fishResult = await storage.spawnFishOnFieldWithRarity(userId, fieldIndex, caterpillarToUse.caterpillarRarity);
+        console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex, 'with average rarity from all 3 fed caterpillars');
+        // Create fish after 3 feedings using AVERAGE rarity of all 3 fed caterpillars
+        const fishResult = await storage.spawnFishOnFieldWithAverageRarity(userId, fieldIndex);
         console.log('🐟 FISH SPAWNED SUCCESS:', fishResult);
         // Reset progress after fish is born - handled in updatePondFeedingProgress
         

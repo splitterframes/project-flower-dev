@@ -3426,15 +3426,78 @@ export class PostgresStorage implements IStorage {
     }
   }
 
-  async spawnFishOnFieldWithRarity(userId: number, pondFieldIndex: number, caterpillarRarity: string): Promise<{ fishName: string, fishRarity: RarityTier }> {
+  // In-memory storage for fed caterpillar rarities (per user/field)
+  private fedCaterpillarRarities: Map<string, string[]> = new Map();
+
+  private getFedCaterpillarsKey(userId: number, fieldIndex: number): string {
+    return `${userId}-${fieldIndex}`;
+  }
+
+  async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
     try {
-      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId} based on caterpillar rarity: ${caterpillarRarity}`);
+      console.log(`🐟 Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
       
-      // Use caterpillar rarity as basis for fish rarity (simplified average calculation)
-      const fishRarity = caterpillarRarity as RarityTier;
-      const fishData = await generateRandomFish(fishRarity);
+      // Store caterpillar rarity for average calculation
+      const key = this.getFedCaterpillarsKey(userId, fieldIndex);
+      let rarities = this.fedCaterpillarRarities.get(key) || [];
+      rarities.push(caterpillarRarity);
+      this.fedCaterpillarRarities.set(key, rarities);
       
-      console.log(`🐟 Generated fish: ${fishData.name} (${fishRarity}) from caterpillar rarity (${caterpillarRarity}) - ID: ${fishData.id}`);
+      console.log(`🐟 Fed caterpillar rarities for field ${fieldIndex}:`, rarities);
+      
+      // Update feeding progress normally
+      const newProgress = await this.updatePondFeedingProgress(userId, fieldIndex);
+      
+      // If fish is created (3 feedings), clean up stored rarities after use
+      if (newProgress >= 3) {
+        console.log(`🐟 Fish will be created, rarities ready for average:`, rarities);
+      }
+      
+      return newProgress;
+      
+    } catch (error) {
+      console.error('🐟 Error updating pond feeding progress with tracking:', error);
+      throw error;
+    }
+  }
+
+  async spawnFishOnFieldWithAverageRarity(userId: number, pondFieldIndex: number): Promise<{ fishName: string, fishRarity: RarityTier }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId} with AVERAGE rarity`);
+      
+      // Get stored caterpillar rarities for this field
+      const key = this.getFedCaterpillarsKey(userId, pondFieldIndex);
+      const rarities = this.fedCaterpillarRarities.get(key) || [];
+      
+      console.log(`🐟 Fed caterpillar rarities for average calculation:`, rarities);
+      
+      if (rarities.length === 0) {
+        // Fallback to random if no rarities stored (shouldn't happen)
+        console.warn('🐟 No fed caterpillar rarities found, using random rarity');
+        const fishRarity = getRandomCreatureRarity();
+        const fishData = await generateRandomFish(fishRarity);
+        
+        await this.db.insert(fieldFish).values({
+          userId,
+          fieldIndex: pondFieldIndex,
+          fishId: fishData.id,
+          fishName: fishData.name,
+          fishRarity: fishRarity,
+          fishImageUrl: fishData.imageUrl,
+          spawnedAt: new Date(),
+          isShrinking: false
+        });
+        
+        return { fishName: fishData.name, fishRarity: fishRarity };
+      }
+      
+      // Calculate average rarity from fed caterpillars
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+      
+      const fishData = await generateRandomFish(averageRarity);
+      
+      console.log(`🐟 Generated fish: ${fishData.name} (${averageRarity}) from average of caterpillars - ID: ${fishData.id}`);
       
       // Spawn fish on field first (not directly in inventory)
       await this.db.insert(fieldFish).values({
@@ -3442,19 +3505,59 @@ export class PostgresStorage implements IStorage {
         fieldIndex: pondFieldIndex,
         fishId: fishData.id,
         fishName: fishData.name,
-        fishRarity: fishRarity,
+        fishRarity: averageRarity,
         fishImageUrl: fishData.imageUrl,
         spawnedAt: new Date(),
         isShrinking: false
       });
       
-      console.log(`🐟 Successfully spawned ${fishData.name} (${fishRarity}) on pond field ${pondFieldIndex} based on caterpillar rarity`);
-      return { fishName: fishData.name, fishRarity: fishRarity };
+      // Clean up stored rarities after creating fish
+      this.fedCaterpillarRarities.delete(key);
+      console.log(`🐟 Cleaned up stored caterpillar rarities for field ${pondFieldIndex}`);
+      
+      console.log(`🐟 Successfully spawned ${fishData.name} (${averageRarity}) on pond field ${pondFieldIndex} based on average caterpillar rarity`);
+      return { fishName: fishData.name, fishRarity: averageRarity };
       
     } catch (error) {
-      console.error('🐟 Error spawning fish on field with rarity:', error);
+      console.error('🐟 Error spawning fish on field with average rarity:', error);
       throw error;
     }
+  }
+
+  private calculateAverageRarity(rarities: string[]): RarityTier {
+    // Map rarities to numeric values for averaging
+    const rarityValues: Record<string, number> = {
+      'common': 0,
+      'uncommon': 1, 
+      'rare': 2,
+      'super-rare': 3,
+      'epic': 4,
+      'legendary': 5,
+      'mythical': 6
+    };
+    
+    const valueToRarity: RarityTier[] = [
+      'common',
+      'uncommon', 
+      'rare',
+      'super-rare',
+      'epic',
+      'legendary',
+      'mythical'
+    ];
+    
+    // Calculate average numeric value
+    const totalValue = rarities.reduce((sum, rarity) => {
+      return sum + (rarityValues[rarity] || 0);
+    }, 0);
+    
+    const averageValue = Math.round(totalValue / rarities.length);
+    const clampedValue = Math.max(0, Math.min(6, averageValue));
+    
+    const result = valueToRarity[clampedValue];
+    console.log(`🐟 Average calculation: [${rarities.join(', ')}] → values [${rarities.map(r => rarityValues[r] || 0).join(', ')}] → avg ${totalValue}/${rarities.length} = ${averageValue} → ${result}`);
+    
+    return result;
   }
   
   async getFieldFish(userId: number): Promise<any[]> {

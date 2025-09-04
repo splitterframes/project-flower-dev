@@ -84,6 +84,15 @@ Preferred communication style: Simple, everyday language.
 ## 7-Tier Rarity System
 The game uses a weighted distribution system for flowers and butterflies across 7 rarity tiers:
 
+## Strategic Pond Feeding System (Sept 4, 2025)
+**🎯 FIXED: Strategic Caterpillar-to-Fish Feeding**
+- Each caterpillar's rarity is tracked when fed to pond fields
+- Fish spawning uses AVERAGE rarity of all 3 fed caterpillars
+- Enables strategic gameplay: feed 3 high-rarity caterpillars = high-rarity fish
+- Example: feed common(0) + legendary(5) + rare(2) → average = 2.33 ≈ rare fish
+- In-memory tracking system prevents data persistence issues
+- Fish spawn field-sized with bounce animations upon collection
+
 ### Rarity Tiers with Colors
 - **Common** (gelb/yellow): 45% - Most frequent, basic varieties
 - **Uncommon** (grün/green): 30% - Slightly rarer, colorful varieties  
