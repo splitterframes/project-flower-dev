@@ -712,7 +712,7 @@ export const TeichView: React.FC = () => {
 
         // Refresh garden data to show placed butterfly
         fetchTeichData();
-        showNotification('success', `${butterfly.butterflyName} wurde platziert!`);
+        // Bestätigungs-Notification entfernt - direkte Animation ohne weitere Dialoge
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');
