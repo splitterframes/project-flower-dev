@@ -2,6 +2,40 @@
 
 export type RarityTier = 'common' | 'uncommon' | 'rare' | 'super-rare' | 'epic' | 'legendary' | 'mythical' | 'vip';
 
+// German rarity names for display
+export const RARITY_NAMES_DE: Record<string, string> = {
+  common: 'Häufig',
+  uncommon: 'Ungewöhnlich', 
+  rare: 'Selten',
+  'super-rare': 'Super-selten',
+  epic: 'Episch',
+  legendary: 'Legendär',
+  mythical: 'Mythisch'
+};
+
+// Calculate expected average fish rarity based on distribution
+export function getExpectedFishRarity(): { name: string; percentage: number } {
+  // Fish rarity distribution percentages from creatures.ts
+  const fishDistribution = {
+    common: 44.3,      // 44.3%
+    uncommon: 30.0,    // 30.0%
+    rare: 12.2,        // 12.2%
+    'super-rare': 7.8, // 7.8%
+    epic: 4.7,         // 4.7%
+    legendary: 2.6,    // 2.6%
+    mythical: 1.3      // 1.3%
+  };
+  
+  // The most probable rarity is 'common' with highest percentage
+  const mostCommon = Object.entries(fishDistribution)
+    .sort(([,a], [,b]) => b - a)[0];
+  
+  return {
+    name: RARITY_NAMES_DE[mostCommon[0]] || 'Häufig',
+    percentage: Math.round(mostCommon[1])
+  };
+}
+
 export interface RarityConfig {
   tier: RarityTier;
   weight: number;
