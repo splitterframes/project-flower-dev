@@ -827,7 +827,6 @@ export const TeichView: React.FC = () => {
           const { getExpectedFishRarity } = await import('../../../shared/rarity');
           const expectedRarity = getExpectedFishRarity();
           showNotification(
-            'Fisch gefüttert!', 
             `Fütterung ${result.feedingCount}/3 abgeschlossen.\n\nErwartete Durchschnitts-Rarität: ${expectedRarity.name} (${expectedRarity.percentage}%)`, 
             'success'
           );
