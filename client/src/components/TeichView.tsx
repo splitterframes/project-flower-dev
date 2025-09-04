@@ -307,26 +307,35 @@ export const TeichView: React.FC = () => {
     };
   }, []);
 
-  // Butterfly shrinking system
+  // Butterfly lifecycle timers - store timers globally to prevent cleanup
+  const butterflyTimersRef = useRef<Map<number, NodeJS.Timeout[]>>(new Map());
+
+  // Butterfly lifecycle management
   useEffect(() => {
-    const intervals: NodeJS.Timeout[] = [];
-    
     placedButterflies.forEach((butterfly) => {
-      if (butterfly.isShrinkling) return;
+      // Skip if already has timers or is shrinking
+      if (butterflyTimersRef.current.has(butterfly.id) || butterfly.isShrinkling) return;
       
       const timeAlive = Date.now() - butterfly.placedAt.getTime();
       
-      // Set up shrinking for new butterflies only
-      if (timeAlive < 1000) { // Only set up shrinking for new butterflies
-        // Wait 5 seconds of wiggling before starting to shrink
+      // Set up lifecycle for new butterflies only
+      if (timeAlive < 1000) {
+        const timers: NodeJS.Timeout[] = [];
+        
+        console.log(`🦋 Starting lifecycle for butterfly ${butterfly.id}: 5s wiggle → 10s shrink → caterpillar`);
+        
+        // Phase 1: Wait 5 seconds of wiggling before starting to shrink
         const shrinkStartTimeout = setTimeout(() => {
+          console.log(`🦋 Butterfly ${butterfly.id} starting shrink phase`);
           setPlacedButterflies(prev => 
             prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
           );
           
-          // Remove after 10 seconds of shrinking and spawn caterpillar
+          // Phase 2: Remove after 10 seconds of shrinking and spawn caterpillar
           const shrinkDuration = 10000; // 10 seconds
           const removeTimeout = setTimeout(() => {
+            console.log(`🦋 Butterfly ${butterfly.id} completing lifecycle → spawning caterpillar`);
+            
             // Generate caterpillar with inherited rarity
             const caterpillarRarity = calculateCaterpillarRarity(butterfly.butterflyRarity as RarityTier);
             const caterpillarId = Math.floor(Math.random() * 20) + 1; // Random caterpillar 1-20
@@ -345,6 +354,9 @@ export const TeichView: React.FC = () => {
             // Remove butterfly and spawn caterpillar
             setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
             setPlacedCaterpillars(prev => [...prev, spawnedCaterpillar]);
+            
+            // Clear timers for this butterfly
+            butterflyTimersRef.current.delete(butterfly.id);
             
             console.log(`🐛 Spawned caterpillar ${spawnedCaterpillar.caterpillarName} (${caterpillarRarity}) from butterfly ${butterfly.butterflyName} (${butterfly.butterflyRarity})`);
             
@@ -377,17 +389,33 @@ export const TeichView: React.FC = () => {
             }, 2000);
           }, shrinkDuration);
           
-          intervals.push(removeTimeout);
+          timers.push(removeTimeout);
         }, 5000); // 5 seconds wiggling before shrinking starts
         
-        intervals.push(shrinkStartTimeout);
+        timers.push(shrinkStartTimeout);
+        butterflyTimersRef.current.set(butterfly.id, timers);
       }
     });
-    
-    return () => {
-      intervals.forEach(clearTimeout);
-    };
+
+    // Cleanup timers for removed butterflies
+    const currentButterflyIds = new Set(placedButterflies.map(b => b.id));
+    for (const [butterflyId, timers] of butterflyTimersRef.current.entries()) {
+      if (!currentButterflyIds.has(butterflyId)) {
+        timers.forEach(clearTimeout);
+        butterflyTimersRef.current.delete(butterflyId);
+      }
+    }
   }, [placedButterflies]);
+
+  // Cleanup all butterfly timers on unmount
+  useEffect(() => {
+    return () => {
+      for (const timers of butterflyTimersRef.current.values()) {
+        timers.forEach(clearTimeout);
+      }
+      butterflyTimersRef.current.clear();
+    };
+  }, []);
 
   // Fish shrinking system
   useEffect(() => {
