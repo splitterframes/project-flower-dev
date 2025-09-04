@@ -359,7 +359,7 @@ export const TeichView: React.FC = () => {
             
             console.log(`🐛 Spawned caterpillar ${spawnedCaterpillar.caterpillarName} (${caterpillarRarity}) from butterfly ${butterfly.butterflyName} (${butterfly.butterflyRarity})`);
             
-            // Also spawn to database for persistence
+            // 1. Spawn caterpillar to database 
             fetch('/api/garden/spawn-caterpillar', {
               method: 'POST',
               headers: { 
@@ -373,11 +373,30 @@ export const TeichView: React.FC = () => {
             }).then(response => {
               if (response.ok) {
                 console.log(`🐛 Database caterpillar spawn successful on field ${butterfly.fieldId - 1}`);
+                
+                // 2. Remove database butterfly after successful caterpillar spawn
+                return fetch('/api/garden/remove-butterfly', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-id': user?.id.toString() || '1'
+                  },
+                  body: JSON.stringify({
+                    fieldIndex: butterfly.fieldId - 1 // Convert to 0-based index
+                  })
+                });
               } else {
                 console.error('🐛 Database caterpillar spawn failed:', response.statusText);
+                throw new Error('Caterpillar spawn failed');
+              }
+            }).then(response => {
+              if (response?.ok) {
+                console.log(`🦋 Database butterfly removed successfully from field ${butterfly.fieldId - 1}`);
+              } else {
+                console.error('🦋 Database butterfly removal failed:', response?.statusText);
               }
             }).catch(error => {
-              console.error('🐛 Failed to spawn caterpillar to database:', error);
+              console.error('🐛 Failed butterfly lifecycle (spawn caterpillar + remove butterfly):', error);
             });
             
             // End growing effect after 2 seconds
