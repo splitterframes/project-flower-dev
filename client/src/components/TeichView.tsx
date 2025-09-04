@@ -712,7 +712,7 @@ export const TeichView: React.FC = () => {
 
         // Refresh garden data to show placed butterfly
         fetchTeichData();
-        showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
+        showNotification('success', `${butterfly.butterflyName} wurde platziert!`);
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');
@@ -1302,7 +1302,7 @@ export const TeichView: React.FC = () => {
 
         {/* Butterfly Selection Modal - DISABLED für direkte Platzierung */}
         <ButterflySelectionModal
-          isOpen={false}
+          isOpen={showButterflyModal}
           onClose={() => {
             setShowButterflyModal(false);
             setSelectedField(null);
