@@ -806,7 +806,7 @@ export const TeichView: React.FC = () => {
                 <Waves className="h-6 w-6 text-blue-400" />
               </div>
               <div className="text-xs text-slate-400">
-                Links: Samen • Rechts: Bouquet
+                Garten: Samen • Teich: Fish • Rechts: Bouquet
               </div>
             </CardTitle>
           </CardHeader>
@@ -820,13 +820,13 @@ export const TeichView: React.FC = () => {
                   <div
                     key={field.id}
                     className={`
-                      aspect-square border-2 rounded-lg relative flex items-center justify-center cursor-pointer transition-all touch-target
+                      aspect-square border-2 rounded-lg relative flex items-center justify-center transition-all touch-target
                       ${field.isPond 
-                        ? 'border-blue-500 bg-gradient-to-br from-blue-800/40 to-teal-800/40' 
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-800/40 to-teal-800/40 cursor-pointer' 
                         : field.isUnlocked 
-                          ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40 active:bg-green-900/60' 
+                          ? 'border-green-500 bg-green-900/20 hover:bg-green-900/40 active:bg-green-900/60 cursor-pointer' 
                           : isNextToUnlock 
-                            ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50' 
+                            ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50 cursor-pointer' 
                             : 'border-slate-600 bg-slate-800 opacity-40'
                       }
                       ${shakingField === field.id ? 'pond-shake' : ''}
