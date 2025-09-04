@@ -170,17 +170,19 @@ export const TeichView: React.FC = () => {
 
     try {
       // Fetch pond-specific data including feeding progress
-      const [caterpillarRes, userCaterpillarsRes, pondProgressRes] = await Promise.all([
+      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/user/${user.id}/caterpillars`),
-        fetch(`/api/user/${user.id}/pond-progress`)
+        fetch(`/api/user/${user.id}/pond-progress`),
+        fetch(`/api/user/${user.id}/butterflies`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok) {
-        const [caterpillarData, userCaterpillarsData, pondProgressData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok) {
+        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData] = await Promise.all([
           caterpillarRes.json(),
           userCaterpillarsRes.json(),
-          pondProgressRes.json()
+          pondProgressRes.json(),
+          butterfliesRes.json()
         ]);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
@@ -239,7 +241,7 @@ export const TeichView: React.FC = () => {
         setFieldButterflies([]);
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns([]); // No sun spawns in pond view
-        setUserButterflies([]);
+        setUserButterflies(butterfliesData.butterflies || []);
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
       }
     } catch (error) {
@@ -1235,14 +1237,11 @@ export const TeichView: React.FC = () => {
                     {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         {field.feedingProgress === 1 && (
-                          <div className="text-2xl animate-pulse drop-shadow-lg">🐟</div>
+                          <div className="text-6xl animate-pulse drop-shadow-lg">🐟</div>
                         )}
                         {field.feedingProgress === 2 && (
-                          <div className="text-3xl animate-bounce drop-shadow-lg">🐠</div>
+                          <div className="text-6xl animate-bounce drop-shadow-lg">🐠</div>
                         )}
-                        <div className="absolute -bottom-2 bg-blue-600/90 text-white text-xs px-2 py-1 rounded-full">
-                          {field.feedingProgress}/3 gefüttert
-                        </div>
                       </div>
                     )}
 
