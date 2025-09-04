@@ -3275,17 +3275,17 @@ export class PostgresStorage {
         const newCount = existing[0].feedingCount + 1;
         
         if (newCount >= 3) {
-          // Reset progress after fish spawns (fish spawning happens in caller)
+          // DON'T delete progress here! Let feedFishWithCaterpillar handle it after fish creation
+          // First update to 3, then the caller will handle fish creation and cleanup
           await this.db
-            .delete(pondFeedingProgressTable)
-            .where(
-              and(
-                eq(pondFeedingProgressTable.userId, userId),
-                eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
-              )
-            );
-          console.log(`🐟 Reset feeding progress for user ${userId} field ${fieldIndex} after fish spawn`);
-          return 3; // Return 3 to indicate fish creation
+            .update(pondFeedingProgressTable)
+            .set({ 
+              feedingCount: 3,
+              lastFedAt: new Date()
+            })
+            .where(eq(pondFeedingProgressTable.id, existing[0].id));
+          console.log(`🐟 Updated feeding progress to 3 for user ${userId} field ${fieldIndex} - ready for fish creation`);
+          return 3; // Return 3 to indicate fish creation needed
         } else {
           // Update progress
           await this.db
@@ -3433,14 +3433,22 @@ export class PostgresStorage {
       const fishResult = await this.spawnFishOnField(userId, fieldIndex, averageRarity);
       console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
       
-      // Clean up fed caterpillars from PostgreSQL after fish creation
+      // Clean up fed caterpillars AND pond progress from PostgreSQL after fish creation  
       await this.db
         .delete(fedCaterpillarsTable)
         .where(and(
           eq(fedCaterpillarsTable.userId, userId),
           eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
         ));
-      console.log(`🐟 Cleaned up fed caterpillars from PostgreSQL for field ${fieldIndex}`);
+      
+      await this.db
+        .delete(pondFeedingProgressTable)
+        .where(and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        ));
+      
+      console.log(`🐟 Cleaned up fed caterpillars AND pond progress from PostgreSQL for field ${fieldIndex}`);
       
       return {
         feedingCount: 3,
