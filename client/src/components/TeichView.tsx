@@ -1194,9 +1194,9 @@ export const TeichView: React.FC = () => {
           fieldIndex={selectedField || 0}
         />
 
-        {/* Butterfly Selection Modal */}
+        {/* Butterfly Selection Modal - DISABLED für direkte Platzierung */}
         <ButterflySelectionModal
-          isOpen={showButterflyModal}
+          isOpen={false}
           onClose={() => {
             setShowButterflyModal(false);
             setSelectedField(null);
