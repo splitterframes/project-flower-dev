@@ -256,20 +256,24 @@ export const TeichView: React.FC = () => {
       
       const timeAlive = Date.now() - butterfly.placedAt.getTime();
       
-      // Start shrinking immediately after placement
+      // Set up shrinking for new butterflies only
       if (timeAlive < 1000) { // Only set up shrinking for new butterflies
-        // Start shrinking immediately
-        setPlacedButterflies(prev => 
-          prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
-        );
+        // Wait 10 seconds before starting to shrink
+        const shrinkStartTimeout = setTimeout(() => {
+          setPlacedButterflies(prev => 
+            prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
+          );
+          
+          // Remove after shrinking animation (30-90 seconds)
+          const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
+          const removeTimeout = setTimeout(() => {
+            setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
+          }, shrinkDuration);
+          
+          intervals.push(removeTimeout);
+        }, 10000); // 10 seconds delay before shrinking starts
         
-        // Remove after shrinking animation (30-90 seconds)
-        const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
-        const removeTimeout = setTimeout(() => {
-          setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-        }, shrinkDuration);
-        
-        intervals.push(removeTimeout);
+        intervals.push(shrinkStartTimeout);
       }
     });
     
