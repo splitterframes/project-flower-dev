@@ -1029,26 +1029,49 @@ export const TeichView: React.FC = () => {
                       animation: shakingField === field.id ? 'pond-wobble 1.5s ease-in-out infinite' : 'none'
                     }}
                     onClick={() => {
-                      // TEICH-ANSICHT: Nur Pond-Felder sind interaktiv!
-                      if (!field.isPond) {
-                        // Gras-Felder sind in der Teich-Ansicht nicht klickbar
-                        showNotification('Nur Teichfelder', 'In der Teich-Ansicht können nur Teichfelder angeklickt werden.', 'info');
+                      if (field.isPond) {
+                        // TEICHFELD: Wackelnd → Fütterungs-Dialog, sonst Fish einsammeln
+                        if (shakingField === field.id) {
+                          // Open feeding dialog if user has caterpillars (only caterpillars can feed fish)
+                          if (userCaterpillars.length > 0) {
+                            console.log("🐛 Opening feeding dialog for pond field", field.id);
+                            setSelectedField(field.id);
+                            setShowFeedingDialog(true);
+                          } else {
+                            showNotification('Keine Futtermittel', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
+                          }
+                        } else {
+                          // Try to collect fish from pond field
+                          const fishOnField = fieldFish.find(f => f.fieldIndex === field.id);
+                          if (fishOnField) {
+                            console.log("🐟 Attempting to collect fish on field", field.id);
+                            collectFish(field.id);
+                          } else {
+                            console.log("🐟 Check for fish on pond field", field.id);
+                          }
+                        }
                         return;
                       }
                       
-                      // TEICHFELD: Wackelnd → Fütterungs-Dialog, sonst Fish einsammeln
-                      if (shakingField === field.id) {
-                        // Open feeding dialog if user has caterpillars (only caterpillars can feed fish)
-                        if (userCaterpillars.length > 0) {
-                          console.log("🐛 Opening feeding dialog for pond field", field.id);
-                          setSelectedField(field.id);
-                          setShowFeedingDialog(true);
+                      // GRASFELD: Butterfly platzieren ODER Caterpillar einsammeln
+                      if (!field.isPond) {
+                        // Check if caterpillar is present on this field to collect  
+                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id);
+                        
+                        if (caterpillarOnField) {
+                          console.log("🐛 Attempting to collect caterpillar on field", field.id);
+                          collectCaterpillar(field.id);
                         } else {
-                          showNotification('Keine Futtermittel', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
+                          // Schmetterling-Auswahl Dialog öffnen
+                          if (userButterflies.length > 0) {
+                            console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
+                            setSelectedField(field.id);
+                            setShowButterflyModal(true);
+                          } else {
+                            showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
+                          }
                         }
-                      } else {
-                        // Check for fish to collect
-                        console.log("🐟 Check for fish on pond field", field.id);
+                        return;
                       }
                     }}
                     onContextMenu={(e) => {
