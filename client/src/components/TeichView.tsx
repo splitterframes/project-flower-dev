@@ -170,19 +170,21 @@ export const TeichView: React.FC = () => {
 
     try {
       // Fetch pond-specific data including feeding progress
-      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes] = await Promise.all([
+      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes, fieldButterfliesRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/user/${user.id}/caterpillars`),
         fetch(`/api/user/${user.id}/pond-progress`),
-        fetch(`/api/user/${user.id}/butterflies`)
+        fetch(`/api/user/${user.id}/butterflies`),
+        fetch(`/api/user/${user.id}/field-butterflies`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok) {
-        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok && fieldButterfliesRes.ok) {
+        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData, fieldButterfliesData] = await Promise.all([
           caterpillarRes.json(),
           userCaterpillarsRes.json(),
           pondProgressRes.json(),
-          butterfliesRes.json()
+          butterfliesRes.json(),
+          fieldButterfliesRes.json()
         ]);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
@@ -238,7 +240,7 @@ export const TeichView: React.FC = () => {
         setUserSeeds([]);
         setUserBouquets([]);
         setPlacedBouquets([]);
-        setFieldButterflies([]);
+        setFieldButterflies(fieldButterfliesData.fieldButterflies || []);
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
         setSunSpawns([]); // No sun spawns in pond view
         setUserButterflies(butterfliesData.butterflies || []);
