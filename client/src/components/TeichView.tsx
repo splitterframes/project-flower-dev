@@ -313,8 +313,8 @@ export const TeichView: React.FC = () => {
           
           // Removed debug logging - bug fixed!
           
-          // Check for field fish (only on pond fields) - use field.id directly instead of fieldIndex
-          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === field.id) : null;
+          // Check for field fish (only on pond fields) - BUG FIX: use fieldIndex (0-based) consistently
+          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === fieldIndex) : null;
 
           return {
             ...field,
