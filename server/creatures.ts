@@ -239,7 +239,7 @@ let TOTAL_CATERPILLARS = 20; // Default, will be updated
 
 // Get proper filename for caterpillar ID
 function getCaterpillarImageFilename(id: number): string {
-  return `${id}.png`;
+  return `${id}.jpg`;
 }
 
 // Dynamic caterpillar rarity distribution (same percentages)
