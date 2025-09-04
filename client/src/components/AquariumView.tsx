@@ -64,6 +64,7 @@ export const AquariumView: React.FC = () => {
   const [tanks, setTanks] = useState<Map<number, AquariumTank>>(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedFish, setSelectedFish] = useState<FishDetailProps | null>(null);
+  const [currentFishIndex, setCurrentFishIndex] = useState<number>(0);
   const [showFishModal, setShowFishModal] = useState(false);
   const [currentTankIndex, setCurrentTankIndex] = useState(0);
 
@@ -217,6 +218,68 @@ export const AquariumView: React.FC = () => {
     return tankFish.find(fish => fish.slotIndex === slotIndex) || null;
   };
 
+  // Get all placed fish in order (for navigation)
+  const getAllPlacedFish = (): AquariumFish[] => {
+    const allFish: AquariumFish[] = [];
+    for (let tankNumber = 1; tankNumber <= 3; tankNumber++) {
+      const tankFish = getFishInTank(tankNumber).sort((a, b) => a.slotIndex - b.slotIndex);
+      allFish.push(...tankFish);
+    }
+    return allFish;
+  };
+
+  // Navigation functions
+  const handleFishSelect = (fish: AquariumFish) => {
+    const allFish = getAllPlacedFish();
+    const index = allFish.findIndex(f => f.id === fish.id);
+    
+    setSelectedFish({
+      id: fish.id,
+      fishName: fish.fishName,
+      fishRarity: fish.fishRarity,
+      fishImageUrl: fish.fishImageUrl,
+      placedAt: fish.placedAt,
+      userId: fish.userId,
+      tankId: fish.tankId
+    });
+    setCurrentFishIndex(index);
+    setShowFishModal(true);
+  };
+
+  const handleNextFish = () => {
+    const allFish = getAllPlacedFish();
+    if (currentFishIndex < allFish.length - 1) {
+      const nextFish = allFish[currentFishIndex + 1];
+      setSelectedFish({
+        id: nextFish.id,
+        fishName: nextFish.fishName,
+        fishRarity: nextFish.fishRarity,
+        fishImageUrl: nextFish.fishImageUrl,
+        placedAt: nextFish.placedAt,
+        userId: nextFish.userId,
+        tankId: nextFish.tankId
+      });
+      setCurrentFishIndex(currentFishIndex + 1);
+    }
+  };
+
+  const handlePreviousFish = () => {
+    const allFish = getAllPlacedFish();
+    if (currentFishIndex > 0) {
+      const prevFish = allFish[currentFishIndex - 1];
+      setSelectedFish({
+        id: prevFish.id,
+        fishName: prevFish.fishName,
+        fishRarity: prevFish.fishRarity,
+        fishImageUrl: prevFish.fishImageUrl,
+        placedAt: prevFish.placedAt,
+        userId: prevFish.userId,
+        tankId: prevFish.tankId
+      });
+      setCurrentFishIndex(currentFishIndex - 1);
+    }
+  };
+
   const renderTankSlot = (tankNumber: number, slotIndex: number) => {
     const fish = getSlotFish(tankNumber, slotIndex);
     const tank = tanks.get(tankNumber);
@@ -228,18 +291,7 @@ export const AquariumView: React.FC = () => {
             <div
               className="w-full h-full bg-gradient-to-br from-blue-900/20 to-blue-700/30 border-2 rounded-lg flex items-center justify-center cursor-pointer hover:from-blue-800/30 hover:to-blue-600/40 transition-all relative overflow-hidden"
               style={{ borderColor: getRarityColor(fish.fishRarity) }}
-              onClick={() => {
-                setSelectedFish({
-                  id: fish.id,
-                  fishName: fish.fishName,
-                  fishRarity: fish.fishRarity,
-                  fishImageUrl: fish.fishImageUrl,
-                  placedAt: fish.placedAt,
-                  userId: fish.userId,
-                  tankId: fish.tankId
-                });
-                setShowFishModal(true);
-              }}
+              onClick={() => handleFishSelect(fish)}
             >
               <img
                 src={fish.fishImageUrl}
@@ -526,6 +578,10 @@ export const AquariumView: React.FC = () => {
           setShowFishModal(false);
           loadData();
         }}
+        currentIndex={currentFishIndex}
+        totalCount={getAllPlacedFish().length}
+        onNext={currentFishIndex < getAllPlacedFish().length - 1 ? handleNextFish : undefined}
+        onPrevious={currentFishIndex > 0 ? handlePreviousFish : undefined}
       />
     </div>
   );
