@@ -416,3 +416,27 @@ export function getFlowerRarityById(flowerId: number): RarityTier {
   // Fallback for IDs outside the normal range
   return 'common';
 }
+
+/**
+ * Caterpillar rarity inheritance from butterfly
+ * 50% same rarity, 30% worse rarity, 20% better rarity
+ */
+export function calculateCaterpillarRarity(butterflyRarity: RarityTier): RarityTier {
+  const rarityOrder: RarityTier[] = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+  const currentIndex = rarityOrder.indexOf(butterflyRarity);
+  
+  const random = Math.random();
+  
+  if (random < 0.5) {
+    // 50% chance: Same rarity
+    return butterflyRarity;
+  } else if (random < 0.8) {
+    // 30% chance: Worse rarity (lower tier)
+    const worseIndex = Math.max(0, currentIndex - 1);
+    return rarityOrder[worseIndex];
+  } else {
+    // 20% chance: Better rarity (higher tier)
+    const betterIndex = Math.min(rarityOrder.length - 1, currentIndex + 1);
+    return rarityOrder[betterIndex];
+  }
+}

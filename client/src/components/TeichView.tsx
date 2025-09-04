@@ -11,13 +11,13 @@ import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { ButterflySelectionModal } from "./ButterflySelectionModal";
 import { FishSelectionModal } from "./FishSelectionModal";
-import { CaterpillarSelectionModal } from "./CaterpillarSelectionModal";
+// CaterpillarSelectionModal import removed - they spawn automatically
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { FishHoverPreview } from "./FishHoverPreview";
 import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
-import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, type RarityTier } from "@shared/rarity";
+import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, calculateCaterpillarRarity, generateLatinCaterpillarName, type RarityTier } from "@shared/rarity";
 import { 
   Flower,
   Lock,
@@ -116,7 +116,7 @@ export const TeichView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
   const [showFishModal, setShowFishModal] = useState(false);
-  const [showCaterpillarModal, setShowCaterpillarModal] = useState(false);
+  // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
     id: number;
@@ -298,10 +298,36 @@ export const TeichView: React.FC = () => {
             prev.map(b => b.id === butterfly.id ? { ...b, isShrinkling: true } : b)
           );
           
-          // Remove after shrinking animation (30-90 seconds)
+          // Remove after shrinking animation (30-90 seconds) and spawn caterpillar
           const shrinkDuration = Math.random() * 60000 + 30000; // 30-90 seconds
           const removeTimeout = setTimeout(() => {
+            // Generate caterpillar with inherited rarity
+            const caterpillarRarity = calculateCaterpillarRarity(butterfly.butterflyRarity as RarityTier);
+            const caterpillarId = Math.floor(Math.random() * 20) + 1; // Random caterpillar 1-20
+            
+            const spawnedCaterpillar = {
+              id: Date.now() + Math.random(), // Unique ID
+              fieldId: butterfly.fieldId,
+              caterpillarImageUrl: `/Raupen/${caterpillarId.toString().padStart(2, '0')}.jpg`,
+              caterpillarName: generateLatinCaterpillarName(caterpillarId),
+              caterpillarRarity: caterpillarRarity,
+              placedAt: new Date(),
+              isShrinkling: false,
+              isGrowing: true // Start with growing effect
+            };
+            
+            // Remove butterfly and spawn caterpillar
             setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
+            setPlacedCaterpillars(prev => [...prev, spawnedCaterpillar]);
+            
+            console.log(`🐛 Spawned caterpillar ${spawnedCaterpillar.caterpillarName} (${caterpillarRarity}) from butterfly ${butterfly.butterflyName} (${butterfly.butterflyRarity})`);
+            
+            // End growing effect after 2 seconds
+            setTimeout(() => {
+              setPlacedCaterpillars(prev => 
+                prev.map(c => c.id === spawnedCaterpillar.id ? { ...c, isGrowing: false } : c)
+              );
+            }, 2000);
           }, shrinkDuration);
           
           intervals.push(removeTimeout);
@@ -631,28 +657,7 @@ export const TeichView: React.FC = () => {
     showNotification('Fisch gesammelt!', 'Der Fisch wurde erfolgreich gesammelt!', 'success');
   };
 
-  // Caterpillar placement and collection functions  
-  const handleCaterpillarSelection = async (caterpillarId: number, caterpillarImageUrl: string, caterpillarName: string, rarity: RarityTier) => {
-    if (!user || selectedField === null) return;
-    
-    const fieldIndex = selectedField - 1;
-    
-    // Add to local state immediately for visual feedback
-    setPlacedCaterpillars(prev => [...prev, {
-      id: Date.now(), // Temporary ID
-      fieldId: selectedField,
-      caterpillarImageUrl,
-      caterpillarName,
-      caterpillarRarity: rarity,
-      placedAt: new Date(),
-      isShrinkling: false
-    }]);
-
-    setShowCaterpillarModal(false);
-    setSelectedField(null);
-    
-    showNotification('Raupe platziert!', `${caterpillarName} erkundet das Teichufer!`, 'success');
-  };
+  // Caterpillars spawn automatically when butterflies disappear, no manual placement
 
   const collectCaterpillar = () => {
     showNotification('Raupe gesammelt!', 'Die Raupe wurde erfolgreich gesammelt!', 'success');
@@ -798,14 +803,9 @@ export const TeichView: React.FC = () => {
                           setPlacedCaterpillars(prev => prev.filter(c => c.id !== placedCaterpillarOnField.id));
                           collectCaterpillar();
                         } else {
-                          // Open selection modal for pond creatures
+                          // Open fish selection modal only (caterpillars spawn automatically)
                           setSelectedField(field.id);
-                          // Randomly show fish or caterpillar modal
-                          if (Math.random() < 0.5) {
-                            setShowFishModal(true);
-                          } else {
-                            setShowCaterpillarModal(true);
-                          }
+                          setShowFishModal(true);
                         }
                         return;
                       }
@@ -1035,10 +1035,18 @@ export const TeichView: React.FC = () => {
                         <div
                           key={caterpillar.id}
                           className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
-                            caterpillar.isShrinkling ? 'animate-pulse opacity-50 scale-75' : 'opacity-100 scale-100'
+                            caterpillar.isGrowing 
+                              ? 'animate-bounce opacity-100 scale-125' 
+                              : caterpillar.isShrinkling 
+                                ? 'animate-pulse opacity-50 scale-75' 
+                                : 'opacity-100 scale-100'
                           }`}
                           style={{
-                            transform: caterpillar.isShrinkling ? 'scale(0.7)' : 'scale(1)',
+                            transform: caterpillar.isGrowing 
+                              ? 'scale(1.25)' 
+                              : caterpillar.isShrinkling 
+                                ? 'scale(0.7)' 
+                                : 'scale(1)',
                             transition: 'all 0.5s ease-in-out'
                           }}
                         >
@@ -1123,15 +1131,7 @@ export const TeichView: React.FC = () => {
           onFishSelected={handleFishSelection}
         />
 
-        {/* Caterpillar Selection Modal */}
-        <CaterpillarSelectionModal
-          isOpen={showCaterpillarModal}
-          onClose={() => {
-            setShowCaterpillarModal(false);
-            setSelectedField(null);
-          }}
-          onCaterpillarSelected={handleCaterpillarSelection}
-        />
+        {/* Caterpillar Selection Modal removed - they spawn automatically */}
       </TooltipProvider>
     </div>
   );
