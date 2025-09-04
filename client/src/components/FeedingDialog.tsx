@@ -59,10 +59,10 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
 }) => {
   const [selectedItem, setSelectedItem] = useState<FeedingItem | null>(null);
 
-  // Combine caterpillars and butterflies into feeding items
+  // Combine caterpillars and butterflies into feeding items (filter out items with 0 quantity)
   const feedingItems: FeedingItem[] = [
     // Convert caterpillars to feeding items
-    ...caterpillars.map(cat => ({
+    ...caterpillars.filter(cat => cat.quantity > 0).map(cat => ({
       id: cat.id,
       name: cat.caterpillarName,
       rarity: cat.caterpillarRarity,
@@ -72,7 +72,7 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
       originalId: cat.caterpillarId
     })),
     // Convert butterflies to feeding items (they become caterpillars in pond)
-    ...butterflies.map(butter => ({
+    ...butterflies.filter(butter => butter.quantity > 0).map(butter => ({
       id: butter.id + 10000, // Offset to avoid ID conflicts
       name: `${butter.butterflyName} → Raupe`,
       rarity: butter.butterflyRarity,
