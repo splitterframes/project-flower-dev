@@ -212,6 +212,7 @@ export const TeichView: React.FC = () => {
             butterflyName: butterfly?.butterflyName,
             butterflyImageUrl: butterfly?.butterflyImageUrl,
             butterflyRarity: butterfly?.butterflyRarity,
+            butterflySpawnedAt: butterfly ? new Date(butterfly.spawnedAt) : undefined,
             hasSunSpawn: !!sunSpawn,
             sunSpawnAmount: sunSpawn?.sunAmount,
             sunSpawnExpiresAt: sunSpawn ? new Date(sunSpawn.expiresAt) : undefined,
@@ -229,6 +230,76 @@ export const TeichView: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch garden data:', error);
+    }
+  };
+
+  // Butterfly lifecycle system
+  useEffect(() => {
+    const processButterflies = () => {
+      const now = Date.now();
+      fieldButterflies.forEach(butterfly => {
+        const spawnedAt = new Date(butterfly.spawnedAt).getTime();
+        const timeElapsed = (now - spawnedAt) / 1000; // seconds
+        
+        // Phase 1: Visible for 10 seconds
+        // Phase 2: Start shrinking after 10s, disappear after 40-100s total
+        if (timeElapsed > 40) {
+          // Remove butterfly and spawn caterpillar
+          removeButterflyAndSpawnCaterpillar(butterfly);
+        }
+      });
+    };
+
+    const butterflyInterval = setInterval(processButterflies, 2000);
+    return () => clearInterval(butterflyInterval);
+  }, [fieldButterflies]);
+
+  const removeButterflyAndSpawnCaterpillar = async (butterfly: any) => {
+    if (!user) return;
+    
+    console.log(`🦋 Processing butterfly lifecycle for:`, { 
+      id: butterfly.id, 
+      fieldIndex: butterfly.fieldIndex, 
+      name: butterfly.butterflyName,
+      spawnedAt: butterfly.spawnedAt 
+    });
+    
+    try {
+      // Remove butterfly from backend
+      const removeRes = await fetch('/api/garden/remove-butterfly', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: butterfly.fieldIndex
+        })
+      });
+      
+      const removeResult = await removeRes.json();
+      console.log(`🦋 Remove butterfly result:`, removeResult);
+      
+      // Spawn caterpillar with rarity inheritance
+      const caterpillarRes = await fetch('/api/garden/spawn-caterpillar', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: butterfly.fieldIndex,
+          parentRarity: butterfly.butterflyRarity
+        })
+      });
+      
+      const caterpillarResult = await caterpillarRes.json();
+      console.log(`🐛 Spawn caterpillar result:`, caterpillarResult);
+      
+      // Refresh garden data
+      fetchGardenData();
+    } catch (error) {
+      console.error('Error in butterfly lifecycle:', error);
     }
   };
 
@@ -889,8 +960,8 @@ export const TeichView: React.FC = () => {
                             src={field.butterflyImageUrl}
                             alt={field.butterflyName || "Schmetterling"}
                             rarity={field.butterflyRarity as RarityTier || "common"}
-                            size="small"
-                            className="w-8 h-8"
+                            size="medium"
+                            className="w-16 h-16"
                           />
                         </div>
                       </ButterflyHoverPreview>

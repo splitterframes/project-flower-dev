@@ -753,6 +753,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Remove butterfly from field (for automatic lifecycle)
+  app.post("/api/garden/remove-butterfly", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🦋 Removing butterfly from field ${fieldIndex} for user ${userId}`);
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.removeFieldButterfly(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Butterfly removed successfully' });
+      } else {
+        res.status(404).json({ message: 'No butterfly found on field' });
+      }
+    } catch (error) {
+      console.error('🦋 Error removing butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Spawn caterpillar with rarity inheritance
+  app.post("/api/garden/spawn-caterpillar", async (req, res) => {
+    try {
+      const { fieldIndex, parentRarity } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🐛 Spawning caterpillar on field ${fieldIndex} with parent rarity ${parentRarity}`);
+      
+      if (fieldIndex === undefined || !parentRarity) {
+        return res.status(400).json({ message: 'Missing fieldIndex or parentRarity' });
+      }
+
+      const result = await storage.spawnCaterpillarOnField(userId, fieldIndex, parentRarity);
+      
+      if (result.success) {
+        res.json({ message: 'Caterpillar spawned successfully', caterpillar: result.caterpillar });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('🐛 Error spawning caterpillar:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Collect butterfly from field
   app.post("/api/garden/collect-butterfly", async (req, res) => {
     try {

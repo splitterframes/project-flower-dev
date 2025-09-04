@@ -1128,6 +1128,104 @@ export class PostgresStorage implements IStorage {
     }
   }
 
+  async removeFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; message?: string }> {
+    console.log(`🦋 Removing field butterfly on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      // First, let's see what butterflies exist
+      const existing = await this.db
+        .select()
+        .from(fieldButterflies)
+        .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+      
+      console.log(`🦋 Found ${existing.length} existing butterflies on field ${fieldIndex}:`, existing.map(b => ({ id: b.id, name: b.butterflyName })));
+
+      const result = await this.db
+        .delete(fieldButterflies)
+        .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)))
+        .returning();
+
+      console.log(`🦋 Deletion result: ${result.length} rows deleted`);
+
+      if (result.length === 0) {
+        return { success: false, message: 'No butterfly found on field' };
+      }
+
+      console.log(`🦋 Successfully removed butterfly from field ${fieldIndex}:`, result[0].butterflyName);
+      return { success: true };
+    } catch (error) {
+      console.error('🦋 Error removing field butterfly:', error);
+      return { success: false, message: 'Database error' };
+    }
+  }
+
+  async spawnCaterpillarOnField(userId: number, fieldIndex: number, parentRarity: string): Promise<{ success: boolean; message?: string; caterpillar?: any }> {
+    console.log(`🐛 Spawning caterpillar on field ${fieldIndex} with parent rarity ${parentRarity}`);
+    
+    // Rarity inheritance system: 50% same, 30% lower, 20% higher
+    const inheritedRarity = this.inheritCaterpillarRarity(parentRarity);
+    
+    // Get random caterpillar for the inherited rarity
+    const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
+    
+    if (!caterpillar) {
+      return { success: false, message: `No caterpillar found for rarity ${inheritedRarity}` };
+    }
+
+    try {
+      // Add caterpillar to user inventory with grow effect
+      await this.addCaterpillarToInventory(userId, caterpillar.id, caterpillar.name, inheritedRarity, caterpillar.imageUrl);
+
+      console.log(`🐛 Successfully spawned caterpillar ${caterpillar.name} (${inheritedRarity}) from butterfly (${parentRarity})`);
+      return { success: true, caterpillar };
+    } catch (error) {
+      console.error('🐛 Error spawning caterpillar:', error);
+      return { success: false, message: 'Database error spawning caterpillar' };
+    }
+  }
+
+  private inheritCaterpillarRarity(parentRarity: string): string {
+    const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    const currentIndex = rarities.indexOf(parentRarity);
+    
+    if (currentIndex === -1) return 'common';
+    
+    const roll = Math.random();
+    
+    if (roll < 0.5) {
+      // 50% same rarity
+      return parentRarity;
+    } else if (roll < 0.8) {
+      // 30% lower rarity
+      return currentIndex > 0 ? rarities[currentIndex - 1] : rarities[0];
+    } else {
+      // 20% higher rarity
+      return currentIndex < rarities.length - 1 ? rarities[currentIndex + 1] : rarities[rarities.length - 1];
+    }
+  }
+
+  private async getRandomCaterpillarByRarity(rarity: string) {
+    // For now, return a mock caterpillar - later connect to real caterpillar data
+    const caterpillarIds = {
+      'common': Array.from({length: 5}, (_, i) => i + 1),
+      'uncommon': Array.from({length: 3}, (_, i) => i + 6),
+      'rare': Array.from({length: 2}, (_, i) => i + 9),
+      'super-rare': [11, 12],
+      'epic': [13],
+      'legendary': [14],
+      'mythical': [15]
+    };
+    
+    const availableIds = caterpillarIds[rarity as keyof typeof caterpillarIds] || caterpillarIds.common;
+    const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
+    
+    return {
+      id: randomId,
+      name: `Caterpillar ${randomId}`,
+      imageUrl: `/Raupen/${randomId}.jpg`
+    };
+  }
+
   private mapRarityToNumber(rarity: string): number {
     const rarityMap: { [key: string]: number } = {
       'common': 1,
