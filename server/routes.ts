@@ -461,8 +461,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🐟 Fish feeding result:', { fieldIndex, feedingCount: newProgress, fishCreated: newProgress >= 3 });
 
       if (newProgress >= 3) {
+        console.log('🐟 THIRD FEEDING: Creating fish on field', fieldIndex);
         // Create fish after 3 feedings - spawn on field first!
         const fishResult = await storage.spawnFishOnField(userId, fieldIndex);
+        console.log('🐟 FISH SPAWNED SUCCESS:', fishResult);
         // Reset progress after fish is born - handled in updatePondFeedingProgress
         
         return res.json({
@@ -482,7 +484,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
     } catch (error) {
-      console.error('Feed fish error:', error);
+      console.error('🐟 CRITICAL ERROR in feed-fish:', error);
+      console.error('🐟 Error details:', {
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        message: error instanceof Error ? error.message : error,
+        userId,
+        caterpillarId,
+        fieldIndex
+      });
       res.status(500).json({ message: 'Fehler beim Füttern der Fische.' });
     }
   });

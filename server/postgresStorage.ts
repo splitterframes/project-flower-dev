@@ -65,7 +65,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
-import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity } from './creatures';
+import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
 import type { IStorage } from './storage';
 
 /**
@@ -3399,9 +3399,9 @@ export class PostgresStorage implements IStorage {
     try {
       console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId}`);
       
-      // Generate a random fish
-      const fishData = generateRandomFish();
-      const rarity = getFishRarity();
+      // Generate a random fish with proper rarity
+      const rarity = getRandomCreatureRarity(); // Get random rarity first
+      const fishData = await generateRandomFish(rarity);
       
       console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id}`);
       
