@@ -926,7 +926,12 @@ export const TeichView: React.FC = () => {
                         butterflyImageUrl={field.butterflyImageUrl}
                         rarity={field.butterflyRarity as RarityTier}
                       >
-                        <div className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all duration-2000 ${field.butterflyShrinking ? 'scale-0 opacity-0' : 'scale-100 opacity-100 hover:scale-110'}`}>
+                        <div 
+                          className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all ${field.butterflyShrinking ? 'scale-0 opacity-0' : 'scale-100 opacity-100 hover:scale-110'}`}
+                          style={{
+                            transitionDuration: field.butterflyShrinking ? '20000ms' : '200ms' // 20s shrinking animation
+                          }}
+                        >
                           <RarityImage
                             src={field.butterflyImageUrl}
                             alt={field.butterflyName || "Schmetterling"}
