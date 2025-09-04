@@ -307,73 +307,6 @@ export const TeichView: React.FC = () => {
     };
   }, []);
 
-  // ULTRA-SIMPLE: 5 Sekunden Schmetterling → Raupe System
-  const [placedButterflyTimers, setPlacedButterflyTimers] = useState<Map<number, NodeJS.Timeout>>(new Map());
-
-  // ULTRA-SIMPLE: Use local placedButterflies for 5s transformation
-  useEffect(() => {
-    placedButterflies.forEach((butterfly) => {
-      // Skip if already has timer for this butterfly
-      if (placedButterflyTimers.has(butterfly.id)) return;
-
-      console.log(`🦋 ULTRA-SIMPLE: Starting 5s timer for local butterfly ${butterfly.id} on field ${butterfly.fieldId}`);
-      
-      // 5 seconds → spawn caterpillar
-      const timer = setTimeout(async () => {
-        console.log(`🦋 ULTRA-SIMPLE: 5 seconds up! Transforming butterfly ${butterfly.id} to caterpillar`);
-        
-        try {
-          // 1. Spawn caterpillar
-          const response = await fetch('/api/teich/spawn-field-caterpillar', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-user-id': user?.id.toString() || '1'
-            },
-            body: JSON.stringify({
-              fieldIndex: butterfly.fieldId - 1, // Convert to 0-based
-              parentRarity: butterfly.butterflyRarity
-            })
-          });
-
-          if (response.ok) {
-            console.log(`🐛 ULTRA-SIMPLE: Caterpillar spawned on field ${butterfly.fieldId - 1}`);
-            
-            // 2. Remove local butterfly from state
-            setPlacedButterflies(prev => prev.filter(b => b.id !== butterfly.id));
-            
-            // 3. Refresh data to show caterpillar
-            fetchTeichData();
-            
-            showNotification('Transformation!', `Schmetterling wurde zur Raupe! 🦋➡️🐛`, 'success');
-          }
-        } catch (error) {
-          console.error('🦋 ULTRA-SIMPLE: Transformation failed:', error);
-        }
-        
-        // Clean up timer
-        setPlacedButterflyTimers(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(butterfly.id);
-          return newMap;
-        });
-      }, 5000); // 5 seconds!
-      
-      // Store timer
-      setPlacedButterflyTimers(prev => {
-        const newMap = new Map(prev);
-        newMap.set(butterfly.id, timer);
-        return newMap;
-      });
-    });
-  }, [placedButterflies]);
-
-  // Cleanup timers
-  useEffect(() => {
-    return () => {
-      placedButterflyTimers.forEach(timer => clearTimeout(timer));
-    };
-  }, []);
 
   // Fish shrinking system
   useEffect(() => {
@@ -1015,18 +948,6 @@ export const TeichView: React.FC = () => {
                       </Tooltip>
                     )}
 
-                    {/* Local placed butterflies - ultra simple display */}
-                    {placedButterflies.find(b => b.fieldId === field.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center cursor-pointer animate-pulse">
-                        <RarityImage
-                          src={placedButterflies.find(b => b.fieldId === field.id)?.butterflyImageUrl || ""}
-                          alt={placedButterflies.find(b => b.fieldId === field.id)?.butterflyName || "Schmetterling"}
-                          rarity={placedButterflies.find(b => b.fieldId === field.id)?.butterflyRarity as RarityTier || "common"}
-                          size="large"
-                          className="w-full h-full max-w-10 max-h-10"
-                        />
-                      </div>
-                    )}
 
                     {/* Database butterflies - only show if no local animation running */}
                     {field.hasButterfly && field.butterflyImageUrl && !placedButterflies.find(b => b.fieldId === field.id) && (
