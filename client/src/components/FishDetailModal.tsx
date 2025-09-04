@@ -213,29 +213,6 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-7xl w-full shadow-2xl">
-        <DialogHeader className="relative mb-4">
-          {/* Enhanced Header Background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-t-lg -mx-6 -my-2"></div>
-          
-          <DialogTitle className="flex items-center text-white relative z-10">
-            <div className="relative">
-              <Fish className="h-6 w-6 mr-3 text-blue-400 animate-pulse" />
-              <div className="absolute inset-0 h-6 w-6 mr-3 text-blue-400 animate-ping opacity-30"></div>
-            </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-300 to-teal-300 bg-clip-text text-transparent">
-              🐟 Fisch-Details
-            </span>
-          </DialogTitle>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-full transition-all duration-200 z-10"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </DialogHeader>
 
         {/* Name and Rarity Header */}
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-lg mb-6">
@@ -254,7 +231,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
               </div>
 
               {/* Navigation Controls */}
-              {(totalCount !== undefined && totalCount > 1 && currentIndex !== undefined) && (
+              {(totalCount !== undefined && currentIndex !== undefined) && (
                 <div className="flex items-center gap-4">
                   <div className="text-sm text-slate-400">
                     Fisch {currentIndex + 1} von {totalCount}
@@ -263,7 +240,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                   <div className="flex gap-2">
                     <Button
                       onClick={onPrevious}
-                      disabled={currentIndex === 0}
+                      disabled={currentIndex === 0 || totalCount <= 1}
                       size="sm"
                       className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
                     >
@@ -273,7 +250,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                     
                     <Button
                       onClick={onNext}
-                      disabled={currentIndex === totalCount - 1}
+                      disabled={currentIndex === totalCount - 1 || totalCount <= 1}
                       size="sm"
                       className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed"
                     >
