@@ -1061,15 +1061,16 @@ export const TeichView: React.FC = () => {
                         if (caterpillarOnField) {
                           console.log("🐛 Attempting to collect caterpillar on field", field.id);
                           collectCaterpillar(field.id);
+                          return; // Wichtig: Nach Raupe sammeln nicht weiter ausführen
+                        }
+                        
+                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da war)
+                        if (userButterflies.length > 0) {
+                          console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
+                          setSelectedField(field.id);
+                          setShowButterflyModal(true);
                         } else {
-                          // Schmetterling-Auswahl Dialog öffnen
-                          if (userButterflies.length > 0) {
-                            console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
-                            setSelectedField(field.id);
-                            setShowButterflyModal(true);
-                          } else {
-                            showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
-                          }
+                          showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
                         }
                         return;
                       }
