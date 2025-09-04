@@ -1067,6 +1067,67 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
+  async placeButterflyOnField(userId: number, fieldIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string; butterfly?: any }> {
+    console.log(`🦋 Placing butterfly ${butterflyId} on field ${fieldIndex} for user ${userId}`);
+    
+    // Check if user has this butterfly
+    const userButterfly = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.id, butterflyId)));
+
+    if (userButterfly.length === 0) {
+      return { success: false, message: "Schmetterling nicht gefunden" };
+    }
+
+    // Check if field already has a butterfly
+    const existingButterfly = await this.db
+      .select()
+      .from(fieldButterflies)
+      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+
+    if (existingButterfly.length > 0) {
+      return { success: false, message: "Auf diesem Feld ist bereits ein Schmetterling platziert" };
+    }
+
+    const butterfly = userButterfly[0];
+
+    if (butterfly.quantity <= 0) {
+      return { success: false, message: "Nicht genügend Schmetterlinge im Inventar" };
+    }
+
+    try {
+      // Place butterfly on field (no bouquet required for this system)
+      const placedButterfly = await this.db.insert(fieldButterflies).values({
+        userId,
+        fieldIndex,
+        butterflyId: butterfly.butterflyId,
+        butterflyName: butterfly.butterflyName,
+        butterflyRarity: butterfly.butterflyRarity,
+        butterflyImageUrl: butterfly.butterflyImageUrl,
+        bouquetId: 1 // Dummy bouquet ID since the schema requires it
+      }).returning();
+
+      // Remove from user inventory (or decrease quantity)
+      if (butterfly.quantity > 1) {
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterfly.quantity - 1 })
+          .where(eq(userButterflies.id, butterfly.id));
+      } else {
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterfly.id));
+      }
+
+      console.log(`🦋 Successfully placed butterfly ${butterfly.butterflyName} on field ${fieldIndex}`);
+      return { success: true, butterfly: placedButterfly[0] };
+    } catch (error) {
+      console.error('🦋 Error placing butterfly on field:', error);
+      return { success: false, message: 'Datenbankfehler beim Platzieren' };
+    }
+  }
+
   private mapRarityToNumber(rarity: string): number {
     const rarityMap: { [key: string]: number } = {
       'common': 1,

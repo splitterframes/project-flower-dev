@@ -598,29 +598,37 @@ export const TeichView: React.FC = () => {
     }
 
     try {
-      // Simulate consuming the butterfly from inventory
-      // In a real implementation, you'd make an API call to reduce quantity
-      setUserButterflies(prev => 
-        prev.map(b => 
-          b.id === butterflyId 
-            ? { ...b, quantity: Math.max(0, b.quantity - 1) }
-            : b
-        )
-      );
+      const response = await fetch('/api/garden/place-butterfly', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: selectedField - 1, // Convert to 0-based index
+          butterflyId: butterflyId
+        })
+      });
 
-      // Add butterfly to placed butterflies
-      const newPlacedButterfly = {
-        id: Date.now() + Math.random(), // Simple unique ID
-        fieldId: selectedField,
-        butterflyImageUrl: butterfly.butterflyImageUrl,
-        butterflyName: butterfly.butterflyName,
-        butterflyRarity: butterfly.butterflyRarity,
-        placedAt: new Date(),
-        isShrinkling: false
-      };
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update local state - reduce butterfly quantity
+        setUserButterflies(prev => 
+          prev.map(b => 
+            b.id === butterflyId 
+              ? { ...b, quantity: Math.max(0, b.quantity - 1) }
+              : b
+          )
+        );
 
-      setPlacedButterflies(prev => [...prev, newPlacedButterfly]);
-      showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
+        // Refresh garden data to show placed butterfly
+        fetchGardenData();
+        showNotification('Butterfly platziert!', `${butterfly.butterflyName} wurde platziert!`, 'success');
+      } else {
+        const error = await response.json();
+        showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');
+      }
 
     } catch (error) {
       console.error('Failed to place butterfly:', error);

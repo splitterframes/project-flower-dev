@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -729,6 +729,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error unlocking field:', error);
       res.status(500).json({ error: "Failed to unlock field" });
+    }
+  });
+
+  // Place butterfly on field
+  app.post("/api/garden/place-butterfly", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const data = placeButterflyOnFieldSchema.parse(req.body);
+      
+      console.log(`🦋 Placing butterfly ${data.butterflyId} on field ${data.fieldIndex} for user ${userId}`);
+
+      const result = await storage.placeButterflyOnField(userId, data.fieldIndex, data.butterflyId);
+      
+      if (result.success) {
+        res.json({ message: 'Schmetterling erfolgreich platziert!', butterfly: result.butterfly });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('🦋 Error placing butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
