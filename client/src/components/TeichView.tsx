@@ -144,7 +144,7 @@ export const TeichView: React.FC = () => {
     butterflyRarity: string;
     placedAt: Date;
     isWiggling: boolean;
-    isShrinkling: boolean;
+    isBursting: boolean;
   }[]>([]);
   const [placedFish, setPlacedFish] = useState<{
     id: number;
@@ -600,23 +600,23 @@ export const TeichView: React.FC = () => {
           butterflyRarity: butterfly.butterflyRarity,
           placedAt: new Date(),
           isWiggling: true,
-          isShrinkling: false
+          isBursting: false
         }]);
 
-        // Start 5-second wiggling, then shrinking animation
+        // Start 5-second wiggling, then burst animation
         setTimeout(() => {
           setPlacedButterflies(prev => 
             prev.map(b => 
               b.id === butterflyId 
-                ? { ...b, isWiggling: false, isShrinkling: true }
+                ? { ...b, isWiggling: false, isBursting: true }
                 : b
             )
           );
 
-          // Remove after 0.5s shrinking animation
+          // Remove after 0.6s burst animation
           setTimeout(() => {
             setPlacedButterflies(prev => prev.filter(b => b.id !== butterflyId));
-          }, 500);
+          }, 600);
         }, 5000);
 
         // Refresh garden data to show placed butterfly
@@ -968,15 +968,15 @@ export const TeichView: React.FC = () => {
                     )}
 
 
-                    {/* Local placed butterflies with wiggle and shrink animations */}
+                    {/* Local placed butterflies with wiggle and burst animations */}
                     {placedButterflies.find(b => b.fieldId === field.id) && (() => {
                       const butterfly = placedButterflies.find(b => b.fieldId === field.id)!;
                       return (
                         <div 
-                          className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-transform duration-500 ${
+                          className={`absolute inset-0 flex items-center justify-center cursor-pointer ${
                             butterfly.isWiggling ? 'animate-wiggle' : ''
                           } ${
-                            butterfly.isShrinkling ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
+                            butterfly.isBursting ? 'animate-burst' : ''
                           }`}
                         >
                           <RarityImage
