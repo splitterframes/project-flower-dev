@@ -189,12 +189,15 @@ export const TeichView: React.FC = () => {
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
 
-        // Update pond fields with only caterpillars (no sun spawns in pond view)
+        // Update pond fields with caterpillars and butterflies (no sun spawns in pond view)
         const updatedFields = gardenFields.map((field) => {
           const fieldIndex = field.id - 1;
           
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
+          
+          // Check for butterfly (only on grass fields)
+          const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex) : null;
 
           return {
             ...field,
@@ -214,10 +217,10 @@ export const TeichView: React.FC = () => {
             bouquetRarity: undefined,
             bouquetPlacedAt: undefined,
             bouquetExpiresAt: undefined,
-            hasButterfly: false,
-            butterflyId: undefined,
-            butterflyName: undefined,
-            butterflyImageUrl: undefined,
+            hasButterfly: butterfly ? true : false,
+            butterflyId: butterfly ? butterfly.butterflyId : undefined,
+            butterflyName: butterfly ? butterfly.butterflyName : undefined,
+            butterflyImageUrl: butterfly ? butterfly.butterflyImageUrl : undefined,
             butterflyRarity: undefined,
             // Only keep caterpillar data for grass fields
             hasCaterpillar: !!caterpillar,
@@ -612,9 +615,11 @@ export const TeichView: React.FC = () => {
       return;
     }
 
-    // Check if field already has a placed butterfly
-    const existingButterfly = placedButterflies.find(b => b.fieldId === selectedField);
-    if (existingButterfly) {
+    // Check if field already has a placed butterfly (both local state and database)
+    const existingLocalButterfly = placedButterflies.find(b => b.fieldId === selectedField);
+    const existingDbButterfly = fieldButterflies.find(b => b.fieldIndex === selectedField - 1);
+    
+    if (existingLocalButterfly || existingDbButterfly) {
       showNotification('Auf diesem Feld ist bereits ein Schmetterling platziert.', 'info');
       return;
     }
