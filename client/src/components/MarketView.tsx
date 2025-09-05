@@ -179,13 +179,21 @@ export const MarketView: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Create clean request data - only send relevant fields
+      const requestData = {
+        itemType: sellForm.itemType,
+        ...(sellForm.itemType === 'seed' ? { seedId: sellForm.seedId } : { caterpillarId: sellForm.caterpillarId }),
+        quantity: sellForm.quantity,
+        pricePerUnit: sellForm.pricePerUnit
+      };
+
       const response = await fetch('/api/market/create-listing', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'X-User-Id': user?.id.toString() || '1'
         },
-        body: JSON.stringify(sellForm)
+        body: JSON.stringify(requestData)
       });
 
       if (response.ok) {
