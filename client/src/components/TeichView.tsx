@@ -1610,7 +1610,6 @@ export const TeichView: React.FC = () => {
           fishName={fishRewardData?.fishName || ""}
           fishImageUrl={fishRewardData?.fishImageUrl || ""}
           rarity={fishRewardData?.rarity || "common"}
-          sellPrice={fishRewardData?.sellPrice || 0}
         />
       </TooltipProvider>
     </div>

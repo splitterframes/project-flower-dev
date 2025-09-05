@@ -11,7 +11,6 @@ interface FishRewardDialogProps {
   fishName: string;
   fishImageUrl: string;
   rarity: string;
-  sellPrice: number;
 }
 
 export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
@@ -19,8 +18,7 @@ export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
   onClose,
   fishName,
   fishImageUrl,
-  rarity,
-  sellPrice
+  rarity
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   
@@ -98,7 +96,7 @@ export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
                 </Badge>
               </div>
               
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center justify-center">
                 <Badge 
                   className="text-sm font-bold px-3 py-1"
                   style={{ 
@@ -107,9 +105,6 @@ export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
                   }}
                 >
                   {rarityName}
-                </Badge>
-                <Badge className="text-sm font-bold px-3 py-1 bg-yellow-600 text-white">
-                  💰 {sellPrice} Cr
                 </Badge>
               </div>
             </div>
