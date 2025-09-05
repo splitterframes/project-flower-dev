@@ -4234,7 +4234,7 @@ export class PostgresStorage {
   }
 
   private getFishSellPrice(rarity: string): number {
-    // Fish prices are 20% of butterfly prices
+    // Fish prices are 40% of butterfly prices (doubled from 20%)
     const basePrice = (() => {
       switch (rarity) {
         case 'common': return 100;
@@ -4248,7 +4248,7 @@ export class PostgresStorage {
       }
     })();
     
-    return Math.floor(basePrice * 0.2); // 20% of butterfly prices
+    return Math.floor(basePrice * 0.4); // 40% of butterfly prices
   }
 }
 
