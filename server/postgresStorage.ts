@@ -3755,25 +3755,9 @@ export class PostgresStorage {
       
       const fish = fieldFishData[0];
       
-      // Add to inventory
-      const existingFish = await this.db.select().from(userFish).where(
-        and(
-          eq(userFish.userId, userId),
-          eq(userFish.fishId, fish.fishId)
-        )
-      );
-
-      if (existingFish.length > 0) {
-        // Fish already exists, increment quantity
-        await this.db
-          .update(userFish)
-          .set({ 
-            quantity: existingFish[0].quantity + 1
-          })
-          .where(eq(userFish.id, existingFish[0].id));
-        console.log(`🐟 Incremented existing fish ${fish.fishName} quantity`);
-      } else {
-        // New fish, create inventory entry
+      // Add to inventory with UPSERT to prevent race conditions
+      try {
+        // Try to insert first (most common case)
         await this.db.insert(userFish).values({
           userId,
           fishId: fish.fishId,
@@ -3783,6 +3767,27 @@ export class PostgresStorage {
           quantity: 1
         });
         console.log(`🐟 Created new fish inventory entry: ${fish.fishName}`);
+      } catch (error) {
+        // If fish already exists (constraint violation), increment quantity
+        const existingFish = await this.db.select().from(userFish).where(
+          and(
+            eq(userFish.userId, userId),
+            eq(userFish.fishId, fish.fishId)
+          )
+        );
+
+        if (existingFish.length > 0) {
+          await this.db
+            .update(userFish)
+            .set({ 
+              quantity: existingFish[0].quantity + 1
+            })
+            .where(eq(userFish.id, existingFish[0].id));
+          console.log(`🐟 Incremented existing fish ${fish.fishName} quantity to ${existingFish[0].quantity + 1}`);
+        } else {
+          // Fallback: re-throw error if not a constraint violation
+          throw error;
+        }
       }
       
       // Remove fish from field
