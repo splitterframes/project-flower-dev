@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import type { UserBouquet, PlacedBouquet, FieldButterfly, FieldFish } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpButton } from "./HelpButton";
 
 interface GardenField {
   id: number;
@@ -1113,6 +1114,7 @@ export const TeichView: React.FC = () => {
                 <Waves className="h-6 w-6 text-blue-400" />
                 <span className="text-2xl font-bold text-blue-300">Mariposa Teich</span>
                 <Waves className="h-6 w-6 text-blue-400" />
+                <HelpButton helpText="Am Teich setzt du Schmetterlinge auf Grasfelder um Raupen zu züchten. Füttere deine Fische in den blauen Teichfeldern mit den Raupen - je höher die Rarität der Raupen, desto bessere Fische bekommst du!" />
               </div>
               <div className="text-xs text-slate-400">
                 Setze Schmetterlinge ins Gras damit sie neue Raupen bilden und fütter deine Fische mit Ihnen - Sie da wackelt was!

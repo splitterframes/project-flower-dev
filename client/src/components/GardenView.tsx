@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpButton } from "./HelpButton";
 
 interface GardenField {
   id: number;
@@ -856,6 +857,7 @@ export const GardenView: React.FC = () => {
             <div className="flex items-center">
               <Sprout className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold">Garten Felder 🌿</span>
+              <HelpButton helpText="Hier pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen die regelmäßig spawnen!" />
             </div>
             <div className="text-xs text-slate-400">
               Links: Samen • Rechts: Bouquet

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Zap, Sun, Coins, Star, Trophy, Crown, Flower } from 'lucide-react';
+import { HelpButton } from './HelpButton';
 import { useAuth } from '@/lib/stores/useAuth';
 import { useSuns } from '@/lib/stores/useSuns';
 import { useCredits } from '@/lib/stores/useCredits';
