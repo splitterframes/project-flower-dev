@@ -152,9 +152,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
 
     setIsSpinning(true);
-    // Gewinnzeile NICHT löschen - bleibt während dem Drehen stehen
-    // setLastWinMessage('');
-    // setIsWinning(false);
+    // Gewinnzeile bleibt während dem Drehen stehen
+    setBlinkCount(0); // Stoppe aktuelles Blinken
 
     try {
       // Call server API
@@ -248,11 +247,11 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   setCredits(prev => prev + data.reward.amount);
                 }
                 
-                setBlinkCount(3); // Blink 3x for win
+                setBlinkCount(3); // Blink 3x gold for win
               } else {
                 setLastWinMessage(data.message);
                 setIsWinning(false);
-                setBlinkCount(3); // Blink 3x for any result
+                setBlinkCount(0); // Keine Blinks für Verlust
               }
             }, 500);
           }
@@ -422,11 +421,11 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             {lastWinMessage && (
               <div className={`p-4 rounded-lg ${
                 isWinning 
-                  ? 'bg-green-800/50 border border-green-400 text-green-200' 
+                  ? `bg-yellow-800/50 border border-yellow-400 text-yellow-200 ${blinkCount > 0 ? 'animate-pulse bg-gradient-to-r from-yellow-600/70 to-orange-600/70 shadow-lg shadow-yellow-500/25' : ''}` 
                   : 'bg-blue-800/50 border border-blue-400 text-blue-200'
-              } ${blinkCount > 0 ? 'animate-pulse' : ''}`}>
-                <div className="text-lg font-bold">
-                  {lastWinMessage}
+              }`}>
+                <div className={`text-lg font-bold ${isWinning && blinkCount > 0 ? 'text-yellow-100' : ''}`}>
+                  🎉 {lastWinMessage}
                 </div>
               </div>
             )}
