@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, TrendingUp, Users, AlertTriangle, Sun, HelpCircle } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, HelpCircle } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
@@ -23,7 +23,9 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     seeds: 0,
     flowers: 0,
     bouquets: 0,
-    butterflies: 0
+    butterflies: 0,
+    caterpillars: 0,
+    fish: 0
   });
   const [passiveIncome, setPassiveIncome] = useState(0);
   const [showUserList, setShowUserList] = useState(false);
@@ -112,29 +114,37 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     if (!user) return;
     
     try {
-      const [seedsRes, flowersRes, bouquetsRes, butterfliesRes] = await Promise.all([
+      const [seedsRes, flowersRes, bouquetsRes, butterfliesRes, caterpillarsRes, fishRes] = await Promise.all([
         fetch(`/api/user/${user.id}/seeds`),
         fetch(`/api/user/${user.id}/flowers`),
         fetch(`/api/user/${user.id}/bouquets`),
-        fetch(`/api/user/${user.id}/butterflies`)
+        fetch(`/api/user/${user.id}/butterflies`),
+        fetch(`/api/user/${user.id}/caterpillars`),
+        fetch(`/api/user/${user.id}/fish`)
       ]);
 
-      if (seedsRes.ok && flowersRes.ok && bouquetsRes.ok && butterfliesRes.ok) {
+      if (seedsRes.ok && flowersRes.ok && bouquetsRes.ok && butterfliesRes.ok && caterpillarsRes.ok && fishRes.ok) {
         const seedsData = await seedsRes.json();
         const flowersData = await flowersRes.json();
         const bouquetsData = await bouquetsRes.json();
         const butterfliesData = await butterfliesRes.json();
+        const caterpillarsData = await caterpillarsRes.json();
+        const fishData = await fishRes.json();
 
         const seedsTotal = (seedsData.seeds || []).reduce((sum: number, seed: any) => sum + seed.quantity, 0);
         const flowersTotal = (flowersData.flowers || []).reduce((sum: number, flower: any) => sum + flower.quantity, 0);
         const bouquetsTotal = (bouquetsData.bouquets || []).reduce((sum: number, bouquet: any) => sum + bouquet.quantity, 0);
         const butterfliesTotal = (butterfliesData.butterflies || []).reduce((sum: number, butterfly: any) => sum + butterfly.quantity, 0);
+        const caterpillarsTotal = (caterpillarsData.caterpillars || []).length;
+        const fishTotal = (fishData.fish || []).length;
 
         setInventoryCounts({
           seeds: seedsTotal,
           flowers: flowersTotal,
           bouquets: bouquetsTotal,
-          butterflies: butterfliesTotal
+          butterflies: butterfliesTotal,
+          caterpillars: caterpillarsTotal,
+          fish: fishTotal
         });
       }
     } catch (error) {
@@ -214,9 +224,19 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
                   <span className="text-sm font-medium">{inventoryCounts.butterflies}</span>
                 </div>
                 <div className="flex items-center space-x-1 text-slate-300">
-                  <Sun className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm font-medium">{suns}</span>
+                  <Bug className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium">{inventoryCounts.caterpillars}</span>
                 </div>
+                <div className="flex items-center space-x-1 text-slate-300">
+                  <Fish className="h-4 w-4 text-cyan-400" />
+                  <span className="text-sm font-medium">{inventoryCounts.fish}</span>
+                </div>
+              </div>
+              
+              {/* Suns Display - Gold style like credits */}
+              <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-3 py-1 sm:py-2 rounded-lg border border-yellow-500">
+                <Sun className="h-4 w-4 text-yellow-400" />
+                <span className="text-yellow-400 font-semibold text-sm">{suns} ☀️</span>
               </div>
 
               {/* Passive Income Display */}
