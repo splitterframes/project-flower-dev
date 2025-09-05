@@ -13,6 +13,7 @@ import { FlowerHoverPreview } from "./FlowerHoverPreview";
 import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { FishHoverPreview } from "./FishHoverPreview";
 import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
+import { CaterpillarDetailModal } from "./CaterpillarDetailModal";
 import type { UserFlower, UserBouquet, UserButterfly, UserVipButterfly, UserFish, UserCaterpillar } from "@shared/schema";
 
 export const InventoryView: React.FC = () => {
@@ -26,6 +27,8 @@ export const InventoryView: React.FC = () => {
   const [myVipButterflies, setMyVipButterflies] = useState<UserVipButterfly[]>([]);
   const [myFish, setMyFish] = useState<UserFish[]>([]);
   const [myCaterpillars, setMyCaterpillars] = useState<UserCaterpillar[]>([]);
+  const [selectedCaterpillar, setSelectedCaterpillar] = useState<UserCaterpillar | null>(null);
+  const [showCaterpillarModal, setShowCaterpillarModal] = useState(false);
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -68,6 +71,21 @@ export const InventoryView: React.FC = () => {
 
   const getCaterpillarsByRarity = (rarity: string) => {
     return myCaterpillars.filter(caterpillar => caterpillar.caterpillarRarity === rarity);
+  };
+
+  const openCaterpillarModal = (caterpillar: UserCaterpillar) => {
+    setSelectedCaterpillar(caterpillar);
+    setShowCaterpillarModal(true);
+  };
+
+  const closeCaterpillarModal = () => {
+    setSelectedCaterpillar(null);
+    setShowCaterpillarModal(false);
+  };
+
+  const handleCaterpillarSold = () => {
+    fetchMyCaterpillars(); // Reload caterpillars after selling
+    closeCaterpillarModal();
   };
 
   const getBouquetsByRarity = (rarity: string) => {
@@ -275,10 +293,17 @@ export const InventoryView: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
             x{caterpillar.quantity}
           </div>
+          <Button
+            onClick={() => openCaterpillarModal(caterpillar)}
+            size="sm"
+            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs py-1 px-3 h-8 transition-all duration-200 hover:scale-105"
+          >
+            Verkaufen
+          </Button>
         </div>
       </div>
     </div>
@@ -931,6 +956,22 @@ export const InventoryView: React.FC = () => {
         </Card>
       </div>
 
+      {/* Caterpillar Detail Modal */}
+      {selectedCaterpillar && (
+        <CaterpillarDetailModal
+          isOpen={showCaterpillarModal}
+          onClose={closeCaterpillarModal}
+          caterpillar={{
+            id: selectedCaterpillar.id,
+            caterpillarName: selectedCaterpillar.caterpillarName,
+            caterpillarRarity: selectedCaterpillar.caterpillarRarity,
+            caterpillarImageUrl: selectedCaterpillar.caterpillarImageUrl,
+            userId: selectedCaterpillar.userId
+          }}
+          onSold={handleCaterpillarSold}
+          readOnly={false}
+        />
+      )}
     </div>
   );
 };

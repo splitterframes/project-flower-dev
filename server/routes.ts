@@ -2090,6 +2090,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get caterpillar sell status (immediately sellable for regular caterpillars)
+  app.get("/api/caterpillars/:caterpillarId/sell-status", async (req, res) => {
+    try {
+      const caterpillarId = parseInt(req.params.caterpillarId);
+      const sellStatus = await storage.canSellCaterpillar(caterpillarId);
+      
+      res.json({
+        canSell: sellStatus.canSell,
+        timeRemainingMs: sellStatus.timeRemainingMs
+      });
+    } catch (error) {
+      console.error('Failed to get caterpillar sell status:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Sell caterpillar
+  app.post("/api/caterpillars/sell", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { caterpillarId } = req.body;
+
+      if (!caterpillarId) {
+        return res.status(400).json({ message: "Raupen-ID fehlt" });
+      }
+
+      const result = await storage.sellCaterpillar(userId, caterpillarId);
+      
+      if (result.success) {
+        res.json({ 
+          message: "Raupe verkauft!",
+          creditsEarned: result.creditsEarned
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Failed to sell caterpillar:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Fish inventory cleanup endpoint
   app.get('/api/admin/cleanup-fish-duplicates', async (req, res) => {
     try {

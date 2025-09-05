@@ -169,6 +169,95 @@ export class PostgresStorage {
     }
   }
 
+  async canSellCaterpillar(caterpillarId: number): Promise<{ canSell: boolean; timeRemainingMs: number }> {
+    try {
+      // Get caterpillar from user_caterpillars (regular caterpillars)
+      const caterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(eq(userCaterpillars.id, caterpillarId));
+      
+      if (caterpillar.length === 0) {
+        return { canSell: false, timeRemainingMs: 0 };
+      }
+      
+      // Regular caterpillars can be sold immediately (no waiting time)
+      // Only field caterpillars from pond feeding would have waiting time
+      return {
+        canSell: true,
+        timeRemainingMs: 0
+      };
+    } catch (error) {
+      console.error('🐛 Error checking caterpillar sell status:', error);
+      return { canSell: false, timeRemainingMs: 0 };
+    }
+  }
+
+  async sellCaterpillar(userId: number, caterpillarId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    try {
+      console.log(`🐛 Selling caterpillar ${caterpillarId} for user ${userId}`);
+      
+      // Check if caterpillar can be sold
+      const sellStatus = await this.canSellCaterpillar(caterpillarId);
+      if (!sellStatus.canSell) {
+        return { success: false, message: 'Raupe kann noch nicht verkauft werden!' };
+      }
+      
+      // Get caterpillar data
+      const caterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.id, caterpillarId),
+          eq(userCaterpillars.userId, userId)
+        ));
+      
+      if (caterpillar.length === 0) {
+        return { success: false, message: 'Raupe nicht gefunden!' };
+      }
+      
+      const caterpillarData = caterpillar[0];
+      
+      // Calculate price (85% of butterfly prices)
+      const price = this.getCaterpillarSellPrice(caterpillarData.caterpillarRarity);
+      
+      // Decrease quantity or remove if quantity reaches 0
+      const newQuantity = caterpillarData.quantity - 1;
+      
+      if (newQuantity <= 0) {
+        // Remove caterpillar completely
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, caterpillarId));
+      } else {
+        // Decrease quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: newQuantity })
+          .where(eq(userCaterpillars.id, caterpillarId));
+      }
+      
+      // Add credits to user
+      const user = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (user.length > 0) {
+        await this.db
+          .update(users)
+          .set({ credits: user[0].credits + price })
+          .where(eq(users.id, userId));
+      }
+      
+      console.log(`🐛 Caterpillar ${caterpillarData.caterpillarName} sold for ${price} credits`);
+      return { success: true, creditsEarned: price };
+    } catch (error) {
+      console.error('🐛 Error selling caterpillar:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
+  }
+
   // ==================== FISH MANAGEMENT ====================
 
   async addFishToUser(userId: number, fishId: number): Promise<UserFish | null> {
@@ -4349,6 +4438,24 @@ export class PostgresStorage {
     })();
     
     return Math.floor(basePrice * 0.4); // 40% of butterfly prices
+  }
+
+  private getCaterpillarSellPrice(rarity: string): number {
+    // Caterpillar prices are 85% of butterfly prices
+    const basePrice = (() => {
+      switch (rarity) {
+        case 'common': return 50;
+        case 'uncommon': return 100;
+        case 'rare': return 200;
+        case 'super-rare': return 400;
+        case 'epic': return 600;
+        case 'legendary': return 800;
+        case 'mythical': return 1000;
+        default: return 50;
+      }
+    })();
+    
+    return Math.floor(basePrice * 0.85); // 85% of butterfly prices
   }
 
   // Marie Posa trading system functions
