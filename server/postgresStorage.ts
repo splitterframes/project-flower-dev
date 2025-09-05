@@ -4381,6 +4381,39 @@ export class PostgresStorage {
             }
             break;
             
+          case 'caterpillar':
+            // Handle caterpillars like fish - check if quantity > 1, decrease quantity instead of deleting
+            const caterpillarData = await this.db
+              .select()
+              .from(userCaterpillars)
+              .where(and(
+                eq(userCaterpillars.id, item.originalId),
+                eq(userCaterpillars.userId, userId)
+              ))
+              .limit(1);
+
+            if (caterpillarData.length > 0) {
+              if (caterpillarData[0].quantity > 1) {
+                // Decrease quantity by 1
+                await this.db
+                  .update(userCaterpillars)
+                  .set({ quantity: caterpillarData[0].quantity - 1 })
+                  .where(eq(userCaterpillars.id, item.originalId));
+                deleteResult = true;
+              } else {
+                // Delete if quantity is 1
+                const caterpillarResult = await this.db
+                  .delete(userCaterpillars)
+                  .where(and(
+                    eq(userCaterpillars.id, item.originalId),
+                    eq(userCaterpillars.userId, userId)
+                  ))
+                  .returning();
+                deleteResult = caterpillarResult.length > 0;
+              }
+            }
+            break;
+            
           default:
             console.warn(`Unknown item type: ${item.type}`);
             continue;
@@ -4407,20 +4440,29 @@ export class PostgresStorage {
         })
         .where(eq(users.id, userId));
 
-      // Record this trade
-      await this.db
-        .insert(mariePosaTracker)
-        .values({
-          userId,
-          lastTradeAt: new Date(),
-          createdAt: new Date()
-        })
-        .onConflictDoUpdate({
-          target: mariePosaTracker.userId,
-          set: {
-            lastTradeAt: new Date()
-          }
-        });
+      // Record this trade - check if entry exists for this user
+      const existingEntry = await this.db
+        .select()
+        .from(mariePosaTracker)
+        .where(eq(mariePosaTracker.userId, userId))
+        .limit(1);
+
+      if (existingEntry.length > 0) {
+        // Update existing entry
+        await this.db
+          .update(mariePosaTracker)
+          .set({ lastTradeAt: new Date() })
+          .where(eq(mariePosaTracker.userId, userId));
+      } else {
+        // Insert new entry
+        await this.db
+          .insert(mariePosaTracker)
+          .values({
+            userId,
+            lastTradeAt: new Date(),
+            createdAt: new Date()
+          });
+      }
 
       console.log(`👑 Marie Posa: User ${userId} sold ${itemsSold} items for ${totalEarned} credits`);
       

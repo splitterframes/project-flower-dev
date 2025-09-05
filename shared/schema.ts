@@ -493,7 +493,9 @@ export const mariePosaTracker = pgTable("marie_posa_tracker", {
   userId: integer("user_id").notNull().references(() => users.id),
   lastTradeAt: timestamp("last_trade_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  uniqueUserMariePosa: uniqueIndex("unique_user_marie_posa").on(table.userId),
+}));
 
 // Aquarium types
 export type AquariumTank = typeof aquariumTanks.$inferSelect;
