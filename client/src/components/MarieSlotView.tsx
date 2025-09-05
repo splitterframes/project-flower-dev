@@ -30,21 +30,21 @@ const createSymbolPools = (): SlotSymbol[] => {
     {
       id: 'caterpillar-1',
       type: 'caterpillar', 
-      imageUrl: `/Raupen/1.png`,
+      imageUrl: `/Raupen/1.jpg`,
       name: 'Raupe'
     },
     // One specific flower
     {
-      id: 'flower-01',
+      id: 'flower-1',
       type: 'flower',
-      imageUrl: `/Blumen/01.jpg`, 
+      imageUrl: `/Blumen/1.jpg`, 
       name: 'Blume'
     },
     // One specific butterfly
     {
-      id: 'butterfly-001',
+      id: 'butterfly-1',
       type: 'butterfly',
-      imageUrl: `/Schmetterlinge/001.jpg`,
+      imageUrl: `/Schmetterlinge/1.jpg`,
       name: 'Schmetterling'
     },
     // One specific fish
@@ -60,7 +60,7 @@ const createSymbolPools = (): SlotSymbol[] => {
 };
 
 const SYMBOLS = createSymbolPools();
-const REEL_HEIGHT = 240; // Height of visible reel area  
+const REEL_HEIGHT = 384; // Height of visible reel area (60% höher)  
 const SYMBOL_HEIGHT = 80; // Height of each symbol - larger symbols
 const SYMBOLS_PER_REEL = 3; // Only show 3 symbols per reel
 const SYMBOLS_PER_DRUM = 15; // Total symbols per drum (5 symbols × 3 each)
