@@ -1275,6 +1275,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sell VIP butterfly from exhibition
+  app.post("/api/exhibition/sell-vip-butterfly", async (req, res) => {
+    try {
+      const { userId, exhibitionVipButterflyId } = req.body;
+      
+      if (!userId || !exhibitionVipButterflyId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+
+      const result = await storage.sellExhibitionVipButterfly(userId, exhibitionVipButterflyId);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'VIP Butterfly sold successfully', 
+          success: true,
+          creditsEarned: result.creditsEarned 
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Failed to sell VIP butterfly' });
+      }
+    } catch (error) {
+      console.error('Failed to sell exhibition VIP butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Sell butterfly from inventory for suns
   app.post("/api/inventory/sell-butterfly-for-suns", async (req, res) => {
     try {

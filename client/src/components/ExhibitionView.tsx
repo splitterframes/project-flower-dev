@@ -318,7 +318,8 @@ export const ExhibitionView: React.FC = () => {
       butterflyRarity: 'vip',
       butterflyImageUrl: vipButterfly.vipButterflyImageUrl,
       placedAt: vipButterfly.placedAt,
-      createdAt: vipButterfly.createdAt
+      createdAt: vipButterfly.createdAt,
+      isVip: true
     };
     
     // Find the index of this VIP butterfly in the combined list

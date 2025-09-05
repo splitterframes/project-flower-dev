@@ -2141,8 +2141,8 @@ export class PostgresStorage {
     const placedAt = new Date(butterfly[0].placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
-    // Base time: 72 hours in milliseconds
-    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms
+    // Base time: 1 minute for testing (normally 72 hours)
+    const baseTimeMs = 1 * 60 * 1000; // = 60,000 ms (TEST MODE)
     
     // Likes reduction: 1 minute per like in milliseconds  
     const likesReductionMs = likesCount * 60 * 1000;
@@ -2237,6 +2237,75 @@ export class PostgresStorage {
     // Add credits
     await this.updateUserCredits(userId, creditsEarned);
 
+    return { success: true, creditsEarned };
+  }
+
+  async canSellVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<boolean> {
+    const timeRemaining = await this.getTimeUntilVipSellable(userId, exhibitionVipButterflyId);
+    return timeRemaining === 0;
+  }
+
+  async getTimeUntilVipSellable(userId: number, exhibitionVipButterflyId: number): Promise<number> {
+    const vipButterfly = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+    
+    if (vipButterfly.length === 0) return 0;
+    
+    // Get likes count for this frame (VIP butterflies also benefit from likes)
+    const allFrameLikes = await this.getUserFrameLikes(userId);
+    const frameWithLikes = allFrameLikes.find(f => f.frameId === vipButterfly[0].frameId);
+    const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+    
+    const now = new Date();
+    const placedAt = new Date(vipButterfly[0].placedAt);
+    const msElapsed = now.getTime() - placedAt.getTime();
+    
+    // Base time: 1 minute for testing (normally 72 hours)
+    const baseTimeMs = 1 * 60 * 1000; // = 60,000 ms (TEST MODE)
+    
+    // Likes reduction: 1 minute per like in milliseconds  
+    const likesReductionMs = likesCount * 60 * 1000;
+    
+    // Required time to sell = 72 hours - (likes * 1 minute)
+    const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
+    
+    // Time remaining = required time - elapsed time
+    const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
+    
+    console.log(`🕒 VIP DEBUG Countdown: placed=${placedAt.toISOString()}, elapsed=${msElapsed}ms, required=${requiredTimeMs}ms, remaining=${remainingMs}ms, likes=${likesCount}`);
+    
+    return remainingMs;
+  }
+
+  async sellExhibitionVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    const canSell = await this.canSellVipButterfly(userId, exhibitionVipButterflyId);
+    if (!canSell) {
+      return { success: false, message: 'VIP Butterfly not ready for sale yet' };
+    }
+
+    const vipButterfly = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+    
+    if (vipButterfly.length === 0) {
+      return { success: false, message: 'VIP Butterfly not found' };
+    }
+
+    // VIP butterflies are worth much more! Fixed high value
+    const creditsEarned = 2500; // VIP butterflies are super valuable
+
+    // Remove VIP butterfly from exhibition
+    await this.db
+      .delete(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+
+    // Add credits
+    await this.updateUserCredits(userId, creditsEarned);
+
+    console.log(`✨ Sold VIP butterfly ${vipButterfly[0].vipButterflyName} for ${creditsEarned} credits`);
     return { success: true, creditsEarned };
   }
 

@@ -18,6 +18,7 @@ interface ButterflyDetailProps {
   placedAt: string;
   userId: number;
   frameId?: number; // Add frameId to get likes information
+  isVip?: boolean; // Flag to distinguish VIP butterflies
 }
 
 interface ButterflyDetailModalProps {
@@ -179,21 +180,25 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
     setIsSelling(true);
     try {
-      const response = await fetch('/api/exhibition/sell-butterfly', {
+      // Use different endpoint for VIP butterflies
+      const endpoint = butterfly.isVip ? '/api/exhibition/sell-vip-butterfly' : '/api/exhibition/sell-butterfly';
+      const bodyData = butterfly.isVip 
+        ? { userId: butterfly.userId, exhibitionVipButterflyId: butterfly.id }
+        : { userId: butterfly.userId, exhibitionButterflyId: butterfly.id };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'X-User-Id': butterfly.userId.toString() || '1'
         },
-        body: JSON.stringify({
-          userId: butterfly.userId,
-          exhibitionButterflyId: butterfly.id
-        })
+        body: JSON.stringify(bodyData)
       });
 
       if (response.ok) {
         const result = await response.json();
-        toast.success("Schmetterling verkauft!", {
+        const butterflyType = butterfly.isVip ? "VIP-Schmetterling" : "Schmetterling";
+        toast.success(`${butterflyType} verkauft!`, {
           description: `Du hast ${result.creditsEarned} Credits erhalten! 💰`,
           duration: 4000,
           className: "border-l-4 border-l-green-500",
