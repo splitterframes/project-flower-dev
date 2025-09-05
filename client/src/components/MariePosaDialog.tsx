@@ -287,10 +287,10 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
   const getCategoryTitle = (type: string) => {
     switch (type) {
-      case 'flower': return '🌸 Blumen';
-      case 'butterfly': return '🦋 Schmetterlinge';
-      case 'caterpillar': return '🐛 Raupen';
-      case 'fish': return '🐟 Fische';
+      case 'flower': return 'Blumen';
+      case 'butterfly': return 'Schmetterlinge';
+      case 'caterpillar': return 'Raupen';
+      case 'fish': return 'Fische';
       default: return type;
     }
   };
