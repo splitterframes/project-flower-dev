@@ -60,14 +60,18 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Default position: right and slightly below cursor
-    let left = mousePosition.x + offset;
+    // Default position: left side of cursor (300px to the left as requested)
+    let left = mousePosition.x - 300;
     let top = mousePosition.y + offset;
     
     // Horizontal bounds checking
-    if (left + previewWidth > windowWidth - margin) {
-      // Move to left side of cursor
-      left = mousePosition.x - offset - previewWidth;
+    if (left < margin) {
+      // Move to right side of cursor if left doesn't fit
+      left = mousePosition.x + offset;
+      // If that also doesn't fit, clamp to right edge
+      if (left + previewWidth > windowWidth - margin) {
+        left = windowWidth - previewWidth - margin;
+      }
     }
     
     // Vertical bounds checking  
