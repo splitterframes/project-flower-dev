@@ -404,8 +404,8 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                 {selectedItems.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-900/30 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {/* 60x60px Bild für ausgewählte Items */}
-                      <div className="w-15 h-15 bg-slate-700 rounded-md flex items-center justify-center overflow-hidden">
+                      {/* 80x80px Bild für ausgewählte Items */}
+                      <div className="w-20 h-20 bg-slate-700 rounded-md flex items-center justify-center overflow-hidden">
                         {item.imageUrl ? (
                           <img 
                             src={item.imageUrl} 
