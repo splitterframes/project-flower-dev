@@ -33,16 +33,16 @@ export const SeedRewardDialog: React.FC<SeedRewardDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-emerald-950 via-green-950 to-emerald-950 border-2 border-green-500/30 text-white max-w-md shadow-2xl">
+      <DialogContent className="bg-gradient-to-br from-emerald-950 via-green-950 to-emerald-950 border-2 border-green-500/30 text-white max-w-sm shadow-2xl">
         <DialogHeader>
           <DialogTitle className="sr-only">Samen erhalten - {rarityName}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col items-center text-center p-6 space-y-6">
+        <div className="flex flex-col items-center text-center p-4 space-y-3">
           {/* Animated Icon */}
           <div className={`relative ${isAnimating ? 'animate-bounce' : ''}`}>
-            <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-full p-4 shadow-lg">
-              <Package className="h-12 w-12 text-white" />
+            <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-full p-3 shadow-lg">
+              <Package className="h-8 w-8 text-white" />
             </div>
             {isAnimating && (
               <div className="absolute -top-2 -right-2">
@@ -52,22 +52,21 @@ export const SeedRewardDialog: React.FC<SeedRewardDialogProps> = ({
           </div>
 
           {/* Title */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-green-300 flex items-center justify-center gap-2">
-              <Gift className="h-6 w-6" />
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-green-300">
               Verwelktes Bouquet gesammelt!
             </h2>
-            <p className="text-green-200">Du hast Samen aus dem verwelkten Bouquet erhalten:</p>
+            <p className="text-green-200 text-sm">Du hast Samen erhalten:</p>
           </div>
 
           {/* Reward Display */}
-          <div className="bg-black/30 rounded-lg p-6 border border-green-500/30 w-full">
+          <div className="bg-black/30 rounded-lg p-4 border border-green-500/30 w-full">
             <div className="flex items-center justify-center gap-4">
               <div className="text-4xl font-bold text-white">
                 {quantity}x
               </div>
               <Badge 
-                className="text-lg font-bold px-4 py-2 border-2"
+                className="text-base font-bold px-3 py-1 border-2"
                 style={{ 
                   backgroundColor: rarityColor.replace('text-', 'bg-').replace('-400', '-600'),
                   borderColor: rarityColor.replace('text-', 'border-').replace('-400', '-400'),
@@ -89,14 +88,14 @@ export const SeedRewardDialog: React.FC<SeedRewardDialogProps> = ({
           </div>
 
           {/* Description */}
-          <p className="text-green-300/80 text-sm">
-            Die Samen wurden automatisch zu deinem Inventar hinzugefügt!
+          <p className="text-green-300/80 text-xs">
+            Automatisch zu deinem Inventar hinzugefügt!
           </p>
 
           {/* Close Button */}
           <Button
             onClick={onClose}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-8 py-2 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
           >
             Perfekt! 🌟
           </Button>
