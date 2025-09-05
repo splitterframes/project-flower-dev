@@ -359,7 +359,8 @@ export const AquariumView: React.FC = () => {
   const renderTank = (tankNumber: number) => {
     const tank = tanks.get(tankNumber);
     const tankFish = getFishInTank(tankNumber);
-    const tankCost = tankNumber * 1000; // 1000, 2000, 3000, etc.
+    // Calculate cost: Tank 1 = free, Tank 2 = 2500, each further x1.5
+    const tankCost = tankNumber === 1 ? 0 : Math.round(2500 * Math.pow(1.5, tankNumber - 2));
 
     if (!tank) {
       // Tank not purchased
@@ -378,7 +379,7 @@ export const AquariumView: React.FC = () => {
                 disabled={purchasingTank === tankNumber || credits < tankCost}
                 className="bg-blue-900/20 border-blue-500/50 text-blue-300 hover:bg-blue-800/30"
               >
-                {purchasingTank === tankNumber ? 'Kaufe...' : `${tankCost} Cr`}
+                {purchasingTank === tankNumber ? 'Kaufe...' : tankCost === 0 ? 'Kostenlos' : `${tankCost} Cr`}
               </Button>
             </div>
           </CardHeader>

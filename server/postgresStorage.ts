@@ -3945,8 +3945,14 @@ export class PostgresStorage {
         return { success: false, message: 'Aquarium bereits gekauft!' };
       }
       
-      // Calculate cost: Tank 1 = 1000, Tank 2 = 2000, etc.
-      const cost = tankNumber * 1000;
+      // Calculate cost: Tank 1 = free, Tank 2 = 2500, each further x1.5
+      let cost = 0;
+      if (tankNumber === 1) {
+        cost = 0; // First aquarium is free
+      } else {
+        // Tank 2 = 2500, Tank 3 = 2500*1.5 = 3750, Tank 4 = 3750*1.5 = 5625, etc.
+        cost = Math.round(2500 * Math.pow(1.5, tankNumber - 2));
+      }
       
       // Check user credits
       const user = await this.getUser(userId);
