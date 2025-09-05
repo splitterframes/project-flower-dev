@@ -3552,20 +3552,22 @@ export class PostgresStorage {
   }
 
   async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
-    try {
-      console.log(`🐟 Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
+    // ATOMIC TRANSACTION to prevent synchronization issues
+    return await this.db.transaction(async (tx) => {
+      console.log(`🐟 🔐 ATOMIC: Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
       
-      // Store caterpillar rarity in PostgreSQL fedCaterpillars table
-      await this.db.insert(fedCaterpillarsTable).values({
+      // 1. Store caterpillar rarity in PostgreSQL fedCaterpillars table
+      await tx.insert(fedCaterpillarsTable).values({
         userId: userId,
         fieldIndex: fieldIndex,
         caterpillarId: 0, // Not used for fish feeding, only for tracking
         caterpillarRarity: caterpillarRarity,
         fedAt: new Date()
       });
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillar inserted successfully`);
       
-      // Get current fed caterpillars count from PostgreSQL
-      const fedCaterpillars = await this.db
+      // 2. Get current fed caterpillars count from PostgreSQL (within transaction)
+      const fedCaterpillars = await tx
         .select()
         .from(fedCaterpillarsTable)
         .where(and(
@@ -3574,23 +3576,50 @@ export class PostgresStorage {
         ));
       
       const feedingCount = fedCaterpillars.length;
-      console.log(`🐟 Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
-      console.log(`🐟 Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
       
-      // Update feeding progress normally
-      const newProgress = await this.updatePondFeedingProgress(userId, fieldIndex);
+      // 3. Update feeding progress within same transaction
+      const existingProgress = await tx
+        .select()
+        .from(pondFeedingProgressTable)
+        .where(and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        ));
+      
+      let newProgress: number;
+      if (existingProgress.length > 0) {
+        // Update existing progress
+        await tx
+          .update(pondFeedingProgressTable)
+          .set({ feedingCount: feedingCount, updatedAt: new Date() })
+          .where(and(
+            eq(pondFeedingProgressTable.userId, userId),
+            eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+          ));
+        newProgress = feedingCount;
+      } else {
+        // Create new progress entry
+        await tx.insert(pondFeedingProgressTable).values({
+          userId: userId,
+          fieldIndex: fieldIndex,
+          feedingCount: feedingCount,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        newProgress = feedingCount;
+      }
+      
+      console.log(`🐟 🔐 ATOMIC: Updated feeding progress to ${newProgress} for user ${userId} field ${fieldIndex}`);
       
       // If fish is created (3 feedings), log that we're ready
       if (newProgress >= 3) {
-        console.log(`🐟 Fish will be created, rarities ready for average:`, fedCaterpillars.map(c => c.caterpillarRarity));
+        console.log(`🐟 🔐 ATOMIC: Fish will be created, rarities ready for average:`, fedCaterpillars.map(c => c.caterpillarRarity));
       }
       
       return newProgress;
-      
-    } catch (error) {
-      console.error('🐟 Error updating pond feeding progress with tracking:', error);
-      throw error;
-    }
+    });
   }
 
   async spawnFishOnFieldWithAverageRarity(userId: number, pondFieldIndex: number): Promise<{ fishName: string, fishRarity: RarityTier }> {
