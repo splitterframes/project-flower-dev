@@ -1263,11 +1263,15 @@ export class PostgresStorage {
     console.log(`🐛 Found field caterpillar: ${fieldCaterpillar.caterpillarName} (ID: ${fieldCaterpillar.caterpillarId})`);
     console.log(`🐛 Removed caterpillar from field ${fieldIndex}`);
 
-    // Add to user inventory
+    // Add to user inventory - group by caterpillarId AND caterpillarRarity
     const existing = await this.db
       .select()
       .from(userCaterpillars)
-      .where(and(eq(userCaterpillars.userId, userId), eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId)));
+      .where(and(
+        eq(userCaterpillars.userId, userId), 
+        eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId),
+        eq(userCaterpillars.caterpillarRarity, fieldCaterpillar.caterpillarRarity)
+      ));
 
     let result: UserCaterpillar;
     
@@ -1278,7 +1282,11 @@ export class PostgresStorage {
         const updated = await this.db
           .update(userCaterpillars)
           .set({ quantity: existing[0].quantity + 1 })
-          .where(and(eq(userCaterpillars.userId, userId), eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId)))
+          .where(and(
+            eq(userCaterpillars.userId, userId), 
+            eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId),
+            eq(userCaterpillars.caterpillarRarity, fieldCaterpillar.caterpillarRarity)
+          ))
           .returning();
         result = updated[0];
       } else {
