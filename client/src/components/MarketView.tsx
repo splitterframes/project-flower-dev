@@ -708,21 +708,29 @@ export const MarketView: React.FC = () => {
                   </div>
                 )}
 
-                {/* Quantity - disabled for caterpillars */}
-                {sellForm.itemType === 'seed' && (
-                  <div>
-                    <Label htmlFor="quantity">Menge</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="1"
-                      value={sellForm.quantity}
-                      onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
-                      className="bg-slate-900 border-slate-600 text-white"
-                      required
-                    />
-                  </div>
-                )}
+                {/* Quantity for seeds and caterpillars */}
+                <div>
+                  <Label htmlFor="quantity">Menge</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    max={sellForm.itemType === 'seed' 
+                      ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 1)
+                      : (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 1)
+                    }
+                    value={sellForm.quantity}
+                    onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
+                    className="bg-slate-900 border-slate-600 text-white"
+                    required
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Verfügbar: {sellForm.itemType === 'seed' 
+                      ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 0)
+                      : (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 0)
+                    }
+                  </p>
+                </div>
 
                 <div>
                   <Label htmlFor="pricePerUnit">Preis pro Stück (Cr)</Label>

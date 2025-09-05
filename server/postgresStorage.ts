@@ -629,7 +629,7 @@ export class PostgresStorage {
 
       return listing[0];
     } else if (data.itemType === "caterpillar") {
-      // Check if user has the caterpillar
+      // Check if user has enough caterpillars
       const caterpillarResult = await this.db
         .select()
         .from(userCaterpillars)
@@ -639,21 +639,35 @@ export class PostgresStorage {
         throw new Error('Caterpillar not found');
       }
 
-      // Create caterpillar listing (quantity always 1 for unique caterpillars)
+      if (caterpillarResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient caterpillars');
+      }
+
+      // Create caterpillar listing with specified quantity
       const listing = await this.db.insert(marketListings).values({
         sellerId,
         itemType: "caterpillar",
         seedId: null,
         caterpillarId: data.caterpillarId!,
-        quantity: 1, // Caterpillars are unique
+        quantity: data.quantity,
         pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit
+        totalPrice: data.pricePerUnit * data.quantity
       }).returning();
 
-      // Remove caterpillar from seller's inventory
-      await this.db
-        .delete(userCaterpillars)
-        .where(eq(userCaterpillars.id, data.caterpillarId!));
+      // Update caterpillar quantity in seller's inventory
+      const newQuantity = caterpillarResult[0].quantity - data.quantity;
+      if (newQuantity <= 0) {
+        // Remove caterpillar entirely if no more left
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, data.caterpillarId!));
+      } else {
+        // Update quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: newQuantity })
+          .where(eq(userCaterpillars.id, data.caterpillarId!));
+      }
 
       return listing[0];
     } else {
