@@ -51,8 +51,8 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   // Sonnen-Boost state
   const [boostMinutes, setBoostMinutes] = useState<string>('1');
   const [isBoosting, setIsBoosting] = useState<boolean>(false);
-  const { suns, refreshSuns } = useSuns();
-  const { refreshCredits } = useCredits();
+  const { suns, setSuns } = useSuns();
+  const { setCredits } = useCredits();
   const { showNotification } = useNotification();
   const { user } = useAuth();
 
@@ -193,7 +193,11 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
       if (response.ok) {
         showNotification(`${minutes} Minuten abgezogen für ${sunCost} Sonnen!`, 'success');
-        await refreshSuns();
+        const sunsResponse = await fetch(`/api/user/${user?.id}/suns`);
+        if (sunsResponse.ok) {
+          const sunsData = await sunsResponse.json();
+          setSuns(sunsData.suns);
+        }
         // Refresh sell status
         setTimeRemaining(prev => Math.max(0, prev - (minutes * 60 * 1000)));
       } else {
