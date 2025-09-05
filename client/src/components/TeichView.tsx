@@ -343,7 +343,7 @@ export const TeichView: React.FC = () => {
           const fieldIndex = field.id - 1;
           
           // Check for caterpillar (only on grass fields)
-          const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
+          const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldIndex === fieldIndex) : null;
           
           // Check for butterfly - should show both on grass fields AND pond fields as small colored dots
           const butterfly = fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex);
