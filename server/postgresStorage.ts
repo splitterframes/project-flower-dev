@@ -226,6 +226,10 @@ export class PostgresStorage {
       .where(eq(userFish.userId, userId));
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await this.db.select().from(users);
+  }
+
   async updateFishQuantity(fishEntryId: number, newQuantity: number): Promise<void> {
     await this.db
       .update(userFish)
