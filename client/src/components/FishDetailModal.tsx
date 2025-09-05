@@ -147,7 +147,11 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
       if (response.ok) {
         showNotification(`Fisch für ${data.creditsEarned} Credits verkauft!`, 'success');
-        await refreshCredits();
+        const creditsResponse = await fetch(`/api/user/${user?.id}/credits`);
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          setCredits(creditsData.credits);
+        }
         onSold();
       } else {
         showNotification(data.message || 'Fehler beim Verkauf', 'error');
