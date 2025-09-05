@@ -1261,9 +1261,11 @@ export class PostgresStorage {
 
     const fieldCaterpillar = deletedCaterpillar[0];
     console.log(`🐛 Found field caterpillar: ${fieldCaterpillar.caterpillarName} (ID: ${fieldCaterpillar.caterpillarId})`);
+    console.log(`🐛 Field caterpillar rarity: ${fieldCaterpillar.caterpillarRarity}`);
     console.log(`🐛 Removed caterpillar from field ${fieldIndex}`);
 
     // Add to user inventory - group by caterpillarId AND caterpillarRarity
+    console.log(`🐛 Looking for existing caterpillar with ID ${fieldCaterpillar.caterpillarId} and rarity ${fieldCaterpillar.caterpillarRarity}`);
     const existing = await this.db
       .select()
       .from(userCaterpillars)
@@ -1272,6 +1274,8 @@ export class PostgresStorage {
         eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId),
         eq(userCaterpillars.caterpillarRarity, fieldCaterpillar.caterpillarRarity)
       ));
+    
+    console.log(`🐛 Found ${existing.length} existing caterpillars with same ID and rarity`);
 
     let result: UserCaterpillar;
     
