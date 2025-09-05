@@ -64,9 +64,9 @@ const createSymbolPools = (): SlotSymbol[] => {
 };
 
 const SYMBOLS = createSymbolPools();
-const REEL_HEIGHT = 300; // Height of visible reel area
-const SYMBOL_HEIGHT = 80; // Height of each symbol
-const SYMBOLS_PER_REEL = Math.floor(REEL_HEIGHT / SYMBOL_HEIGHT) + 2; // Extra symbols for smooth scrolling
+const REEL_HEIGHT = 240; // Height of visible reel area
+const SYMBOL_HEIGHT = 80; // Height of each symbol - larger symbols
+const SYMBOLS_PER_REEL = 3; // Only show 3 symbols per reel
 
 interface Reel {
   symbols: SlotSymbol[];
@@ -94,8 +94,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => {
     const initReels = Array(5).fill(null).map(() => {
       const reelSymbols = [];
-      // Fill reel with random symbols for smooth scrolling
-      for (let i = 0; i < SYMBOLS_PER_REEL * 3; i++) {
+      // Fill reel with random symbols for smooth scrolling - more symbols for spinning effect
+      for (let i = 0; i < SYMBOLS_PER_REEL * 5; i++) {
         reelSymbols.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
       }
       
@@ -122,12 +122,12 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const reelSymbols = [];
     
     // Fill with random symbols for the spinning part
-    for (let i = 0; i < SYMBOLS_PER_REEL * 4; i++) {
+    for (let i = 0; i < SYMBOLS_PER_REEL * 6; i++) {
       reelSymbols.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
     }
     
-    // Place the final symbol at the position where it will be visible when stopped
-    const targetIndex = Math.floor(SYMBOLS_PER_REEL * 2.5); // Middle-ish position
+    // Place the final symbol in the middle position (will be visible when stopped)
+    const targetIndex = Math.floor(SYMBOLS_PER_REEL * 3) + 1; // Middle position
     reelSymbols[targetIndex] = finalSymbol;
     
     return reelSymbols;
@@ -175,7 +175,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         symbols: createSpinningReel(finalSymbols[index]),
         isSpinning: true,
         position: 0,
-        targetPosition: SYMBOL_HEIGHT * Math.floor(SYMBOLS_PER_REEL * 2.5), // Position to show final symbol
+        targetPosition: SYMBOL_HEIGHT * (Math.floor(SYMBOLS_PER_REEL * 3) + 1), // Position to show final symbol in middle
         finalSymbol: finalSymbols[index]
       }));
 
@@ -265,20 +265,47 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 className="flex items-center justify-center border-b border-slate-600"
                 style={{ height: SYMBOL_HEIGHT }}
               >
-                <div className="relative w-16 h-16">
+                <div className="relative w-20 h-20">
                   <img
                     src={symbol.imageUrl}
                     alt={symbol.name}
-                    className="w-full h-full object-contain rounded"
+                    className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // Fallback to placeholder on image error
+                      // Better fallback with type-specific icons
                       const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMzc0MTUxIi8+CjwvZz4=';
+                      let fallbackColor = '#374151';
+                      let icon = '?';
+                      
+                      switch(symbol.type) {
+                        case 'butterfly':
+                          fallbackColor = '#7c3aed';
+                          icon = '🦋';
+                          break;
+                        case 'fish':
+                          fallbackColor = '#0ea5e9';
+                          icon = '🐠';
+                          break;
+                        case 'caterpillar':
+                          fallbackColor = '#16a34a';
+                          icon = '🐛';
+                          break;
+                        case 'flower':
+                          fallbackColor = '#dc2626';
+                          icon = '🌸';
+                          break;
+                      }
+                      
+                      target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="80" height="80" fill="${fallbackColor}" rx="8"/>
+                          <text x="40" y="55" text-anchor="middle" font-size="32" fill="white">${icon}</text>
+                        </svg>
+                      `)}`;
                     }}
                   />
                   {/* Glow effect for spinning */}
                   {reel.isSpinning && (
-                    <div className="absolute inset-0 bg-yellow-400 opacity-20 animate-pulse rounded" />
+                    <div className="absolute inset-0 bg-yellow-400 opacity-30 animate-pulse rounded" />
                   )}
                 </div>
               </div>
