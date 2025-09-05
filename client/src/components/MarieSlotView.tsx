@@ -35,9 +35,9 @@ const createSymbolPools = (): SlotSymbol[] => {
     },
     // One specific flower
     {
-      id: 'flower-1',
+      id: 'flower-2',
       type: 'flower',
-      imageUrl: `/Blumen/1.jpg`, 
+      imageUrl: `/Blumen/2.jpg`, 
       name: 'Blume'
     },
     // One specific butterfly
@@ -305,12 +305,21 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                           break;
                       }
                       
-                      target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                        <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="160" height="160" fill="${fallbackColor}" rx="20"/>
-                          <text x="80" y="105" text-anchor="middle" font-size="60" fill="white">${icon}</text>
-                        </svg>
-                      `)}`;
+                      // Special handling for sun - no background, just emoji
+                      if (symbol.type === 'sun') {
+                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <text x="80" y="110" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
+                          </svg>
+                        `)}`;
+                      } else {
+                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="160" height="160" fill="${fallbackColor}" rx="20"/>
+                            <text x="80" y="105" text-anchor="middle" font-size="60" fill="white">${icon}</text>
+                          </svg>
+                        `)}`;
+                      }
                     }}
                   />
                   {/* Glow effect for spinning */}
@@ -371,15 +380,25 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
         {/* Main Slot Machine */}
         <Card className="bg-gradient-to-b from-slate-900 to-slate-800 border-yellow-500 border-4 shadow-2xl">
-          <CardHeader className="text-center pb-6">
+          <CardHeader className="text-center pb-4">
             <CardTitle className="text-yellow-400 text-3xl flex items-center justify-center gap-3">
               <Star className="h-8 w-8 animate-pulse" />
-              SLOT MACHINE
+              Slot Machine
               <Star className="h-8 w-8 animate-pulse" />
             </CardTitle>
-            <div className="text-white text-lg mt-2">
-              5 Sonnen pro Spiel • Echte Bilder aus deinem Garten!
-            </div>
+            
+            {/* Gewinnzeile über den Trommeln */}
+            {lastWinMessage && (
+              <div className={`mt-4 p-4 rounded-lg ${
+                isWinning 
+                  ? 'bg-green-800/50 border border-green-400 text-green-200' 
+                  : 'bg-blue-800/50 border border-blue-400 text-blue-200'
+              }`}>
+                <div className={`text-lg font-bold ${isWinning ? 'animate-pulse' : ''}`}>
+                  {lastWinMessage}
+                </div>
+              </div>
+            )}
           </CardHeader>
           
           <CardContent className="px-8 pb-8">
@@ -388,19 +407,6 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <div className="grid grid-cols-5 gap-4" style={{ height: REEL_HEIGHT }}>
                 {reels.map((reel, index) => renderReel(reel, index))}
               </div>
-              
-              {/* Win/Loss Message */}
-              {lastWinMessage && (
-                <div className={`text-center mt-6 p-4 rounded-lg ${
-                  isWinning 
-                    ? 'bg-green-800/50 border border-green-400 text-green-200' 
-                    : 'bg-blue-800/50 border border-blue-400 text-blue-200'
-                }`}>
-                  <div className={`text-lg font-bold ${isWinning ? 'animate-pulse' : ''}`}>
-                    {lastWinMessage}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Spin Button */}
