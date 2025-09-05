@@ -45,32 +45,64 @@ interface SelectedItem extends SellableItem {
   quantity: number;
 }
 
-// Preise basierend auf Rarität (exponentiell ansteigend)
+// Preise basierend auf echten Detaildialog-Preisen
 const getItemPrice = (type: string, rarity: number): number => {
-  const butterflyBasePrice = 100;
-  const fishBasePrice = 150;
+  const rarityTier = mapRarityNumberToTier(rarity);
   
-  let basePrice: number;
   switch (type) {
-    case 'butterfly':
-      basePrice = butterflyBasePrice;
-      break;
-    case 'fish':
-      basePrice = fishBasePrice;
-      break;
-    case 'flower':
+    case 'butterfly': {
+      const butterflyPrices = {
+        'common': 50,
+        'uncommon': 100,
+        'rare': 200,
+        'super-rare': 400,
+        'epic': 600,
+        'legendary': 800,
+        'mythical': 1000
+      };
+      return butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50;
+    }
+    case 'fish': {
+      const fishPrices = {
+        'common': 100,
+        'uncommon': 300,
+        'rare': 800,
+        'super-rare': 2000,
+        'epic': 5000,
+        'legendary': 12000,
+        'mythical': 30000
+      };
+      return fishPrices[rarityTier as keyof typeof fishPrices] || 100;
+    }
+    case 'flower': {
+      const butterflyPrices = {
+        'common': 50,
+        'uncommon': 100,
+        'rare': 200,
+        'super-rare': 400,
+        'epic': 600,
+        'legendary': 800,
+        'mythical': 1000
+      };
       // Blumenpreise = 30% der Schmetterlingspreise
-      basePrice = Math.floor(butterflyBasePrice * 0.3);
-      break;
-    case 'caterpillar':
+      return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50) * 0.3);
+    }
+    case 'caterpillar': {
+      const butterflyPrices = {
+        'common': 50,
+        'uncommon': 100,
+        'rare': 200,
+        'super-rare': 400,
+        'epic': 600,
+        'legendary': 800,
+        'mythical': 1000
+      };
       // Raupenpreise = 85% der Schmetterlingspreise
-      basePrice = Math.floor(butterflyBasePrice * 0.85);
-      break;
+      return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50) * 0.85);
+    }
     default:
-      basePrice = 50;
+      return 50;
   }
-  
-  return Math.floor(Math.pow(2, rarity) * basePrice);
 };
 
 export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseComplete }: MariePosaDialogProps) {
@@ -255,12 +287,17 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
   const getCategoryTitle = (type: string) => {
     switch (type) {
-      case 'flower': return 'Blumen';
-      case 'butterfly': return 'Schmetterlinge';
-      case 'caterpillar': return 'Raupen';
-      case 'fish': return 'Fische';
+      case 'flower': return '🌸 Blumen';
+      case 'butterfly': return '🦋 Schmetterlinge';
+      case 'caterpillar': return '🐛 Raupen';
+      case 'fish': return '🐟 Fische';
       default: return type;
     }
+  };
+  
+  // Prüfe ob eine Kategorie ausgewählte Items hat
+  const categoryHasSelectedItems = (categoryType: string): boolean => {
+    return selectedItems.some(item => item.type === categoryType);
   };
   
   const toggleCategory = (type: string) => {
@@ -334,17 +371,32 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                   <div key={categoryType} className="border border-yellow-500/30 rounded-lg bg-yellow-900/20">
                     <Collapsible open={isExpanded} onOpenChange={() => toggleCategory(categoryType)}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between p-3 hover:bg-yellow-800/20 transition-colors">
+                        <div className={`flex items-center justify-between p-3 transition-colors ${
+                          categoryHasSelectedItems(categoryType) 
+                            ? 'bg-gradient-to-r from-yellow-600/20 to-yellow-800/20 hover:from-yellow-600/30 hover:to-yellow-800/30' 
+                            : 'hover:bg-yellow-800/20'
+                        }`}>
                           <div className="flex items-center gap-3">
-                            <span className="font-medium text-yellow-200">{getCategoryTitle(categoryType)}</span>
-                            <Badge variant="secondary" className="bg-yellow-700/30 text-yellow-200">
+                            {getItemIcon(categoryType)}
+                            <span className={`font-medium ${
+                              categoryHasSelectedItems(categoryType) ? 'text-yellow-300' : 'text-yellow-200'
+                            }`}>{getCategoryTitle(categoryType)}</span>
+                            <Badge variant="secondary" className={`${
+                              categoryHasSelectedItems(categoryType) 
+                                ? 'bg-yellow-600/40 text-yellow-100 border-yellow-400/50' 
+                                : 'bg-yellow-700/30 text-yellow-200'
+                            }`}>
                               {items.length}
                             </Badge>
                           </div>
                           {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-yellow-200" />
+                            <ChevronDown className={`h-4 w-4 ${
+                              categoryHasSelectedItems(categoryType) ? 'text-yellow-300' : 'text-yellow-200'
+                            }`} />
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-yellow-200" />
+                            <ChevronRight className={`h-4 w-4 ${
+                              categoryHasSelectedItems(categoryType) ? 'text-yellow-300' : 'text-yellow-200'
+                            }`} />
                           )}
                         </div>
                       </CollapsibleTrigger>
