@@ -309,8 +309,8 @@ export const TeichView: React.FC = () => {
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldId === fieldIndex) : null;
           
-          // Check for butterfly (only on grass fields) - BUG FIX: convert field.id to 0-indexed fieldIndex
-          const butterfly = !field.isPond ? fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex) : null;
+          // Check for butterfly - should show both on grass fields AND pond fields as small colored dots
+          const butterfly = fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex);
           
           // Removed debug logging - bug fixed!
           
@@ -1170,8 +1170,8 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
-                    {/* Permanent field butterflies from database - BUG FIX: Show database butterflies! */}
-                    {field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && !field.isPond && (
+                    {/* Permanent field butterflies from database - Show on ALL fields (grass + pond) */}
+                    {field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && (
                       <ButterflyHoverPreview
                         butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
