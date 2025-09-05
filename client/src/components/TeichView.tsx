@@ -1513,12 +1513,9 @@ export const TeichView: React.FC = () => {
                       <div 
                         className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 ${
                           collectingFish.has(field.id) 
-                            ? `${fadingFish.has(field.id) ? 'opacity-0 scale-75 transition-all duration-700' : 'opacity-100 scale-100'}` 
-                            : 'animate-bounce opacity-100 scale-100 transition-all duration-700'
+                            ? `${fadingFish.has(field.id) ? 'opacity-0 scale-0 transition-all duration-500' : 'animate-bounce opacity-100 scale-110'}` 
+                            : 'animate-bounce opacity-100 scale-100 transition-all duration-300'
                         }`}
-                        style={collectingFish.has(field.id) ? {
-                          animation: 'spin 0.5s linear infinite'
-                        } : {}}
                         onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
                       >
                         <div className={`relative transform transition-transform duration-200 ${
@@ -1536,6 +1533,13 @@ export const TeichView: React.FC = () => {
                           }`}>
                             🐟
                           </div>
+                          {/* Sparkle Effect while collecting */}
+                          {collectingFish.has(field.id) && !fadingFish.has(field.id) && (
+                            <div className="absolute -top-2 -right-2 text-yellow-400 animate-ping">✨</div>
+                          )}
+                          {collectingFish.has(field.id) && !fadingFish.has(field.id) && (
+                            <div className="absolute -bottom-2 -left-2 text-blue-400 animate-ping" style={{animationDelay: '0.2s'}}>💧</div>
+                          )}
                         </div>
                       </div>
                     )}
