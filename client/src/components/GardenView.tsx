@@ -648,11 +648,7 @@ export const GardenView: React.FC = () => {
             [fieldIndex]: { quantity, rarity }
           }));
           
-          toast.success("Verwelktes Bouquet gesammelt!", {
-            description: `Du hast ${quantity}x ${rarityName} Samen erhalten! 🌱`,
-            duration: 4000,
-            className: "border-l-4 " + getRarityColor(rarity as RarityTier).replace('text-', 'border-l-'),
-          });
+          // Toast notification removed - user requested no more seed notifications
         }
         
         // Refresh all garden data
@@ -971,20 +967,7 @@ export const GardenView: React.FC = () => {
                     </div>
                   )}
                   
-                  {collectedBouquets.has(field.id - 1) && (() => {
-                    const seedDrop = bouquetSeedDrops[field.id - 1];
-                    const quantity = seedDrop?.quantity || 3;
-                    const rarity = seedDrop?.rarity || 'common';
-                    const rarityName = getRarityDisplayName(rarity as RarityTier);
-                    
-                    return (
-                      <div className="absolute inset-0 bg-yellow-400/30 rounded-lg flex items-center justify-center z-10">
-                        <div className="text-white font-bold text-sm animate-pulse text-center">
-                          +{quantity} {rarityName}<br/>Samen erhalten!
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* Visual seed notification removed - user requested no more seed notifications */}
                   
                   {!field.isUnlocked && (
                     <>
