@@ -146,7 +146,6 @@ export const TeichView: React.FC = () => {
     fishName: string;
     fishImageUrl: string;
     rarity: string;
-    sellPrice: number;
   } | null>(null);
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
@@ -879,8 +878,7 @@ export const TeichView: React.FC = () => {
         setFishRewardData({
           fishName: fishOnField.fishName,
           fishImageUrl: fishOnField.fishImageUrl,
-          rarity: fishOnField.fishRarity,
-          sellPrice: data.sellPrice || 0
+          rarity: fishOnField.fishRarity
         });
         setIsFishRewardDialogOpen(true);
         
