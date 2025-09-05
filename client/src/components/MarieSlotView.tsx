@@ -19,39 +19,39 @@ interface SlotSymbol {
 // Create symbol pools - only 5 specific symbols for slot machine
 const createSymbolPools = (): SlotSymbol[] => {
   const symbols: SlotSymbol[] = [
-    // Sun symbol (new 5th symbol)
+    // Sun symbol (new 5th symbol) - will use fallback
     {
       id: 'sun',
       type: 'sun',
-      imageUrl: '/icons/sun-icon.svg', // We'll use a fallback icon
+      imageUrl: '/nonexistent/sun.jpg', // Intentionally use fallback
       name: 'Sonne'
     },
     // One specific caterpillar
     {
-      id: 'caterpillar-3',
+      id: 'caterpillar-1',
       type: 'caterpillar', 
-      imageUrl: `/Raupen/3.png`,
+      imageUrl: `/Raupen/1.png`,
       name: 'Raupe'
     },
     // One specific flower
     {
-      id: 'flower-05',
+      id: 'flower-01',
       type: 'flower',
-      imageUrl: `/Blumen/05.jpg`, 
+      imageUrl: `/Blumen/01.jpg`, 
       name: 'Blume'
     },
     // One specific butterfly
     {
-      id: 'butterfly-007',
+      id: 'butterfly-001',
       type: 'butterfly',
-      imageUrl: `/Schmetterlinge/007.jpg`,
+      imageUrl: `/Schmetterlinge/001.jpg`,
       name: 'Schmetterling'
     },
     // One specific fish
     {
-      id: 'fish-5',
+      id: 'fish-1',
       type: 'fish',
-      imageUrl: `/Fische/5.jpg`,
+      imageUrl: `/Fische/1.jpg`,
       name: 'Fisch'
     }
   ];
@@ -271,7 +271,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 className="flex items-center justify-center border-b border-slate-600"
                 style={{ height: SYMBOL_HEIGHT }}
               >
-                <div className="relative w-20 h-20">
+                <div className="relative w-24 h-24">
                   <img
                     src={symbol.imageUrl}
                     alt={symbol.name}
@@ -306,9 +306,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       }
                       
                       target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="80" height="80" fill="${fallbackColor}" rx="8"/>
-                          <text x="40" y="55" text-anchor="middle" font-size="32" fill="white">${icon}</text>
+                        <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="96" height="96" fill="${fallbackColor}" rx="12"/>
+                          <text x="48" y="65" text-anchor="middle" font-size="38" fill="white">${icon}</text>
                         </svg>
                       `)}`;
                     }}
