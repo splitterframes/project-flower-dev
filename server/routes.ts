@@ -2190,8 +2190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserSuns(userId, -5);
       console.log(`🎰 User ${userId} spent 5 suns on Marie-Slot`);
 
-      // Generate slot machine result (5 reels)
-      const symbols = ['caterpillar', 'flower', 'butterfly', 'fish'];
+      // Generate slot machine result (5 reels) - now with 5 symbols including sun
+      const symbols = ['caterpillar', 'flower', 'butterfly', 'fish', 'sun'];
       const reels: string[] = [];
       for (let i = 0; i < 5; i++) {
         const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
