@@ -221,6 +221,9 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-7xl w-full shadow-2xl [&>button]:hidden">
+        <DialogHeader>
+          <DialogTitle className="sr-only">{fish.fishName} - Fisch Details</DialogTitle>
+        </DialogHeader>
 
         {/* Name and Rarity Header */}
         <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg mb-6">
