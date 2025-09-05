@@ -2030,6 +2030,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fish inventory cleanup endpoint
+  app.post('/api/admin/cleanup-fish-duplicates', async (req, res) => {
+    try {
+      console.log('🧹 Starting fish inventory cleanup...');
+      
+      // Get all users with fish
+      const allUsers = await storage.getAllUsers();
+      let totalMerged = 0;
+      
+      for (const user of allUsers) {
+        const userFish = await storage.getUserFish(user.id);
+        
+        // Group fish by fishId
+        const fishGroups = new Map<number, any[]>();
+        userFish.forEach(fish => {
+          if (!fishGroups.has(fish.fishId)) {
+            fishGroups.set(fish.fishId, []);
+          }
+          fishGroups.get(fish.fishId)!.push(fish);
+        });
+        
+        // Process groups with duplicates
+        for (const [fishId, duplicates] of fishGroups) {
+          if (duplicates.length > 1) {
+            console.log(`🐟 User ${user.username}: Found ${duplicates.length} duplicates of fish ${fishId}`);
+            
+            // Calculate total quantity
+            const totalQuantity = duplicates.reduce((sum, fish) => sum + fish.quantity, 0);
+            
+            // Keep the first entry and delete others
+            const keepFish = duplicates[0];
+            const deleteFish = duplicates.slice(1);
+            
+            // Update the kept fish with total quantity
+            await storage.updateFishQuantity(keepFish.id, totalQuantity);
+            
+            // Delete the duplicates
+            for (const duplicate of deleteFish) {
+              await storage.deleteFishEntry(duplicate.id);
+            }
+            
+            console.log(`🐟 Merged ${duplicates.length} entries into 1 with quantity ${totalQuantity}`);
+            totalMerged += duplicates.length - 1;
+          }
+        }
+      }
+      
+      console.log(`🎉 Fish cleanup complete! Merged ${totalMerged} duplicate entries.`);
+      res.json({ 
+        success: true, 
+        message: `Successfully merged ${totalMerged} duplicate fish entries.`,
+        mergedCount: totalMerged
+      });
+    } catch (error) {
+      console.error('Failed to cleanup fish duplicates:', error);
+      res.status(500).json({ error: 'Failed to cleanup fish duplicates' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

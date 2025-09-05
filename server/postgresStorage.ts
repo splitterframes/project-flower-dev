@@ -226,6 +226,19 @@ export class PostgresStorage {
       .where(eq(userFish.userId, userId));
   }
 
+  async updateFishQuantity(fishEntryId: number, newQuantity: number): Promise<void> {
+    await this.db
+      .update(userFish)
+      .set({ quantity: newQuantity })
+      .where(eq(userFish.id, fishEntryId));
+  }
+
+  async deleteFishEntry(fishEntryId: number): Promise<void> {
+    await this.db
+      .delete(userFish)
+      .where(eq(userFish.id, fishEntryId));
+  }
+
   // ==================== CATERPILLAR MANAGEMENT ====================
 
   async addCaterpillarToUser(userId: number, caterpillarId: number): Promise<UserCaterpillar | null> {
