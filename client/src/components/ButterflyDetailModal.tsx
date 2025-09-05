@@ -89,7 +89,12 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
     const fetchSellStatus = async () => {
       try {
-        const response = await fetch(`/api/exhibition/butterfly/${butterfly.id}/sell-status`, {
+        // Use different endpoint for VIP butterflies
+        const endpoint = butterfly.isVip 
+          ? `/api/exhibition/vip-butterfly/${butterfly.id}/sell-status`
+          : `/api/exhibition/butterfly/${butterfly.id}/sell-status`;
+          
+        const response = await fetch(endpoint, {
           headers: { 
             'X-User-Id': butterfly.userId.toString()
           }

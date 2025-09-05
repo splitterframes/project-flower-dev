@@ -2280,7 +2280,10 @@ export class PostgresStorage {
   }
 
   async sellExhibitionVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    console.log(`💎 VIP SELL DEBUG: Attempting to sell VIP butterfly ${exhibitionVipButterflyId} for user ${userId}`);
+    
     const canSell = await this.canSellVipButterfly(userId, exhibitionVipButterflyId);
+    console.log(`💎 VIP SELL DEBUG: canSell = ${canSell}`);
     if (!canSell) {
       return { success: false, message: 'VIP Butterfly not ready for sale yet' };
     }
@@ -2290,7 +2293,14 @@ export class PostgresStorage {
       .from(exhibitionVipButterflies)
       .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
     
+    console.log(`💎 VIP SELL DEBUG: Found ${vipButterfly.length} VIP butterflies`);
     if (vipButterfly.length === 0) {
+      // Let's also check what VIP butterflies exist for this user
+      const allUserVips = await this.db
+        .select()
+        .from(exhibitionVipButterflies)
+        .where(eq(exhibitionVipButterflies.userId, userId));
+      console.log(`💎 VIP SELL DEBUG: User has ${allUserVips.length} VIP butterflies total:`, allUserVips.map(v => ({ id: v.id, name: v.vipButterflyName })));
       return { success: false, message: 'VIP Butterfly not found' };
     }
 

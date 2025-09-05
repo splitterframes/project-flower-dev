@@ -1250,6 +1250,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get VIP butterfly sell status (countdown info with like reduction)
+  app.get("/api/exhibition/vip-butterfly/:id/sell-status", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const exhibitionVipButterflyId = parseInt(req.params.id);
+
+      // Get all exhibition VIP butterflies for this user
+      const userVipExhibitionButterflies = await storage.getExhibitionVipButterflies(userId);
+      const vipExhibitionButterfly = userVipExhibitionButterflies.find(b => b.id === exhibitionVipButterflyId);
+      
+      if (!vipExhibitionButterfly) {
+        return res.status(404).json({ error: "VIP-Schmetterling nicht gefunden" });
+      }
+
+      const canSell = await storage.canSellVipButterfly(userId, exhibitionVipButterflyId);
+      const timeRemaining = await storage.getTimeUntilVipSellable(userId, exhibitionVipButterflyId);
+      
+      // Get likes count using getUserFrameLikes and find our specific frame
+      const allFrameLikes = await storage.getUserFrameLikes(vipExhibitionButterfly.userId);
+      const frameWithLikes = allFrameLikes.find(f => f.frameId === vipExhibitionButterfly.frameId);
+      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+
+      res.json({
+        canSell,
+        timeRemainingMs: timeRemaining,
+        likesCount,
+        frameId: vipExhibitionButterfly.frameId
+      });
+    } catch (error) {
+      console.error('Failed to get VIP butterfly sell status:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/exhibition/sell-butterfly", async (req, res) => {
     try {
       const { userId, exhibitionButterflyId } = req.body;
