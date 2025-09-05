@@ -54,37 +54,29 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
   const getPreviewPosition = () => {
     const previewWidth = 400; // 24rem = 384px + padding
     const previewHeight = 450; // estimated height
-    const margin = 5; // very small margin from screen edge
-    const offset = 5; // minimal offset from cursor - super close!
+    const margin = 15; // safe margin from screen edge
+    const offset = 12; // close but visible offset from cursor
     
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Start with cursor position and minimal offset
+    // Default position: right and slightly below cursor
     let left = mousePosition.x + offset;
     let top = mousePosition.y + offset;
     
-    // Check if preview would go off-screen horizontally
+    // Horizontal bounds checking
     if (left + previewWidth > windowWidth - margin) {
-      // Try positioning to the left of cursor instead
+      // Move to left side of cursor
       left = mousePosition.x - offset - previewWidth;
-      // If that also doesn't fit, force it to fit within bounds
-      if (left < margin) {
-        left = windowWidth - previewWidth - margin;
-      }
     }
     
-    // Check if preview would go off-screen vertically  
+    // Vertical bounds checking  
     if (top + previewHeight > windowHeight - margin) {
-      // Try positioning above cursor instead
+      // Move above cursor
       top = mousePosition.y - offset - previewHeight;
-      // If that also doesn't fit, force it to fit within bounds
-      if (top < margin) {
-        top = windowHeight - previewHeight - margin;
-      }
     }
     
-    // Ensure we stay within bounds as final safety check
+    // Final safety clamp to ensure always visible
     left = Math.max(margin, Math.min(left, windowWidth - previewWidth - margin));
     top = Math.max(margin, Math.min(top, windowHeight - previewHeight - margin));
     
