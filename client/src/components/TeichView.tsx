@@ -852,11 +852,13 @@ export const TeichView: React.FC = () => {
     console.log(`🐟 Attempting to collect fish on field ${fieldId}`, fishOnField);
     
     // Start collection animation
+    console.log("🌪️ ANIMATION: Starting spin animation for field", fieldId);
     setCollectingFish(prev => new Set(prev).add(fieldId));
     
     try {
       // Wait longer for spin animation to be visible before fading
       setTimeout(() => {
+        console.log("👻 ANIMATION: Starting fade animation for field", fieldId);
         setFadingFish(prev => new Set(prev).add(fieldId));
       }, 800); // Start fading after 800ms of spinning
       
@@ -1511,7 +1513,7 @@ export const TeichView: React.FC = () => {
                       <div 
                         className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 transition-all duration-700 ${
                           collectingFish.has(field.id) 
-                            ? `animate-spin ${fadingFish.has(field.id) ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}` 
+                            ? `animate-spin duration-500 ${fadingFish.has(field.id) ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}` 
                             : 'animate-bounce opacity-100 scale-100'
                         }`}
                         onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
