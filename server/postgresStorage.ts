@@ -583,12 +583,17 @@ export class PostgresStorage {
         caterpillarId: marketListings.caterpillarId,
         quantity: marketListings.quantity,
         pricePerUnit: marketListings.pricePerUnit,
+        totalPrice: marketListings.totalPrice,
         createdAt: marketListings.createdAt,
         sellerUsername: users.username,
         // Seed data (for seed listings)
         seedName: seeds.name,
         seedRarity: seeds.rarity,
-        // Caterpillar data (for caterpillar listings) - we'll create a name and get rarity
+        // Caterpillar data (for caterpillar listings)
+        caterpillarName: userCaterpillars.caterpillarName,
+        caterpillarRarity: userCaterpillars.caterpillarRarity,
+        caterpillarImageUrl: userCaterpillars.caterpillarImageUrl,
+        caterpillarIdOriginal: userCaterpillars.caterpillarId,
       })
       .from(marketListings)
       .leftJoin(users, eq(marketListings.sellerId, users.id))

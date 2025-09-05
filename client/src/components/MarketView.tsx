@@ -430,7 +430,9 @@ export const MarketView: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {marketListings.map((listing) => {
                   const rarity = listing.itemType === 'seed' ? listing.seedRarity : listing.caterpillarRarity;
-                  const itemName = listing.itemType === 'seed' ? listing.seedName : `Raupe ID ${listing.caterpillarId}`;
+                  const itemName = listing.itemType === 'seed' 
+                    ? listing.seedName 
+                    : (listing.caterpillarName || generateLatinCaterpillarName((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0));
                   const itemIcon = listing.itemType === 'seed' ? '🌱' : '🐛';
                   
                   return (
@@ -440,10 +442,28 @@ export const MarketView: React.FC = () => {
                     style={{ borderColor: getBorderColor(rarity as RarityTier) }}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-white flex items-center">
-                        <span className="mr-2">{itemIcon}</span>
-                        {itemName}
-                      </h4>
+                      <div className="flex items-center">
+                        {/* Item Icon/Image */}
+                        {listing.itemType === 'seed' ? (
+                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                        ) : (
+                          <div className="w-8 h-8 rounded border mr-3 bg-slate-700 flex-shrink-0 overflow-hidden"
+                               style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
+                            <img
+                              src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                              alt={itemName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-sm">🐛</div>';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <h4 className="font-bold text-white">
+                          {itemName}
+                        </h4>
+                      </div>
                       <div className="flex items-center">
                         <Star className={`h-4 w-4 mr-1 ${getRarityColor(rarity as RarityTier)}`} />
                         <span className={`text-xs ${getRarityColor(rarity as RarityTier)}`}>

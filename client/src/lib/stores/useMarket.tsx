@@ -4,8 +4,18 @@ import { subscribeWithSelector } from "zustand/middleware";
 export interface MarketListing {
   id: number;
   sellerUsername: string;
+  itemType: 'seed' | 'caterpillar';
+  // Seed properties
   seedName: string;
   seedRarity: string;
+  seedId?: number;
+  // Caterpillar properties
+  caterpillarId?: number;
+  caterpillarName?: string;
+  caterpillarRarity?: string;
+  caterpillarImageUrl?: string;
+  caterpillarIdOriginal?: number;
+  // Common properties
   quantity: number;
   pricePerUnit: number;
   totalPrice: number;
