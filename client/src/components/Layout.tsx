@@ -58,7 +58,7 @@ export const Layout: React.FC = () => {
       case "ausstellung":
         return <ExhibitionView />;
       case "aquarium":
-        return <AquariumView onNavigateToSlot={() => handleViewChange('marie-slot')} />;
+        return <AquariumView />;
       case "marie-slot":
         return <MarieSlotView onBack={() => handleViewChange('garten')} />;
       case "dashboard":
