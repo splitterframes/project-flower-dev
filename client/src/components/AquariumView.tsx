@@ -56,7 +56,7 @@ interface FishDetailProps {
 
 export const AquariumView: React.FC = () => {
   const { user } = useAuth();
-  const { credits, refreshCredits } = useCredits();
+  const { credits, setCredits } = useCredits();
   const { showNotification } = useNotification();
   
   const [userFish, setUserFish] = useState<UserFish[]>([]);
@@ -143,7 +143,11 @@ export const AquariumView: React.FC = () => {
       if (response.ok) {
         showNotification(`Aquarium ${tankNumber} gekauft!`, 'success');
         await loadTanks();
-        await refreshCredits();
+        const creditsResponse = await fetch(`/api/user/${user.id}/credits`);
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          setCredits(creditsData.credits);
+        }
       } else {
         showNotification(data.message || 'Fehler beim Kauf', 'error');
       }

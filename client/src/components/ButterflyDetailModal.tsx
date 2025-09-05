@@ -52,7 +52,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   // Sonnen-Boost state
   const [boostMinutes, setBoostMinutes] = useState<string>('1');
   const [isBoosting, setIsBoosting] = useState<boolean>(false);
-  const { suns, refreshSuns } = useSuns();
+  const { suns, setSuns } = useSuns();
 
   // Calculate countdown every second (using server data with like reduction)
   useEffect(() => {
@@ -232,7 +232,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           className: "border-l-4 border-l-yellow-500",
         });
         // Refresh suns to show updated amount
-        refreshSuns();
+        const sunsResponse = await fetch(`/api/user/${butterfly.userId}/suns`);
+        if (sunsResponse.ok) {
+          const sunsData = await sunsResponse.json();
+          setSuns(sunsData.suns);
+        }
         // Reset input
         setBoostMinutes('1');
       } else {
