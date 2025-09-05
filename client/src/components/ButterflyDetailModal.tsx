@@ -90,7 +90,10 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     const fetchSellStatus = async () => {
       try {
         // Use different endpoint for VIP butterflies
-        const endpoint = butterfly.isVip 
+        const isVipButterfly = butterfly.isVip || butterfly.butterflyRarity === 'vip';
+        console.log(`🦋 STATUS DEBUG: butterfly.isVip=${butterfly.isVip}, rarity=${butterfly.butterflyRarity}, isVipButterfly=${isVipButterfly}`);
+        
+        const endpoint = isVipButterfly 
           ? `/api/exhibition/vip-butterfly/${butterfly.id}/sell-status`
           : `/api/exhibition/butterfly/${butterfly.id}/sell-status`;
           
@@ -165,7 +168,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     }
   };
 
-  const getSellPrice = (rarity: string): number => {
+  const getSellPrice = (rarity: string, isVip?: boolean): number => {
+    if (isVip || rarity === 'vip') return 2500; // VIP butterflies are extra valuable!
     // Must match server-side rarityValues in sellExhibitionButterfly
     const prices = {
       'common': 10,
@@ -174,8 +178,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
       'super-rare': 100,
       'epic': 200,
       'legendary': 500,
-      'mythical': 1000,
-      'vip': 2500  // VIP butterflies are extra valuable!
+      'mythical': 1000
     };
     return prices[rarity as keyof typeof prices] || 10;
   };
@@ -186,8 +189,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     setIsSelling(true);
     try {
       // Use different endpoint for VIP butterflies
-      const endpoint = butterfly.isVip ? '/api/exhibition/sell-vip-butterfly' : '/api/exhibition/sell-butterfly';
-      const bodyData = butterfly.isVip 
+      const isVipButterfly = butterfly.isVip || butterfly.butterflyRarity === 'vip';
+      console.log(`🦋 SELL DEBUG: butterfly.isVip=${butterfly.isVip}, rarity=${butterfly.butterflyRarity}, isVipButterfly=${isVipButterfly}`);
+      
+      const endpoint = isVipButterfly ? '/api/exhibition/sell-vip-butterfly' : '/api/exhibition/sell-butterfly';
+      const bodyData = isVipButterfly 
         ? { userId: butterfly.userId, exhibitionVipButterflyId: butterfly.id }
         : { userId: butterfly.userId, exhibitionButterflyId: butterfly.id };
 
