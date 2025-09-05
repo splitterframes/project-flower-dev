@@ -47,14 +47,29 @@ interface SelectedItem extends SellableItem {
 
 // Preise basierend auf Rarität (exponentiell ansteigend)
 const getItemPrice = (type: string, rarity: number): number => {
-  const basePrices = {
-    flower: 25,      // Blumen günstiger
-    butterfly: 100,  // Standard Schmetterlingspreise
-    caterpillar: 50, // Raupen mittlerer Preis
-    fish: 150       // Fische teurer
-  };
+  const butterflyBasePrice = 100;
+  const fishBasePrice = 150;
   
-  const basePrice = basePrices[type as keyof typeof basePrices] || 50;
+  let basePrice: number;
+  switch (type) {
+    case 'butterfly':
+      basePrice = butterflyBasePrice;
+      break;
+    case 'fish':
+      basePrice = fishBasePrice;
+      break;
+    case 'flower':
+      // Blumenpreise = 30% der Schmetterlingspreise
+      basePrice = Math.floor(butterflyBasePrice * 0.3);
+      break;
+    case 'caterpillar':
+      // Raupenpreise = 85% der Schmetterlingspreise
+      basePrice = Math.floor(butterflyBasePrice * 0.85);
+      break;
+    default:
+      basePrice = 50;
+  }
+  
   return Math.floor(Math.pow(2, rarity) * basePrice);
 };
 
@@ -65,12 +80,12 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
   const [isLoading, setIsLoading] = useState(false);
   const [isSelling, setIsSelling] = useState(false);
   
-  // Collapsible state für Kategorien
+  // Collapsible state für Kategorien - alle eingeklappt starten
   const [expandedCategories, setExpandedCategories] = useState({
-    flower: true,
-    butterfly: true, 
-    caterpillar: true,
-    fish: true
+    flower: false,
+    butterfly: false, 
+    caterpillar: false,
+    fish: false
   });
 
   const fetchAvailableItems = async () => {
@@ -240,10 +255,10 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
   const getCategoryTitle = (type: string) => {
     switch (type) {
-      case 'flower': return 'Blumen 🌸';
-      case 'butterfly': return 'Schmetterlinge 🦋';
-      case 'caterpillar': return 'Raupen 🐛';
-      case 'fish': return 'Fische 🐟';
+      case 'flower': return 'Blumen';
+      case 'butterfly': return 'Schmetterlinge';
+      case 'caterpillar': return 'Raupen';
+      case 'fish': return 'Fische';
       default: return type;
     }
   };
@@ -321,7 +336,6 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                       <CollapsibleTrigger className="w-full">
                         <div className="flex items-center justify-between p-3 hover:bg-yellow-800/20 transition-colors">
                           <div className="flex items-center gap-3">
-                            {getItemIcon(categoryType)}
                             <span className="font-medium text-yellow-200">{getCategoryTitle(categoryType)}</span>
                             <Badge variant="secondary" className="bg-yellow-700/30 text-yellow-200">
                               {items.length}
@@ -336,13 +350,14 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                       </CollapsibleTrigger>
                       
                       <CollapsibleContent>
-                        <div className="px-3 pb-3 space-y-2">
-                          {items.map(item => (
+                        <div className="px-3 pb-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            {items.map(item => (
                             <Card 
                               key={item.id} 
                               className={`cursor-pointer transition-all duration-300 ${
                                 selectedItems.some(selected => selected.id === item.id)
-                                  ? 'bg-gradient-to-br from-yellow-600/30 to-yellow-800/30 border-yellow-400 shadow-lg shadow-yellow-400/30 scale-105'
+                                  ? 'bg-gradient-to-br from-yellow-600/30 to-yellow-800/30 border-yellow-400 shadow-lg shadow-yellow-400/20 scale-[1.01]'
                                   : 'bg-slate-800/50 border-slate-600 hover:bg-yellow-800/10 hover:border-yellow-500/50'
                               }`}
                               onClick={() => handleItemSelect(item)}
@@ -395,7 +410,8 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                                 </div>
                               </CardContent>
                             </Card>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </CollapsibleContent>
                     </Collapsible>
