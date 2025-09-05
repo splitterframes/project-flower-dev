@@ -421,10 +421,12 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
-        // Refresh unlocked fields and credits from backend
+        // Refresh unlocked fields and update UI properly without page reload
         await fetchUnlockedFields();
-        // Refresh page to update credits and UI properly
-        window.location.reload();
+        // Calculate and subtract the cost from current credits
+        const cost = calculateUnlockCost(fieldId);
+        updateCredits(credits - cost);
+        showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${cost} Credits freigeschaltet.`, 'success');
       } else {
         const errorData = await response.json();
         showNotification(errorData.error || 'Fehler beim Freischalten des Feldes', 'error');
