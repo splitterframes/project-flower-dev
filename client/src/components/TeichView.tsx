@@ -1121,19 +1121,18 @@ export const TeichView: React.FC = () => {
                         return;
                       }
                       
-                      // GRASFELD: Butterfly platzieren ODER Caterpillar einsammeln
+                      // GRASFELD: Butterfly platzieren (KEINE Caterpillar-Logik hier - wird von Raupe onClick gehandelt)
                       if (!field.isPond) {
-                        // Check if caterpillar is present on this field to collect  
-                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id);
+                        // Check if caterpillar is present - dann NICHT den Schmetterlings-Dialog öffnen
+                        const caterpillarOnField = fieldCaterpillars.find(c => c.fieldIndex === field.id - 1) || 
+                                                  field.hasCaterpillar;
                         
                         if (caterpillarOnField) {
-                          console.log("🐛 Attempting to collect caterpillar on field", field.id);
-                          setIsCollectingCaterpillar(true); // SOFORT blockieren
-                          collectCaterpillar(field.id);
-                          return; // Wichtig: Nach Raupe sammeln nicht weiter ausführen
+                          console.log("🐛 Caterpillar present on field", field.id, "- ignoring field click");
+                          return; // Caterpillar-Clicks werden von deren eigenem onClick gehandelt
                         }
                         
-                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da war und nicht gerade sammelnd)
+                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da ist)
                         if (!isCollectingCaterpillar && userButterflies.length > 0) {
                           console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
                           setSelectedField(field.id);
