@@ -1217,7 +1217,7 @@ export const TeichView: React.FC = () => {
                             alt={caterpillar.caterpillarName || "Raupe"}
                             rarity={caterpillar.caterpillarRarity as RarityTier || "common"}
                             size="large"
-                            className="w-full h-full"
+                            className="w-full h-full field-image"
                           />
                         </div>
                       </CaterpillarHoverPreview>
@@ -1248,7 +1248,7 @@ export const TeichView: React.FC = () => {
                             alt={field.caterpillarName || "Raupe"}
                             rarity={field.caterpillarRarity as RarityTier || "common"}
                             size="large"
-                            className="w-full h-full"
+                            className="w-full h-full field-image"
                           />
                         </div>
                       </CaterpillarHoverPreview>
