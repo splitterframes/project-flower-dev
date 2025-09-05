@@ -150,8 +150,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
 
     setIsSpinning(true);
-    setLastWinMessage('');
-    setIsWinning(false);
+    // Gewinnzeile NICHT löschen - bleibt während dem Drehen stehen
+    // setLastWinMessage('');
+    // setIsWinning(false);
 
     try {
       // Call server API
@@ -273,7 +274,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const spinSpeed = reel.isSpinning ? 'animate-spin-fast' : '';
     
     return (
-      <div key={index} className="relative overflow-hidden bg-slate-800 rounded-lg border-2 border-yellow-500">
+      <div key={index} className={`relative overflow-hidden bg-slate-800 rounded-lg border-2 border-yellow-500 ${reel.isSpinning ? 'animate-[recoil_0.3s_ease-out]' : ''}`}>
         <div 
           className={`transition-transform ${reel.isSpinning ? 'duration-100 ease-linear' : 'duration-500 ease-out'}`}
           style={{
