@@ -54,6 +54,34 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   const [isBoosting, setIsBoosting] = useState<boolean>(false);
   const { suns, setSuns } = useSuns();
 
+  // Mouse wheel navigation
+  useEffect(() => {
+    if (!isOpen || !onNext || !onPrevious) return;
+
+    const handleWheel = (e: Event) => {
+      e.preventDefault();
+      const wheelEvent = e as WheelEvent;
+      if (wheelEvent.deltaY > 0) {
+        // Scroll down = Next
+        if (currentIndex !== undefined && totalCount !== undefined && currentIndex < totalCount - 1) {
+          onNext();
+        }
+      } else if (wheelEvent.deltaY < 0) {
+        // Scroll up = Previous  
+        if (currentIndex !== undefined && currentIndex > 0) {
+          onPrevious();
+        }
+      }
+    };
+
+    // Add wheel event listener to dialog
+    const dialogElement = document.querySelector('[role="dialog"]');
+    if (dialogElement) {
+      dialogElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => dialogElement.removeEventListener('wheel', handleWheel);
+    }
+  }, [isOpen, onNext, onPrevious, currentIndex, totalCount]);
+
   // Calculate countdown every second (using server data with like reduction)
   useEffect(() => {
     if (!butterfly || readOnly) return;
