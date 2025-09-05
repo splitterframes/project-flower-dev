@@ -136,6 +136,7 @@ export const TeichView: React.FC = () => {
   const [showFishModal, setShowFishModal] = useState(false);
   const [showFeedingDialog, setShowFeedingDialog] = useState(false);
   const [isCollectingCaterpillar, setIsCollectingCaterpillar] = useState(false);
+  const [collectingFish, setCollectingFish] = useState<Set<number>>(new Set());
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
@@ -849,31 +850,62 @@ export const TeichView: React.FC = () => {
     
     console.log(`🐟 Attempting to collect fish on field ${fieldId}`, fishOnField);
     
+    // Start collection animation
+    setCollectingFish(prev => new Set(prev).add(fieldId));
+    
     try {
-      const response = await fetch('/api/garden/collect-field-fish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          fieldFishId: fishOnField.id  // Use the correct fish database ID
-        })
-      });
+      // Wait for spin animation to start
+      setTimeout(async () => {
+        try {
+          const response = await fetch('/api/garden/collect-field-fish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              fieldFishId: fishOnField.id  // Use the correct fish database ID
+            })
+          });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🐟 Fisch erfolgreich gesammelt!');
-        showNotification('Fisch gesammelt!', data.message, 'success');
-        
-        // Refresh data to show updated state
-        fetchTeichData();
-      } else {
-        const errorData = await response.json();
-        console.error('Field fish collection failed:', errorData);
-        showNotification('Fehler', errorData.message || 'Fehler beim Sammeln des Fisches.', 'error');
-      }
+          if (response.ok) {
+            console.log('🐟 Fisch erfolgreich gesammelt!');
+            
+            // Remove from collecting state after API success
+            setCollectingFish(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(fieldId);
+              return newSet;
+            });
+            
+            // Refresh data to show updated state
+            fetchTeichData();
+          } else {
+            const errorData = await response.json();
+            console.error('Field fish collection failed:', errorData);
+            // Remove from collecting state on error
+            setCollectingFish(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(fieldId);
+              return newSet;
+            });
+          }
+        } catch (error) {
+          console.error('Field fish collection error:', error);
+          // Remove from collecting state on error
+          setCollectingFish(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldId);
+            return newSet;
+          });
+        }
+      }, 200); // Short delay for animation to start
+      
     } catch (error) {
-      console.error('Field fish collection error:', error);
-      showNotification('Fehler', 'Fehler beim Sammeln des Fisches.', 'error');
+      console.error('Animation setup error:', error);
+      setCollectingFish(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldId);
+        return newSet;
+      });
     }
   };
 
@@ -1452,10 +1484,16 @@ export const TeichView: React.FC = () => {
                     {/* Field Fish - Spawned from feeding (bouncing animation) */}
                     {field.hasFish && (
                       <div 
-                        className="absolute inset-0 flex items-center justify-center cursor-pointer group animate-bounce z-30"
-                        onClick={() => handleFieldFishClick(field)}
+                        className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 transition-all duration-700 ${
+                          collectingFish.has(field.id) 
+                            ? 'animate-spin opacity-0 scale-75' 
+                            : 'animate-bounce opacity-100 scale-100'
+                        }`}
+                        onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
                       >
-                        <div className="relative transform group-hover:scale-110 transition-transform duration-200">
+                        <div className={`relative transform transition-transform duration-200 ${
+                          collectingFish.has(field.id) ? 'scale-50' : 'group-hover:scale-110'
+                        }`}>
                           <RarityImage 
                             src={field.fishImageUrl!}
                             alt={field.fishName || "Fisch"}
@@ -1463,7 +1501,9 @@ export const TeichView: React.FC = () => {
                             size="large"
                             className="w-full h-full"
                           />
-                          <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
+                          <div className={`absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center transition-opacity duration-300 ${
+                            collectingFish.has(field.id) ? 'opacity-0' : 'animate-pulse opacity-100'
+                          }`}>
                             🐟
                           </div>
                         </div>
