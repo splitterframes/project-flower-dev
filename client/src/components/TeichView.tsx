@@ -1572,7 +1572,7 @@ export const TeichView: React.FC = () => {
           }}
           caterpillars={userCaterpillars}
           onFeedCaterpillar={onFeedCaterpillar}
-          fieldIndex={selectedField || 0}
+          fieldIndex={(selectedField || 1) - 1}
         />
 
         {/* Caterpillar Selection Modal removed - they spawn automatically */}
