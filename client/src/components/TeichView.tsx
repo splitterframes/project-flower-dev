@@ -1419,25 +1419,18 @@ export const TeichView: React.FC = () => {
                         className="absolute inset-0 flex items-center justify-center cursor-pointer group animate-bounce z-30"
                         onClick={() => handleFieldFishClick(field)}
                       >
-                        <FishHoverPreview
-                          fishImageUrl={field.fishImageUrl!}
-                          fishName={field.fishName!}
-                          fishRarity={field.fishRarity as RarityTier}
-                          className="z-10"
-                        >
-                          <div className="relative transform group-hover:scale-110 transition-transform duration-200">
-                            <RarityImage 
-                              src={field.fishImageUrl!}
-                              alt={field.fishName || "Fisch"}
-                              rarity={field.fishRarity as RarityTier || "common"}
-                              size="large"
-                              className="w-full h-full"
-                            />
-                            <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
-                              🐟
-                            </div>
+                        <div className="relative transform group-hover:scale-110 transition-transform duration-200">
+                          <RarityImage 
+                            src={field.fishImageUrl!}
+                            alt={field.fishName || "Fisch"}
+                            rarity={field.fishRarity as RarityTier || "common"}
+                            size="large"
+                            className="w-full h-full"
+                          />
+                          <div className="absolute -top-1 -right-1 bg-cyan-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-pulse">
+                            🐟
                           </div>
-                        </FishHoverPreview>
+                        </div>
                       </div>
                     )}
 
