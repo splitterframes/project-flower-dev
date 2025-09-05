@@ -1170,14 +1170,8 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
-                    {/* Permanent field butterflies from database - Only show on grass fields (NOT pond) */}
-                    {(() => {
-                      const shouldShow = field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && !field.isPond;
-                      if (field.hasButterfly) {
-                        console.log(`🦋 Field ${field.id}: hasButterfly=${field.hasButterfly}, isPond=${field.isPond}, shouldShow=${shouldShow}`);
-                      }
-                      return shouldShow;
-                    })() && (
+                    {/* DISABLED: No butterflies in pond view - butterflies only visible in garden view */}
+                    {false && field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && (
                       <ButterflyHoverPreview
                         butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
