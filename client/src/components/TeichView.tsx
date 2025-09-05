@@ -1109,15 +1109,22 @@ export const TeichView: React.FC = () => {
       <TooltipProvider>
         <Card className="bg-gradient-to-br from-blue-900 to-teal-900 border border-blue-500/30 shadow-lg mb-6">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-center">
-              <div className="flex items-center justify-center gap-3">
-                <Waves className="h-6 w-6 text-blue-400" />
-                <span className="text-2xl font-bold text-blue-300">Mariposa Teich</span>
-                <Waves className="h-6 w-6 text-blue-400" />
-                <HelpButton helpText="Am Teich setzt du Schmetterlinge auf Grasfelder um Raupen zu züchten. Füttere deine Fische in den blauen Teichfeldern mit den Raupen - je höher die Rarität der Raupen, desto bessere Fische bekommst du!" />
-              </div>
-              <div className="text-xs text-slate-400">
-                Setze Schmetterlinge ins Gras damit sie neue Raupen bilden und fütter deine Fische mit Ihnen - Sie da wackelt was!
+            <CardTitle className="text-white">
+              <div className="flex items-center justify-between">
+                <div></div> {/* Spacer links */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-3">
+                    <Waves className="h-6 w-6 text-blue-400" />
+                    <span className="text-2xl font-bold text-blue-300">Mariposa Teich</span>
+                    <Waves className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Setze Schmetterlinge ins Gras damit sie neue Raupen bilden und fütter deine Fische mit Ihnen - Sie da wackelt was!
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <HelpButton helpText="Am Teich setzt du Schmetterlinge auf Grasfelder um Raupen zu züchten. Füttere deine Fische in den blauen Teichfeldern mit den Raupen - je höher die Rarität der Raupen, desto bessere Fische bekommst du!" />
+                </div>
               </div>
             </CardTitle>
           </CardHeader>

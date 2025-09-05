@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Flower2, Star, Heart, Gift, Plus, Sparkles, Palette } from "lucide-react";
+import { HelpButton } from './HelpButton';
 import { BouquetCreationModal } from "./BouquetCreationModal";
 import { BouquetRecipeDisplay } from "./BouquetRecipeDisplay";
 import { RarityImage } from "./RarityImage";
@@ -268,11 +269,17 @@ export const BouquetsView: React.FC = () => {
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
       {/* Compact Bouquets Header */}
       <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
-        <div className="text-center mb-3">
-          <h1 className="text-2xl font-bold text-pink-300 mb-1">
-            Bouquet Kollektion
-          </h1>
-          <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+        <div className="flex items-center justify-between mb-3">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-pink-300 mb-1">
+              Bouquet Kollektion
+            </h1>
+            <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" />
+          </div>
         </div>
         
         {/* Compact Stats */}

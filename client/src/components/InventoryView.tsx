@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { useSuns } from "@/lib/stores/useSuns";
 import { Package, Flower, Bug, Gem, Sprout, Star, Sun } from "lucide-react";
+import { HelpButton } from './HelpButton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { RarityImage } from "./RarityImage";
@@ -562,11 +563,19 @@ export const InventoryView: React.FC = () => {
   return (
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
       {/* Compact Inventory Header */}
-      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-500/30 text-center">
-        <h1 className="text-2xl font-bold text-indigo-300 mb-1">
-          Inventar 🎒
-        </h1>
-        <p className="text-slate-400 text-sm">Verwalte deine Blumen und Schmetterlinge</p>
+      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-500/30">
+        <div className="flex items-center justify-between">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-indigo-300 mb-1">
+              Inventar 🎒
+            </h1>
+            <p className="text-slate-400 text-sm">Verwalte deine Blumen und Schmetterlinge</p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="Im Inventar siehst du alle deine gesammelten Gegenstände: Samen, Blumen, Schmetterlinge, Fische und Raupen. Du kannst sie hier verwalten und für verschiedene Zwecke verwenden!" />
+          </div>
+        </div>
       </div>
 
       {/* Organized Inventory Grid */}

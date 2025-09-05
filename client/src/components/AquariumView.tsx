@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Fish, Plus, Clock, Star, Waves, Eye } from "lucide-react";
+import { HelpButton } from './HelpButton';
 import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
@@ -442,15 +443,21 @@ export const AquariumView: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-teal-950 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-300 mb-2 flex items-center justify-center space-x-3">
-            <Waves className="h-10 w-10" />
-            <span>Aquarium</span>
-            <Waves className="h-10 w-10" />
-          </h1>
-          <p className="text-blue-200 max-w-2xl mx-auto">
-            Zeige deine wertvollsten Fische in wunderschönen Aquarien! Jedes Aquarium bietet 24 Plätze für deine Fisch-Sammlung.
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-blue-300 mb-2 flex items-center justify-center space-x-3">
+              <Waves className="h-10 w-10" />
+              <span>Aquarium</span>
+              <Waves className="h-10 w-10" />
+            </h1>
+            <p className="text-blue-200 max-w-2xl mx-auto">
+              Zeige deine wertvollsten Fische in wunderschönen Aquarien! Jedes Aquarium bietet 24 Plätze für deine Fisch-Sammlung.
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="Im Aquarium präsentierst du deine schönsten Fische! Kaufe Aquarium-Tanks für Credits und stelle deine seltenen Fische zur Schau. Jedes Aquarium hat 24 Plätze für deine Sammlung!" />
+          </div>
         </div>
 
         {/* Tank Navigation */}

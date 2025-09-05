@@ -8,6 +8,7 @@ import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { ButterflyDetailModal } from "./ButterflyDetailModal";
 import { RarityImage } from "./RarityImage";
 import { Trophy, Plus, DollarSign, Clock, Star, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { HelpButton } from './HelpButton';
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly, UserVipButterfly } from "@shared/schema";
 
@@ -598,11 +599,17 @@ export const ExhibitionView: React.FC = () => {
       {/* Exhibition Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-purple-500/30">
         {/* Title Section */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-purple-300 mb-1">
-            Schmetterlingsausstellung 🦋
-          </h1>
-          <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
+        <div className="flex items-center justify-between mb-4">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-purple-300 mb-1">
+              Schmetterlingsausstellung 🦋
+            </h1>
+            <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="In der Ausstellung präsentierst du deine schönsten Schmetterlinge in Rahmen! Du verdienst passiv Credits pro Stunde basierend auf der Rarität deiner ausgestellten Schmetterlinge. VIP-Schmetterlinge bringen noch mehr Credits!" />
+          </div>
         </div>
         
         {/* Compact Stats */}

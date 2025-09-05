@@ -17,6 +17,7 @@ import {
   HandCoins,
   Star
 } from "lucide-react";
+import { HelpButton } from './HelpButton';
 
 interface MarketListing {
   id: number;
@@ -268,11 +269,17 @@ export const MarketView: React.FC = () => {
       {/* Market Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-emerald-500/30">
         {/* Title Section */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-emerald-300 mb-1">
-            Samen Markt 🌱
-          </h1>
-          <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
+        <div className="flex items-center justify-between mb-4">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-emerald-300 mb-1">
+              Samen Markt 🌱
+            </h1>
+            <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="Im Markt kaufst du Samen von anderen Spielern oder vom Server. Du kannst auch deine eigenen Samen verkaufen und Credits verdienen. Schau regelmäßig nach neuen Angeboten!" />
+          </div>
         </div>
         
         {/* Compact Stats */}

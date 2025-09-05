@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { RarityImage } from "./RarityImage";
 import { Sparkles, Flower, Zap, Star, Heart, Plus, Minus, Trophy, Users, Info, Gift } from "lucide-react";
+import { HelpButton } from './HelpButton';
 
 interface WeeklyChallenge {
   id: number;
@@ -245,16 +246,22 @@ export const FlowerpowerView: React.FC = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Zap className="h-10 w-10 text-orange-400 mr-3" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-              Flowerpower Challenge
-            </h1>
+        <div className="flex items-center justify-between mb-8">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <Zap className="h-10 w-10 text-orange-400 mr-3" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+                Flowerpower Challenge
+              </h1>
+            </div>
+            <p className="text-slate-400 text-lg">
+              Woche {challenge?.weekNumber} • Spende Blumen und gewinne animierte Schmetterlinge!
+            </p>
           </div>
-          <p className="text-slate-400 text-lg">
-            Woche {challenge?.weekNumber} • Spende Blumen und gewinne animierte Schmetterlinge!
-          </p>
+          <div className="flex justify-end">
+            <HelpButton helpText="Bei der Flowerpower Challenge spendest du bestimmte Blumen für die Gemeinschaft! Je mehr Blumen du spendest, desto höher deine Chance auf seltene animierte Schmetterlinge als Belohnung!" />
+          </div>
         </div>
 
         {/* Main Grid */}
