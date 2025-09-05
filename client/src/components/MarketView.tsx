@@ -643,7 +643,7 @@ export const MarketView: React.FC = () => {
       )}
 
       {activeTab === "sell" && (
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-orange-500/30 shadow-2xl">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-orange-500/30 shadow-2xl overflow-visible">
           <CardHeader className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-t-lg -mx-6 -my-2"></div>
             <CardTitle className="text-white flex items-center relative z-10">
@@ -656,7 +656,7 @@ export const MarketView: React.FC = () => {
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-visible">
             {(sellForm.itemType === 'seed' && mySeeds.length === 0) || (sellForm.itemType === 'caterpillar' && myCaterpillars.length === 0) ? (
               <div className="text-center py-8">
                 {sellForm.itemType === 'seed' ? (
@@ -724,7 +724,7 @@ export const MarketView: React.FC = () => {
                 ) : (
                   <div>
                     <Label>Raupe auswählen</Label>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ zIndex: 1, position: 'relative' }}>
                       {myCaterpillars.length === 0 ? (
                         <div className="text-center py-4 text-slate-400">
                           Keine Raupen verfügbar
@@ -765,7 +765,7 @@ export const MarketView: React.FC = () => {
                                       />
                                     </div>
                                   </HoverCardTrigger>
-                                  <HoverCardContent className="w-80 p-4">
+                                  <HoverCardContent className="w-80 p-4 z-[60]">
                                     <div className="flex flex-col space-y-3">
                                       {/* Großes Raupenbild */}
                                       <div className="flex justify-center">
