@@ -1355,7 +1355,7 @@ export const TeichView: React.FC = () => {
                             rarity={fish.fishRarity as RarityTier}
                           >
                             <div
-                              className="w-full h-full rounded-lg border-2 cursor-pointer hover:scale-110 transition-transform"
+                              className="w-8 h-8 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform"
                               style={{ borderColor: getFishBorderColor(fish.fishRarity) }}
                             >
                               <img
