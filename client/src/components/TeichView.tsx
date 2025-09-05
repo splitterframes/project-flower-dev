@@ -1170,8 +1170,8 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
-                    {/* DISABLED: No butterflies in pond view - butterflies only visible in garden view */}
-                    {false && field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && (
+                    {/* Butterflies are only visible in garden view, not in pond view */}
+                    {false && (
                       <ButterflyHoverPreview
                         butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
