@@ -52,50 +52,36 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
   };
 
   const getPreviewPosition = () => {
-    const previewWidth = 400; // 24rem = 384px + padding
-    const previewHeight = 450; // estimated height
-    const margin = 15; // safe margin from screen edge
-    const offset = 12; // close but visible offset from cursor
+    const previewWidth = 400;
+    const previewHeight = 450;
+    const margin = 20;
     
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Try positioning to the left of cursor with intelligent spacing
-    let left = mousePosition.x - 300;
-    let top = mousePosition.y + offset;
+    // Simple and reliable: Try left first, then right
+    let left = mousePosition.x - 200; // Start 200px to the left
+    let top = mousePosition.y + 20;   // 20px below cursor
     
-    // Horizontal bounds checking - ensure it stays visible
+    // If goes off left edge, move to right side
     if (left < margin) {
-      // Not enough space on the left, try positioning to the right
-      left = mousePosition.x + offset;
-      // If that also doesn't fit, place it optimally within bounds
-      if (left + previewWidth > windowWidth - margin) {
-        // Find best position within screen bounds
-        const spaceLeft = mousePosition.x - margin;
-        const spaceRight = windowWidth - mousePosition.x - margin;
-        
-        if (spaceLeft >= previewWidth) {
-          // Fits on the left side
-          left = mousePosition.x - previewWidth - offset;
-        } else if (spaceRight >= previewWidth) {
-          // Fits on the right side  
-          left = mousePosition.x + offset;
-        } else {
-          // Center it for best visibility
-          left = (windowWidth - previewWidth) / 2;
-        }
-      }
+      left = mousePosition.x + 20;
     }
     
-    // Vertical bounds checking  
+    // If goes off right edge, clamp to right
+    if (left + previewWidth > windowWidth - margin) {
+      left = windowWidth - previewWidth - margin;
+    }
+    
+    // If goes off bottom, move above cursor
     if (top + previewHeight > windowHeight - margin) {
-      // Move above cursor
-      top = mousePosition.y - offset - previewHeight;
+      top = mousePosition.y - previewHeight - 20;
     }
     
-    // Final safety clamp to ensure always visible
-    left = Math.max(margin, Math.min(left, windowWidth - previewWidth - margin));
-    top = Math.max(margin, Math.min(top, windowHeight - previewHeight - margin));
+    // If goes off top, clamp to top
+    if (top < margin) {
+      top = margin;
+    }
     
     return { left, top };
   };
