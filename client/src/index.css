@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for slot machine */
+@keyframes spin-slow {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100px);
+  }
+}
+
+@keyframes spin-fast {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-200px);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 0.1s linear infinite;
+}
+
+.animate-spin-fast {
+  animation: spin-fast 0.05s linear infinite;
+}
+
 @layer base {
   :root {
     --background: 222.2 84% 4.9%;

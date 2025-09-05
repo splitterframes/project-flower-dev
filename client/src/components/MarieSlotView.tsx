@@ -1,71 +1,79 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { useAuth } from "@/lib/stores/useAuth";
-import { useSuns } from "@/lib/stores/useSuns";
-import { useCredits } from "@/lib/stores/useCredits";
-import { useNotification } from "../hooks/useNotification";
-import { 
-  Zap, 
-  Sun, 
-  ArrowLeft, 
-  Star, 
-  Gift,
-  Sparkles,
-  Trophy,
-  Coins,
-  Bug,
-  Fish,
-  Flower,
-  Sprout
-} from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Zap, Sun, Coins, Star } from 'lucide-react';
+import { useAuth } from '@/lib/stores/useAuth';
+import { useSuns } from '@/lib/stores/useSuns';
+import { useCredits } from '@/lib/stores/useCredits';
+import { useNotification } from '../hooks/useNotification';
 
-// Symbol types for the slot machine
+// Slot machine symbols with real game images
 interface SlotSymbol {
   id: string;
-  name: string;
-  icon: React.ComponentType<any>;
-  color: string;
   type: 'caterpillar' | 'flower' | 'butterfly' | 'fish';
+  imageUrl: string;
+  name: string;
 }
 
-// Slot machine symbols (12 total - 3 of each type)
-const SLOT_SYMBOLS: SlotSymbol[] = [
-  // Caterpillars (green tones)
-  { id: 'cat1', name: 'Grüne Raupe', icon: Bug, color: 'text-green-400', type: 'caterpillar' },
-  { id: 'cat2', name: 'Gelbe Raupe', icon: Bug, color: 'text-yellow-400', type: 'caterpillar' },
-  { id: 'cat3', name: 'Rote Raupe', icon: Bug, color: 'text-red-400', type: 'caterpillar' },
+// Create symbol pools using real game assets
+const createSymbolPools = (): SlotSymbol[] => {
+  const symbols: SlotSymbol[] = [];
   
-  // Flowers (pink/purple tones)
-  { id: 'flow1', name: 'Rosa Blume', icon: Flower, color: 'text-pink-400', type: 'flower' },
-  { id: 'flow2', name: 'Lila Blume', icon: Flower, color: 'text-purple-400', type: 'flower' },
-  { id: 'flow3', name: 'Weiße Blume', icon: Flower, color: 'text-white', type: 'flower' },
+  // Add caterpillars (Raupen) - using IDs 1-10
+  for (let i = 1; i <= 10; i++) {
+    symbols.push({
+      id: `caterpillar-${i}`,
+      type: 'caterpillar',
+      imageUrl: `/Raupen/${i}.png`,
+      name: `Raupe ${i}`
+    });
+  }
   
-  // Butterflies (blue tones)
-  { id: 'but1', name: 'Blauer Falter', icon: Bug, color: 'text-blue-400', type: 'butterfly' },
-  { id: 'but2', name: 'Türkiser Falter', icon: Bug, color: 'text-cyan-400', type: 'butterfly' },
-  { id: 'but3', name: 'Violetter Falter', icon: Bug, color: 'text-violet-400', type: 'butterfly' },
+  // Add flowers (Blumen) - using IDs 1-20
+  for (let i = 1; i <= 20; i++) {
+    symbols.push({
+      id: `flower-${i}`,
+      type: 'flower',
+      imageUrl: `/Blumen/${i.toString().padStart(2, '0')}.jpg`,
+      name: `Blume ${i}`
+    });
+  }
   
-  // Fish (water tones)
-  { id: 'fish1', name: 'Silber Fisch', icon: Fish, color: 'text-gray-300', type: 'fish' },
-  { id: 'fish2', name: 'Gold Fisch', icon: Fish, color: 'text-yellow-500', type: 'fish' },
-  { id: 'fish3', name: 'Blau Fisch', icon: Fish, color: 'text-blue-500', type: 'fish' },
-];
+  // Add butterflies (Schmetterlinge) - using IDs 1-20
+  for (let i = 1; i <= 20; i++) {
+    symbols.push({
+      id: `butterfly-${i}`,
+      type: 'butterfly',
+      imageUrl: `/Schmetterlinge/${i.toString().padStart(3, '0')}.jpg`,
+      name: `Schmetterling ${i}`
+    });
+  }
+  
+  // Add fish (Fische) - using IDs 1-15
+  for (let i = 1; i <= 15; i++) {
+    symbols.push({
+      id: `fish-${i}`,
+      type: 'fish',
+      imageUrl: `/Fische/${i}.jpg`,
+      name: `Fisch ${i}`
+    });
+  }
+  
+  return symbols;
+};
 
-interface ReelState {
+const SYMBOLS = createSymbolPools();
+const REEL_HEIGHT = 300; // Height of visible reel area
+const SYMBOL_HEIGHT = 80; // Height of each symbol
+const SYMBOLS_PER_REEL = Math.floor(REEL_HEIGHT / SYMBOL_HEIGHT) + 2; // Extra symbols for smooth scrolling
+
+interface Reel {
   symbols: SlotSymbol[];
-  spinning: boolean;
-  finalPosition: number;
-}
-
-interface WinResult {
-  type: 'none' | 'small' | 'medium' | 'large' | 'jackpot';
-  count: number;
-  symbol: SlotSymbol | null;
-  reward: string;
-  amount: number;
+  position: number; // Current scroll position
+  isSpinning: boolean;
+  targetPosition: number;
+  finalSymbol: SlotSymbol;
 }
 
 export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
@@ -74,130 +82,72 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { credits, setCredits } = useCredits();
   const { showNotification } = useNotification();
   
-  const [reels, setReels] = useState<ReelState[]>([]);
+  const [reels, setReels] = useState<Reel[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [lastWin, setLastWin] = useState<WinResult | null>(null);
-  const [spinCost] = useState(5);
-  const [showWinAnimation, setShowWinAnimation] = useState(false);
+  const [lastWinMessage, setLastWinMessage] = useState('');
+  const [isWinning, setIsWinning] = useState(false);
+  const animationRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
+
+  const spinCost = 5;
 
   // Initialize reels
   useEffect(() => {
-    const initialReels: ReelState[] = Array(5).fill(null).map(() => ({
-      symbols: [
-        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
-        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
-        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
-      ],
-      spinning: false,
-      finalPosition: 0,
-    }));
-    setReels(initialReels);
+    const initReels = Array(5).fill(null).map(() => {
+      const reelSymbols = [];
+      // Fill reel with random symbols for smooth scrolling
+      for (let i = 0; i < SYMBOLS_PER_REEL * 3; i++) {
+        reelSymbols.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+      }
+      
+      return {
+        symbols: reelSymbols,
+        position: 0,
+        isSpinning: false,
+        targetPosition: 0,
+        finalSymbol: SYMBOLS[0]
+      };
+    });
+    
+    setReels(initReels);
   }, []);
 
-  // Generate random symbols for a reel
-  const generateReelSymbols = (): SlotSymbol[] => {
-    return Array(3).fill(null).map(() => 
-      SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]
-    );
+  // Get random symbol of specific type
+  const getRandomSymbolOfType = (type: string): SlotSymbol => {
+    const typeSymbols = SYMBOLS.filter(s => s.type === type);
+    return typeSymbols[Math.floor(Math.random() * typeSymbols.length)];
   };
 
-  // Check for winning combinations (middle row only)
-  const checkWin = (reelResults: ReelState[]): WinResult => {
-    const middleSymbols = reelResults.map(reel => reel.symbols[1]); // Middle position (index 1)
-    const symbolCounts = new Map<string, number>();
+  // Create spinning reel with final symbol
+  const createSpinningReel = (finalSymbol: SlotSymbol): SlotSymbol[] => {
+    const reelSymbols = [];
     
-    middleSymbols.forEach(symbol => {
-      symbolCounts.set(symbol.id, (symbolCounts.get(symbol.id) || 0) + 1);
-    });
-
-    let maxCount = 0;
-    let winningSymbol: SlotSymbol | null = null;
-    
-    symbolCounts.forEach((count, symbolId) => {
-      if (count >= 2 && count > maxCount) {
-        maxCount = count;
-        winningSymbol = SLOT_SYMBOLS.find(s => s.id === symbolId) || null;
-      }
-    });
-
-    if (maxCount >= 2) {
-      switch (maxCount) {
-        case 2:
-          return { 
-            type: 'small', 
-            count: 2, 
-            symbol: winningSymbol, 
-            reward: '5 Sonnen',
-            amount: 5
-          };
-        case 3:
-          return { 
-            type: 'medium', 
-            count: 3, 
-            symbol: winningSymbol, 
-            reward: '3 Super-Rare Samen',
-            amount: 3
-          };
-        case 4:
-          return { 
-            type: 'large', 
-            count: 4, 
-            symbol: winningSymbol, 
-            reward: 'Epischer Schmetterling',
-            amount: 1
-          };
-        case 5:
-          return { 
-            type: 'jackpot', 
-            count: 5, 
-            symbol: winningSymbol, 
-            reward: '1000 Credits',
-            amount: 1000
-          };
-        default:
-          return { 
-            type: 'none', 
-            count: 0, 
-            symbol: null, 
-            reward: '',
-            amount: 0
-          };
-      }
+    // Fill with random symbols for the spinning part
+    for (let i = 0; i < SYMBOLS_PER_REEL * 4; i++) {
+      reelSymbols.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
     }
-
-    return { 
-      type: 'none', 
-      count: 0, 
-      symbol: null, 
-      reward: '',
-      amount: 0
-    };
+    
+    // Place the final symbol at the position where it will be visible when stopped
+    const targetIndex = Math.floor(SYMBOLS_PER_REEL * 2.5); // Middle-ish position
+    reelSymbols[targetIndex] = finalSymbol;
+    
+    return reelSymbols;
   };
 
-  // Handle slot machine spin
+  // Handle spin
   const handleSpin = async () => {
-    if (!user) return;
+    if (!user || isSpinning) return;
     
     if (suns < spinCost) {
       showNotification('Nicht genügend Sonnen! Du brauchst 5 Sonnen zum Spielen.', 'error');
       return;
     }
 
-    if (isSpinning) return;
-
     setIsSpinning(true);
-    setLastWin(null);
-    setShowWinAnimation(false);
-
-    // Start spinning animation
-    const newReels = reels.map(reel => ({
-      ...reel,
-      spinning: true,
-    }));
-    setReels(newReels);
+    setLastWinMessage('');
+    setIsWinning(false);
 
     try {
-      // Call the unified slot machine API
+      // Call server API
       const response = await fetch(`/api/user/${user.id}/marie-slot-play`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
@@ -208,163 +158,151 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       if (!response.ok) {
         showNotification(data.message || 'Ein Fehler ist aufgetreten', 'error');
         setIsSpinning(false);
-        setReels(reels.map(reel => ({ ...reel, spinning: false })));
         return;
       }
 
-      // Update suns count from response
+      // Update local sun count
       setSuns(suns - spinCost);
 
-      // Convert server symbols to our symbols
-      const symbolTypeMap: { [key: string]: SlotSymbol[] } = {
-        'caterpillar': SLOT_SYMBOLS.filter(s => s.type === 'caterpillar'),
-        'flower': SLOT_SYMBOLS.filter(s => s.type === 'flower'),
-        'butterfly': SLOT_SYMBOLS.filter(s => s.type === 'butterfly'),
-        'fish': SLOT_SYMBOLS.filter(s => s.type === 'fish'),
-      };
+      // Convert server response to final symbols
+      const finalSymbols = data.reels.map((symbolType: string) => {
+        return getRandomSymbolOfType(symbolType);
+      });
 
-      // Simulate spinning time with staggered stops
-      const spinDurations = [1000, 1200, 1400, 1600, 1800];
-      const finalReels: ReelState[] = [];
+      // Create new spinning reels with final symbols
+      const newReels = reels.map((reel, index) => ({
+        ...reel,
+        symbols: createSpinningReel(finalSymbols[index]),
+        isSpinning: true,
+        position: 0,
+        targetPosition: SYMBOL_HEIGHT * Math.floor(SYMBOLS_PER_REEL * 2.5), // Position to show final symbol
+        finalSymbol: finalSymbols[index]
+      }));
 
-      for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-          // Get the symbol type from server response
-          const serverSymbol = data.reels[i];
-          const possibleSymbols = symbolTypeMap[serverSymbol] || SLOT_SYMBOLS.slice(0, 3);
-          const selectedSymbol = possibleSymbols[Math.floor(Math.random() * possibleSymbols.length)];
-          
-          // Create reel with the selected symbol in center position
-          const reelSymbols = generateReelSymbols();
-          reelSymbols[1] = selectedSymbol; // Middle position is the result
-          
-          finalReels[i] = {
-            symbols: reelSymbols,
-            spinning: false,
-            finalPosition: 0,
-          };
+      setReels(newReels);
 
+      // Start spinning animations - each reel stops after a delay
+      const spinDurations = [2000, 2300, 2600, 2900, 3200]; // Staggered stopping times
+      
+      spinDurations.forEach((duration, reelIndex) => {
+        // Clear any existing timeout
+        if (animationRefs.current[reelIndex]) {
+          clearTimeout(animationRefs.current[reelIndex]!);
+        }
+        
+        // Set new timeout to stop this reel
+        animationRefs.current[reelIndex] = setTimeout(() => {
           setReels(prevReels => {
             const updatedReels = [...prevReels];
-            updatedReels[i] = finalReels[i];
+            updatedReels[reelIndex] = {
+              ...updatedReels[reelIndex],
+              isSpinning: false,
+              position: updatedReels[reelIndex].targetPosition
+            };
             return updatedReels;
           });
 
-          // Check win when all reels have stopped
-          if (i === 4) {
+          // Check if all reels have stopped
+          if (reelIndex === spinDurations.length - 1) {
             setTimeout(() => {
+              setIsSpinning(false);
+              
+              // Handle win results
               if (data.matchCount >= 2) {
-                // Create win result based on server response
-                const winResult: WinResult = {
-                  type: data.matchCount === 2 ? 'small' : 
-                        data.matchCount === 3 ? 'medium' :
-                        data.matchCount === 4 ? 'large' : 'jackpot',
-                  count: data.matchCount,
-                  symbol: possibleSymbols[0], // Use first symbol of winning type
-                  reward: data.reward?.type === 'suns' ? `${data.reward.amount} Sonnen` :
-                         data.reward?.type === 'seeds' ? `${data.reward.amount} Super-Rare Samen` :
-                         data.reward?.type === 'butterfly' ? 'Epischer Schmetterling' :
-                         data.reward?.type === 'credits' ? `${data.reward.amount} Credits` : '',
-                  amount: data.reward?.amount || 0
-                };
+                setIsWinning(true);
+                setLastWinMessage(data.message);
                 
-                setLastWin(winResult);
-                setShowWinAnimation(true);
-                
-                // Update local state based on reward type
+                // Update local state based on reward
                 if (data.reward?.type === 'suns') {
-                  setSuns(suns - spinCost + data.reward.amount);
+                  setSuns(prev => prev + data.reward.amount);
                 } else if (data.reward?.type === 'credits') {
-                  setCredits(credits + data.reward.amount);
+                  setCredits(prev => prev + data.reward.amount);
                 }
                 
                 showNotification(data.message, 'success');
               } else {
+                setLastWinMessage(data.message);
                 showNotification(data.message, 'info');
               }
-              
-              setIsSpinning(false);
-            }, 300);
+            }, 500);
           }
-        }, spinDurations[i]);
-      }
+        }, duration);
+      });
 
     } catch (error) {
       console.error('Error spinning slot machine:', error);
       showNotification('Verbindungsfehler beim Slot-Spiel', 'error');
       setIsSpinning(false);
-      setReels(reels.map(reel => ({ ...reel, spinning: false })));
     }
   };
 
-  // Process win rewards
-  const processWin = async (win: WinResult) => {
-    if (!user || win.type === 'none') return;
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      Object.values(animationRefs.current).forEach(timeout => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, []);
 
-    try {
-      switch (win.type) {
-        case 'small': // 5 suns
-          setSuns(suns + win.amount);
-          await fetch(`/api/user/${user.id}/add-suns`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: win.amount })
-          });
-          showNotification(`🎉 Gewinn! +${win.amount} Sonnen!`, 'success');
-          break;
-          
-        case 'medium': // 3 super-rare seeds
-          await fetch(`/api/user/${user.id}/add-seeds`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              seedId: Math.floor(Math.random() * 200) + 1, // Random seed ID
-              rarity: 'super-rare',
-              quantity: win.amount 
-            })
-          });
-          showNotification(`🎉 Großer Gewinn! +${win.amount} Super-Rare Samen!`, 'success');
-          break;
-          
-        case 'large': // Epic butterfly
-          await fetch(`/api/user/${user.id}/add-butterfly`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              butterflyId: Math.floor(Math.random() * 1000) + 1, // Random butterfly ID
-              rarity: 'epic'
-            })
-          });
-          showNotification(`🎉 Epischer Gewinn! Epischer Schmetterling erhalten!`, 'success');
-          break;
-          
-        case 'jackpot': // 1000 credits
-          setCredits(credits + win.amount);
-          await fetch(`/api/user/${user.id}/add-credits`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: win.amount })
-          });
-          showNotification(`🎰 JACKPOT! +${win.amount} Credits!`, 'success');
-          break;
-      }
-    } catch (error) {
-      console.error('Failed to process win:', error);
-      showNotification('Fehler beim Auszahlen des Gewinns', 'error');
-    }
+  // Render individual reel
+  const renderReel = (reel: Reel, index: number) => {
+    const spinSpeed = reel.isSpinning ? 'animate-spin-fast' : '';
+    
+    return (
+      <div key={index} className="relative overflow-hidden bg-slate-800 rounded-lg border-2 border-yellow-500">
+        <div 
+          className={`transition-transform ${reel.isSpinning ? 'duration-100 ease-linear' : 'duration-500 ease-out'}`}
+          style={{
+            transform: `translateY(-${reel.position}px)`,
+            height: REEL_HEIGHT
+          }}
+        >
+          <div className={reel.isSpinning ? 'animate-spin-slow' : ''}>
+            {reel.symbols.map((symbol, symbolIndex) => (
+              <div
+                key={`${index}-${symbolIndex}`}
+                className="flex items-center justify-center border-b border-slate-600"
+                style={{ height: SYMBOL_HEIGHT }}
+              >
+                <div className="relative w-16 h-16">
+                  <img
+                    src={symbol.imageUrl}
+                    alt={symbol.name}
+                    className="w-full h-full object-contain rounded"
+                    onError={(e) => {
+                      // Fallback to placeholder on image error
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMzc0MTUxIi8+CjwvZz4=';
+                    }}
+                  />
+                  {/* Glow effect for spinning */}
+                  {reel.isSpinning && (
+                    <div className="absolute inset-0 bg-yellow-400 opacity-20 animate-pulse rounded" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Center line indicator */}
+        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-yellow-400 opacity-50 pointer-events-none transform -translate-y-1/2" />
+      </div>
+    );
   };
 
   if (reels.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white">Lade Marie-Slot...</div>
+        <div className="text-white text-xl">Lade Marie-Slot...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Button
@@ -373,182 +311,109 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             className="border-white/20 text-white hover:bg-white/10"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück zum Garten
+            Zurück
           </Button>
           
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
-              <Zap className="h-8 w-8 text-yellow-400" />
+            <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+              <Coins className="h-10 w-10 text-yellow-400" />
               Marie-Slot
+              <Coins className="h-10 w-10 text-yellow-400" />
             </h1>
-            <p className="text-purple-200">Viel Glück beim Spielen!</p>
+            <p className="text-purple-200 text-lg">Echter Spielautomat mit echten Bildern!</p>
           </div>
           
           <div className="text-right text-white">
             <div className="flex items-center gap-2 mb-1">
-              <Sun className="h-5 w-5 text-yellow-400" />
-              <span className="font-bold text-lg">{suns}</span>
+              <Sun className="h-6 w-6 text-yellow-400" />
+              <span className="font-bold text-2xl">{suns}</span>
             </div>
             <div className="text-sm text-purple-200">Sonnen</div>
           </div>
         </div>
 
         {/* Main Slot Machine */}
-        <Card className="bg-gradient-to-b from-gray-900 to-gray-800 border-yellow-500 border-2">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-yellow-400 text-2xl flex items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6" />
-              Slot Machine
-              <Sparkles className="h-6 w-6" />
+        <Card className="bg-gradient-to-b from-slate-900 to-slate-800 border-yellow-500 border-4 shadow-2xl">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-yellow-400 text-3xl flex items-center justify-center gap-3">
+              <Star className="h-8 w-8 animate-pulse" />
+              SLOT MACHINE
+              <Star className="h-8 w-8 animate-pulse" />
             </CardTitle>
+            <div className="text-white text-lg mt-2">
+              5 Sonnen pro Spiel • Echte Bilder aus deinem Garten!
+            </div>
           </CardHeader>
           
-          <CardContent>
-            {/* Slot Machine Display */}
-            <div className="bg-black rounded-lg p-6 mb-6 border-2 border-yellow-600">
-              <div className="grid grid-cols-5 gap-2 mb-4">
-                {reels.map((reel, reelIndex) => (
-                  <div
-                    key={reelIndex}
-                    className={`bg-gray-800 rounded-lg p-4 border-2 ${
-                      reel.spinning 
-                        ? 'border-yellow-400 animate-pulse' 
-                        : 'border-gray-600'
-                    }`}
-                  >
-                    <div className={`space-y-2 ${reel.spinning ? 'animate-spin' : ''}`}>
-                      {reel.symbols.map((symbol, symbolIndex) => {
-                        const Icon = symbol.icon;
-                        const isMiddle = symbolIndex === 1;
-                        return (
-                          <div
-                            key={symbolIndex}
-                            className={`
-                              flex items-center justify-center h-12 w-12 mx-auto rounded-lg
-                              ${isMiddle 
-                                ? 'bg-yellow-400/20 border-2 border-yellow-400 ring-2 ring-yellow-400/50' 
-                                : 'bg-gray-700'
-                              }
-                              ${showWinAnimation && isMiddle && lastWin?.symbol?.id === symbol.id 
-                                ? 'animate-bounce' 
-                                : ''
-                              }
-                            `}
-                          >
-                            <Icon className={`h-8 w-8 ${symbol.color}`} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+          <CardContent className="px-8 pb-8">
+            {/* Slot Machine Reels */}
+            <div className="bg-slate-900 rounded-xl p-6 mb-8 border-4 border-yellow-600 shadow-inner">
+              <div className="grid grid-cols-5 gap-4" style={{ height: REEL_HEIGHT }}>
+                {reels.map((reel, index) => renderReel(reel, index))}
               </div>
               
-              {/* Win Line Indicator */}
-              <div className="text-center text-yellow-400 text-sm font-bold mb-2">
-                ← GEWINNLINIE →
-              </div>
+              {/* Win/Loss Message */}
+              {lastWinMessage && (
+                <div className={`text-center mt-6 p-4 rounded-lg ${
+                  isWinning 
+                    ? 'bg-green-800/50 border border-green-400 text-green-200' 
+                    : 'bg-blue-800/50 border border-blue-400 text-blue-200'
+                }`}>
+                  <div className={`text-lg font-bold ${isWinning ? 'animate-pulse' : ''}`}>
+                    {lastWinMessage}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Controls */}
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-4 text-white">
-                <Sun className="h-5 w-5 text-yellow-400" />
-                <span className="text-lg">Einsatz: {spinCost} Sonnen</span>
-              </div>
-              
+            {/* Spin Button */}
+            <div className="text-center">
               <Button
                 onClick={handleSpin}
                 disabled={isSpinning || suns < spinCost}
-                className={`
-                  px-8 py-4 text-xl font-bold rounded-lg transition-all
-                  ${isSpinning
-                    ? 'bg-gray-600 cursor-not-allowed'
+                className={`px-12 py-6 text-2xl font-bold rounded-xl transition-all transform hover:scale-105 ${
+                  isSpinning 
+                    ? 'bg-gray-600 cursor-not-allowed' 
                     : suns >= spinCost
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black animate-pulse'
-                    : 'bg-gray-600 cursor-not-allowed'
-                  }
-                `}
+                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black shadow-lg animate-pulse'
+                      : 'bg-gray-600 cursor-not-allowed text-gray-400'
+                }`}
               >
                 {isSpinning ? (
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-6 w-6 animate-spin" />
-                    DREHT...
-                  </div>
+                  <>
+                    <Zap className="h-6 w-6 mr-2 animate-spin" />
+                    Dreht sich...
+                  </>
                 ) : suns >= spinCost ? (
-                  <div className="flex items-center gap-2">
-                    <Star className="h-6 w-6" />
-                    DREHEN
-                  </div>
+                  <>
+                    <Zap className="h-6 w-6 mr-2" />
+                    DREHEN! (5 <Sun className="h-5 w-5 inline" />)
+                  </>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-6 w-6" />
-                    MEHR SONNEN BENÖTIGT
-                  </div>
+                  'Nicht genug Sonnen'
                 )}
               </Button>
-            </div>
-
-            {/* Win Display */}
-            {lastWin && lastWin.type !== 'none' && (
-              <div className={`
-                mt-6 p-4 rounded-lg text-center
-                ${showWinAnimation ? 'animate-bounce' : ''}
-                ${lastWin.type === 'jackpot' 
-                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' 
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                }
-              `}>
-                <div className="text-2xl font-bold mb-2">
-                  🎉 GEWINN! 🎉
-                </div>
-                <div className="text-lg">
-                  {lastWin.count} x {lastWin.symbol?.name}
-                </div>
-                <div className="text-xl font-bold">
-                  {lastWin.reward}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Win Table */}
-        <Card className="mt-6 bg-gray-900 border-yellow-500 border">
-          <CardHeader>
-            <CardTitle className="text-yellow-400 text-center flex items-center justify-center gap-2">
-              <Trophy className="h-5 w-5" />
-              Gewinn-Tabelle
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
-              <div className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                <span>2 Gleiche</span>
-                <div className="flex items-center gap-2">
-                  <Sun className="h-4 w-4 text-yellow-400" />
-                  <span className="text-yellow-400 font-bold">5 Sonnen</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                <span>3 Gleiche</span>
-                <div className="flex items-center gap-2">
-                  <Sprout className="h-4 w-4 text-purple-400" />
-                  <span className="text-purple-400 font-bold">3 Super-Rare Samen</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                <span>4 Gleiche</span>
-                <div className="flex items-center gap-2">
-                  <Bug className="h-4 w-4 text-orange-400" />
-                  <span className="text-orange-400 font-bold">Epischer Schmetterling</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded">
-                <span className="text-black font-bold">5 Gleiche</span>
-                <div className="flex items-center gap-2">
-                  <Coins className="h-4 w-4 text-black" />
-                  <span className="text-black font-bold">1000 Credits</span>
+              
+              {/* Payout Table */}
+              <div className="mt-8 bg-slate-800/50 rounded-lg p-4">
+                <h3 className="text-white text-lg font-bold mb-4 text-center">Gewinnmöglichkeiten:</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm text-white">
+                  <div className="text-center">
+                    <Badge className="bg-green-600 mb-2">2 Gleiche</Badge>
+                    <div>5 Sonnen</div>
+                  </div>
+                  <div className="text-center">
+                    <Badge className="bg-blue-600 mb-2">3 Gleiche</Badge>
+                    <div>3 Super-Rare Samen</div>
+                  </div>
+                  <div className="text-center">
+                    <Badge className="bg-purple-600 mb-2">4 Gleiche</Badge>
+                    <div>Epischer Schmetterling</div>
+                  </div>
+                  <div className="text-center">
+                    <Badge className="bg-yellow-600 mb-2">5 Gleiche</Badge>
+                    <div>1000 Credits!</div>
+                  </div>
                 </div>
               </div>
             </div>
