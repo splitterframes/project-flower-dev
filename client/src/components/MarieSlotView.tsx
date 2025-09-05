@@ -497,7 +497,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     </div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Sun className="h-5 w-5 text-yellow-400" />
-                      <span className="text-green-200 font-semibold">5 Sonnen</span>
+                      <span className="text-green-200 font-semibold">3 Sonnen</span>
                     </div>
                     <div className="text-xs text-green-300">~74%</div>
                   </div>
@@ -508,8 +508,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       <span className="text-2xl font-bold text-blue-300">3×</span>
                     </div>
                     <div className="flex items-center justify-center gap-1 mb-2">
-                      <Flower className="h-5 w-5 text-blue-400" />
-                      <span className="text-blue-200 font-semibold">Rare Samen</span>
+                      <Coins className="h-5 w-5 text-blue-400" />
+                      <span className="text-blue-200 font-semibold">50 Credits</span>
                     </div>
                     <div className="text-xs text-blue-300">~20%</div>
                   </div>

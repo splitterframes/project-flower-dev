@@ -2236,17 +2236,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`🎰 Win detected: ${maxCount} matching ${winningSymbol} symbols`);
         
         if (maxCount === 2) {
-          // 2 matching = 5 suns
-          await storage.updateUserSuns(userId, 5);
-          reward = { type: 'suns', amount: 5 };
-          message = "🌞 2 gleiche Symbole! Du gewinnst 5 Sonnen!";
-          console.log(`🎰 Rewarded 5 suns to user ${userId}`);
+          // 2 matching = 3 suns
+          await storage.updateUserSuns(userId, 3);
+          reward = { type: 'suns', amount: 3 };
+          message = "🌞 2 gleiche Symbole! Du gewinnst 3 Sonnen!";
+          console.log(`🎰 Rewarded 3 suns to user ${userId}`);
         } else if (maxCount === 3) {
-          // 3 matching = 1 rare seed
-          await storage.addSeedToInventory(userId, 'rare', 1);
-          reward = { type: 'seeds', rarity: 'rare', amount: 1 };
-          message = "🌱 3 gleiche Symbole! Du gewinnst 1 rare Samen!";
-          console.log(`🎰 Rewarded 1 rare seed to user ${userId}`);
+          // 3 matching = 50 credits
+          await storage.updateUserCredits(userId, 50);
+          reward = { type: 'credits', amount: 50 };
+          message = "💰 3 gleiche Symbole! Du gewinnst 50 Credits!";
+          console.log(`🎰 Rewarded 50 credits to user ${userId}`);
         } else if (maxCount === 4) {
           // 4 matching = legendary butterfly
           const butterflyResult = await storage.addButterflyToInventory(userId, 'legendary', 1);
