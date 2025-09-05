@@ -381,15 +381,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         {/* Main Slot Machine */}
         <Card className="bg-gradient-to-b from-slate-900 to-slate-800 border-yellow-500 border-4 shadow-2xl">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-yellow-400 text-3xl flex items-center justify-center gap-3">
-              <Star className="h-8 w-8 animate-pulse" />
-              Slot Machine
-              <Star className="h-8 w-8 animate-pulse" />
-            </CardTitle>
-            
             {/* Gewinnzeile über den Trommeln */}
             {lastWinMessage && (
-              <div className={`mt-4 p-4 rounded-lg ${
+              <div className={`p-4 rounded-lg ${
                 isWinning 
                   ? 'bg-green-800/50 border border-green-400 text-green-200' 
                   : 'bg-blue-800/50 border border-blue-400 text-blue-200'
