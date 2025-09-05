@@ -1170,8 +1170,8 @@ export const TeichView: React.FC = () => {
                       );
                     })()}
 
-                    {/* Permanent field butterflies from database - Show on ALL fields (grass + pond) */}
-                    {field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && (
+                    {/* Permanent field butterflies from database - Only show on grass fields (NOT pond) */}
+                    {field.hasButterfly && !placedButterflies.find(b => b.fieldId === field.id) && !field.isPond && (
                       <ButterflyHoverPreview
                         butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
