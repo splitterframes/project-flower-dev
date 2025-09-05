@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Crown } from 'lucide-react';
 import MariePosaDialog from './MariePosaDialog';
+import MariePosaReturnDialog from './MariePosaReturnDialog';
 import { useAuth } from '@/lib/stores/useAuth';
 
 interface MariePosaButtonProps {
@@ -12,6 +13,7 @@ export default function MariePosaButton({ userId }: MariePosaButtonProps) {
   const { user } = useAuth();
   const [isAvailable, setIsAvailable] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [nextAvailableAt, setNextAvailableAt] = useState<Date | null>(null);
 
   const checkMariePosaStatus = async () => {
@@ -40,12 +42,9 @@ export default function MariePosaButton({ userId }: MariePosaButtonProps) {
     if (isAvailable) {
       setShowDialog(true);
     } else {
-      // Show when Marie Posa will be available next
-      const timeLeft = nextAvailableAt ? nextAvailableAt.getTime() - Date.now() : 0;
-      if (timeLeft > 0) {
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        alert(`Marie Posa ist in ${hours}h ${minutes}min wieder verfügbar!`);
+      // Show nice dialog when Marie Posa will be available next
+      if (nextAvailableAt && nextAvailableAt.getTime() > Date.now()) {
+        setShowReturnDialog(true);
       }
     }
   };
@@ -86,6 +85,14 @@ export default function MariePosaButton({ userId }: MariePosaButtonProps) {
         user={user}
         onPurchaseComplete={handlePurchaseComplete}
       />
+
+      {nextAvailableAt && (
+        <MariePosaReturnDialog
+          isOpen={showReturnDialog}
+          onClose={() => setShowReturnDialog(false)}
+          nextAvailableAt={nextAvailableAt}
+        />
+      )}
     </>
   );
 }
