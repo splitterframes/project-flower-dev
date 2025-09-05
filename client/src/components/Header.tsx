@@ -234,9 +234,9 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               </div>
               
               {/* Suns Display - Gold style like credits */}
-              <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-3 py-1 sm:py-2 rounded-lg border border-yellow-500">
-                <Sun className="h-4 w-4 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold text-sm">{suns} ☀️</span>
+              <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border border-yellow-500">
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+                <span className="text-yellow-400 font-semibold text-sm sm:text-base">{suns} ☀️</span>
               </div>
 
               {/* Passive Income Display */}
