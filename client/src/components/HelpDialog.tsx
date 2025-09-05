@@ -44,6 +44,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               content: [
                 'Gewachsene Blumen automatisch harvesten durch Anklicken',
                 'Jede Blume hat eine Seltenheit (Common bis Mythical)',
+                'Seltenheitssystem: Gelb=Common, Grün=Uncommon, Blau=Rare, Türkis=Super-rare, Lila=Epic, Orange=Legendary, Rot=Mythical',
                 'Seltene Blumen sind wertvoller für Bouquets',
                 'Blumen werden in deinem Inventar gesammelt'
               ]
@@ -54,7 +55,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               content: [
                 'Rechts-Klick auf ein Feld zum Bouquet platzieren',
                 'Bouquets locken Schmetterlinge an',
-                'Jedes Bouquet spawnt 1 Schmetterling alle 45 Minuten',
+                'Jedes Bouquet spawnt 1-4 Schmetterlinge in 21 Minuten',
                 'Bouquet-Qualität beeinflusst Schmetterlings-Seltenheit'
               ]
             },
@@ -64,7 +65,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               content: [
                 'Goldene Sonnen spawnen zufällig auf Feldern',
                 'Sonnen sind die Premium-Währung des Spiels',
-                'Verwende Sonnen für Marie-Posa Handel und Slot Machine',
+                'Verwende Sonnen für Marie-Posa Handel, Slot Machine und Ausstellung',
                 'Sonnen verschwinden nach 30 Sekunden - schnell sammeln!'
               ]
             }
@@ -270,7 +271,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               icon: <Sparkles className="h-6 w-6 text-purple-400" />,
               content: [
                 'Bouquets im Garten platzieren lockt Schmetterlinge an',
-                'Alle 45 Minuten spawnt 1 Schmetterling pro Bouquet',
+                'Alle 21 Minuten spawnen 1-4 Schmetterlinge pro Bouquet',
                 'Bouquet-Qualität beeinflusst Schmetterlings-Seltenheit',
                 'Seltene Bouquets = seltenere Schmetterlinge'
               ]
@@ -317,47 +318,37 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               icon: <Trophy className="h-6 w-6 text-yellow-400" />,
               content: [
                 'Zeige deine schönsten Fische in Aquarium-Tanks',
-                'Jeder Tank generiert passives Einkommen',
-                'Fisch-Seltenheit bestimmt Credits pro Stunde',
+                'Sammle deine wertvollsten Exemplare',
+                'Präsentiere seltene Fische für andere Spieler',
                 'Begrenzte Tank-Plätze - wähle weise!'
               ]
             },
             {
-              title: '💰 Passives Einkommen',
+              title: '💰 Verkaufs-System',
               icon: <Coins className="h-6 w-6 text-yellow-400" />,
               content: [
-                'Ausgestellte Fische generieren automatisch Credits',
-                'Seltene Fische = höheres Einkommen pro Stunde',
-                'Credits werden alle paar Minuten gutgeschrieben',
-                'Optimiere Tank-Belegung für maximalen Ertrag'
-              ]
-            },
-            {
-              title: '⏰ Verkaufs-System',
-              icon: <Clock className="h-6 w-6 text-orange-400" />,
-              content: [
                 'Fische können nach 24 Stunden verkauft werden',
-                'Verkaufspreis basiert auf Seltenheit und Zustand',
+                'Verkaufspreis basiert nur auf Seltenheit',
                 '☀️ Sonnen-Boost verkürzt Wartezeit',
                 'Plane Verkaufs-Timing für optimalen Gewinn'
               ]
             },
             {
               title: '🔄 Tank-Management',
-              icon: <ArrowRight className="h-6 w-6 text-blue-400" />,
+              icon: <Clock className="h-6 w-6 text-orange-400" />,
               content: [
                 'Tausche Fische strategisch aus',
                 'Neue Fische ersetzen alte nach Verkauf',
                 'Behalte deine wertvollsten Exemplare',
-                'Kontinuierliche Optimierung für bessere Erträge'
+                'Kontinuierliche Optimierung für bessere Präsentation'
               ]
-            }
+            },
           ],
           tips: [
-            'Priorisiere seltene Fische für höchstes passives Einkommen',
+            'Sammle deine seltensten Fische für die Präsentation',
             'Nutze Sonnen-Boost nur bei sehr wertvollen Fischen',
             'Verkaufe regelmäßig für Platz für bessere Exemplare',
-            'Beobachte Credits/Stunde für optimale Tank-Nutzung'
+            'Plane Tank-Platzierung für optimale Ästhetik'
           ]
         };
 
@@ -488,7 +479,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               icon: <Sparkles className="h-6 w-6 text-purple-400" />,
               content: [
                 'Kosten: 5 Sonnen pro Spin',
-                '3 vertikale Rollen mit echten Blumen-Bildern',
+                '5 vertikale Rollen mit echten Blumen-Bildern',
                 'Nur die mittlere Reihe (Payline) zählt für Gewinne',
                 'Realistische Slot-Animation mit Rollen-Stopp'
               ]
