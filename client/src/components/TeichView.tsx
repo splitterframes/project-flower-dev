@@ -276,6 +276,42 @@ export const TeichView: React.FC = () => {
     }
   };
 
+  // Handle field caterpillar collection
+  const handleCaterpillarClick = async (field: GardenField) => {
+    if (!user || !field.hasCaterpillar || isCollectingCaterpillar) return;
+    
+    console.log(`🐛 Attempting to collect caterpillar on field ${field.id}`);
+    setIsCollectingCaterpillar(true);
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldIndex: field.id - 1 // Convert to 0-based index
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🐛 Raupe erfolgreich gesammelt!');
+        toast.success(`${field.caterpillarName} gesammelt!`);
+        
+        // Refresh data to show updated state
+        fetchTeichData();
+      } else {
+        const errorData = await response.json();
+        console.error('Field caterpillar collection failed:', errorData);
+        toast.error(errorData.message || 'Fehler beim Sammeln der Raupe.');
+      }
+    } catch (error) {
+      console.error('Field caterpillar collection error:', error);
+      toast.error('Fehler beim Sammeln der Raupe.');
+    } finally {
+      setIsCollectingCaterpillar(false);
+    }
+  };
+
   const fetchTeichData = async () => {
     if (!user) return;
 
@@ -1406,7 +1442,33 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Local Caterpillars REMOVED - Only use database caterpillars */}
+                    {/* Field Caterpillars - Spawned from butterflies (full field size) */}
+                    {field.hasCaterpillar && (
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center cursor-pointer group animate-pulse z-30"
+                        onClick={() => handleCaterpillarClick(field)}
+                      >
+                        <CaterpillarHoverPreview
+                          caterpillarImageUrl={field.caterpillarImageUrl!}
+                          caterpillarName={field.caterpillarName!}
+                          rarity={field.caterpillarRarity as RarityTier}
+                          className="z-10"
+                        >
+                          <div className="relative transform group-hover:scale-110 transition-transform duration-200">
+                            <RarityImage 
+                              src={field.caterpillarImageUrl!}
+                              alt={field.caterpillarName || "Raupe"}
+                              rarity={field.caterpillarRarity as RarityTier || "common"}
+                              size="large"
+                              className="w-full h-full"
+                            />
+                            <div className="absolute -top-1 -right-1 bg-green-400 text-white text-xs px-1 py-0.5 rounded-full flex items-center animate-bounce">
+                              🐛
+                            </div>
+                          </div>
+                        </CaterpillarHoverPreview>
+                      </div>
+                    )}
 
                     {/* Pond Feeding Progress Icons - Show fish symbols for feeding progress */}
                     {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
