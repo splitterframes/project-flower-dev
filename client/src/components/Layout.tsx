@@ -12,6 +12,7 @@ import { BouquetsView } from "./BouquetsView";
 import { FlowerpowerView } from "./FlowerpowerView";
 import { ExhibitionView } from "./ExhibitionView";
 import { AquariumView } from "./AquariumView";
+import { MarieSlotView } from "./MarieSlotView";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,7 +58,9 @@ export const Layout: React.FC = () => {
       case "ausstellung":
         return <ExhibitionView />;
       case "aquarium":
-        return <AquariumView />;
+        return <AquariumView onNavigateToSlot={() => handleViewChange('marie-slot')} />;
+      case "marie-slot":
+        return <MarieSlotView onBack={() => handleViewChange('garten')} />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":

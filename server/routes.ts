@@ -2167,6 +2167,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marie-Slot machine endpoint
+  app.post("/api/user/:userId/marie-slot-play", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // Check if user has enough suns (5 suns to play)
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.suns < 5) {
+        return res.status(400).json({ message: "Nicht genügend Sonnen! Du brauchst 5 Sonnen zum Spielen." });
+      }
+
+      // Deduct 5 suns
+      await storage.updateUserSuns(userId, -5);
+      console.log(`🎰 User ${userId} spent 5 suns on Marie-Slot`);
+
+      // Generate slot machine result (5 reels)
+      const symbols = ['caterpillar', 'flower', 'butterfly', 'fish'];
+      const reels: string[] = [];
+      for (let i = 0; i < 5; i++) {
+        const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+        reels.push(randomSymbol);
+      }
+
+      console.log(`🎰 Slot result: ${reels.join(' - ')}`);
+
+      // Check for wins
+      const symbolCounts = new Map<string, number>();
+      reels.forEach(symbol => {
+        symbolCounts.set(symbol, (symbolCounts.get(symbol) || 0) + 1);
+      });
+
+      let maxCount = 0;
+      let winningSymbol = '';
+      for (const [symbol, count] of symbolCounts) {
+        if (count > maxCount) {
+          maxCount = count;
+          winningSymbol = symbol;
+        }
+      }
+
+      let reward: any = null;
+      let message = "Leider kein Gewinn! Probier's nochmal!";
+
+      // Determine reward based on matching symbols
+      if (maxCount >= 2) {
+        console.log(`🎰 Win detected: ${maxCount} matching ${winningSymbol} symbols`);
+        
+        if (maxCount === 2) {
+          // 2 matching = 5 suns
+          await storage.updateUserSuns(userId, 5);
+          reward = { type: 'suns', amount: 5 };
+          message = "🌞 2 gleiche Symbole! Du gewinnst 5 Sonnen!";
+          console.log(`🎰 Rewarded 5 suns to user ${userId}`);
+        } else if (maxCount === 3) {
+          // 3 matching = 3 super-rare seeds
+          await storage.addSeedToInventory(userId, 'super-rare', 3);
+          reward = { type: 'seeds', rarity: 'super-rare', amount: 3 };
+          message = "🌱 3 gleiche Symbole! Du gewinnst 3 super-seltene Samen!";
+          console.log(`🎰 Rewarded 3 super-rare seeds to user ${userId}`);
+        } else if (maxCount === 4) {
+          // 4 matching = epic butterfly
+          const butterflyResult = await storage.addButterflyToInventory(userId, 'epic', 1);
+          reward = { type: 'butterfly', rarity: 'epic', amount: 1 };
+          message = "🦋 4 gleiche Symbole! Du gewinnst einen epischen Schmetterling!";
+          console.log(`🎰 Rewarded 1 epic butterfly to user ${userId}`);
+        } else if (maxCount === 5) {
+          // 5 matching = 1000 credits (jackpot!)
+          await storage.updateUserCredits(userId, 1000);
+          reward = { type: 'credits', amount: 1000 };
+          message = "💰 JACKPOT! 5 gleiche Symbole! Du gewinnst 1000 Credits!";
+          console.log(`🎰 JACKPOT! Rewarded 1000 credits to user ${userId}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        reels,
+        matchCount: maxCount,
+        winningSymbol: maxCount >= 2 ? winningSymbol : null,
+        reward,
+        message
+      });
+
+    } catch (error) {
+      console.error('🎰 Error in Marie-Slot play:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
