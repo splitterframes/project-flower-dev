@@ -631,17 +631,19 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {[
-                    { tier: 'common', name: 'Common', color: 'yellow' },
-                    { tier: 'uncommon', name: 'Uncommon', color: 'green' },
-                    { tier: 'rare', name: 'Rare', color: 'blue' },
-                    { tier: 'super-rare', name: 'Super-Rare', color: 'purple' },
-                    { tier: 'epic', name: 'Epic', color: 'purple' },
-                    { tier: 'legendary', name: 'Legendary', color: 'orange' },
-                    { tier: 'mythical', name: 'Mythical', color: 'red' }
+                    { tier: 'common', name: 'Common', bgColor: 'bg-yellow-500/20 border-yellow-400/40' },
+                    { tier: 'uncommon', name: 'Uncommon', bgColor: 'bg-green-500/20 border-green-400/40' },
+                    { tier: 'rare', name: 'Rare', bgColor: 'bg-blue-500/20 border-blue-400/40' },
+                    { tier: 'super-rare', name: 'Super-Rare', bgColor: 'bg-cyan-500/20 border-cyan-400/40' },
+                    { tier: 'epic', name: 'Epic', bgColor: 'bg-purple-500/20 border-purple-400/40' },
+                    { tier: 'legendary', name: 'Legendary', bgColor: 'bg-orange-500/20 border-orange-400/40' },
+                    { tier: 'mythical', name: 'Mythical', bgColor: 'bg-red-500/20 border-red-400/40' }
                   ].map((rarity) => (
-                    <Badge key={rarity.tier} className={`${getRarityColor(rarity.tier as any)} text-white font-bold text-sm px-3 py-1`}>
-                      {rarity.name}
-                    </Badge>
+                    <div key={rarity.tier} className={`${rarity.bgColor} rounded-lg p-3 border-2 transition-all duration-300 hover:scale-105`}>
+                      <Badge className={`${getRarityColor(rarity.tier as any)} text-white font-bold text-sm px-3 py-1 w-full justify-center`}>
+                        {rarity.name}
+                      </Badge>
+                    </div>
                   ))}
                 </div>
                 <p className="text-slate-300 text-lg mt-4">
