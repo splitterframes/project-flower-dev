@@ -606,7 +606,7 @@ export const MarketView: React.FC = () => {
                         name="itemType"
                         value="caterpillar"
                         checked={sellForm.itemType === 'caterpillar'}
-                        onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0, quantity: 1})}
+                        onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
                         className="mr-2"
                       />
                       <span className="text-white">🐛 Raupen</span>
@@ -649,7 +649,7 @@ export const MarketView: React.FC = () => {
                           return (
                             <div
                               key={caterpillar.id}
-                              onClick={() => setSellForm({...sellForm, caterpillarId: caterpillar.id, quantity: 1})}
+                              onClick={() => setSellForm({...sellForm, caterpillarId: caterpillar.id})}
                               className={`cursor-pointer rounded-lg p-3 border-2 transition-all duration-200 hover:scale-[1.02] ${
                                 isSelected 
                                   ? `border-orange-400 bg-orange-400/20 shadow-lg` 
