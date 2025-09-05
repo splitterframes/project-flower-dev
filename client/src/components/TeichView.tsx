@@ -1109,8 +1109,8 @@ export const TeichView: React.FC = () => {
                             showNotification('Keine Futtermittel', 'Du hast keine Raupen zum Füttern im Inventar.', 'error');
                           }
                         } else {
-                          // Try to collect fish from pond field
-                          const fishOnField = fieldFish.find(f => f.fieldIndex === field.id);
+                          // Try to collect fish from pond field (convert field.id to 0-based index)
+                          const fishOnField = fieldFish.find(f => f.fieldIndex === field.id - 1);
                           if (fishOnField) {
                             console.log("🐟 Attempting to collect fish on field", field.id);
                             collectFish(field.id);

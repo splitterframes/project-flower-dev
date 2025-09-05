@@ -3497,6 +3497,7 @@ export class PostgresStorage {
       console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
       
       // Spawn fish with calculated average rarity
+      console.log(`🐟 CALLING spawnFishOnField with fieldIndex: ${fieldIndex}`);
       const fishResult = await this.spawnFishOnField(userId, fieldIndex, averageRarity);
       console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
       
