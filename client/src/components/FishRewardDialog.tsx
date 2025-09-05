@@ -121,7 +121,7 @@ export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
 
           {/* Description */}
           <p className="text-blue-300/80 text-sm">
-            Der Fisch wurde automatisch zu deinem Aquarium hinzugefügt!
+            Der Fisch wurde automatisch zu deinem Inventar hinzugefügt!
           </p>
 
           {/* Close Button */}
