@@ -3132,7 +3132,7 @@ export class PostgresStorage {
    */
   async spawnSun(fieldIndex: number, userId: number): Promise<{ success: boolean; sunAmount: number }> {
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 120 * 1000); // 120 seconds (2 minutes for testing)
+    const expiresAt = new Date(now.getTime() + 30 * 1000); // 30 seconds
     const sunAmount = Math.floor(Math.random() * 3) + 1; // 1-3 suns
 
     try {
