@@ -456,8 +456,8 @@ export const TeichView: React.FC = () => {
       }, 6000);
     };
 
-    // Start first shake after random delay (20-40s)
-    const getRandomInterval = () => Math.random() * 20000 + 20000; // 20-40 seconds
+    // Start first shake after random delay (10-20s)
+    const getRandomInterval = () => Math.random() * 10000 + 10000; // 10-20 seconds
     
     let timeoutId = setTimeout(() => {
       startShaking();
