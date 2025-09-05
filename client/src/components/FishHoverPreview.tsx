@@ -54,43 +54,39 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
   const getPreviewPosition = () => {
     const previewWidth = 400; // 24rem = 384px + padding
     const previewHeight = 450; // estimated height
-    const margin = 10; // smaller margin from screen edge
-    const offset = 10; // very small offset from cursor
+    const margin = 5; // very small margin from screen edge
+    const offset = 5; // minimal offset from cursor - super close!
     
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Calculate available space around cursor
-    const spaceRight = windowWidth - mousePosition.x - margin;
-    const spaceLeft = mousePosition.x - margin;
-    const spaceBelow = windowHeight - mousePosition.y - margin;
-    const spaceAbove = mousePosition.y - margin;
+    // Start with cursor position and minimal offset
+    let left = mousePosition.x + offset;
+    let top = mousePosition.y + offset;
     
-    // Determine horizontal position - prefer where there's more space
-    let left: number;
-    if (spaceRight >= previewWidth + offset) {
-      // Fits on the right
-      left = mousePosition.x + offset;
-    } else if (spaceLeft >= previewWidth + offset) {
-      // Fits on the left
+    // Check if preview would go off-screen horizontally
+    if (left + previewWidth > windowWidth - margin) {
+      // Try positioning to the left of cursor instead
       left = mousePosition.x - offset - previewWidth;
-    } else {
-      // Center horizontally with preference for keeping cursor visible
-      left = Math.max(margin, Math.min(windowWidth - previewWidth - margin, mousePosition.x - previewWidth / 2));
+      // If that also doesn't fit, force it to fit within bounds
+      if (left < margin) {
+        left = windowWidth - previewWidth - margin;
+      }
     }
     
-    // Determine vertical position - prefer below cursor
-    let top: number;
-    if (spaceBelow >= previewHeight + offset) {
-      // Fits below cursor
-      top = mousePosition.y + offset;
-    } else if (spaceAbove >= previewHeight + offset) {
-      // Fits above cursor
+    // Check if preview would go off-screen vertically  
+    if (top + previewHeight > windowHeight - margin) {
+      // Try positioning above cursor instead
       top = mousePosition.y - offset - previewHeight;
-    } else {
-      // Center vertically
-      top = Math.max(margin, Math.min(windowHeight - previewHeight - margin, mousePosition.y - previewHeight / 2));
+      // If that also doesn't fit, force it to fit within bounds
+      if (top < margin) {
+        top = windowHeight - previewHeight - margin;
+      }
     }
+    
+    // Ensure we stay within bounds as final safety check
+    left = Math.max(margin, Math.min(left, windowWidth - previewWidth - margin));
+    top = Math.max(margin, Math.min(top, windowHeight - previewHeight - margin));
     
     return { left, top };
   };
