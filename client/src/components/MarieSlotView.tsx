@@ -130,15 +130,16 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return typeSymbols[Math.floor(Math.random() * typeSymbols.length)];
   };
 
-  // Create spinning reel with final symbol in middle
+  // Create spinning reel with final symbol in middle - FIXED
   const createSpinningReel = (finalSymbol: SlotSymbol): SlotSymbol[] => {
     // Create a new shuffled drum for spinning
     const drum = createDrum();
     
-    // Find the middle position where symbol should stop (visible position)
+    // CRITICAL FIX: Ensure the final symbol is at the EXACT middle position for payline
     const middlePosition = Math.floor(drum.length / 2);
     drum[middlePosition] = finalSymbol;
     
+    console.log(`🎰 Reel created with middle symbol: ${finalSymbol.type} at position ${middlePosition}`);
     return drum;
   };
 
@@ -196,7 +197,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         symbols: createSpinningReel(finalSymbols[index]),
         isSpinning: true,
         position: 0,
-        targetPosition: SYMBOL_HEIGHT * Math.floor(SYMBOLS_PER_DRUM / 2), // Position to show final symbol in middle
+        targetPosition: SYMBOL_HEIGHT * (Math.floor(SYMBOLS_PER_DRUM / 2) - 1), // Position to show final symbol in middle row (PAYLINE)
         finalSymbol: finalSymbols[index]
       }));
 
