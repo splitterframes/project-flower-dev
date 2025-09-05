@@ -137,6 +137,7 @@ export const TeichView: React.FC = () => {
   const [showFeedingDialog, setShowFeedingDialog] = useState(false);
   const [isCollectingCaterpillar, setIsCollectingCaterpillar] = useState(false);
   const [collectingFish, setCollectingFish] = useState<Set<number>>(new Set());
+  const [fadingFish, setFadingFish] = useState<Set<number>>(new Set());
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
@@ -854,7 +855,11 @@ export const TeichView: React.FC = () => {
     setCollectingFish(prev => new Set(prev).add(fieldId));
     
     try {
-      // Wait for spin animation to start
+      // Wait longer for spin animation to be visible before fading
+      setTimeout(() => {
+        setFadingFish(prev => new Set(prev).add(fieldId));
+      }, 800); // Start fading after 800ms of spinning
+      
       setTimeout(async () => {
         try {
           const response = await fetch('/api/garden/collect-field-fish', {
@@ -875,6 +880,11 @@ export const TeichView: React.FC = () => {
               newSet.delete(fieldId);
               return newSet;
             });
+            setFadingFish(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(fieldId);
+              return newSet;
+            });
             
             // Refresh data to show updated state
             fetchTeichData();
@@ -883,6 +893,11 @@ export const TeichView: React.FC = () => {
             console.error('Field fish collection failed:', errorData);
             // Remove from collecting state on error
             setCollectingFish(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(fieldId);
+              return newSet;
+            });
+            setFadingFish(prev => {
               const newSet = new Set(prev);
               newSet.delete(fieldId);
               return newSet;
@@ -896,12 +911,22 @@ export const TeichView: React.FC = () => {
             newSet.delete(fieldId);
             return newSet;
           });
+          setFadingFish(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldId);
+            return newSet;
+          });
         }
       }, 200); // Short delay for animation to start
       
     } catch (error) {
       console.error('Animation setup error:', error);
       setCollectingFish(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldId);
+        return newSet;
+      });
+      setFadingFish(prev => {
         const newSet = new Set(prev);
         newSet.delete(fieldId);
         return newSet;
@@ -1486,7 +1511,7 @@ export const TeichView: React.FC = () => {
                       <div 
                         className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 transition-all duration-700 ${
                           collectingFish.has(field.id) 
-                            ? 'animate-spin opacity-0 scale-75' 
+                            ? `animate-spin ${fadingFish.has(field.id) ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}` 
                             : 'animate-bounce opacity-100 scale-100'
                         }`}
                         onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
