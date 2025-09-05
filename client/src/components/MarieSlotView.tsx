@@ -489,7 +489,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <Trophy className="h-6 w-6" />
                 </h3>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                   {/* 2 Gleiche */}
                   <div className="bg-green-800/30 border border-green-400/50 rounded-lg p-4 text-center hover:scale-105 transition-transform">
                     <div className="flex items-center justify-center mb-2">
@@ -502,16 +502,28 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     <div className="text-xs text-green-300">~74%</div>
                   </div>
 
-                  {/* 3 Gleiche */}
-                  <div className="bg-blue-800/30 border border-blue-400/50 rounded-lg p-4 text-center hover:scale-105 transition-transform">
-                    <div className="flex items-center justify-center mb-2">
-                      <span className="text-2xl font-bold text-blue-300">3×</span>
+                  {/* 3 Gleiche (Nicht Sonne) */}
+                  <div className="bg-blue-800/30 border border-blue-400/50 rounded-lg p-3 text-center hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-center mb-1">
+                      <span className="text-xl font-bold text-blue-300">3×</span>
                     </div>
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <Coins className="h-5 w-5 text-blue-400" />
-                      <span className="text-blue-200 font-semibold">50 Credits</span>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Flower className="h-4 w-4 text-blue-400" />
+                      <span className="text-blue-200 font-semibold text-sm">Rare Samen</span>
                     </div>
                     <div className="text-xs text-blue-300">~20%</div>
+                  </div>
+
+                  {/* 3 Sonnen Bonus */}
+                  <div className="bg-yellow-800/30 border border-yellow-400/50 rounded-lg p-3 text-center hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-center mb-1">
+                      <span className="text-xl font-bold text-yellow-300">3☀️</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Coins className="h-4 w-4 text-yellow-400" />
+                      <span className="text-yellow-200 font-semibold text-sm">50 Credits</span>
+                    </div>
+                    <div className="text-xs text-yellow-300">~5%</div>
                   </div>
 
                   {/* 4 Gleiche */}
