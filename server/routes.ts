@@ -2211,11 +2211,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🎰 Slot result (all): ${reels.map(reel => reel.join('|')).join(' - ')}`);
       console.log(`🎰 Payline (middle): ${paylineSymbols.join(' - ')}`);
 
-      // Check for wins on payline (middle symbols only)
+      // Check for wins on payline (middle symbols only) - FIXED!
       const symbolCounts = new Map<string, number>();
       paylineSymbols.forEach(symbol => {
         symbolCounts.set(symbol, (symbolCounts.get(symbol) || 0) + 1);
       });
+      
+      console.log(`🎰 Symbol counts on payline:`, Object.fromEntries(symbolCounts));
 
       let maxCount = 0;
       let winningSymbol = '';
