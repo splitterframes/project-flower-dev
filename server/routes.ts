@@ -133,15 +133,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Market routes
   app.get("/api/market/listings", async (req, res) => {
     try {
+      console.log("🛒 Getting market listings...");
       const listings = await storage.getMarketListings();
+      console.log("🛒 Market listings retrieved:", listings.length);
       res.json({ listings });
     } catch (error) {
+      console.log("🛒 Market listings error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
   app.post("/api/market/create-listing", async (req, res) => {
     try {
+      console.log("🛒 Creating listing with data:", JSON.stringify(req.body, null, 2));
       const listingData = createMarketListingSchema.parse(req.body);
       const sellerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
@@ -149,8 +153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ listing });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("🛒 Zod validation errors:", JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Invalid input data", errors: error.errors });
       }
+      console.log("🛒 Create listing error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

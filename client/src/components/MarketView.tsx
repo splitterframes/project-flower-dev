@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
-import { getRarityColor, generateGermanButterflyName, type RarityTier } from "@shared/rarity";
+import { getRarityColor, generateLatinCaterpillarName, type RarityTier } from "@shared/rarity";
 import { 
   Store,
   TrendingUp,
@@ -635,7 +635,7 @@ export const MarketView: React.FC = () => {
                         </div>
                       ) : (
                         myCaterpillars.map((caterpillar) => {
-                          const caterpillarName = generateGermanButterflyName(caterpillar.caterpillarId || caterpillar.id);
+                          const caterpillarName = generateLatinCaterpillarName(caterpillar.caterpillarId || caterpillar.id);
                           const isSelected = sellForm.caterpillarId === caterpillar.id;
                           
                           return (
