@@ -173,8 +173,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         return;
       }
 
-      // Update local sun count
-      setSuns(suns - spinCost);
+      // Update global sun count immediately for consistent UI
+      const newSunCount = suns - spinCost;
+      setSuns(newSunCount);
 
       // Convert server response to final symbols - FIXED: Use exact symbols from server
       console.log('🎰 Server response:', data);
@@ -188,7 +189,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         return typeSymbols[0]; // Always use first symbol of type for consistency
       });
       
-      console.log('🎰 Final symbols for display:', finalSymbols.map(s => s.type));
+      console.log('🎰 Final symbols for display:', finalSymbols.map((s: SlotSymbol) => s.type));
       console.log('🎰 Exact payline should be:', paylineFromServer);
 
       // Create new spinning reels with final symbols
@@ -251,11 +252,13 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 setIsWinning(true);
                 setLastWinMessage(data.message);
                 
-                // Update local state based on reward
+                // Update global state immediately based on reward  
                 if (data.reward?.type === 'suns') {
-                  setSuns(prev => prev + data.reward.amount);
+                  const currentSuns = suns - spinCost; // Recalculate current sun count
+                  const newSunTotal = currentSuns + data.reward.amount;
+                  setSuns(newSunTotal);
                 } else if (data.reward?.type === 'credits') {
-                  setCredits(prev => prev + data.reward.amount);
+                  setCredits(credits + data.reward.amount);
                 }
                 
                 setBlinkCount(3); // Blink 3x gold for win
