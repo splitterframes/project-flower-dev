@@ -12,6 +12,7 @@ import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { ButterflySelectionModal } from "./ButterflySelectionModal";
 import { FishSelectionModal } from "./FishSelectionModal";
 import { FeedingDialog } from "./FeedingDialog";
+import { FishRewardDialog } from "./FishRewardDialog";
 // CaterpillarSelectionModal import removed - they spawn automatically
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
@@ -138,6 +139,15 @@ export const TeichView: React.FC = () => {
   const [isCollectingCaterpillar, setIsCollectingCaterpillar] = useState(false);
   const [collectingFish, setCollectingFish] = useState<Set<number>>(new Set());
   const [fadingFish, setFadingFish] = useState<Set<number>>(new Set());
+  
+  // Fish Reward Dialog State
+  const [isFishRewardDialogOpen, setIsFishRewardDialogOpen] = useState(false);
+  const [fishRewardData, setFishRewardData] = useState<{
+    fishName: string;
+    fishImageUrl: string;
+    rarity: string;
+    sellPrice: number;
+  } | null>(null);
   // Caterpillar modal removed - they spawn automatically
   const [userButterflies, setUserButterflies] = useState<any[]>([]);
   const [placedButterflies, setPlacedButterflies] = useState<{
@@ -851,88 +861,37 @@ export const TeichView: React.FC = () => {
     
     console.log(`🐟 Attempting to collect fish on field ${fieldId}`, fishOnField);
     
-    // Start collection animation
-    console.log("🌪️ ANIMATION: Starting spin animation for field", fieldId);
-    setCollectingFish(prev => new Set(prev).add(fieldId));
-    
     try {
-      // Wait longer for spin animation to be visible before fading
-      setTimeout(() => {
-        console.log("👻 ANIMATION: Starting fade animation for field", fieldId);
-        setFadingFish(prev => new Set(prev).add(fieldId));
-      }, 800); // Start fading after 800ms of spinning
-      
-      setTimeout(async () => {
-        try {
-          const response = await fetch('/api/garden/collect-field-fish', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.id,
-              fieldFishId: fishOnField.id  // Use the correct fish database ID
-            })
-          });
+      const response = await fetch('/api/garden/collect-field-fish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          fieldFishId: fishOnField.id  // Use the correct fish database ID
+        })
+      });
 
-          if (response.ok) {
-            console.log('🐟 Fisch erfolgreich gesammelt!');
-            
-            // Remove from collecting state after API success
-            setCollectingFish(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(fieldId);
-              return newSet;
-            });
-            setFadingFish(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(fieldId);
-              return newSet;
-            });
-            
-            // Refresh data to show updated state
-            fetchTeichData();
-          } else {
-            const errorData = await response.json();
-            console.error('Field fish collection failed:', errorData);
-            // Remove from collecting state on error
-            setCollectingFish(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(fieldId);
-              return newSet;
-            });
-            setFadingFish(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(fieldId);
-              return newSet;
-            });
-          }
-        } catch (error) {
-          console.error('Field fish collection error:', error);
-          // Remove from collecting state on error
-          setCollectingFish(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(fieldId);
-            return newSet;
-          });
-          setFadingFish(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(fieldId);
-            return newSet;
-          });
-        }
-      }, 200); // Short delay for animation to start
-      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🐟 Fisch erfolgreich gesammelt!');
+        
+        // Show the beautiful fish reward dialog
+        setFishRewardData({
+          fishName: fishOnField.fishName,
+          fishImageUrl: fishOnField.fishImageUrl,
+          rarity: fishOnField.fishRarity,
+          sellPrice: data.sellPrice || 0
+        });
+        setIsFishRewardDialogOpen(true);
+        
+        // Refresh data to show updated state
+        fetchTeichData();
+      } else {
+        const errorData = await response.json();
+        console.error('Field fish collection failed:', errorData);
+      }
     } catch (error) {
-      console.error('Animation setup error:', error);
-      setCollectingFish(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(fieldId);
-        return newSet;
-      });
-      setFadingFish(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(fieldId);
-        return newSet;
-      });
+      console.error('Collect fish error:', error);
     }
   };
 
@@ -1643,6 +1602,16 @@ export const TeichView: React.FC = () => {
         />
 
         {/* Caterpillar Selection Modal removed - they spawn automatically */}
+
+        {/* Fish Reward Dialog */}
+        <FishRewardDialog
+          isOpen={isFishRewardDialogOpen}
+          onClose={() => setIsFishRewardDialogOpen(false)}
+          fishName={fishRewardData?.fishName || ""}
+          fishImageUrl={fishRewardData?.fishImageUrl || ""}
+          rarity={fishRewardData?.rarity || "common"}
+          sellPrice={fishRewardData?.sellPrice || 0}
+        />
       </TooltipProvider>
     </div>
   );
