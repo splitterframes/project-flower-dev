@@ -2190,19 +2190,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserSuns(userId, -5);
       console.log(`🎰 User ${userId} spent 5 suns on Marie-Slot`);
 
-      // Generate slot machine result (5 reels) - now with 5 symbols including sun
+      // Generate slot machine result (5 reels with 3 symbols each) - Payline system
       const symbols = ['caterpillar', 'flower', 'butterfly', 'fish', 'sun'];
-      const reels: string[] = [];
+      const reels: string[][] = [];
+      const paylineSymbols: string[] = []; // Only middle symbols count for wins
+      
       for (let i = 0; i < 5; i++) {
-        const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-        reels.push(randomSymbol);
+        const reelSymbols: string[] = [];
+        for (let j = 0; j < 3; j++) {
+          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+          reelSymbols.push(randomSymbol);
+          // Middle symbol (index 1) goes to payline
+          if (j === 1) {
+            paylineSymbols.push(randomSymbol);
+          }
+        }
+        reels.push(reelSymbols);
       }
 
-      console.log(`🎰 Slot result: ${reels.join(' - ')}`);
+      console.log(`🎰 Slot result (all): ${reels.map(reel => reel.join('|')).join(' - ')}`);
+      console.log(`🎰 Payline (middle): ${paylineSymbols.join(' - ')}`);
 
-      // Check for wins
+      // Check for wins on payline (middle symbols only)
       const symbolCounts = new Map<string, number>();
-      reels.forEach(symbol => {
+      paylineSymbols.forEach(symbol => {
         symbolCounts.set(symbol, (symbolCounts.get(symbol) || 0) + 1);
       });
 
@@ -2251,7 +2262,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        reels,
+        reels: reels.flat(), // Send all 15 symbols (3 per reel) to frontend
+        payline: paylineSymbols, // The 5 middle symbols that count for wins
         matchCount: maxCount,
         winningSymbol: maxCount >= 2 ? winningSymbol : null,
         reward,

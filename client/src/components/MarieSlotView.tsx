@@ -176,7 +176,10 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setSuns(suns - spinCost);
 
       // Convert server response to final symbols
-      const finalSymbols = data.reels.map((symbolType: string) => {
+      // Backend now sends 15 symbols (3 per reel), use payline (middle symbols) as final symbols
+      const finalSymbols = data.payline ? data.payline.map((symbolType: string) => {
+        return getRandomSymbolOfType(symbolType);
+      }) : data.reels.slice(0, 5).map((symbolType: string) => { // Fallback for old format
         return getRandomSymbolOfType(symbolType);
       });
 
