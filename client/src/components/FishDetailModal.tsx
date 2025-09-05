@@ -101,11 +101,11 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
           setCanSell(data.canSell);
           setTimeRemaining(data.timeRemainingMs);
         } else {
-          // Fallback to local calculation (1 minute for testing - normally 24 hours for fish)
+          // Fallback to local calculation (24 hours for fish)
           const placedTime = new Date(fish.placedAt).getTime();
           const now = new Date().getTime();
           const timeSincePlacement = now - placedTime;
-          const TWENTY_FOUR_HOURS = 1 * 60 * 1000; // 1 minute for testing (normally 24h vs 72h for butterflies)
+          const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24h vs 72h for butterflies
           const remaining = TWENTY_FOUR_HOURS - timeSincePlacement;
           
           if (remaining <= 0) {
