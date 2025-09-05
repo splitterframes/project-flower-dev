@@ -118,7 +118,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
             },
             {
               title: '⏱️ Timing & Effizienz',
-              icon: <Clock className="h-6 w-6 text-orange-400" />,
+              icon: <Clock className="h-6 w-6 text-cyan-400" />,
               content: [
                 'Seltene Schmetterlinge brauchen länger für Raupen-Produktion',
                 'Plane voraus: 3 Schmetterlinge = 1 kompletter Fisch-Zyklus',
@@ -174,7 +174,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
             },
             {
               title: '💡 Trading-Strategien',
-              icon: <Star className="h-6 w-6 text-orange-400" />,
+              icon: <Star className="h-6 w-6 text-cyan-400" />,
               content: [
                 'Kaufe günstig, verkaufe teuer',
                 'Bevorre seltene Samen für langfristige Gewinne',
@@ -335,7 +335,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
             },
             {
               title: '🔄 Tank-Management',
-              icon: <Clock className="h-6 w-6 text-orange-400" />,
+              icon: <Clock className="h-6 w-6 text-cyan-400" />,
               content: [
                 'Tausche Fische strategisch aus',
                 'Neue Fische ersetzen alte nach Verkauf',
@@ -357,7 +357,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
           title: '⚡ Flowerpower Challenge',
           subtitle: 'Wöchentliche Community-Challenge',
           icon: <Zap className="h-8 w-8 text-yellow-400" />,
-          gradient: 'from-yellow-500/20 to-orange-500/20',
+          gradient: 'from-yellow-500/20 to-amber-500/20',
           border: 'border-yellow-400/30',
           sections: [
             {
@@ -429,7 +429,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
             },
             {
               title: '💎 VIP-System',
-              icon: <Star className="h-6 w-6 text-orange-400" />,
+              icon: <Star className="h-6 w-6 text-cyan-400" />,
               content: [
                 'VIP-Schmetterlinge sind besonders wertvoll',
                 'Deutlich höhere Einkommens-Rate als normale',
@@ -471,7 +471,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
           title: '🎰 Marie-Slot',
           subtitle: 'Glücksspiel mit echten Spiel-Bildern',
           icon: <Coins className="h-8 w-8 text-yellow-400" />,
-          gradient: 'from-yellow-500/20 to-orange-500/20',
+          gradient: 'from-yellow-500/20 to-amber-500/20',
           border: 'border-yellow-400/30',
           sections: [
             {
@@ -541,7 +541,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <DialogHeader className="relative">
           {/* Enhanced Header Background */}
           <div className={`absolute inset-0 bg-gradient-to-r ${viewInfo.gradient} rounded-t-lg -mx-6 -my-2`}></div>
@@ -552,7 +552,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               <div className="absolute inset-0 animate-ping opacity-30">{viewInfo.icon}</div>
             </div>
             <div className="ml-4">
-              <span className="text-3xl font-bold bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent">
                 {viewInfo.title}
               </span>
               <p className="text-lg text-slate-300 mt-1">{viewInfo.subtitle}</p>
@@ -590,14 +590,14 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
 
           {/* Tips Section */}
           {viewInfo.tips.length > 0 && (
-            <Card className="bg-gradient-to-r from-orange-800/20 to-yellow-800/20 border-2 border-orange-500/30 shadow-xl">
+            <Card className="bg-gradient-to-r from-blue-800/20 to-cyan-800/20 border-2 border-blue-500/30 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-white">
                   <div className="relative mr-3">
                     <Star className="h-6 w-6 text-yellow-400 animate-pulse" />
                     <div className="absolute inset-0 h-6 w-6 text-yellow-400 animate-ping opacity-30"></div>
                   </div>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
                     💡 Profi-Tipps
                   </span>
                 </CardTitle>
@@ -605,7 +605,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {viewInfo.tips.map((tip, index) => (
-                    <div key={index} className="flex items-start bg-slate-800/50 rounded-lg p-4 border border-orange-400/20">
+                    <div key={index} className="flex items-start bg-slate-800/50 rounded-lg p-4 border border-blue-400/20">
                       <Sparkles className="h-5 w-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" />
                       <span className="text-slate-300 text-lg">{tip}</span>
                     </div>
@@ -636,7 +636,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
                     { tier: 'rare', name: 'Rare', bgColor: 'bg-blue-500/20 border-blue-400/40' },
                     { tier: 'super-rare', name: 'Super-Rare', bgColor: 'bg-cyan-500/20 border-cyan-400/40' },
                     { tier: 'epic', name: 'Epic', bgColor: 'bg-purple-500/20 border-purple-400/40' },
-                    { tier: 'legendary', name: 'Legendary', bgColor: 'bg-orange-500/20 border-orange-400/40' },
+                    { tier: 'legendary', name: 'Legendary', bgColor: 'bg-amber-500/20 border-amber-400/40' },
                     { tier: 'mythical', name: 'Mythical', bgColor: 'bg-red-500/20 border-red-400/40' }
                   ].map((rarity) => (
                     <div key={rarity.tier} className={`${rarity.bgColor} rounded-lg p-3 border-2 transition-all duration-300 hover:scale-105`}>
@@ -657,7 +657,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
           <div className="flex justify-center pt-6 pb-2">
             <Button
               onClick={onClose}
-              className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 text-white font-bold text-lg rounded-full shadow-lg border-2 border-orange-400/50 transition-all duration-300 hover:scale-105"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold text-lg rounded-full shadow-lg border-2 border-blue-400/50 transition-all duration-300 hover:scale-105"
             >
               <CheckCircle className="h-5 w-5 mr-2" />
               Verstanden!
