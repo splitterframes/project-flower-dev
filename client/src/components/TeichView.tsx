@@ -1511,15 +1511,15 @@ export const TeichView: React.FC = () => {
                     {/* Field Fish - Spawned from feeding (bouncing animation) */}
                     {field.hasFish && (
                       <div 
-                        className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 transition-all duration-700 ${
+                        className={`absolute inset-0 flex items-center justify-center cursor-pointer group z-30 ${
                           collectingFish.has(field.id) 
-                            ? `animate-spin duration-500 ${fadingFish.has(field.id) ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}` 
-                            : 'animate-bounce opacity-100 scale-100'
+                            ? `animate-spin ${fadingFish.has(field.id) ? 'opacity-0 scale-75 transition-all duration-700' : 'opacity-100 scale-100'}` 
+                            : 'animate-bounce opacity-100 scale-100 transition-all duration-700'
                         }`}
                         onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
                       >
                         <div className={`relative transform transition-transform duration-200 ${
-                          collectingFish.has(field.id) ? 'scale-50' : 'group-hover:scale-110'
+                          collectingFish.has(field.id) ? '' : 'group-hover:scale-110'
                         }`}>
                           <RarityImage 
                             src={field.fishImageUrl!}
