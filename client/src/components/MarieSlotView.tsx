@@ -84,6 +84,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [lastWinMessage, setLastWinMessage] = useState('');
   const [isWinning, setIsWinning] = useState(false);
   const [blinkCount, setBlinkCount] = useState(0);
+  const [recoilStates, setRecoilStates] = useState<boolean[]>([]);
   const animationRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
 
   const spinCost = 5;
@@ -120,6 +121,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     });
     
     setReels(initReels);
+    setRecoilStates(new Array(5).fill(false));
   }, []);
 
   // Get random symbol of specific type
@@ -202,6 +204,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         
         // Set new timeout to stop this reel
         animationRefs.current[reelIndex] = setTimeout(() => {
+          // Stoppe die Trommel
           setReels(prevReels => {
             const updatedReels = [...prevReels];
             updatedReels[reelIndex] = {
@@ -211,6 +214,22 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             };
             return updatedReels;
           });
+
+          // Rückstoss-Effekt beim Stoppen
+          setRecoilStates(prev => {
+            const newStates = [...prev];
+            newStates[reelIndex] = true;
+            return newStates;
+          });
+
+          // Rückstoss nach 300ms wieder ausschalten
+          setTimeout(() => {
+            setRecoilStates(prev => {
+              const newStates = [...prev];
+              newStates[reelIndex] = false;
+              return newStates;
+            });
+          }, 300);
 
           // Check if all reels have stopped
           if (reelIndex === spinDurations.length - 1) {
@@ -274,7 +293,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const spinSpeed = reel.isSpinning ? 'animate-spin-fast' : '';
     
     return (
-      <div key={index} className={`relative overflow-hidden bg-slate-800 rounded-lg border-2 border-yellow-500 ${reel.isSpinning ? 'animate-[recoil_0.3s_ease-out]' : ''}`}>
+      <div key={index} className={`relative overflow-hidden bg-slate-800 rounded-lg border-2 border-yellow-500 ${recoilStates[index] ? 'animate-[recoil_0.3s_ease-out]' : ''}`}>
         <div 
           className={`transition-transform ${reel.isSpinning ? 'duration-100 ease-linear' : 'duration-500 ease-out'}`}
           style={{
