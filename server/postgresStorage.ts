@@ -174,25 +174,9 @@ export class PostgresStorage {
     try {
       const fishData = await generateRandomFish(getFishRarity(fishId));
       
-      // Check if user already has this fish
-      const existingFish = await this.db
-        .select()
-        .from(userFish)
-        .where(and(
-          eq(userFish.userId, userId),
-          eq(userFish.fishId, fishData.id)
-        ));
-      
-      if (existingFish.length > 0) {
-        // Update quantity
-        const [updatedFish] = await this.db
-          .update(userFish)
-          .set({ quantity: existingFish[0].quantity + 1 })
-          .where(eq(userFish.id, existingFish[0].id))
-          .returning();
-        return updatedFish;
-      } else {
-        // Add new fish
+      // Add to inventory with UPSERT to prevent race conditions
+      try {
+        // Try to insert first (most common case)
         const [newFish] = await this.db
           .insert(userFish)
           .values({
@@ -204,7 +188,30 @@ export class PostgresStorage {
             quantity: 1
           })
           .returning();
+        console.log(`🐟 Created new fish inventory entry: ${fishData.name}`);
         return newFish;
+      } catch (error) {
+        // If fish already exists (constraint violation), increment quantity
+        const existingFish = await this.db
+          .select()
+          .from(userFish)
+          .where(and(
+            eq(userFish.userId, userId),
+            eq(userFish.fishId, fishData.id)
+          ));
+
+        if (existingFish.length > 0) {
+          const [updatedFish] = await this.db
+            .update(userFish)
+            .set({ quantity: existingFish[0].quantity + 1 })
+            .where(eq(userFish.id, existingFish[0].id))
+            .returning();
+          console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
+          return updatedFish;
+        } else {
+          // Fallback: re-throw error if not a constraint violation
+          throw error;
+        }
       }
     } catch (error) {
       console.error('Failed to add fish to user:', error);
