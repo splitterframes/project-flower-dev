@@ -165,22 +165,21 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
   };
 
   const handleItemSelect = (item: SellableItem) => {
-    if (selectedItems.length >= 4) {
-      showNotification('Marie Posa kauft maximal 4 Items pro Besuch!', 'warning');
-      return;
-    }
-
     const existingItem = selectedItems.find(selected => selected.id === item.id);
+    
     if (existingItem) {
-      showNotification('Dieses Item ist bereits ausgewählt!', 'warning');
+      // Item abwählen
+      setSelectedItems(prev => prev.filter(selected => selected.id !== item.id));
     } else {
+      // Item auswählen
+      if (selectedItems.length >= 4) {
+        showNotification('Marie Posa kauft maximal 4 Items pro Besuch!', 'warning');
+        return;
+      }
       setSelectedItems(prev => [...prev, { ...item, quantity: 1 }]);
     }
   };
 
-  const removeSelectedItem = (itemId: string) => {
-    setSelectedItems(prev => prev.filter(item => item.id !== itemId));
-  };
 
   const handleSell = async () => {
     if (!user || selectedItems.length === 0) return;
@@ -341,7 +340,11 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                           {items.map(item => (
                             <Card 
                               key={item.id} 
-                              className="cursor-pointer hover:bg-yellow-800/20 transition-colors bg-slate-800/50 border-slate-600"
+                              className={`cursor-pointer transition-all duration-300 ${
+                                selectedItems.some(selected => selected.id === item.id)
+                                  ? 'bg-gradient-to-br from-yellow-600/30 to-yellow-800/30 border-yellow-400 shadow-lg shadow-yellow-400/30 scale-105'
+                                  : 'bg-slate-800/50 border-slate-600 hover:bg-yellow-800/10 hover:border-yellow-500/50'
+                              }`}
                               onClick={() => handleItemSelect(item)}
                             >
                               <CardContent className="p-3 flex items-center justify-between">
@@ -370,8 +373,17 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                                     </Badge>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="text-sm font-medium text-green-400">
+                                <div className="text-right relative">
+                                  {selectedItems.some(selected => selected.id === item.id) && (
+                                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+                                      <span className="text-xs font-bold text-black">✓</span>
+                                    </div>
+                                  )}
+                                  <div className={`text-sm font-medium ${
+                                    selectedItems.some(selected => selected.id === item.id) 
+                                      ? 'text-yellow-300' 
+                                      : 'text-green-400'
+                                  }`}>
                                     {item.sellPrice} Cr
                                   </div>
                                   <div className="text-xs text-slate-400 line-through">
@@ -393,67 +405,16 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
             )}
           </div>
 
-          {/* Selected Items Summary */}
+          {/* Kurze Zusammenfassung nur wenn Items ausgewählt */}
           {selectedItems.length > 0 && (
             <div className="border-t border-yellow-500/30 pt-4">
-              <h4 className="font-medium mb-3 flex items-center gap-2 text-yellow-200">
-                <ShoppingCart className="h-4 w-4" />
-                Ausgewählte Items ({selectedItems.length}/4)
-              </h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {selectedItems.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-900/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {/* 80x80px Bild für ausgewählte Items */}
-                      <div className="w-20 h-20 bg-slate-700 rounded-md flex items-center justify-center overflow-hidden">
-                        {item.imageUrl ? (
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-slate-400">
-                            {getItemIcon(item.type)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-white">{item.name}</span>
-                        <Badge 
-                          className={`text-xs w-fit ${getRarityColor(mapRarityNumberToTier(item.rarity))} border`}
-                          variant="outline"
-                        >
-                          {getRarityDisplayName(mapRarityNumberToTier(item.rarity))}
-                        </Badge>
-                      </div>
-                      <span className="text-xs bg-yellow-700 text-yellow-100 px-2 py-1 rounded">
-                        x{item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-green-400">
-                        {item.sellPrice * item.quantity} Cr
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeSelectedItem(item.id)}
-                        className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-400"
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <Separator className="my-3 bg-yellow-500/30" />
-              
-              <div className="flex justify-between items-center font-medium">
-                <span className="text-yellow-200">Gesamt:</span>
-                <span className="text-lg text-green-400 font-bold">
-                  {totalValue} Cr
+              <div className="flex justify-between items-center">
+                <span className="text-yellow-200 font-medium flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  {selectedItems.length} Item{selectedItems.length > 1 ? 's' : ''} ausgewählt (max. 4)
+                </span>
+                <span className="text-lg text-yellow-300 font-bold">
+                  Gesamt: {totalValue} Cr
                 </span>
               </div>
             </div>
@@ -473,17 +434,26 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
           <Button
             onClick={handleSell}
             disabled={selectedItems.length === 0 || isSelling}
-            className="bg-yellow-600 hover:bg-yellow-700 text-black font-medium flex items-center gap-2"
+            className={`font-medium flex items-center gap-2 transition-all ${
+              selectedItems.length > 0 
+                ? 'bg-yellow-600 hover:bg-yellow-700 text-black shadow-lg shadow-yellow-400/30' 
+                : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+            }`}
           >
             {isSelling ? (
               <>
                 <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                 Verkaufe...
               </>
-            ) : (
+            ) : selectedItems.length > 0 ? (
               <>
                 <Crown className="h-4 w-4" />
                 An Marie Posa verkaufen ({totalValue} Cr)
+              </>
+            ) : (
+              <>
+                <Crown className="h-4 w-4" />
+                Items auswählen zum Verkaufen
               </>
             )}
           </Button>
