@@ -260,7 +260,7 @@ export const FlowerpowerView: React.FC = () => {
             </p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Bei der Flowerpower Challenge spendest du bestimmte Blumen für die Gemeinschaft! Je mehr Blumen du spendest, desto höher deine Chance auf seltene animierte Schmetterlinge als Belohnung!" />
+            <HelpButton helpText="Bei der Flowerpower Challenge spendest du bestimmte Blumen für die Gemeinschaft! Je mehr Blumen du spendest, desto höher deine Chance auf seltene animierte Schmetterlinge als Belohnung!" viewType="flowerpower" />
           </div>
         </div>
 

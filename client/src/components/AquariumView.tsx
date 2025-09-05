@@ -456,7 +456,7 @@ export const AquariumView: React.FC = () => {
             </p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Im Aquarium präsentierst du deine schönsten Fische! Kaufe Aquarium-Tanks für Credits und stelle deine seltenen Fische zur Schau. Jedes Aquarium hat 24 Plätze für deine Sammlung!" />
+            <HelpButton helpText="Im Aquarium präsentierst du deine schönsten Fische! Kaufe Aquarium-Tanks für Credits und stelle deine seltenen Fische zur Schau. Jedes Aquarium hat 24 Plätze für deine Sammlung!" viewType="aquarium" />
           </div>
         </div>
 

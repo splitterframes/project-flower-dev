@@ -608,7 +608,7 @@ export const ExhibitionView: React.FC = () => {
             <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="In der Ausstellung präsentierst du deine schönsten Schmetterlinge in Rahmen! Du verdienst passiv Credits pro Stunde basierend auf der Rarität deiner ausgestellten Schmetterlinge. VIP-Schmetterlinge bringen noch mehr Credits!" />
+            <HelpButton helpText="In der Ausstellung präsentierst du deine schönsten Schmetterlinge in Rahmen! Du verdienst passiv Credits pro Stunde basierend auf der Rarität deiner ausgestellten Schmetterlinge. VIP-Schmetterlinge bringen noch mehr Credits!" viewType="exhibition" />
           </div>
         </div>
         

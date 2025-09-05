@@ -573,7 +573,7 @@ export const InventoryView: React.FC = () => {
             <p className="text-slate-400 text-sm">Verwalte deine Blumen und Schmetterlinge</p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Im Inventar siehst du alle deine gesammelten Gegenstände: Samen, Blumen, Schmetterlinge, Fische und Raupen. Du kannst sie hier verwalten und für verschiedene Zwecke verwenden!" />
+            <HelpButton helpText="Im Inventar siehst du alle deine gesammelten Gegenstände: Samen, Blumen, Schmetterlinge, Fische und Raupen. Du kannst sie hier verwalten und für verschiedene Zwecke verwenden!" viewType="inventory" />
           </div>
         </div>
       </div>

@@ -416,7 +416,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <Coins className="h-10 w-10 text-yellow-400" />
               Marie-Slot
               <Coins className="h-10 w-10 text-yellow-400" />
-              <HelpButton helpText="Marie-Slot ist dein Glücksspielautomat! Setze 5 Sonnen und drehe die Rollen. Nur die mittleren Symbole (Payline) zählen für Gewinne: 2 gleiche = 3 Sonnen, 3 Sonnen = 50 Credits, 3 andere = seltener Samen!" />
+              <HelpButton helpText="Marie-Slot ist dein Glücksspielautomat! Setze 5 Sonnen und drehe die Rollen. Nur die mittleren Symbole (Payline) zählen für Gewinne: 2 gleiche = 3 Sonnen, 3 Sonnen = 50 Credits, 3 andere = seltener Samen!" viewType="marie-slot" />
             </h1>
             <p className="text-purple-200 text-lg">Echter Spielautomat mit echten Bildern!</p>
           </div>

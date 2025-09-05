@@ -817,7 +817,7 @@ export const GardenView: React.FC = () => {
             <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Im Mariposa Garten pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick auf Felder für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen!" />
+            <HelpButton helpText="Im Mariposa Garten pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick auf Felder für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen!" viewType="garden" />
           </div>
         </div>
         

@@ -278,7 +278,7 @@ export const BouquetsView: React.FC = () => {
             <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" />
+            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
           </div>
         </div>
         

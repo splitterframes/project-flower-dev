@@ -278,7 +278,7 @@ export const MarketView: React.FC = () => {
             <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
           </div>
           <div className="flex justify-end">
-            <HelpButton helpText="Im Markt kaufst du Samen von anderen Spielern oder vom Server. Du kannst auch deine eigenen Samen verkaufen und Credits verdienen. Schau regelmäßig nach neuen Angeboten!" />
+            <HelpButton helpText="Im Markt kaufst du Samen von anderen Spielern oder vom Server. Du kannst auch deine eigenen Samen verkaufen und Credits verdienen. Schau regelmäßig nach neuen Angeboten!" viewType="market" />
           </div>
         </div>
         

@@ -1123,7 +1123,7 @@ export const TeichView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <HelpButton helpText="Am Teich setzt du Schmetterlinge auf Grasfelder um Raupen zu züchten. Füttere deine Fische in den blauen Teichfeldern mit den Raupen - je höher die Rarität der Raupen, desto bessere Fische bekommst du!" />
+                  <HelpButton helpText="Am Teich setzt du Schmetterlinge auf Grasfelder um Raupen zu züchten. Füttere deine Fische in den blauen Teichfeldern mit den Raupen - je höher die Rarität der Raupen, desto bessere Fische bekommst du!" viewType="pond" />
                 </div>
               </div>
             </CardTitle>
