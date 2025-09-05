@@ -487,8 +487,20 @@ export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldS
 export type PondFeedingProgress = typeof pondFeedingProgress.$inferSelect;
 export type FieldFish = typeof fieldFish.$inferSelect;
 
+// Marie Posa trading tracker
+export const mariePosaTracker = pgTable("marie_posa_tracker", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  lastTradeAt: timestamp("last_trade_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Aquarium types
 export type AquariumTank = typeof aquariumTanks.$inferSelect;
 export type NewAquariumTank = typeof aquariumTanks.$inferInsert;
 export type AquariumFish = typeof aquariumFish.$inferSelect;
 export type NewAquariumFish = typeof aquariumFish.$inferInsert;
+
+// Marie Posa types  
+export type MariePosaTracker = typeof mariePosaTracker.$inferSelect;
+export type NewMariePosaTracker = typeof mariePosaTracker.$inferInsert;

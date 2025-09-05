@@ -8,6 +8,7 @@ import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
 import { HelpDialog } from "./HelpDialog";
+import MariePosaButton from "./MariePosaButton";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -232,17 +233,8 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
                 <span className="text-orange-400 font-semibold text-sm sm:text-base">{credits} Cr</span>
               </div>
               
-              {/* Emergency Button - Smaller on mobile */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEmergencyDialog(true)}
-                className="border-red-500 text-red-300 hover:bg-red-800 hover:text-white px-2 sm:px-3"
-                title="Notfall-Hilfe"
-              >
-                <AlertTriangle className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">🆘 SOS</span>
-              </Button>
+              {/* Marie Posa Button - Smaller on mobile */}
+              <MariePosaButton userId={user.id} />
 
               {/* User List Button - Smaller on mobile */}
               <Button

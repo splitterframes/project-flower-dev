@@ -2089,6 +2089,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marie Posa trading system routes
+  // Check if Marie Posa is available for trading (every 3 hours)
+  app.get("/api/user/:userId/marie-posa-status", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const lastTradeResult = await storage.getMariePosaLastTrade(userId);
+      const now = new Date();
+      const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+      
+      let isAvailable = false;
+      if (!lastTradeResult.lastTradeAt || lastTradeResult.lastTradeAt < threeHoursAgo) {
+        isAvailable = true;
+      }
+
+      const nextAvailableAt = lastTradeResult.lastTradeAt ? 
+        new Date(lastTradeResult.lastTradeAt.getTime() + (3 * 60 * 60 * 1000)) : 
+        now;
+
+      res.json({ 
+        isAvailable,
+        nextAvailableAt: nextAvailableAt.toISOString(),
+        lastTradeAt: lastTradeResult.lastTradeAt?.toISOString() || null
+      });
+    } catch (error) {
+      console.error('Error checking Marie Posa status:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Marie Posa selling endpoint
+  app.post("/api/user/:userId/marie-posa-sell", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { items } = req.body;
+      
+      if (!userId || !items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Invalid request data" });
+      }
+
+      if (items.length > 4) {
+        return res.status(400).json({ message: "Marie Posa kauft maximal 4 Items pro Besuch!" });
+      }
+
+      // Check if Marie Posa is available
+      const lastTradeResult = await storage.getMariePosaLastTrade(userId);
+      const now = new Date();
+      const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+      
+      if (lastTradeResult.lastTradeAt && lastTradeResult.lastTradeAt >= threeHoursAgo) {
+        const nextAvailableAt = new Date(lastTradeResult.lastTradeAt.getTime() + (3 * 60 * 60 * 1000));
+        return res.status(400).json({ 
+          message: `Marie Posa ist erst wieder ${nextAvailableAt.toLocaleTimeString('de-DE')} verfügbar!` 
+        });
+      }
+
+      // Process the sale
+      const result = await storage.processMariePosaSale(userId, items);
+      
+      if (result.success) {
+        res.json({ 
+          message: `Marie Posa hat deine Items für ${result.totalEarned} Credits gekauft!`,
+          totalEarned: result.totalEarned,
+          itemsSold: result.itemsSold
+        });
+      } else {
+        res.status(400).json({ message: result.message || 'Verkauf fehlgeschlagen' });
+      }
+    } catch (error) {
+      console.error('Error processing Marie Posa sale:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -30,6 +30,7 @@ import {
   fieldFish,
   aquariumTanks,
   aquariumFish,
+  mariePosaTracker,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -65,7 +66,7 @@ import {
   type AquariumFish,
   insertUserSchema
 } from "@shared/schema";
-import { eq, ilike, and, lt, gt, inArray, sql } from "drizzle-orm";
+import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
@@ -4284,6 +4285,154 @@ export class PostgresStorage {
     })();
     
     return Math.floor(basePrice * 0.4); // 40% of butterfly prices
+  }
+
+  // Marie Posa trading system functions
+  async getMariePosaLastTrade(userId: number): Promise<{ lastTradeAt: Date | null }> {
+    try {
+      const result = await this.db
+        .select()
+        .from(mariePosaTracker)
+        .where(eq(mariePosaTracker.userId, userId))
+        .orderBy(desc(mariePosaTracker.lastTradeAt))
+        .limit(1);
+
+      return { 
+        lastTradeAt: result.length > 0 ? result[0].lastTradeAt : null 
+      };
+    } catch (error) {
+      console.error('Error getting Marie Posa last trade:', error);
+      return { lastTradeAt: null };
+    }
+  }
+
+  async processMariePosaSale(userId: number, items: Array<{type: string, originalId: number, sellPrice: number}>): Promise<{
+    success: boolean;
+    message?: string;
+    totalEarned?: number;
+    itemsSold?: number;
+  }> {
+    try {
+      if (!items || items.length === 0 || items.length > 4) {
+        return { success: false, message: 'Ungültige Item-Auswahl' };
+      }
+
+      let totalEarned = 0;
+      let itemsSold = 0;
+
+      // Begin transaction to ensure all operations succeed or fail together
+      for (const item of items) {
+        let deleteResult = false;
+        
+        // Delete the item from user's inventory based on type
+        switch (item.type) {
+          case 'flower':
+            const flowerResult = await this.db
+              .delete(userFlowers)
+              .where(and(
+                eq(userFlowers.id, item.originalId),
+                eq(userFlowers.userId, userId)
+              ))
+              .returning();
+            deleteResult = flowerResult.length > 0;
+            break;
+            
+          case 'butterfly':
+            const butterflyResult = await this.db
+              .delete(userButterflies)
+              .where(and(
+                eq(userButterflies.id, item.originalId),
+                eq(userButterflies.userId, userId)
+              ))
+              .returning();
+            deleteResult = butterflyResult.length > 0;
+            break;
+            
+          case 'fish':
+            // Handle fish differently - check if quantity > 1, decrease quantity instead of deleting
+            const fishData = await this.db
+              .select()
+              .from(userFish)
+              .where(and(
+                eq(userFish.id, item.originalId),
+                eq(userFish.userId, userId)
+              ))
+              .limit(1);
+
+            if (fishData.length > 0) {
+              if (fishData[0].quantity > 1) {
+                // Decrease quantity by 1
+                await this.db
+                  .update(userFish)
+                  .set({ quantity: fishData[0].quantity - 1 })
+                  .where(eq(userFish.id, item.originalId));
+                deleteResult = true;
+              } else {
+                // Delete if quantity is 1
+                const fishResult = await this.db
+                  .delete(userFish)
+                  .where(and(
+                    eq(userFish.id, item.originalId),
+                    eq(userFish.userId, userId)
+                  ))
+                  .returning();
+                deleteResult = fishResult.length > 0;
+              }
+            }
+            break;
+            
+          default:
+            console.warn(`Unknown item type: ${item.type}`);
+            continue;
+        }
+
+        if (deleteResult) {
+          totalEarned += item.sellPrice;
+          itemsSold++;
+        } else {
+          console.warn(`Failed to delete item ${item.originalId} of type ${item.type} for user ${userId}`);
+        }
+      }
+
+      if (itemsSold === 0) {
+        return { success: false, message: 'Keine Items konnten verkauft werden' };
+      }
+
+      // Add credits to user
+      await this.db
+        .update(users)
+        .set({ 
+          credits: sql`credits + ${totalEarned}`,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+
+      // Record this trade
+      await this.db
+        .insert(mariePosaTracker)
+        .values({
+          userId,
+          lastTradeAt: new Date(),
+          createdAt: new Date()
+        })
+        .onConflictDoUpdate({
+          target: mariePosaTracker.userId,
+          set: {
+            lastTradeAt: new Date()
+          }
+        });
+
+      console.log(`👑 Marie Posa: User ${userId} sold ${itemsSold} items for ${totalEarned} credits`);
+      
+      return {
+        success: true,
+        totalEarned,
+        itemsSold
+      };
+    } catch (error) {
+      console.error('Error processing Marie Posa sale:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
   }
 }
 
