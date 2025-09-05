@@ -808,11 +808,17 @@ export const GardenView: React.FC = () => {
       {/* Garden Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-green-500/30">
         {/* Title Section */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-green-300 mb-1">
-            Mariposa Garten 🌱
-          </h1>
-          <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
+        <div className="flex items-center justify-between mb-4">
+          <div></div> {/* Spacer links */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-green-300 mb-1">
+              Mariposa Garten 🌱
+            </h1>
+            <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
+          </div>
+          <div className="flex justify-end">
+            <HelpButton helpText="Im Mariposa Garten pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick auf Felder für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen!" />
+          </div>
         </div>
         
         {/* Compact Stats */}
@@ -858,13 +864,8 @@ export const GardenView: React.FC = () => {
               <Sprout className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold">Garten Felder 🌿</span>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-slate-400">
-                Links: Samen • Rechts: Bouquet
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <HelpButton helpText="Hier pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen die regelmäßig spawnen!" />
+            <div className="text-xs text-slate-400">
+              Links: Samen • Rechts: Bouquet
             </div>
           </CardTitle>
         </CardHeader>
