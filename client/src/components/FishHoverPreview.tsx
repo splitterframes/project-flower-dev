@@ -55,28 +55,27 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
     const previewWidth = 400; // 24rem = 384px + padding
     const previewHeight = 450; // estimated height
     const margin = 20; // margin from screen edge
-    const offset = 20; // offset from cursor
+    const offset = 15; // smaller offset from cursor
     
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Determine horizontal position
-    const canFitRight = mousePosition.x + offset + previewWidth + margin <= windowWidth;
-    const canFitLeft = mousePosition.x - offset - previewWidth >= margin;
+    // Always stay within reasonable viewport bounds
+    const maxLeft = Math.min(windowWidth * 0.8, windowWidth - previewWidth - margin);
+    const maxTop = Math.min(windowHeight * 0.8, windowHeight - previewHeight - margin);
     
-    let left: number;
-    if (canFitRight) {
-      left = mousePosition.x + offset;
-    } else if (canFitLeft) {
-      left = mousePosition.x - offset - previewWidth;
-    } else {
-      // Center if neither fits perfectly
-      left = Math.max(margin, Math.min(windowWidth - previewWidth - margin, mousePosition.x - previewWidth / 2));
+    // Determine horizontal position - prefer right side but stay within bounds
+    let left = mousePosition.x + offset;
+    if (left > maxLeft) {
+      left = Math.max(margin, mousePosition.x - offset - previewWidth);
+      if (left < margin) {
+        left = margin; // force to left edge if needed
+      }
     }
     
-    // Determine vertical position
+    // Determine vertical position - center around cursor but stay within bounds  
     let top = mousePosition.y - previewHeight / 2;
-    top = Math.max(margin, Math.min(windowHeight - previewHeight - margin, top));
+    top = Math.max(margin, Math.min(maxTop, top));
     
     return { left, top };
   };

@@ -922,7 +922,7 @@ export const TeichView: React.FC = () => {
         body: JSON.stringify({
           userId: user.id,
           caterpillarId,
-          fieldIndex: fieldIndex // Use field ID directly (1-based)
+          fieldIndex: fieldIndex - 1 // Convert to 0-based index
         })
       });
 
