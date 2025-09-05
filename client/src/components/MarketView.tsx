@@ -481,7 +481,7 @@ export const MarketView: React.FC = () => {
                               <div className="flex flex-col space-y-3">
                                 {/* Großes Raupenbild */}
                                 <div className="flex justify-center">
-                                  <div className="w-32 h-32 rounded-xl border-4 bg-slate-700 overflow-hidden shadow-lg"
+                                  <div className="w-50 h-50 rounded-xl border-4 bg-slate-700 overflow-hidden shadow-lg"
                                        style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
                                     <img
                                       src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
@@ -746,22 +746,67 @@ export const MarketView: React.FC = () => {
                               style={isSelected ? { borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) } : {}}
                             >
                               <div className="flex items-center space-x-3">
-                                {/* Raupe Bild */}
-                                <div 
-                                  className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden"
-                                  style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
-                                >
-                                  <img
-                                    src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
-                                    alt={caterpillarName}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      // Fallback zu einem Platzhalter wenn Bild nicht gefunden wird
-                                      e.currentTarget.style.display = 'none';
-                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🐛</div>';
-                                    }}
-                                  />
-                                </div>
+                                {/* Raupe Bild mit Hover */}
+                                <HoverCard>
+                                  <HoverCardTrigger asChild>
+                                    <div 
+                                      className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                                      style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
+                                    >
+                                      <img
+                                        src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
+                                        alt={caterpillarName}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          // Fallback zu einem Platzhalter wenn Bild nicht gefunden wird
+                                          e.currentTarget.style.display = 'none';
+                                          e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🐛</div>';
+                                        }}
+                                      />
+                                    </div>
+                                  </HoverCardTrigger>
+                                  <HoverCardContent className="w-80 p-4">
+                                    <div className="flex flex-col space-y-3">
+                                      {/* Großes Raupenbild */}
+                                      <div className="flex justify-center">
+                                        <div className="w-50 h-50 rounded-xl border-4 bg-slate-700 overflow-hidden shadow-lg"
+                                             style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}>
+                                          <img
+                                            src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
+                                            alt={caterpillarName}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = 'none';
+                                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">🐛</div>';
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Raupe-Details */}
+                                      <div className="text-center space-y-2">
+                                        <h3 className="font-bold text-lg text-white">{caterpillarName}</h3>
+                                        <div className="flex items-center justify-center space-x-1">
+                                          <Star className={`h-5 w-5 ${getRarityColor(caterpillar.caterpillarRarity as RarityTier)}`} />
+                                          <span className={`text-sm font-semibold ${getRarityColor(caterpillar.caterpillarRarity as RarityTier)}`}>
+                                            {caterpillar.caterpillarRarity?.toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <p className="text-slate-400 text-sm">
+                                          ID: {caterpillar.caterpillarId || caterpillar.id}
+                                        </p>
+                                        
+                                        {/* Besitz-Info */}
+                                        <div className="mt-3 p-3 bg-slate-800/50 rounded-lg">
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-slate-300">Deine Raupe</span>
+                                            <span className="text-green-400 font-medium">✓ Besessen</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </HoverCardContent>
+                                </HoverCard>
                                 
                                 {/* Raupe Info */}
                                 <div className="flex-1">
