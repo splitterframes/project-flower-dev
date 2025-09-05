@@ -293,17 +293,8 @@ export const InventoryView: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
-            x{caterpillar.quantity}
-          </div>
-          <Button
-            onClick={() => openCaterpillarModal(caterpillar)}
-            size="sm"
-            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs py-1 px-3 h-8 transition-all duration-200 hover:scale-105"
-          >
-            Verkaufen
-          </Button>
+        <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center justify-center min-w-[40px]">
+          x{caterpillar.quantity}
         </div>
       </div>
     </div>
