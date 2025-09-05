@@ -8,6 +8,7 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useSunSpawns } from "@/lib/stores/useSunSpawns";
 import { SeedSelectionModal } from "./SeedSelectionModal";
+import { SeedRewardDialog } from "./SeedRewardDialog";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { RarityImage } from "./RarityImage";
 import { FlowerHoverPreview } from "./FlowerHoverPreview";
@@ -96,6 +97,10 @@ export const GardenView: React.FC = () => {
   const [collectedSuns, setCollectedSuns] = useState<Set<number>>(new Set());
   const [bouquetSeedDrops, setBouquetSeedDrops] = useState<Record<number, {quantity: number, rarity: string}>>({});
   const [touchStart, setTouchStart] = useState<{fieldIndex: number, timer: NodeJS.Timeout} | null>(null);
+  
+  // Seed Reward Dialog State
+  const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
+  const [rewardData, setRewardData] = useState<{quantity: number; rarity: string} | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -637,18 +642,13 @@ export const GardenView: React.FC = () => {
         const data = await response.json();
         // Removed console.log to prevent duplicate notification display
         
-        // Show beautiful toast with seed information
+        // Show beautiful seed reward dialog
         if (data.seedDrop) {
           const { rarity, quantity } = data.seedDrop;
-          const rarityName = getRarityDisplayName(rarity as RarityTier);
           
-          // Store seed drop info for overlay display
-          setBouquetSeedDrops(prev => ({
-            ...prev,
-            [fieldIndex]: { quantity, rarity }
-          }));
-          
-          // Toast notification removed - user requested no more seed notifications
+          // Show the reward dialog
+          setRewardData({ quantity, rarity });
+          setIsRewardDialogOpen(true);
         }
         
         // Refresh all garden data
@@ -1279,6 +1279,14 @@ export const GardenView: React.FC = () => {
         fieldIndex={selectedFieldIndex}
         userBouquets={userBouquets}
         onPlaceBouquet={placeBouquet}
+      />
+
+      {/* Seed Reward Dialog */}
+      <SeedRewardDialog
+        isOpen={isRewardDialogOpen}
+        onClose={() => setIsRewardDialogOpen(false)}
+        quantity={rewardData?.quantity || 0}
+        rarity={rewardData?.rarity || 'common'}
       />
     </div>
   );
