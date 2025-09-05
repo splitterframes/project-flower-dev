@@ -160,17 +160,18 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   };
 
   const getSellPrice = (rarity: string): number => {
+    // Must match server-side rarityValues in sellExhibitionButterfly
     const prices = {
-      'common': 50,
-      'uncommon': 100,
-      'rare': 200,
-      'super-rare': 400,
-      'epic': 600,
-      'legendary': 800,
+      'common': 10,
+      'uncommon': 25,
+      'rare': 50,
+      'super-rare': 100,
+      'epic': 200,
+      'legendary': 500,
       'mythical': 1000,
       'vip': 2500  // VIP butterflies are extra valuable!
     };
-    return prices[rarity as keyof typeof prices] || 50;
+    return prices[rarity as keyof typeof prices] || 10;
   };
 
   const handleSell = async () => {

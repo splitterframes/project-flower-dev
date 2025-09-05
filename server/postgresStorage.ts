@@ -2235,10 +2235,7 @@ export class PostgresStorage {
       .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
 
     // Add credits
-    const user = await this.getUser(userId);
-    if (user) {
-      await this.updateUserCredits(userId, user.credits + creditsEarned);
-    }
+    await this.updateUserCredits(userId, creditsEarned);
 
     return { success: true, creditsEarned };
   }
