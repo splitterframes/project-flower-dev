@@ -837,8 +837,44 @@ export const TeichView: React.FC = () => {
     showNotification('Fisch platziert!', `${fishName} schwimmt im Teich umher!`, 'success');
   };
 
-  const collectFish = () => {
-    showNotification('Fisch gesammelt!', 'Der Fisch wurde erfolgreich gesammelt!', 'success');
+  const collectFish = async (fieldId: number) => {
+    if (!user) return;
+    
+    // Find the fish on this field (using correct 0-based index conversion)
+    const fishOnField = fieldFish.find(f => f.fieldIndex === fieldId - 1);
+    if (!fishOnField) {
+      console.log(`🐟 No fish found on field ${fieldId}`);
+      return;
+    }
+    
+    console.log(`🐟 Attempting to collect fish on field ${fieldId}`, fishOnField);
+    
+    try {
+      const response = await fetch('/api/garden/collect-field-fish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          fieldFishId: fishOnField.id  // Use the correct fish database ID
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🐟 Fisch erfolgreich gesammelt!');
+        showNotification('Fisch gesammelt!', data.message, 'success');
+        
+        // Refresh data to show updated state
+        fetchTeichData();
+      } else {
+        const errorData = await response.json();
+        console.error('Field fish collection failed:', errorData);
+        showNotification('Fehler', errorData.message || 'Fehler beim Sammeln des Fisches.', 'error');
+      }
+    } catch (error) {
+      console.error('Field fish collection error:', error);
+      showNotification('Fehler', 'Fehler beim Sammeln des Fisches.', 'error');
+    }
   };
 
   // Caterpillars spawn automatically when butterflies disappear, no manual placement
