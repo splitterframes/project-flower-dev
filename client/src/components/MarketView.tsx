@@ -672,7 +672,8 @@ export const MarketView: React.FC = () => {
                 )}
               </div>
             ) : (
-              <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
+              <div className="relative">
+                <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
                 {/* Item Type Selector */}
                 <div>
                   <Label>Was möchtest du verkaufen?</Label>
@@ -722,9 +723,9 @@ export const MarketView: React.FC = () => {
                     </select>
                   </div>
                 ) : (
-                  <div>
+                  <div className="relative">
                     <Label>Raupe auswählen</Label>
-                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ zIndex: 1, position: 'relative' }}>
+                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
                       {myCaterpillars.length === 0 ? (
                         <div className="text-center py-4 text-slate-400">
                           Keine Raupen verfügbar
@@ -765,7 +766,14 @@ export const MarketView: React.FC = () => {
                                       />
                                     </div>
                                   </HoverCardTrigger>
-                                  <HoverCardContent className="w-80 p-4 z-[60]">
+                                  <HoverCardContent 
+                                    className="w-80 p-4" 
+                                    side="right" 
+                                    align="center" 
+                                    sideOffset={15}
+                                    style={{ zIndex: 9999 }}
+                                    forceMount={false}
+                                  >
                                     <div className="flex flex-col space-y-3">
                                       {/* Großes Raupenbild */}
                                       <div className="flex justify-center">
@@ -894,6 +902,7 @@ export const MarketView: React.FC = () => {
                   {isLoading ? "Erstelle Angebot..." : "Angebot erstellen"}
                 </Button>
               </form>
+              </div>
             )}
           </CardContent>
         </Card>
