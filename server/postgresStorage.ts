@@ -4214,8 +4214,8 @@ export class PostgresStorage {
       const now = new Date().getTime();
       const timeSincePlacement = now - placedTime;
       
-      // Fish can be sold after 24 hours (vs 72 hours for butterflies)
-      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      // Fish can be sold after 1 minute (TEST MODE - normally 24 hours)
+      const TWENTY_FOUR_HOURS = 1 * 60 * 1000; // 1 minute for testing
       const timeRemaining = TWENTY_FOUR_HOURS - timeSincePlacement;
       
       return {
