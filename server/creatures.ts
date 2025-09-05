@@ -205,10 +205,10 @@ async function generateAvailableCaterpillarIds(): Promise<number[]> {
     const caterpillarDir = path.join(process.cwd(), 'client/public/Raupen');
     const files = await fs.readdir(caterpillarDir);
     
-    // Extract caterpillar numbers from xxx.png files
+    // Extract caterpillar numbers from xxx.jpg files (not png!)
     const ids: number[] = [];
     files.forEach(file => {
-      const match = file.match(/^(\d+)\.png$/i);
+      const match = file.match(/^(\d+)\.jpg$/i);
       if (match) {
         const id = parseInt(match[1]);
         if (!isNaN(id)) {
