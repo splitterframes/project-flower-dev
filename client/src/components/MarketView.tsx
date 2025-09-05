@@ -3,11 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
 import { getRarityColor, generateLatinCaterpillarName, type RarityTier } from "@shared/rarity";
+
+// getBorderColor helper function
+const getBorderColor = (rarity: RarityTier): string => {
+  switch (rarity) {
+    case 'common': return '#fbbf24';      // yellow-400
+    case 'uncommon': return '#4ade80';    // green-400  
+    case 'rare': return '#3b82f6';        // blue-400
+    case 'super-rare': return '#06b6d4';  // cyan-400
+    case 'epic': return '#a855f7';        // purple-400
+    case 'legendary': return '#f97316';   // orange-400
+    case 'mythical': return '#ef4444';    // red-400
+    default: return '#9ca3af';            // gray-400
+  }
+};
 import { 
   Store,
   TrendingUp,
@@ -447,18 +462,71 @@ export const MarketView: React.FC = () => {
                         {listing.itemType === 'seed' ? (
                           <span className="mr-2 text-2xl">{itemIcon}</span>
                         ) : (
-                          <div className="w-16 h-16 rounded-lg border-2 mr-3 bg-slate-700 flex-shrink-0 overflow-hidden shadow-md"
-                               style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
-                            <img
-                              src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
-                              alt={itemName}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg">🐛</div>';
-                              }}
-                            />
-                          </div>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <div className="w-16 h-16 rounded-lg border-2 mr-3 bg-slate-700 flex-shrink-0 overflow-hidden shadow-md cursor-pointer hover:scale-105 transition-transform"
+                                   style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
+                                <img
+                                  src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                                  alt={itemName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg">🐛</div>';
+                                  }}
+                                />
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80 p-4">
+                              <div className="flex flex-col space-y-3">
+                                {/* Großes Raupenbild */}
+                                <div className="flex justify-center">
+                                  <div className="w-32 h-32 rounded-xl border-4 bg-slate-700 overflow-hidden shadow-lg"
+                                       style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
+                                    <img
+                                      src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                                      alt={itemName}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">🐛</div>';
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Raupe-Details */}
+                                <div className="text-center space-y-2">
+                                  <h3 className="font-bold text-lg text-white">{itemName}</h3>
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <Star className={`h-5 w-5 ${getRarityColor(rarity as RarityTier)}`} />
+                                    <span className={`text-sm font-semibold ${getRarityColor(rarity as RarityTier)}`}>
+                                      {rarity?.toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <p className="text-slate-400 text-sm">
+                                    ID: {(listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0}
+                                  </p>
+                                  
+                                  {/* Preis-Infos */}
+                                  <div className="mt-3 p-3 bg-slate-800/50 rounded-lg">
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-slate-300">Anzahl:</span>
+                                      <span className="text-white font-medium">{listing.quantity}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm mt-1">
+                                      <span className="text-slate-300">Preis/Stück:</span>
+                                      <span className="text-orange-400 font-medium">{listing.pricePerUnit} Cr</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm mt-1 pt-2 border-t border-slate-600">
+                                      <span className="text-slate-300 font-medium">Gesamt:</span>
+                                      <span className="text-orange-400 font-bold">{listing.totalPrice} Cr</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
                         )}
                         <h4 className="font-bold text-white">
                           {itemName}
