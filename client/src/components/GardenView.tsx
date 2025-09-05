@@ -857,10 +857,14 @@ export const GardenView: React.FC = () => {
             <div className="flex items-center">
               <Sprout className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold">Garten Felder 🌿</span>
-              <HelpButton helpText="Hier pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen die regelmäßig spawnen!" />
             </div>
-            <div className="text-xs text-slate-400">
-              Links: Samen • Rechts: Bouquet
+            <div className="text-center">
+              <div className="text-xs text-slate-400">
+                Links: Samen • Rechts: Bouquet
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <HelpButton helpText="Hier pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen die regelmäßig spawnen!" />
             </div>
           </CardTitle>
         </CardHeader>
