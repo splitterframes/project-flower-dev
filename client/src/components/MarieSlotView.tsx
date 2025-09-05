@@ -177,13 +177,18 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       // Convert server response to final symbols - FIXED: Use exact symbols from server
       console.log('🎰 Server response:', data);
-      const finalSymbols = data.payline ? data.payline.map((symbolType: string) => {
-        return getRandomSymbolOfType(symbolType);
-      }) : data.reels.slice(0, 5).map((symbolType: string) => { // Fallback for old format
-        return getRandomSymbolOfType(symbolType);
+      console.log('🎰 Server payline:', data.payline);
+      
+      // Use the exact payline symbols from server (no random generation)
+      const paylineFromServer = data.payline || data.reels.slice(0, 5); // Fallback for old format
+      const finalSymbols = paylineFromServer.map((symbolType: string, index: number) => {
+        // Use first available symbol of this type (consistent display)
+        const typeSymbols = SYMBOLS.filter(s => s.type === symbolType);
+        return typeSymbols[0]; // Always use first symbol of type for consistency
       });
       
       console.log('🎰 Final symbols for display:', finalSymbols.map(s => s.type));
+      console.log('🎰 Exact payline should be:', paylineFromServer);
 
       // Create new spinning reels with final symbols
       const newReels = reels.map((reel, index) => ({
