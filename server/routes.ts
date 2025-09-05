@@ -2031,7 +2031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Fish inventory cleanup endpoint
-  app.post('/api/admin/cleanup-fish-duplicates', async (req, res) => {
+  app.get('/api/admin/cleanup-fish-duplicates', async (req, res) => {
     try {
       console.log('🧹 Starting fish inventory cleanup...');
       
