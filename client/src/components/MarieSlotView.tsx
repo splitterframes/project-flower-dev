@@ -61,7 +61,7 @@ const createSymbolPools = (): SlotSymbol[] => {
 
 const SYMBOLS = createSymbolPools();
 const REEL_HEIGHT = 384; // Height of visible reel area (60% höher)  
-const SYMBOL_HEIGHT = 80; // Height of each symbol - larger symbols
+const SYMBOL_HEIGHT = 128; // Height of each symbol (384px / 3 = 128px)
 const SYMBOLS_PER_REEL = 3; // Only show 3 symbols per reel
 const SYMBOLS_PER_DRUM = 15; // Total symbols per drum (5 symbols × 3 each)
 
@@ -271,7 +271,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 className="flex items-center justify-center border-b border-slate-600"
                 style={{ height: SYMBOL_HEIGHT }}
               >
-                <div className="relative w-24 h-24">
+                <div className="relative w-32 h-32">
                   <img
                     src={symbol.imageUrl}
                     alt={symbol.name}
@@ -306,9 +306,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       }
                       
                       target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                        <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="96" height="96" fill="${fallbackColor}" rx="12"/>
-                          <text x="48" y="65" text-anchor="middle" font-size="38" fill="white">${icon}</text>
+                        <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="128" height="128" fill="${fallbackColor}" rx="16"/>
+                          <text x="64" y="85" text-anchor="middle" font-size="48" fill="white">${icon}</text>
                         </svg>
                       `)}`;
                     }}
