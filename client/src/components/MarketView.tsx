@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
-import { getRarityColor, type RarityTier } from "@shared/rarity";
+import { getRarityColor, generateGermanButterflyName, type RarityTier } from "@shared/rarity";
 import { 
   Store,
   TrendingUp,
@@ -627,21 +627,76 @@ export const MarketView: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    <Label htmlFor="caterpillarSelect">Raupe auswählen</Label>
-                    <select
-                      id="caterpillarSelect"
-                      value={sellForm.caterpillarId}
-                      onChange={(e) => setSellForm({...sellForm, caterpillarId: Number(e.target.value), quantity: 1})}
-                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
-                      required
-                    >
-                      <option value={0}>-- Raupe wählen --</option>
-                      {myCaterpillars.map((caterpillar) => (
-                        <option key={caterpillar.id} value={caterpillar.id}>
-                          Raupe ID {caterpillar.id} (Seltenheit: {caterpillar.caterpillarRarity})
-                        </option>
-                      ))}
-                    </select>
+                    <Label>Raupe auswählen</Label>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {myCaterpillars.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400">
+                          Keine Raupen verfügbar
+                        </div>
+                      ) : (
+                        myCaterpillars.map((caterpillar) => {
+                          const caterpillarName = generateGermanButterflyName(caterpillar.caterpillarId || caterpillar.id);
+                          const isSelected = sellForm.caterpillarId === caterpillar.id;
+                          
+                          return (
+                            <div
+                              key={caterpillar.id}
+                              onClick={() => setSellForm({...sellForm, caterpillarId: caterpillar.id, quantity: 1})}
+                              className={`cursor-pointer rounded-lg p-3 border-2 transition-all duration-200 hover:scale-[1.02] ${
+                                isSelected 
+                                  ? `border-orange-400 bg-orange-400/20 shadow-lg` 
+                                  : `hover:border-slate-500 border-slate-600 bg-slate-800`
+                              }`}
+                              style={isSelected ? { borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) } : {}}
+                            >
+                              <div className="flex items-center space-x-3">
+                                {/* Raupe Bild */}
+                                <div 
+                                  className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden"
+                                  style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
+                                >
+                                  <img
+                                    src={`/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
+                                    alt={caterpillarName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      // Fallback zu einem Platzhalter wenn Bild nicht gefunden wird
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🐛</div>';
+                                    }}
+                                  />
+                                </div>
+                                
+                                {/* Raupe Info */}
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="font-bold text-white text-sm">{caterpillarName}</h4>
+                                    <div className="flex items-center">
+                                      <Star className={`h-3 w-3 mr-1 ${getRarityColor(caterpillar.caterpillarRarity as RarityTier)}`} />
+                                      <span className={`text-xs font-medium ${getRarityColor(caterpillar.caterpillarRarity as RarityTier)}`}>
+                                        {caterpillar.caterpillarRarity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    ID: {caterpillar.caterpillarId || caterpillar.id}
+                                  </div>
+                                </div>
+                                
+                                {/* Auswahl Indikator */}
+                                {isSelected && (
+                                  <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-orange-400 flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">✓</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 )}
 
