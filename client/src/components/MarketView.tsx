@@ -367,7 +367,7 @@ export const MarketView: React.FC = () => {
       </div>
 
       {/* Enhanced Market Tabs */}
-      <div className="flex justify-center space-x-4">
+      <div className="flex justify-center space-x-8">
         <Button
           variant={activeTab === "buy" ? "default" : "outline"}
           onClick={() => setActiveTab("buy")}
