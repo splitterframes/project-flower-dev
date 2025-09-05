@@ -203,32 +203,32 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         
         // Set new timeout to stop this reel
         animationRefs.current[reelIndex] = setTimeout(() => {
-          // Stoppe die Trommel
-          setReels(prevReels => {
-            const updatedReels = [...prevReels];
-            updatedReels[reelIndex] = {
-              ...updatedReels[reelIndex],
-              isSpinning: false,
-              position: updatedReels[reelIndex].targetPosition
-            };
-            return updatedReels;
-          });
-
-          // Rückstoss-Effekt beim Stoppen
+          // Rückstoss-Effekt kurz vor dem Stoppen (Trommel rutscht nach oben und fällt zurück)
           setRecoilStates(prev => {
             const newStates = [...prev];
             newStates[reelIndex] = true;
             return newStates;
           });
 
-          // Rückstoss nach 300ms wieder ausschalten
+          // Nach 400ms Rückstoss die Trommel stoppen
           setTimeout(() => {
+            setReels(prevReels => {
+              const updatedReels = [...prevReels];
+              updatedReels[reelIndex] = {
+                ...updatedReels[reelIndex],
+                isSpinning: false,
+                position: updatedReels[reelIndex].targetPosition
+              };
+              return updatedReels;
+            });
+
+            // Rückstoss ausschalten
             setRecoilStates(prev => {
               const newStates = [...prev];
               newStates[reelIndex] = false;
               return newStates;
             });
-          }, 300);
+          }, 400);
 
           // Check if all reels have stopped
           if (reelIndex === spinDurations.length - 1) {
