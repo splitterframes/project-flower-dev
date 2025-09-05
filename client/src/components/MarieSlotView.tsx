@@ -83,6 +83,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [lastWinMessage, setLastWinMessage] = useState('');
   const [isWinning, setIsWinning] = useState(false);
+  const [blinkCount, setBlinkCount] = useState(0);
   const animationRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
 
   const spinCost = 5;
@@ -162,7 +163,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       const data = await response.json();
       
       if (!response.ok) {
-        showNotification(data.message || 'Ein Fehler ist aufgetreten', 'error');
+        setLastWinMessage(data.message || 'Ein Fehler ist aufgetreten');
+        setIsWinning(false);
+        setBlinkCount(3); // Blink 3x for error
         setIsSpinning(false);
         return;
       }
@@ -225,10 +228,11 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   setCredits(prev => prev + data.reward.amount);
                 }
                 
-                showNotification(data.message, 'success');
+                setBlinkCount(3); // Blink 3x for win
               } else {
                 setLastWinMessage(data.message);
-                showNotification(data.message, 'info');
+                setIsWinning(false);
+                setBlinkCount(3); // Blink 3x for any result
               }
             }, 500);
           }
@@ -237,10 +241,23 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     } catch (error) {
       console.error('Error spinning slot machine:', error);
-      showNotification('Verbindungsfehler beim Slot-Spiel', 'error');
+      setLastWinMessage('Verbindungsfehler beim Slot-Spiel');
+      setIsWinning(false);
+      setBlinkCount(3); // Blink 3x for error
       setIsSpinning(false);
     }
   };
+
+  // Handle blinking animation
+  useEffect(() => {
+    if (blinkCount > 0) {
+      const timer = setTimeout(() => {
+        setBlinkCount(prev => prev - 1);
+      }, 500); // Blink every 500ms
+      
+      return () => clearTimeout(timer);
+    }
+  }, [blinkCount]);
 
   // Cleanup timeouts
   useEffect(() => {
@@ -387,8 +404,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 isWinning 
                   ? 'bg-green-800/50 border border-green-400 text-green-200' 
                   : 'bg-blue-800/50 border border-blue-400 text-blue-200'
-              }`}>
-                <div className={`text-lg font-bold ${isWinning ? 'animate-pulse' : ''}`}>
+              } ${blinkCount > 0 ? 'animate-pulse' : ''}`}>
+                <div className="text-lg font-bold">
                   {lastWinMessage}
                 </div>
               </div>
