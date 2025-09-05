@@ -2141,19 +2141,18 @@ export class PostgresStorage {
     const placedAt = new Date(butterfly[0].placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
-    // Base time: 1 minute for testing (normally 72 hours)
-    const baseTimeMs = 1 * 60 * 1000; // = 60,000 ms (TEST MODE)
+    // Base time: 72 hours for production
+    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
     
-    // Likes reduction: 1 minute per like in milliseconds  
-    const likesReductionMs = likesCount * 60 * 1000;
+    // Likes reduction: 1 hour per like in milliseconds  
+    const likesReductionMs = likesCount * 60 * 60 * 1000;
     
-    // Required time to sell = 72 hours - (likes * 1 minute)
+    // Required time to sell = 72 hours - (likes * 1 hour)
     const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
     
     // Time remaining = required time - elapsed time
     const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
     
-    console.log(`🕒 DEBUG Countdown: placed=${placedAt.toISOString()}, elapsed=${msElapsed}ms, required=${requiredTimeMs}ms, remaining=${remainingMs}ms, likes=${likesCount}`);
     
     return remainingMs;
   }
@@ -2262,28 +2261,24 @@ export class PostgresStorage {
     const placedAt = new Date(vipButterfly[0].placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
-    // Base time: 1 minute for testing (normally 72 hours)
-    const baseTimeMs = 1 * 60 * 1000; // = 60,000 ms (TEST MODE)
+    // Base time: 72 hours for production
+    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
     
-    // Likes reduction: 1 minute per like in milliseconds  
-    const likesReductionMs = likesCount * 60 * 1000;
+    // Likes reduction: 1 hour per like in milliseconds  
+    const likesReductionMs = likesCount * 60 * 60 * 1000;
     
-    // Required time to sell = 72 hours - (likes * 1 minute)
+    // Required time to sell = 72 hours - (likes * 1 hour)
     const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
     
     // Time remaining = required time - elapsed time
     const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
     
-    console.log(`🕒 VIP DEBUG Countdown: placed=${placedAt.toISOString()}, elapsed=${msElapsed}ms, required=${requiredTimeMs}ms, remaining=${remainingMs}ms, likes=${likesCount}`);
     
     return remainingMs;
   }
 
   async sellExhibitionVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
-    console.log(`💎 VIP SELL DEBUG: Attempting to sell VIP butterfly ${exhibitionVipButterflyId} for user ${userId}`);
-    
     const canSell = await this.canSellVipButterfly(userId, exhibitionVipButterflyId);
-    console.log(`💎 VIP SELL DEBUG: canSell = ${canSell}`);
     if (!canSell) {
       return { success: false, message: 'VIP Butterfly not ready for sale yet' };
     }
@@ -2293,14 +2288,7 @@ export class PostgresStorage {
       .from(exhibitionVipButterflies)
       .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
     
-    console.log(`💎 VIP SELL DEBUG: Found ${vipButterfly.length} VIP butterflies`);
     if (vipButterfly.length === 0) {
-      // Let's also check what VIP butterflies exist for this user
-      const allUserVips = await this.db
-        .select()
-        .from(exhibitionVipButterflies)
-        .where(eq(exhibitionVipButterflies.userId, userId));
-      console.log(`💎 VIP SELL DEBUG: User has ${allUserVips.length} VIP butterflies total:`, allUserVips.map(v => ({ id: v.id, name: v.vipButterflyName })));
       return { success: false, message: 'VIP Butterfly not found' };
     }
 

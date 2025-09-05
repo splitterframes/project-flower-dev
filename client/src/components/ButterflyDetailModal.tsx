@@ -91,7 +91,6 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
       try {
         // Use different endpoint for VIP butterflies
         const isVipButterfly = butterfly.isVip || butterfly.butterflyRarity === 'vip';
-        console.log(`🦋 STATUS DEBUG: butterfly.isVip=${butterfly.isVip}, rarity=${butterfly.butterflyRarity}, isVipButterfly=${isVipButterfly}`);
         
         const endpoint = isVipButterfly 
           ? `/api/exhibition/vip-butterfly/${butterfly.id}/sell-status`
@@ -190,7 +189,6 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     try {
       // Use different endpoint for VIP butterflies
       const isVipButterfly = butterfly.isVip || butterfly.butterflyRarity === 'vip';
-      console.log(`🦋 SELL DEBUG: butterfly.isVip=${butterfly.isVip}, rarity=${butterfly.butterflyRarity}, isVipButterfly=${isVipButterfly}`);
       
       const endpoint = isVipButterfly ? '/api/exhibition/sell-vip-butterfly' : '/api/exhibition/sell-butterfly';
       const bodyData = isVipButterfly 
