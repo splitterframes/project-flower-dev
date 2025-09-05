@@ -427,7 +427,7 @@ export const MarketView: React.FC = () => {
                 <p className="text-slate-400">Noch keine Angebote verfügbar</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {marketListings.map((listing) => {
                   const rarity = listing.itemType === 'seed' ? listing.seedRarity : listing.caterpillarRarity;
                   const itemName = listing.itemType === 'seed' 
@@ -447,7 +447,7 @@ export const MarketView: React.FC = () => {
                         {listing.itemType === 'seed' ? (
                           <span className="mr-2 text-2xl">{itemIcon}</span>
                         ) : (
-                          <div className="w-8 h-8 rounded border mr-3 bg-slate-700 flex-shrink-0 overflow-hidden"
+                          <div className="w-24 h-24 rounded-lg border-2 mr-4 bg-slate-700 flex-shrink-0 overflow-hidden shadow-lg"
                                style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
                             <img
                               src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
@@ -455,7 +455,7 @@ export const MarketView: React.FC = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-sm">🐛</div>';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🐛</div>';
                               }}
                             />
                           </div>
