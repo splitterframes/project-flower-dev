@@ -22,8 +22,14 @@ import { HelpButton } from './HelpButton';
 interface MarketListing {
   id: number;
   sellerUsername: string;
-  seedName: string;
-  seedRarity: string;
+  itemType: 'seed' | 'caterpillar';
+  // Seed fields
+  seedName?: string;
+  seedRarity?: string;
+  // Caterpillar fields
+  caterpillarId?: number;
+  caterpillarName?: string;
+  caterpillarRarity?: string;
   quantity: number;
   pricePerUnit: number;
   totalPrice: number;
@@ -46,6 +52,7 @@ export const MarketView: React.FC = () => {
   const [creditOffers, setCreditOffers] = useState<any[]>([]);
   const [sunOffers, setSunOffers] = useState<any[]>([]);
   const [mySeeds, setMySeeds] = useState<any[]>([]);
+  const [myCaterpillars, setMyCaterpillars] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"buy" | "sell" | "server">("buy");
   const [isLoading, setIsLoading] = useState(false);
   
@@ -64,7 +71,9 @@ export const MarketView: React.FC = () => {
   
   // Sell form state
   const [sellForm, setSellForm] = useState({
+    itemType: 'seed' as 'seed' | 'caterpillar',
     seedId: 0,
+    caterpillarId: 0,
     quantity: 1,
     pricePerUnit: 10
   });
@@ -74,6 +83,7 @@ export const MarketView: React.FC = () => {
       fetchMarketListings();
       fetchServerOffers();
       fetchMySeeds();
+      fetchMyCaterpillars();
     }
   }, [user]);
 
@@ -115,6 +125,19 @@ export const MarketView: React.FC = () => {
     }
   };
 
+  const fetchMyCaterpillars = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/caterpillars`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyCaterpillars(data.caterpillars || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my caterpillars:', error);
+    }
+  };
+
   const buyListing = async (listingId: number, quantity: number, totalCost: number) => {
     if (!user || credits < totalCost) {
       showNotification(`Du brauchst ${totalCost} Cr um dieses Angebot zu kaufen!`, 'warning');
@@ -136,6 +159,7 @@ export const MarketView: React.FC = () => {
         await updateCredits(user.id, -totalCost);
         await fetchMarketListings();
         await fetchMySeeds();
+        await fetchMyCaterpillars();
         showNotification('Kauf erfolgreich!', 'success');
       } else {
         const error = await response.json();
@@ -149,7 +173,9 @@ export const MarketView: React.FC = () => {
 
   const createListing = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !sellForm.seedId) return;
+    if (!user) return;
+    if (sellForm.itemType === 'seed' && !sellForm.seedId) return;
+    if (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId) return;
 
     setIsLoading(true);
     try {
@@ -165,7 +191,14 @@ export const MarketView: React.FC = () => {
       if (response.ok) {
         await fetchMarketListings();
         await fetchMySeeds();
-        setSellForm({ seedId: 0, quantity: 1, pricePerUnit: 10 });
+        await fetchMyCaterpillars();
+        setSellForm({ 
+          itemType: 'seed',
+          seedId: 0, 
+          caterpillarId: 0,
+          quantity: 1, 
+          pricePerUnit: 10 
+        });
         showNotification('Angebot erfolgreich erstellt!', 'success');
       } else {
         const error = await response.json();
@@ -387,22 +420,31 @@ export const MarketView: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {marketListings.map((listing) => (
-                  <div
-                    key={listing.id}
+                {marketListings.map((listing) => {
+                  const rarity = listing.itemType === 'seed' ? listing.seedRarity : listing.caterpillarRarity;
+                  const itemName = listing.itemType === 'seed' ? listing.seedName : `Raupe ID ${listing.caterpillarId}`;
+                  const itemIcon = listing.itemType === 'seed' ? '🌱' : '🐛';
+                  
+                  return (
+                    <div
+                      key={listing.id}
                     className="bg-slate-900 rounded-lg p-4 border-2"
-                    style={{ borderColor: getBorderColor(listing.seedRarity as RarityTier) }}
+                    style={{ borderColor: getBorderColor(rarity as RarityTier) }}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-white">{listing.seedName}</h4>
+                      <h4 className="font-bold text-white flex items-center">
+                        <span className="mr-2">{itemIcon}</span>
+                        {itemName}
+                      </h4>
                       <div className="flex items-center">
-                        <Star className={`h-4 w-4 mr-1 ${getRarityColor(listing.seedRarity as RarityTier)}`} />
-                        <span className={`text-xs ${getRarityColor(listing.seedRarity as RarityTier)}`}>
-                          {listing.seedRarity}
+                        <Star className={`h-4 w-4 mr-1 ${getRarityColor(rarity as RarityTier)}`} />
+                        <span className={`text-xs ${getRarityColor(rarity as RarityTier)}`}>
+                          {rarity}
                         </span>
                       </div>
                     </div>
                     <p className="text-slate-400 text-sm mb-3">Von: {listing.sellerUsername}</p>
+                    <p className="text-slate-300 text-xs mb-3">Typ: {listing.itemType === 'seed' ? 'Samen' : 'Raupe'}</p>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-slate-400">Menge:</span>
@@ -424,8 +466,9 @@ export const MarketView: React.FC = () => {
                     >
                       {isLoading ? "Kaufe..." : "Kaufen"}
                     </Button>
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </CardContent>
@@ -513,48 +556,110 @@ export const MarketView: React.FC = () => {
                 <div className="absolute inset-0 h-8 w-8 mr-3 text-orange-400 animate-ping opacity-30"></div>
               </div>
               <span className="text-3xl font-bold bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
-                Samen Verkaufen 💰
+                Items Verkaufen 💰
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {mySeeds.length === 0 ? (
+            {(sellForm.itemType === 'seed' && mySeeds.length === 0) || (sellForm.itemType === 'caterpillar' && myCaterpillars.length === 0) ? (
               <div className="text-center py-8">
-                <p className="text-slate-400">Du hast noch keine Samen zum Verkaufen</p>
-                <p className="text-slate-500 text-sm mt-2">Züchte Blumen im Garten um Samen zu erhalten</p>
+                {sellForm.itemType === 'seed' ? (
+                  <>
+                    <p className="text-slate-400">Du hast noch keine Samen zum Verkaufen</p>
+                    <p className="text-slate-500 text-sm mt-2">Züchte Blumen im Garten um Samen zu erhalten</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-slate-400">Du hast noch keine Raupen zum Verkaufen</p>
+                    <p className="text-slate-500 text-sm mt-2">Sammel Raupen am Teich um sie zu verkaufen</p>
+                  </>
+                )}
               </div>
             ) : (
               <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
+                {/* Item Type Selector */}
                 <div>
-                  <Label htmlFor="seedSelect">Samen auswählen</Label>
-                  <select
-                    id="seedSelect"
-                    value={sellForm.seedId}
-                    onChange={(e) => setSellForm({...sellForm, seedId: Number(e.target.value)})}
-                    className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
-                    required
-                  >
-                    <option value={0}>-- Samen wählen --</option>
-                    {mySeeds.map((seed) => (
-                      <option key={seed.id} value={seed.seedId}>
-                        {seed.seedName} (x{seed.quantity})
-                      </option>
-                    ))}
-                  </select>
+                  <Label>Was möchtest du verkaufen?</Label>
+                  <div className="flex space-x-4 mt-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="itemType"
+                        value="seed"
+                        checked={sellForm.itemType === 'seed'}
+                        onChange={(e) => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
+                        className="mr-2"
+                      />
+                      <span className="text-white">🌱 Samen</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="itemType"
+                        value="caterpillar"
+                        checked={sellForm.itemType === 'caterpillar'}
+                        onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0, quantity: 1})}
+                        className="mr-2"
+                      />
+                      <span className="text-white">🐛 Raupen</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="quantity">Menge</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    value={sellForm.quantity}
-                    onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
-                    className="bg-slate-900 border-slate-600 text-white"
-                    required
-                  />
-                </div>
+                {/* Item Selector based on type */}
+                {sellForm.itemType === 'seed' ? (
+                  <div>
+                    <Label htmlFor="seedSelect">Samen auswählen</Label>
+                    <select
+                      id="seedSelect"
+                      value={sellForm.seedId}
+                      onChange={(e) => setSellForm({...sellForm, seedId: Number(e.target.value)})}
+                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
+                      required
+                    >
+                      <option value={0}>-- Samen wählen --</option>
+                      {mySeeds.map((seed) => (
+                        <option key={seed.id} value={seed.seedId}>
+                          {seed.seedName} (x{seed.quantity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="caterpillarSelect">Raupe auswählen</Label>
+                    <select
+                      id="caterpillarSelect"
+                      value={sellForm.caterpillarId}
+                      onChange={(e) => setSellForm({...sellForm, caterpillarId: Number(e.target.value), quantity: 1})}
+                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
+                      required
+                    >
+                      <option value={0}>-- Raupe wählen --</option>
+                      {myCaterpillars.map((caterpillar) => (
+                        <option key={caterpillar.id} value={caterpillar.id}>
+                          Raupe ID {caterpillar.id} (Seltenheit: {caterpillar.caterpillarRarity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Quantity - disabled for caterpillars */}
+                {sellForm.itemType === 'seed' && (
+                  <div>
+                    <Label htmlFor="quantity">Menge</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      value={sellForm.quantity}
+                      onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
+                      className="bg-slate-900 border-slate-600 text-white"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="pricePerUnit">Preis pro Stück (Cr)</Label>
@@ -580,7 +685,7 @@ export const MarketView: React.FC = () => {
                 <Button
                   type="submit"
                   className="w-full bg-orange-600 hover:bg-orange-700"
-                  disabled={isLoading || !sellForm.seedId}
+                  disabled={isLoading || (sellForm.itemType === 'seed' && !sellForm.seedId) || (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId)}
                 >
                   {isLoading ? "Erstelle Angebot..." : "Angebot erstellen"}
                 </Button>

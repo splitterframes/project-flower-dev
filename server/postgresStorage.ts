@@ -578,48 +578,87 @@ export class PostgresStorage {
       .select({
         id: marketListings.id,
         sellerId: marketListings.sellerId,
+        itemType: marketListings.itemType,
         seedId: marketListings.seedId,
+        caterpillarId: marketListings.caterpillarId,
         quantity: marketListings.quantity,
         pricePerUnit: marketListings.pricePerUnit,
         createdAt: marketListings.createdAt,
         sellerUsername: users.username,
+        // Seed data (for seed listings)
         seedName: seeds.name,
-        seedRarity: seeds.rarity
+        seedRarity: seeds.rarity,
+        // Caterpillar data (for caterpillar listings) - we'll create a name and get rarity
       })
       .from(marketListings)
       .leftJoin(users, eq(marketListings.sellerId, users.id))
-      .leftJoin(seeds, eq(marketListings.seedId, seeds.id));
+      .leftJoin(seeds, eq(marketListings.seedId, seeds.id))
+      .leftJoin(userCaterpillars, eq(marketListings.caterpillarId, userCaterpillars.id));
     
     return listings;
   }
 
   async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
-    // Check if user has enough seeds
-    const userSeedsResult = await this.db
-      .select()
-      .from(userSeeds)
-      .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId)));
-    
-    if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < data.quantity) {
-      throw new Error('Insufficient seeds');
+    if (data.itemType === "seed") {
+      // Check if user has enough seeds
+      const userSeedsResult = await this.db
+        .select()
+        .from(userSeeds)
+        .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+      
+      if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient seeds');
+      }
+
+      // Create seed listing
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "seed",
+        seedId: data.seedId!,
+        caterpillarId: null,
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity
+      }).returning();
+
+      // Deduct seeds from seller
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: userSeedsResult[0].quantity - data.quantity })
+        .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+
+      return listing[0];
+    } else if (data.itemType === "caterpillar") {
+      // Check if user has the caterpillar
+      const caterpillarResult = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(eq(userCaterpillars.userId, sellerId), eq(userCaterpillars.id, data.caterpillarId!)));
+      
+      if (caterpillarResult.length === 0) {
+        throw new Error('Caterpillar not found');
+      }
+
+      // Create caterpillar listing (quantity always 1 for unique caterpillars)
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "caterpillar",
+        seedId: null,
+        caterpillarId: data.caterpillarId!,
+        quantity: 1, // Caterpillars are unique
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit
+      }).returning();
+
+      // Remove caterpillar from seller's inventory
+      await this.db
+        .delete(userCaterpillars)
+        .where(eq(userCaterpillars.id, data.caterpillarId!));
+
+      return listing[0];
+    } else {
+      throw new Error('Invalid item type');
     }
-
-    // Create listing
-    const listing = await this.db.insert(marketListings).values({
-      sellerId,
-      seedId: data.seedId,
-      quantity: data.quantity,
-      pricePerUnit: data.pricePerUnit,
-      totalPrice: data.pricePerUnit * data.quantity
-    }).returning();
-
-    // Deduct seeds from seller
-    await this.db
-      .update(userSeeds)
-      .set({ quantity: userSeedsResult[0].quantity - data.quantity })
-      .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId)));
-
-    return listing[0];
   }
 
   async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
@@ -640,14 +679,64 @@ export class PostgresStorage {
       return { success: false, message: 'Insufficient credits' };
     }
 
-    // Process purchase
-    await this.db
-      .update(users)
-      .set({ credits: buyer.credits - totalPrice })
-      .where(eq(users.id, buyerId));
+    // Process purchase based on item type
+    if (listing[0].itemType === "seed") {
+      // Add seller credits
+      const seller = await this.getUser(listing[0].sellerId);
+      if (seller) {
+        await this.db
+          .update(users)
+          .set({ credits: seller.credits + totalPrice })
+          .where(eq(users.id, listing[0].sellerId));
+      }
 
-    // Add seeds to buyer
-    await this.addSeedToInventory(buyerId, listing[0].seedId, data.quantity);
+      // Deduct buyer credits
+      await this.db
+        .update(users)
+        .set({ credits: buyer.credits - totalPrice })
+        .where(eq(users.id, buyerId));
+
+      // Add seeds to buyer
+      await this.addSeedToInventory(buyerId, listing[0].seedId, data.quantity);
+
+    } else if (listing[0].itemType === "caterpillar") {
+      // For caterpillars, quantity is always 1
+      if (data.quantity !== 1) {
+        return { success: false, message: 'Caterpillars can only be purchased one at a time' };
+      }
+
+      // Get the original caterpillar data from the listing
+      const caterpillarData = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(eq(userCaterpillars.id, listing[0].caterpillarId!))
+        .limit(1);
+
+      if (caterpillarData.length === 0) {
+        return { success: false, message: 'Caterpillar data not found' };
+      }
+
+      // Add seller credits
+      const seller = await this.getUser(listing[0].sellerId);
+      if (seller) {
+        await this.db
+          .update(users)
+          .set({ credits: seller.credits + totalPrice })
+          .where(eq(users.id, listing[0].sellerId));
+      }
+
+      // Deduct buyer credits
+      await this.db
+        .update(users)
+        .set({ credits: buyer.credits - totalPrice })
+        .where(eq(users.id, buyerId));
+
+      // Transfer caterpillar to buyer
+      await this.db
+        .update(userCaterpillars)
+        .set({ userId: buyerId })
+        .where(eq(userCaterpillars.id, listing[0].caterpillarId!));
+    }
 
     // Update listing quantity or remove
     if (listing[0].quantity > data.quantity) {

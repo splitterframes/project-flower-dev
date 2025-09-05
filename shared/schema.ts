@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -34,7 +34,9 @@ export const userSeeds = pgTable("user_seeds", {
 export const marketListings = pgTable("market_listings", {
   id: serial("id").primaryKey(),
   sellerId: integer("seller_id").notNull().references(() => users.id),
-  seedId: integer("seed_id").notNull().references(() => seeds.id),
+  itemType: varchar("item_type", { length: 20 }).notNull().default("seed"), // "seed" | "caterpillar"
+  seedId: integer("seed_id").references(() => seeds.id), // Optional for caterpillars
+  caterpillarId: integer("caterpillar_id").references(() => userCaterpillars.id), // For caterpillar listings
   quantity: integer("quantity").notNull(),
   pricePerUnit: integer("price_per_unit").notNull(),
   totalPrice: integer("total_price").notNull(),
@@ -54,9 +56,18 @@ export const loginSchema = z.object({
 });
 
 export const createMarketListingSchema = z.object({
-  seedId: z.number().min(1),
+  itemType: z.enum(["seed", "caterpillar"]).default("seed"),
+  seedId: z.number().min(1).optional(), // Optional for caterpillars
+  caterpillarId: z.number().min(1).optional(), // Optional for seeds
   quantity: z.number().min(1),
   pricePerUnit: z.number().min(1),
+}).refine(data => {
+  // Ensure either seedId or caterpillarId is provided based on itemType
+  if (data.itemType === "seed") return data.seedId !== undefined;
+  if (data.itemType === "caterpillar") return data.caterpillarId !== undefined;
+  return false;
+}, {
+  message: "seedId is required for seed listings, caterpillarId is required for caterpillar listings"
 });
 
 export const buyListingSchema = z.object({
