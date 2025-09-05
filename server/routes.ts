@@ -2229,11 +2229,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message = "🌞 2 gleiche Symbole! Du gewinnst 5 Sonnen!";
           console.log(`🎰 Rewarded 5 suns to user ${userId}`);
         } else if (maxCount === 3) {
-          // 3 matching = 3 super-rare seeds
-          await storage.addSeedToInventory(userId, 'super-rare', 3);
-          reward = { type: 'seeds', rarity: 'super-rare', amount: 3 };
-          message = "🌱 3 gleiche Symbole! Du gewinnst 3 super-seltene Samen!";
-          console.log(`🎰 Rewarded 3 super-rare seeds to user ${userId}`);
+          // 3 matching = 1 uncommon seed
+          await storage.addSeedToInventory(userId, 'uncommon', 1);
+          reward = { type: 'seeds', rarity: 'uncommon', amount: 1 };
+          message = "🌱 3 gleiche Symbole! Du gewinnst 1 uncommon Samen!";
+          console.log(`🎰 Rewarded 1 uncommon seed to user ${userId}`);
         } else if (maxCount === 4) {
           // 4 matching = epic butterfly
           const butterflyResult = await storage.addButterflyToInventory(userId, 'epic', 1);

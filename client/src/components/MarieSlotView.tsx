@@ -181,8 +181,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       setReels(newReels);
 
-      // Start spinning animations - each reel stops after a delay
-      const spinDurations = [2000, 2300, 2600, 2900, 3200]; // Staggered stopping times
+      // Start spinning animations - each reel stops after a delay (longer spinning)
+      const spinDurations = [3000, 3500, 4000, 4500, 5000]; // Longer staggered stopping times
       
       spinDurations.forEach((duration, reelIndex) => {
         // Clear any existing timeout
@@ -431,7 +431,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </div>
                   <div className="text-center">
                     <Badge className="bg-blue-600 mb-2">3 Gleiche</Badge>
-                    <div>3 Super-Rare Samen</div>
+                    <div>1 Uncommon Samen</div>
                   </div>
                   <div className="text-center">
                     <Badge className="bg-purple-600 mb-2">4 Gleiche</Badge>
