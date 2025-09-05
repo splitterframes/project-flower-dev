@@ -3389,13 +3389,34 @@ export class PostgresStorage {
    */
   async spawnFishOnField(userId: number, pondFieldIndex: number, customRarity?: string): Promise<{ fishName: string, fishRarity: RarityTier }> {
     try {
-      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId}${customRarity ? ` with custom rarity: ${customRarity}` : ''}`);
+      console.log(`🐟 SPAWNING FISH: field ${pondFieldIndex} for user ${userId}${customRarity ? ` with custom rarity: ${customRarity}` : ''}`);
+      
+      // Check if a fish already exists on this field and remove it first
+      const existingFish = await this.db
+        .select()
+        .from(fieldFish)
+        .where(and(
+          eq(fieldFish.userId, userId),
+          eq(fieldFish.fieldIndex, pondFieldIndex)
+        ))
+        .limit(1);
+      
+      if (existingFish.length > 0) {
+        console.log(`🐟 WARNING: Fish already exists on field ${pondFieldIndex}, removing old fish first`);
+        await this.db
+          .delete(fieldFish)
+          .where(and(
+            eq(fieldFish.userId, userId),
+            eq(fieldFish.fieldIndex, pondFieldIndex)
+          ));
+        console.log(`🐟 Removed existing fish from field ${pondFieldIndex}`);
+      }
       
       // Use custom rarity if provided, otherwise generate random
       const rarity = (customRarity as RarityTier) || getRandomCreatureRarity();
       const fishData = await generateRandomFish(rarity);
       
-      console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id}`);
+      console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id} for field ${pondFieldIndex}`);
       
       // Spawn fish on field first (not directly in inventory)
       await this.db.insert(fieldFish).values({
@@ -3409,7 +3430,7 @@ export class PostgresStorage {
         isShrinking: false
       });
       
-      console.log(`🐟 Successfully spawned ${fishData.name} (${rarity}) on pond field ${pondFieldIndex}`);
+      console.log(`🐟 ✅ FISH SPAWNED SUCCESSFULLY: ${fishData.name} (${rarity}) on pond field ${pondFieldIndex}`);
       return { fishName: fishData.name, fishRarity: rarity };
       
     } catch (error) {
