@@ -1043,6 +1043,53 @@ export class PostgresStorage {
     return result;
   }
 
+  async addButterflyToInventory(userId: number, rarity: RarityTier, quantity: number = 1): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    try {
+      console.log(`🦋 Adding ${quantity} butterfly(s) of rarity ${rarity} to user ${userId} inventory`);
+      
+      // Generate random butterfly using the existing system
+      const { generateRandomButterfly } = await import('./bouquet');
+      const butterflyData = await generateRandomButterfly(rarity);
+      
+      // Check if user already has this butterfly type
+      const existing = await this.db
+        .select()
+        .from(userButterflies)
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyData.id)));
+
+      let result: UserButterfly;
+      
+      if (existing.length > 0) {
+        // Increase quantity
+        console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + quantity}`);
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existing[0].quantity + quantity })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyData.id)))
+          .returning();
+        result = updated[0];
+      } else {
+        // Add new butterfly to inventory  
+        console.log(`🦋 Adding new butterfly to inventory`);
+        const newButterfly = await this.db.insert(userButterflies).values({
+          userId,
+          butterflyId: butterflyData.id,
+          butterflyName: butterflyData.name,
+          butterflyRarity: rarity,
+          butterflyImageUrl: butterflyData.imageUrl,
+          quantity
+        }).returning();
+        result = newButterfly[0];
+      }
+
+      console.log(`🦋 Successfully added butterfly: ${result.butterflyName} (${rarity}) to user ${userId}`);
+      return { success: true, butterfly: result };
+    } catch (error) {
+      console.error('🦋 Error adding butterfly to inventory:', error);
+      return { success: false };
+    }
+  }
+
   // VIP Butterfly methods
   async getUserVipButterflies(userId: number): Promise<UserVipButterfly[]> {
     const result = await this.db

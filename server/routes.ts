@@ -814,6 +814,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add butterflies to user inventory (for testing/admin purposes)
+  app.post("/api/user/:id/add-butterfly", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { rarity = 'common', quantity = 1 } = req.body;
+      
+      // Validate rarity
+      const validRarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+      if (!validRarities.includes(rarity)) {
+        return res.status(400).json({ 
+          message: "Invalid rarity", 
+          validRarities 
+        });
+      }
+
+      // Validate quantity
+      if (typeof quantity !== 'number' || quantity < 1 || quantity > 10) {
+        return res.status(400).json({ 
+          message: "Quantity must be a number between 1 and 10" 
+        });
+      }
+
+      console.log(`🦋 Adding ${quantity} ${rarity} butterfly(s) to user ${userId}`);
+      const result = await storage.addButterflyToInventory(userId, rarity as any, quantity);
+      
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          message: `${quantity} ${rarity} Schmetterling(e) hinzugefügt!`,
+          butterfly: result.butterfly
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Fehler beim Hinzufügen des Schmetterlings" 
+        });
+      }
+    } catch (error) {
+      console.error('🦋 Error adding butterfly to inventory:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Fish collection endpoints
   app.get("/api/user/:id/fish", async (req, res) => {
     try {
