@@ -635,7 +635,7 @@ export const MarketView: React.FC = () => {
                         </div>
                       ) : (
                         myCaterpillars.map((caterpillar) => {
-                          const caterpillarName = generateLatinCaterpillarName(caterpillar.caterpillarId || caterpillar.id);
+                          const caterpillarName = caterpillar.caterpillarName || generateLatinCaterpillarName(caterpillar.caterpillarId || caterpillar.id);
                           const isSelected = sellForm.caterpillarId === caterpillar.id;
                           
                           return (
@@ -656,7 +656,7 @@ export const MarketView: React.FC = () => {
                                   style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
                                 >
                                   <img
-                                    src={`/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
+                                    src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
                                     alt={caterpillarName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
