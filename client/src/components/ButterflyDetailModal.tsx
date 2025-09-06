@@ -182,6 +182,50 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     return prices[rarity as keyof typeof prices] || 10;
   };
 
+  // Calculate current Cr/h based on degradation over 72 hours
+  const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string): number => {
+    if (isVip || rarity === 'vip') {
+      // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+      const startValue = 60;
+      const minValue = 6;
+      return calculateDegradedValue(startValue, minValue, placedAt);
+    }
+
+    const rarityValues = {
+      'common': { start: 1, min: 1 },       // No degradation for Common
+      'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+      'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+      'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+      'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+      'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+      'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+    };
+
+    const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
+    return calculateDegradedValue(values.start, values.min, placedAt);
+  };
+
+  // Calculate degraded value over 72 hours
+  const calculateDegradedValue = (startValue: number, minValue: number, placedAt?: string): number => {
+    if (!placedAt) return startValue;
+
+    const placedTime = new Date(placedAt).getTime();
+    const now = new Date().getTime();
+    const timeSincePlacement = now - placedTime;
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
+      const valueRange = startValue - minValue;
+      const currentValue = startValue - (valueRange * degradationProgress);
+      return Math.max(Math.round(currentValue), minValue);
+    }
+
+    // After 72 hours, return minimum value
+    return minValue;
+  };
+
   const handleSell = async () => {
     if (!butterfly || !canSell) return;
 
@@ -496,6 +540,17 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                     </div>
                     <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-lg px-4 py-2 font-bold">
                       {sellPrice} Credits
+                    </Badge>
+                  </div>
+
+                  {/* Passive Income Display */}
+                  <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/20 rounded-lg">
+                    <div className="flex items-center">
+                      <Timer className="h-5 w-5 mr-3 text-purple-400" />
+                      <span className="text-base font-semibold text-purple-200">Passives Einkommen:</span>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-base px-3 py-1 font-bold">
+                      {getCurrentCrPerHour(butterfly.butterflyRarity, butterfly.isVip, butterfly.placedAt)} Cr/h
                     </Badge>
                   </div>
 
