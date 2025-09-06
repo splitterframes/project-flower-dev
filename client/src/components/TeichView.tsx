@@ -809,18 +809,29 @@ export const TeichView: React.FC = () => {
     }
 
     try {
-      console.log("🌸 PLACEFLOWER: Creating temporary flower (NO database save)");
+      console.log("🌸 PLACEFLOWER: Starting with API call to consume flower from server inventory");
       
-      // ✅ FIX: Update local state - reduce FLOWER quantity, not butterfly
-      setUserFlowers(prev => 
-        prev.map(f => 
-          f.id === flowerId 
-            ? { ...f, quantity: Math.max(0, f.quantity - 1) }
-            : f
-        )
-      );
+      // ✅ FIXED: First remove flower from server inventory
+      const flowerResponse = await fetch('/api/garden/place-flower-on-field', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          fieldIndex: selectedField - 1,
+          flowerId: flowerId
+        })
+      });
 
-      // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (NO database save)
+      if (!flowerResponse.ok) {
+        const errorData = await flowerResponse.json();
+        throw new Error(errorData.message || 'Failed to place flower');
+      }
+
+      console.log("🌸 PLACEFLOWER: Server inventory updated, flower consumed ✅");
+
+      // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (temporary visual only)
       // Add temporary visual flower that will spawn a caterpillar
       const tempFlowerId = Date.now();
       setPlacedFlowers(prev => [...prev, {
