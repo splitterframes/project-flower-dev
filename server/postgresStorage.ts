@@ -5014,7 +5014,7 @@ export class PostgresStorage {
   }
 
   private getFishSellPrice(rarity: string): number {
-    // Fish prices are 40% of butterfly prices (doubled from 20%)
+    // Fish prices - Marie Posa pays 50% of market value
     const basePrice = (() => {
       switch (rarity) {
         case 'common': return 100;
@@ -5022,13 +5022,13 @@ export class PostgresStorage {
         case 'rare': return 800;
         case 'super-rare': return 2000;
         case 'epic': return 5000;
-        case 'legendary': return 12000;
-        case 'mythical': return 30000;
+        case 'legendary': return 9000;  // Updated to user's price
+        case 'mythical': return 15000;  // Updated to user's price
         default: return 100;
       }
     })();
     
-    return Math.floor(basePrice * 0.4); // 40% of butterfly prices
+    return Math.floor(basePrice * 0.5); // Marie Posa pays 50% of market value
   }
 
   private getCaterpillarSellPrice(rarity: string): number {

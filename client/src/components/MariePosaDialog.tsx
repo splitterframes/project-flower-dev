@@ -68,8 +68,8 @@ const getItemPrice = (type: string, rarity: number): number => {
         'rare': 800,
         'super-rare': 2000,
         'epic': 5000,
-        'legendary': 12000,
-        'mythical': 30000
+        'legendary': 9000,   // Updated to user's price
+        'mythical': 15000    // Updated to user's price
       };
       return fishPrices[rarityTier as keyof typeof fishPrices] || 100;
     }
