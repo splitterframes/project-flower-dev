@@ -1006,12 +1006,25 @@ export class PostgresStorage {
       // Add item to buyer's inventory based on type
       switch (listing.itemType) {
         case "seed":
-          // Create seed inventory directly using copied data from listing
-          await this.db.insert(userSeeds).values({
-            userId: buyerId,
-            seedId: listing.seedId || 0,
-            quantity: quantity
-          });
+          // Check if user already has this seed type
+          const existingSeed = await this.db.select()
+            .from(userSeeds)
+            .where(and(eq(userSeeds.userId, buyerId), eq(userSeeds.seedId, listing.seedId || 0)))
+            .limit(1);
+          
+          if (existingSeed.length > 0) {
+            // Update existing seed quantity
+            await this.db.update(userSeeds)
+              .set({ quantity: existingSeed[0].quantity + quantity })
+              .where(eq(userSeeds.id, existingSeed[0].id));
+          } else {
+            // Create new seed entry
+            await this.db.insert(userSeeds).values({
+              userId: buyerId,
+              seedId: listing.seedId || 0,
+              quantity: quantity
+            });
+          }
           break;
           
         case "caterpillar":
