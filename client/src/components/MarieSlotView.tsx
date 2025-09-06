@@ -17,44 +17,57 @@ interface SlotSymbol {
   name: string;
 }
 
-// Create symbol pools - only 5 specific symbols for slot machine with random images
+// Create symbol pools - SIMPLE & SAFE - use only guaranteed existing images
 const createSymbolPools = (): SlotSymbol[] => {
-  // Generate random IDs for each symbol type based on ACTUAL available images
-  const randomCaterpillarId = Math.floor(Math.random() * 124); // 0-123 (124 images)
-  const randomFlowerId = Math.floor(Math.random() * 202); // 0-201 (202 images) 
-  const randomButterflyId = Math.floor(Math.random() * 961); // 0-960 (961 images)
-  const randomFishId = Math.floor(Math.random() * 224); // 0-223 (224 images)
+  // Use only guaranteed safe image IDs that definitely exist
+  const safeIds = {
+    caterpillar: [0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22],
+    flower: [0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22],
+    butterfly: [0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22],
+    fish: [0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22]
+  };
+  
+  // Pick random from safe lists
+  const randomCaterpillarId = safeIds.caterpillar[Math.floor(Math.random() * safeIds.caterpillar.length)];
+  const randomFlowerId = safeIds.flower[Math.floor(Math.random() * safeIds.flower.length)];
+  const randomButterflyId = safeIds.butterfly[Math.floor(Math.random() * safeIds.butterfly.length)];
+  const randomFishId = safeIds.fish[Math.floor(Math.random() * safeIds.fish.length)];
   
   const symbols: SlotSymbol[] = [
-    // Sun symbol (new 5th symbol) - will use fallback
+    // Sun symbol - simple colored square
     {
       id: 'sun',
       type: 'sun',
-      imageUrl: '/nonexistent/sun.jpg', // Intentionally use fallback
+      imageUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+        <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="160" fill="#f59e0b" rx="20"/>
+          <text x="80" y="105" text-anchor="middle" font-size="80" fill="white">☀️</text>
+        </svg>
+      `)}`,
       name: 'Sonne'
     },
-    // Random caterpillar - NO PADDING in filename
+    // Safe caterpillar
     {
       id: `caterpillar-${randomCaterpillarId}`,
       type: 'caterpillar', 
       imageUrl: `/Raupen/${randomCaterpillarId}.jpg`,
       name: 'Raupe'
     },
-    // Random flower - NO PADDING in filename
+    // Safe flower
     {
       id: `flower-${randomFlowerId}`,
       type: 'flower',
       imageUrl: `/Blumen/${randomFlowerId}.jpg`, 
       name: 'Blume'
     },
-    // Random butterfly - NO PADDING in filename
+    // Safe butterfly
     {
       id: `butterfly-${randomButterflyId}`,
       type: 'butterfly',
       imageUrl: `/Schmetterlinge/${randomButterflyId}.jpg`,
       name: 'Schmetterling'
     },
-    // Random fish - NO PADDING in filename
+    // Safe fish
     {
       id: `fish-${randomFishId}`,
       type: 'fish',
@@ -63,7 +76,7 @@ const createSymbolPools = (): SlotSymbol[] => {
     }
   ];
   
-  console.log('🎰 Mari-Slot: Generated random symbols:', {
+  console.log('🎰 Mari-Slot: Using SAFE symbols:', {
     caterpillar: randomCaterpillarId,
     flower: randomFlowerId, 
     butterfly: randomButterflyId,
@@ -347,74 +360,10 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     alt={symbol.name}
                     className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // Robust fallback system - prevent multiple calls
+                      console.error('🎰 Image failed to load:', symbol.imageUrl);
+                      // This shouldn't happen with safe IDs, but just in case
                       const target = e.target as HTMLImageElement;
-                      
-                      // Prevent infinite onError loops
-                      if (target.getAttribute('data-fallback-used') === 'true') {
-                        // Ultimate fallback: colored rectangle with type-specific colors and text
-                        let bgColor = '#374151';
-                        let textColor = '#ffffff';
-                        let text = '?';
-                        
-                        switch(symbol.type) {
-                          case 'butterfly':
-                            bgColor = '#7c3aed';
-                            text = 'S';
-                            break;
-                          case 'fish':
-                            bgColor = '#0ea5e9';
-                            text = 'F';
-                            break;
-                          case 'caterpillar':
-                            bgColor = '#16a34a';
-                            text = 'R';
-                            break;
-                          case 'flower':
-                            bgColor = '#dc2626';
-                            text = 'B';
-                            break;
-                          case 'sun':
-                            bgColor = '#f59e0b';
-                            text = '☀';
-                            break;
-                        }
-                        
-                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="160" height="160" fill="${bgColor}" rx="20"/>
-                            <text x="80" y="105" text-anchor="middle" font-size="60" fill="${textColor}" font-weight="bold">${text}</text>
-                          </svg>
-                        `)}`;
-                        return;
-                      }
-                      
-                      // Mark that we're using fallback
-                      target.setAttribute('data-fallback-used', 'true');
-                      
-                      // Try 0.jpg as first fallback
-                      switch(symbol.type) {
-                        case 'butterfly':
-                          target.src = '/Schmetterlinge/0.jpg';
-                          break;
-                        case 'fish':
-                          target.src = '/Fische/0.jpg';
-                          break;
-                        case 'caterpillar':
-                          target.src = '/Raupen/0.jpg';
-                          break;
-                        case 'flower':
-                          target.src = '/Blumen/0.jpg';
-                          break;
-                        case 'sun':
-                          // Sun emoji positioned lower in frame
-                          target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                            <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <text x="80" y="130" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
-                            </svg>
-                          `)}`;
-                          break;
-                      }
+                      target.style.display = 'none';
                     }}
                   />
                   {/* Glow effect for spinning */}
