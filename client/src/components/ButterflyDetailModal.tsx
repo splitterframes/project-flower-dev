@@ -478,7 +478,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                     <div className="border-t border-slate-600 pt-4">
                       <div className="flex items-center mb-3">
                         <Sun className="h-5 w-5 mr-2 text-yellow-400" />
-                        <span className="text-lg font-semibold text-yellow-300">☀️ Sonnen-Boost</span>
+                        <span className="text-lg font-semibold text-yellow-300">Sonnen-Boost</span>
                       </div>
                       
                       <div className="text-sm text-slate-400 mb-3">
@@ -569,7 +569,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                         ? "Verkaufe..." 
                         : canSell 
                           ? `💰 Für ${sellPrice} Credits verkaufen`
-                          : "🕐 Noch nicht verkaufbar"
+                          : "Noch nicht verkaufbar"
                       }
                     </div>
                   </Button>
