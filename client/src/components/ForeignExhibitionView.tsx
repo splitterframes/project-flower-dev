@@ -400,8 +400,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     </CardHeader>
                     <CardContent>
                       {/* Butterfly Display Grid */}
-                      <div className="grid grid-cols-5 gap-2 h-[600px]">
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((slotIndex) => {
+                      <div className="grid grid-cols-3 gap-2 h-[720px]">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((slotIndex) => {
                           const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex) ||
                                           frameVipButterflies.find(b => b.slotIndex === slotIndex);
                           
