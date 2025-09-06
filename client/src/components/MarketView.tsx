@@ -584,7 +584,7 @@ export const MarketView: React.FC = () => {
                           </div>
                         ) : listing.itemType === 'caterpillar' ? (
                           <img
-                            src={listing.caterpillarImageUrl || `/Raupen/${(listing.caterpillarIdOriginal || listing.caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                            src={listing.caterpillarImageUrl || `/Raupen/${(listing.caterpillarIdOriginal || listing.caterpillarId || 0)}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
