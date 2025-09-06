@@ -329,6 +329,7 @@ export const TeichView: React.FC = () => {
 
   const fetchTeichData = async () => {
     if (!user) return;
+    console.log("🌸 FETCHTEICHDATA: Starting to fetch pond data...");
 
     try {
       // Fetch pond-specific data including feeding progress
@@ -423,6 +424,7 @@ export const TeichView: React.FC = () => {
         setSunSpawns([]); // No sun spawns in pond view
         setUserButterflies(butterfliesData.butterflies || []);
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
+        console.log("🌸 FETCHTEICHDATA: Setting userFlowers to:", flowersData.flowers);
         setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
       }
     } catch (error) {
@@ -1256,6 +1258,7 @@ export const TeichView: React.FC = () => {
                         
                         // Blumen-Auswahl Dialog öffnen für neue pond system (nur wenn keine Raupe da ist)
                         console.log("🌸 Debug: userFlowers.length =", userFlowers.length, "userButterflies.length =", userButterflies.length);
+        console.log("🌸 Debug: Full userFlowers =", userFlowers);
                         if (!isCollectingCaterpillar && userFlowers.length > 0) {
                           console.log("🌸 Opening flower selection for field", field.id, "with", userFlowers.length, "flowers");
                           setSelectedField(field.id);
