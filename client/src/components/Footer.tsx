@@ -1,5 +1,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { 
+  Flower,
+  Package,
+  Flower2,
+  Trophy,
+  Store,
+  Zap,
+  Waves,
+  Fish,
+  Coins
+} from "lucide-react";
 
 interface FooterProps {
   activeView: string;
@@ -8,15 +19,15 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   const navigationItems = [
-    { id: "garten", label: "Garten", emoji: "🌻" },
-    { id: "teich", label: "Teich", emoji: "🌊" },
-    { id: "markt", label: "Markt", emoji: "🏪" },
-    { id: "inventar", label: "Inventar", emoji: "📦" },
-    { id: "bouquets", label: "Bouquets", emoji: "💐" },
-    { id: "flowerpower", label: "Flowerpower", emoji: "⚡" },
-    { id: "ausstellung", label: "Ausstellung", emoji: "🏆" },
-    { id: "aquarium", label: "Aquarium", emoji: "🐠" },
-    { id: "marie-slot", label: "Marie-Slot", emoji: "🪙" },
+    { id: "garten", label: "Garten", icon: Flower },
+    { id: "teich", label: "Teich", icon: Waves },
+    { id: "markt", label: "Markt", icon: Store },
+    { id: "inventar", label: "Inventar", icon: Package },
+    { id: "bouquets", label: "Bouquets", icon: Flower2 },
+    { id: "flowerpower", label: "Flowerpower", icon: Zap },
+    { id: "ausstellung", label: "Ausstellung", icon: Trophy },
+    { id: "aquarium", label: "Aquarium", icon: Fish },
+    { id: "marie-slot", label: "Marie-Slot", icon: Coins },
   ];
 
   return (
@@ -24,6 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
       <div className="flex justify-center">
         <div className="flex space-x-1 sm:space-x-2 w-full max-w-md justify-between sm:justify-center">
           {navigationItems.map((item) => {
+            const Icon = item.icon;
             const isActive = activeView === item.id;
             
             return (
@@ -38,7 +50,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
                     : "text-slate-400 hover:text-white hover:bg-slate-800"
                 } flex-1 sm:flex-none`}
               >
-                <span className="text-lg">{item.emoji}</span>
+                <Icon className="h-4 w-4" />
                 <span className="text-xs sm:text-sm">{item.label}</span>
               </Button>
             );
