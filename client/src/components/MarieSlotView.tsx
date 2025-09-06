@@ -34,16 +34,11 @@ const createSymbolPools = (): SlotSymbol[] => {
   const randomFishId = safeIds.fish[Math.floor(Math.random() * safeIds.fish.length)];
   
   const symbols: SlotSymbol[] = [
-    // Sun symbol - simple colored square
+    // Sun symbol - using real sun image from Landschaft folder
     {
       id: 'sun',
       type: 'sun',
-      imageUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-        <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" fill="#f59e0b" rx="20"/>
-          <text x="80" y="105" text-anchor="middle" font-size="80" fill="white">☀️</text>
-        </svg>
-      `)}`,
+      imageUrl: '/Landschaft/Sonne.png',
       name: 'Sonne'
     },
     // Safe caterpillar
