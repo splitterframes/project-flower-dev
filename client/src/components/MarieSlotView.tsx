@@ -347,31 +347,31 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     alt={symbol.name}
                     className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // NO EMOJI FALLBACKS - only show sun emoji, hide all others
+                      // Use 0.jpg as fallback for each type
                       const target = e.target as HTMLImageElement;
                       
                       switch(symbol.type) {
                         case 'butterfly':
-                          // NO EMOJI FALLBACK - hide broken butterfly images  
-                          target.style.display = 'none';
-                          return;
+                          // Fallback to first butterfly image
+                          target.src = '/Schmetterlinge/0.jpg';
+                          break;
                         case 'fish':
-                          // NO EMOJI FALLBACK - hide broken fish images
-                          target.style.display = 'none';
-                          return;
+                          // Fallback to first fish image
+                          target.src = '/Fische/0.jpg';
+                          break;
                         case 'caterpillar':
-                          // NO EMOJI FALLBACK - hide broken caterpillar images
-                          target.style.display = 'none';
-                          return;
+                          // Fallback to first caterpillar image
+                          target.src = '/Raupen/0.jpg';
+                          break;
                         case 'flower':
-                          // NO EMOJI FALLBACK - hide broken flower images
-                          target.style.display = 'none';
-                          return;
+                          // Fallback to first flower image
+                          target.src = '/Blumen/0.jpg';
+                          break;
                         case 'sun':
-                          // ONLY sun gets emoji fallback
+                          // Sun emoji positioned lower in frame
                           target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
                             <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <text x="80" y="110" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
+                              <text x="80" y="130" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
                             </svg>
                           `)}`;
                           break;
