@@ -3347,6 +3347,24 @@ export class PostgresStorage {
     return result;
   }
 
+  async getForeignAquariumFish(ownerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(aquariumFish)
+      .where(eq(aquariumFish.userId, ownerId));
+    
+    return result;
+  }
+
+  async getForeignAquariumTanks(ownerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(aquariumTanks)
+      .where(eq(aquariumTanks.userId, ownerId));
+    
+    return result;
+  }
+
   // Bouquet timing methods for butterfly spawner
   async updateBouquetNextSpawnTime(userId: number, fieldIndex: number, nextSpawnAt: Date): Promise<void> {
     // Get current spawn slot for this bouquet

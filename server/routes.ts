@@ -1609,6 +1609,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/user/:ownerId/foreign-aquarium', async (req, res) => {
+    try {
+      const ownerId = parseInt(req.params.ownerId);
+      
+      if (isNaN(ownerId)) {
+        return res.status(400).json({ error: 'Invalid owner ID' });
+      }
+      
+      const fish = await storage.getForeignAquariumFish(ownerId);
+      const tanks = await storage.getForeignAquariumTanks(ownerId);
+      res.json({ fish, tanks });
+    } catch (error) {
+      console.error('Failed to get foreign aquarium:', error);
+      res.status(500).json({ error: 'Failed to get foreign aquarium' });
+    }
+  });
+
   // Debug route to show rarity distribution
   app.get("/api/debug/rarity-distribution", async (req, res) => {
     try {
