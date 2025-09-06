@@ -5434,7 +5434,7 @@ export class PostgresStorage {
         .orderBy(desc(sql`COALESCE(COUNT(${exhibitionButterflies.id}), 0)`))
         .limit(100);
 
-      return this.formatRankingResults(userStats, 'exhibition-butterflies', currentUserId);
+      return this.formatRankingResults(userStats, 'exhibitionButterflies', currentUserId);
     } catch (error) {
       console.error('🏆 Error in getTop100ByExhibitionButterflies:', error);
       return [];
@@ -5455,7 +5455,7 @@ export class PostgresStorage {
         .orderBy(desc(sql`COALESCE(COUNT(${exhibitionFish.id}), 0)`))
         .limit(100);
 
-      return this.formatRankingResults(userStats, 'exhibition-fish', currentUserId);
+      return this.formatRankingResults(userStats, 'exhibitionFish', currentUserId);
     } catch (error) {
       console.error('🏆 Error in getTop100ByExhibitionFish:', error);
       return [];
@@ -5477,7 +5477,7 @@ export class PostgresStorage {
         .orderBy(desc(sql`COALESCE(COUNT(DISTINCT CONCAT(${userBouquets.flower1Id}, '-', ${userBouquets.flower2Id}, '-', ${userBouquets.flower3Id})), 0)`))
         .limit(100);
 
-      return this.formatRankingResults(userStats, 'bouquet-recipes', currentUserId);
+      return this.formatRankingResults(userStats, 'bouquetRecipes', currentUserId);
     } catch (error) {
       console.error('🏆 Error in getTop100ByBouquetRecipes:', error);
       return [];
