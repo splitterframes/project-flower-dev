@@ -582,6 +582,16 @@ export const MarketView: React.FC = () => {
                           <div className="w-full h-full flex items-center justify-center text-4xl">
                             {itemIcon}
                           </div>
+                        ) : listing.itemType === 'caterpillar' ? (
+                          <img
+                            src={listing.caterpillarImageUrl || `/Raupen/${(listing.caterpillarIdOriginal || listing.caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                            alt={itemName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐛</div>';
+                            }}
+                          />
                         ) : listing.itemType === 'flower' ? (
                           <img
                             src={listing.flowerImageUrl || `/Blumen/${(listing.flowerIdOriginal || listing.flowerId || 1).toString().padStart(3, '0')}.jpg`}
@@ -590,16 +600,6 @@ export const MarketView: React.FC = () => {
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🌸</div>';
-                            }}
-                          />
-                        ) : listing.itemType === 'fish' ? (
-                          <img
-                            src={listing.fishImageUrl || `/Fische/${(listing.fishIdOriginal || listing.fishId || 1).toString().padStart(3, '0')}.jpg`}
-                            alt={itemName}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐟</div>';
                             }}
                           />
                         ) : listing.itemType === 'butterfly' ? (
@@ -612,14 +612,14 @@ export const MarketView: React.FC = () => {
                               e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🦋</div>';
                             }}
                           />
-                        ) : listing.itemType === 'caterpillar' ? (
+                        ) : listing.itemType === 'fish' ? (
                           <img
-                            src={listing.caterpillarImageUrl || `/Raupen/${(listing.caterpillarIdOriginal || listing.caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                            src={listing.fishImageUrl || `/Fische/${(listing.fishIdOriginal || listing.fishId || 1).toString().padStart(3, '0')}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐛</div>';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐟</div>';
                             }}
                           />
                         ) : (
