@@ -19,11 +19,11 @@ interface SlotSymbol {
 
 // Create symbol pools - only 5 specific symbols for slot machine with random images
 const createSymbolPools = (): SlotSymbol[] => {
-  // Generate random IDs for each symbol type
-  const randomCaterpillarId = Math.floor(Math.random() * 124); // 0-123
-  const randomFlowerId = Math.floor(Math.random() * 200) + 1; // 1-200
-  const randomButterflyId = Math.floor(Math.random() * 1000) + 1; // 1-1000
-  const randomFishId = Math.floor(Math.random() * 224); // 0-223
+  // Generate random IDs for each symbol type based on ACTUAL available images
+  const randomCaterpillarId = Math.floor(Math.random() * 124); // 0-123 (124 images)
+  const randomFlowerId = Math.floor(Math.random() * 202); // 0-201 (202 images) 
+  const randomButterflyId = Math.floor(Math.random() * 961); // 0-960 (961 images)
+  const randomFishId = Math.floor(Math.random() * 224); // 0-223 (224 images)
   
   const symbols: SlotSymbol[] = [
     // Sun symbol (new 5th symbol) - will use fallback
@@ -33,32 +33,32 @@ const createSymbolPools = (): SlotSymbol[] => {
       imageUrl: '/nonexistent/sun.jpg', // Intentionally use fallback
       name: 'Sonne'
     },
-    // Random caterpillar
+    // Random caterpillar - NO PADDING in filename
     {
       id: `caterpillar-${randomCaterpillarId}`,
       type: 'caterpillar', 
       imageUrl: `/Raupen/${randomCaterpillarId}.jpg`,
       name: 'Raupe'
     },
-    // Random flower
+    // Random flower - NO PADDING in filename
     {
       id: `flower-${randomFlowerId}`,
       type: 'flower',
-      imageUrl: `/Blumen/${randomFlowerId.toString().padStart(3, '0')}.jpg`, 
+      imageUrl: `/Blumen/${randomFlowerId}.jpg`, 
       name: 'Blume'
     },
-    // Random butterfly
+    // Random butterfly - NO PADDING in filename
     {
       id: `butterfly-${randomButterflyId}`,
       type: 'butterfly',
-      imageUrl: `/Schmetterlinge/${randomButterflyId.toString().padStart(3, '0')}.jpg`,
+      imageUrl: `/Schmetterlinge/${randomButterflyId}.jpg`,
       name: 'Schmetterling'
     },
-    // Random fish
+    // Random fish - NO PADDING in filename
     {
       id: `fish-${randomFishId}`,
       type: 'fish',
-      imageUrl: `/Fische/${randomFishId.toString().padStart(3, '0')}.jpg`,
+      imageUrl: `/Fische/${randomFishId}.jpg`,
       name: 'Fisch'
     }
   ];
@@ -347,48 +347,34 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     alt={symbol.name}
                     className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // Better fallback with type-specific icons - NO FISH EMOJI
+                      // NO EMOJI FALLBACKS - only show sun emoji, hide all others
                       const target = e.target as HTMLImageElement;
-                      let fallbackColor = '#374151';
-                      let icon = '?';
                       
                       switch(symbol.type) {
                         case 'butterfly':
-                          fallbackColor = '#7c3aed';
-                          icon = '🦋';
-                          break;
+                          // NO EMOJI FALLBACK - hide broken butterfly images  
+                          target.style.display = 'none';
+                          return;
                         case 'fish':
                           // NO EMOJI FALLBACK - hide broken fish images
                           target.style.display = 'none';
                           return;
                         case 'caterpillar':
-                          fallbackColor = '#16a34a';
-                          icon = '🐛';
-                          break;
+                          // NO EMOJI FALLBACK - hide broken caterpillar images
+                          target.style.display = 'none';
+                          return;
                         case 'flower':
                           // NO EMOJI FALLBACK - hide broken flower images
                           target.style.display = 'none';
                           return;
                         case 'sun':
-                          fallbackColor = '#f59e0b';
-                          icon = '☀️';
+                          // ONLY sun gets emoji fallback
+                          target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                            <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <text x="80" y="110" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
+                            </svg>
+                          `)}`;
                           break;
-                      }
-                      
-                      // Special handling for sun - no background, just emoji
-                      if (symbol.type === 'sun') {
-                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <text x="80" y="110" text-anchor="middle" font-size="120" fill="#FFD700">☀️</text>
-                          </svg>
-                        `)}`;
-                      } else {
-                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="160" height="160" fill="${fallbackColor}" rx="20"/>
-                            <text x="80" y="105" text-anchor="middle" font-size="60" fill="white">${icon}</text>
-                          </svg>
-                        `)}`;
                       }
                     }}
                   />
