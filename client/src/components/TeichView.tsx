@@ -10,6 +10,7 @@ import { useSunSpawns } from "@/lib/stores/useSunSpawns";
 import { SeedSelectionModal } from "./SeedSelectionModal";
 import { BouquetSelectionModal } from "./BouquetSelectionModal";
 import { ButterflySelectionModal } from "./ButterflySelectionModal";
+import { FlowerSelectionModal } from "./FlowerSelectionModal";
 import { FishSelectionModal } from "./FishSelectionModal";
 import { FeedingDialog } from "./FeedingDialog";
 import { FishRewardDialog } from "./FishRewardDialog";
@@ -717,6 +718,14 @@ export const TeichView: React.FC = () => {
     setSelectedField(null);
   };
 
+  // Legacy butterfly function (still needed for compatibility)
+  const placeButterflyOnField = async (butterflyId: number) => {
+    console.log("🦋 Legacy butterfly placement - redirecting to flower system");
+    showNotification('Verwende die neue Blumen-Platzierung!', 'info');
+    setShowButterflyModal(false);
+    setSelectedField(null);
+  };
+
   const placeFlowerOnField = async (flowerId: number) => {
     if (!user || selectedField === null) return;
 
@@ -1244,11 +1253,11 @@ export const TeichView: React.FC = () => {
                           return; // Caterpillar-Clicks werden von deren eigenem onClick gehandelt
                         }
                         
-                        // Schmetterling-Auswahl Dialog öffnen (nur wenn keine Raupe da ist)
-                        if (!isCollectingCaterpillar && userButterflies.length > 0) {
-                          console.log("🦋 Opening butterfly selection for field", field.id, "with", userButterflies.length, "butterflies");
+                        // Blumen-Auswahl Dialog öffnen für neue pond system (nur wenn keine Raupe da ist)
+                        if (!isCollectingCaterpillar && userFlowers.length > 0) {
+                          console.log("🌸 Opening flower selection for field", field.id, "with", userFlowers.length, "flowers");
                           setSelectedField(field.id);
-                          setShowButterflyModal(true);
+                          setShowFlowerModal(true);
                         } else if (isCollectingCaterpillar) {
                           console.log("🐛 Currently collecting caterpillar, skipping butterfly dialog for", field.id);
                         } else {
@@ -1640,6 +1649,17 @@ export const TeichView: React.FC = () => {
           }}
           userButterflies={userButterflies}
           onSelectButterfly={placeButterflyOnField}
+          fieldIndex={selectedField || 0}
+        />
+
+        <FlowerSelectionModal
+          isOpen={showFlowerModal}
+          onClose={() => {
+            setShowFlowerModal(false);
+            setSelectedField(null);
+          }}
+          userFlowers={userFlowers}
+          onSelectFlower={placeFlowerOnField}
           fieldIndex={selectedField || 0}
         />
 
