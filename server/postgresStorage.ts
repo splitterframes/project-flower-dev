@@ -926,7 +926,7 @@ export class PostgresStorage {
       }
 
       // Add flowers to buyer's inventory
-      await this.addFlowerToInventory(buyerId, flowerData[0].flowerId, flowerData[0].flowerRarity, data.quantity);
+      await this.addFlowerToInventoryWithQuantity(buyerId, flowerData[0].flowerId, flowerData[0].flowerName, flowerData[0].flowerRarity, flowerData[0].flowerImageUrl, data.quantity);
 
     } else if (listing[0].itemType === "butterfly") {
       // For butterflies, quantity is always 1
@@ -998,7 +998,7 @@ export class PostgresStorage {
       }
 
       // Add fish to buyer's inventory
-      await this.addFishToInventory(buyerId, fishData[0].fishId, fishData[0].fishRarity, data.quantity);
+      await this.addFishToInventoryWithQuantity(buyerId, fishData[0].fishId, fishData[0].fishName, fishData[0].fishRarity, fishData[0].fishImageUrl, data.quantity);
     }
 
     // Update listing quantity or remove
@@ -1184,6 +1184,73 @@ export class PostgresStorage {
         quantity: 1
       });
       console.log(`💾 Added new flower ${flowerName} for user ${userId} to PostgreSQL`);
+    }
+  }
+
+  async addFlowerToInventoryWithQuantity(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string, quantity: number): Promise<void> {
+    // Check if user already has this flower
+    const existingFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(eq(userFlowers.userId, userId), eq(userFlowers.flowerId, flowerId)))
+      .limit(1);
+
+    if (existingFlower.length > 0) {
+      // Increase quantity of existing flower
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: existingFlower[0].quantity + quantity })
+        .where(eq(userFlowers.id, existingFlower[0].id));
+      
+      console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + quantity} for user ${userId}`);
+    } else {
+      // Add new flower to inventory
+      await this.db
+        .insert(userFlowers)
+        .values({
+          userId,
+          flowerId,
+          rarity: this.getRarityInteger(flowerRarity),
+          flowerName,
+          flowerRarity,
+          flowerImageUrl,
+          quantity
+        });
+      
+      console.log(`💾 Added new flower ${flowerName} (x${quantity}) to user ${userId} inventory`);
+    }
+  }
+
+  async addFishToInventoryWithQuantity(userId: number, fishId: number, fishName: string, fishRarity: string, fishImageUrl: string, quantity: number): Promise<void> {
+    // Check if user already has this fish type
+    const existingFish = await this.db
+      .select()
+      .from(userFish)
+      .where(and(eq(userFish.userId, userId), eq(userFish.fishId, fishId)))
+      .limit(1);
+
+    if (existingFish.length > 0) {
+      // Increase quantity of existing fish
+      await this.db
+        .update(userFish)
+        .set({ quantity: existingFish[0].quantity + quantity })
+        .where(eq(userFish.id, existingFish[0].id));
+      
+      console.log(`🐟 Increased ${fishName} quantity to ${existingFish[0].quantity + quantity} for user ${userId}`);
+    } else {
+      // Add new fish to inventory
+      await this.db
+        .insert(userFish)
+        .values({
+          userId,
+          fishId,
+          fishName,
+          fishRarity,
+          fishImageUrl,
+          quantity
+        });
+      
+      console.log(`🐟 Added new fish ${fishName} (x${quantity}) to user ${userId} inventory`);
     }
   }
 
