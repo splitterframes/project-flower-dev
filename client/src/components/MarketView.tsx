@@ -1072,7 +1072,7 @@ export const MarketView: React.FC = () => {
                                   style={{ borderColor: getBorderColor(caterpillar.caterpillarRarity as RarityTier) }}
                                 >
                                   <img
-                                    src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id).toString().padStart(3, '0')}.png`}
+                                    src={caterpillar.caterpillarImageUrl || `/Raupen/${(caterpillar.caterpillarId || caterpillar.id)}.jpg`}
                                     alt={caterpillarName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
