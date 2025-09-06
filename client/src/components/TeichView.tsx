@@ -342,7 +342,9 @@ export const TeichView: React.FC = () => {
         fetch(`/api/user/${user.id}/field-fish`)
       ]);
 
+      console.log("🌸 FETCHTEICHDATA: All API responses received, checking status...");
       if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && flowersRes.ok && fieldFlowersRes.ok && fieldFishRes.ok) {
+        console.log("🌸 FETCHTEICHDATA: All responses OK, parsing JSON...");
         const [caterpillarData, userCaterpillarsData, pondProgressData, flowersData, fieldFlowersData, fieldFishData] = await Promise.all([
           caterpillarRes.json(),
           userCaterpillarsRes.json(),
@@ -351,6 +353,7 @@ export const TeichView: React.FC = () => {
           fieldFlowersRes.json(),
           fieldFishRes.json()
         ]);
+        console.log("🌸 FETCHTEICHDATA: JSON parsed, flowersData =", flowersData);
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
 
@@ -426,9 +429,18 @@ export const TeichView: React.FC = () => {
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
         console.log("🌸 FETCHTEICHDATA: Setting userFlowers to:", flowersData.flowers);
         setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
+      } else {
+        console.error("🌸 FETCHTEICHDATA ERROR: Some API responses failed", {
+          caterpillar: caterpillarRes.status,
+          userCaterpillars: userCaterpillarsRes.status,
+          pondProgress: pondProgressRes.status,
+          flowers: flowersRes.status,
+          fieldFlowers: fieldFlowersRes.status,
+          fieldFish: fieldFishRes.status
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch garden data:', error);
+      console.error('🌸 FETCHTEICHDATA CATCH ERROR:', error);
     }
   };
 
