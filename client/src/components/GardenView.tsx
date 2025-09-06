@@ -71,9 +71,11 @@ const getBackgroundPosition = (fieldIndex: number) => {
   const column = fieldIndex % 10; // 0-9 columns
   const row = Math.floor(fieldIndex / 10); // 0-4 rows
   
-  // Each segment is 10% width (100% / 10 columns) and 20% height (100% / 5 rows)
-  const posX = -(column * 10); // Move left by column * segment width
-  const posY = -(row * 20); // Move up by row * segment height
+  // Since we scale the image to 1000% width (10 fields) and 500% height (5 rows),
+  // each field needs to show 1/10th of the width and 1/5th of the height
+  // Background position moves the image to show the correct segment
+  const posX = -(column * 100); // Move left: 0%, -100%, -200%, ..., -900%
+  const posY = -(row * 100); // Move up: 0%, -100%, -200%, -300%, -400%
   
   return `${posX}% ${posY}%`;
 };
@@ -923,11 +925,12 @@ export const GardenView: React.FC = () => {
                   `}
                   style={{
                     backgroundImage: 'url("/Landschaft/Gardenview.png")',
-                    backgroundSize: '1000% 500%', // 10 columns × 5 rows = 1000% × 500%
+                    backgroundSize: '1000% 500%', // Scale image to fit across 10 columns and 5 rows
                     backgroundPosition: getBackgroundPosition(field.id - 1), // field.id is 1-based, convert to 0-based
                     backgroundRepeat: 'no-repeat',
                     minHeight: '44px',
-                    minWidth: '44px'
+                    minWidth: '44px',
+                    backgroundColor: '#1e293b' // Fallback if image doesn't load
                   }}
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
