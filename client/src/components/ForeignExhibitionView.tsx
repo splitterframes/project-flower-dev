@@ -350,37 +350,37 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                 const frameLike = frameLikes.find(fl => fl.frameId === frameId);
                 
                 const totalButterflies = frameButterflies.length + frameVipButterflies.length;
-                const isFullFrame = totalButterflies === 10;
+                const isFullFrame = totalButterflies === 6;
                 const canBeLiked = isFullFrame || frameLike?.isLiked;
                 
                 return (
                   <Card 
                     key={frameId}
-                    className={`bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-2 ${
-                      isFullFrame 
-                        ? 'border-green-500/50 hover:border-green-400/70' 
-                        : 'border-slate-600 hover:border-orange-400/50'
-                    } transition-all duration-300 shadow-xl max-w-2xl mx-auto`}
+                    className="bg-gradient-to-br from-amber-900 to-amber-800 border-amber-700 shadow-2xl"
                   >
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-amber-100 text-center flex items-center justify-between text-xl">
                         <div className="flex items-center">
-                          <span>🖼️ Rahmen #{frameNumber}</span>
+                          <span>🖼️ {ownerName}s Rahmen #{frameNumber}</span>
                           {isFullFrame && (
-                            <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse">
-                              Vollständig
+                            <span className="ml-3 text-sm bg-green-600 text-white px-3 py-1 rounded-full animate-pulse shadow-lg">
+                              ✨ Vollständig
                             </span>
                           )}
                           {!isFullFrame && (
-                            <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
-                              {totalButterflies}/10
+                            <span className="ml-3 text-sm bg-amber-600 text-amber-100 px-3 py-1 rounded-full">
+                              {totalButterflies}/6
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-slate-400">
-                            {frameLike?.totalLikes || 0} <Heart className="h-4 w-4 inline text-pink-400" />
-                          </span>
+                        <div className="flex items-center space-x-3">
+                          {/* Likes Display */}
+                          {(frameLike?.totalLikes || 0) > 0 && (
+                            <div className="flex items-center text-pink-300">
+                              <Heart className="h-5 w-5 mr-2 fill-pink-300" />
+                              <span className="text-base">{frameLike?.totalLikes}</span>
+                            </div>
+                          )}
                           <Button
                             onClick={() => handleLike(frameId)}
                             disabled={!canBeLiked}
@@ -389,8 +389,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             className={frameLike?.isLiked 
                               ? "bg-pink-600 hover:bg-pink-700 text-white" 
                               : canBeLiked 
-                                ? "bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 hover:border-pink-400" 
-                                : "bg-slate-800 border-slate-600 text-slate-500 cursor-not-allowed"}
+                                ? "bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 hover:border-pink-400" 
+                                : "bg-amber-800 border-amber-600 text-amber-500 cursor-not-allowed"}
                           >
                             <Heart className={`h-4 w-4 mr-1 ${frameLike?.isLiked ? 'fill-current' : ''}`} />
                             {frameLike?.isLiked ? 'Geliked' : 'Liken'}
@@ -399,63 +399,49 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Butterfly Display Grid */}
-                      <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[800px] place-items-center">
-                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
-                          const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex) ||
-                                          frameVipButterflies.find(b => b.slotIndex === slotIndex);
-                          
-                          return (
-                            <div 
-                              key={slotIndex} 
-                              className={`aspect-square border-2 rounded-lg ${
-                                butterfly ? 'border-slate-400' : 'border-slate-600'
-                              } bg-slate-800/50 flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-amber-400/50`}
-                            >
-                              {butterfly ? (
-                                <div 
-                                  className="w-full h-full cursor-pointer group relative" 
-                                  onClick={() => {
-                                    setSelectedButterfly(butterfly);
-                                    setShowButterflyModal(true);
-                                  }}
-                                >
-                                  <div className="absolute inset-2 rounded-lg overflow-hidden bg-slate-900/80 border-2"
-                                       style={{
-                                         borderColor: getRarityColor(butterfly.butterflyRarity as RarityTier)
-                                       }}>
+                      {/* Wood frame effect */}
+                      <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
+                        <div className="bg-slate-100 p-7 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[800px] place-items-center">
+                          {Array.from({ length: 6 }, (_, slotIndex) => {
+                            const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
+                            const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
+                            const hasContent = butterfly || vipButterfly;
+                            
+                            return (
+                              <div 
+                                key={slotIndex}
+                                className="aspect-square bg-white border border-slate-300 rounded flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow min-h-0"
+                              >
+                                {hasContent ? (
+                                  <div 
+                                    className="w-full h-full cursor-pointer relative group"
+                                    onClick={() => {
+                                      setSelectedButterfly(butterfly || vipButterfly);
+                                      setShowButterflyModal(true);
+                                    }}
+                                  >
                                     <RarityImage
-                                      src={butterfly.butterflyImageUrl}
-                                      alt={butterfly.butterflyName}
-                                      rarity={butterfly.butterflyRarity as RarityTier}
-                                      className="w-full h-full object-cover"
+                                      src={(butterfly || vipButterfly).butterflyImageUrl}
+                                      alt={(butterfly || vipButterfly).butterflyName}
+                                      rarity={(butterfly || vipButterfly).butterflyRarity as RarityTier}
+                                      size="medium"
+                                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                                      <div className="absolute bottom-1 left-1 right-1 text-center">
-                                        <div className="text-white text-xs font-bold bg-black/60 rounded px-1 py-0.5 mb-1">
-                                          {butterfly.butterflyName}
-                                        </div>
-                                        <div className="text-xs font-semibold"
-                                             style={{
-                                               color: getRarityColor(butterfly.butterflyRarity as RarityTier)
-                                             }}>
-                                          {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-                                        </div>
-                                        <div className="mt-2 text-green-300 font-semibold">
-                                          Klicken für Details
-                                        </div>
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
+                                      <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Details anzeigen
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="text-slate-500 text-xs text-center">
-                                  Leer
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                ) : (
+                                  <div className="text-slate-400 text-sm text-center">
+                                    Leer
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                       
                       {frameButterflies.length > 0 && (
