@@ -995,19 +995,29 @@ export const MarketView: React.FC = () => {
                 </div>
               ) : (
                 <div className="max-w-7xl mx-auto">
-                  <form onSubmit={createListing} className="space-y-6">
+                  <form onSubmit={createListing}>
                     {/* Two Column Layout: Selection Left + Form Right */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       
-                      {/* LEFT COLUMN: Item Selection */}
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
-                          {sellForm.itemType === 'seed' ? '🌱 Samen auswählen' :
-                           sellForm.itemType === 'flower' ? '🌸 Blume auswählen' :
-                           sellForm.itemType === 'butterfly' ? '🦋 Schmetterling auswählen' :
-                           sellForm.itemType === 'caterpillar' ? '🐛 Raupe auswählen' :
-                           sellForm.itemType === 'fish' ? '🐟 Fisch auswählen' : 'Item auswählen'}
-                        </h3>
+                      {/* LEFT COLUMN: Item Selection Card */}
+                      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-500/30">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center">
+                            <span className="text-2xl mr-3">
+                              {sellForm.itemType === 'seed' ? '🌱' :
+                               sellForm.itemType === 'flower' ? '🌸' :
+                               sellForm.itemType === 'butterfly' ? '🦋' :
+                               sellForm.itemType === 'caterpillar' ? '🐛' :
+                               sellForm.itemType === 'fish' ? '🐟' : '📦'}
+                            </span>
+                            {sellForm.itemType === 'seed' ? 'Samen auswählen' :
+                             sellForm.itemType === 'flower' ? 'Blume auswählen' :
+                             sellForm.itemType === 'butterfly' ? 'Schmetterling auswählen' :
+                             sellForm.itemType === 'caterpillar' ? 'Raupe auswählen' :
+                             sellForm.itemType === 'fish' ? 'Fisch auswählen' : 'Item auswählen'}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
 
                         {/* Item Selector based on type */}
                         {sellForm.itemType === 'seed' ? (
@@ -1310,13 +1320,18 @@ export const MarketView: React.FC = () => {
                     </div>
                   </div>
                         ) : null}
-                      </div>
+                        </CardContent>
+                      </Card>
 
-                      {/* RIGHT COLUMN: Form Fields */}
-                      <div className="space-y-6">
-                        <h3 className="text-xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
-                          💰 Verkaufsdetails
-                        </h3>
+                      {/* RIGHT COLUMN: Form Fields Card */}
+                      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-orange-500/30">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center">
+                            <span className="text-2xl mr-3">💰</span>
+                            Verkaufsdetails
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
 
                         {/* Quantity Input */}
                         <div className="space-y-2">
@@ -1403,7 +1418,8 @@ export const MarketView: React.FC = () => {
                             "💰 Angebot erstellen"
                           )}
                         </Button>
-                      </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </form>
                 </div>
