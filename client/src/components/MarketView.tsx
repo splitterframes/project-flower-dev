@@ -888,40 +888,146 @@ export const MarketView: React.FC = () => {
                     </select>
                   </div>
                 ) : sellForm.itemType === 'flower' ? (
-                  <div>
-                    <Label htmlFor="flowerSelect">Blume auswählen</Label>
-                    <select
-                      id="flowerSelect"
-                      value={sellForm.flowerId}
-                      onChange={(e) => setSellForm({...sellForm, flowerId: Number(e.target.value)})}
-                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
-                      required
-                    >
-                      <option value={0}>-- Blume wählen --</option>
-                      {myFlowers.map((flower) => (
-                        <option key={flower.id} value={flower.id}>
-                          {flower.flowerName} (x{flower.quantity})
-                        </option>
-                      ))}
-                    </select>
+                  <div className="relative">
+                    <Label>Blume auswählen</Label>
+                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
+                      {myFlowers.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400">
+                          Keine Blumen verfügbar
+                        </div>
+                      ) : (
+                        myFlowers.map((flower) => {
+                          const isSelected = sellForm.flowerId === flower.id;
+                          
+                          return (
+                            <div
+                              key={flower.id}
+                              onClick={() => setSellForm({...sellForm, flowerId: flower.id})}
+                              className={`cursor-pointer rounded-lg p-3 border-2 transition-all duration-200 hover:scale-[1.02] ${
+                                isSelected 
+                                  ? `border-pink-400 bg-pink-400/20 shadow-lg` 
+                                  : `hover:border-slate-500 border-slate-600 bg-slate-800`
+                              }`}
+                              style={isSelected ? { borderColor: getBorderColor(flower.flowerRarity as RarityTier) } : {}}
+                            >
+                              <div className="flex items-center space-x-3">
+                                {/* Blumen Bild */}
+                                <div 
+                                  className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden"
+                                  style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
+                                >
+                                  <img
+                                    src={flower.flowerImageUrl || `/Blumen/${(flower.flowerId || flower.id).toString().padStart(3, '0')}.jpg`}
+                                    alt={flower.flowerName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🌸</div>';
+                                    }}
+                                  />
+                                </div>
+                                
+                                {/* Blumen Info */}
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="font-bold text-white text-sm">{flower.flowerName}</h4>
+                                    <div className="flex items-center">
+                                      <Star className={`h-3 w-3 mr-1 ${getRarityColor(flower.flowerRarity as RarityTier)}`} />
+                                      <span className={`text-xs font-medium ${getRarityColor(flower.flowerRarity as RarityTier)}`}>
+                                        {flower.flowerRarity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    Menge: {flower.quantity}
+                                  </div>
+                                </div>
+                                
+                                {/* Auswahl Indikator */}
+                                {isSelected && (
+                                  <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-pink-400 flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">✓</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 ) : sellForm.itemType === 'fish' ? (
-                  <div>
-                    <Label htmlFor="fishSelect">Fisch auswählen</Label>
-                    <select
-                      id="fishSelect"
-                      value={sellForm.fishId}
-                      onChange={(e) => setSellForm({...sellForm, fishId: Number(e.target.value)})}
-                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
-                      required
-                    >
-                      <option value={0}>-- Fisch wählen --</option>
-                      {myFish.map((fish) => (
-                        <option key={fish.id} value={fish.id}>
-                          {fish.fishName} (x{fish.quantity})
-                        </option>
-                      ))}
-                    </select>
+                  <div className="relative">
+                    <Label>Fisch auswählen</Label>
+                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
+                      {myFish.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400">
+                          Keine Fische verfügbar
+                        </div>
+                      ) : (
+                        myFish.map((fish) => {
+                          const isSelected = sellForm.fishId === fish.id;
+                          
+                          return (
+                            <div
+                              key={fish.id}
+                              onClick={() => setSellForm({...sellForm, fishId: fish.id})}
+                              className={`cursor-pointer rounded-lg p-3 border-2 transition-all duration-200 hover:scale-[1.02] ${
+                                isSelected 
+                                  ? `border-blue-400 bg-blue-400/20 shadow-lg` 
+                                  : `hover:border-slate-500 border-slate-600 bg-slate-800`
+                              }`}
+                              style={isSelected ? { borderColor: getBorderColor(fish.fishRarity as RarityTier) } : {}}
+                            >
+                              <div className="flex items-center space-x-3">
+                                {/* Fisch Bild */}
+                                <div 
+                                  className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden"
+                                  style={{ borderColor: getBorderColor(fish.fishRarity as RarityTier) }}
+                                >
+                                  <img
+                                    src={fish.fishImageUrl || `/Fische/${(fish.fishId || fish.id).toString().padStart(3, '0')}.jpg`}
+                                    alt={fish.fishName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🐟</div>';
+                                    }}
+                                  />
+                                </div>
+                                
+                                {/* Fisch Info */}
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="font-bold text-white text-sm">{fish.fishName}</h4>
+                                    <div className="flex items-center">
+                                      <Star className={`h-3 w-3 mr-1 ${getRarityColor(fish.fishRarity as RarityTier)}`} />
+                                      <span className={`text-xs font-medium ${getRarityColor(fish.fishRarity as RarityTier)}`}>
+                                        {fish.fishRarity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    Menge: {fish.quantity}
+                                  </div>
+                                </div>
+                                
+                                {/* Auswahl Indikator */}
+                                {isSelected && (
+                                  <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-blue-400 flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">✓</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 ) : sellForm.itemType === 'caterpillar' ? (
                   <div className="relative">
