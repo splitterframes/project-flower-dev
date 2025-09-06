@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { useSuns } from "@/lib/stores/useSuns";
-import { Package, Flower, Bug, Gem, Sprout, Star, Sun } from "lucide-react";
 import { HelpButton } from './HelpButton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
@@ -600,7 +599,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-green-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Sprout className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold text-green-300">
                 Samen 🌱 ({mySeeds.filter(seed => seed.quantity > 0).length})
               </span>
@@ -648,7 +646,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-pink-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Flower className="h-5 w-5 mr-2 text-pink-400" />
               <span className="text-lg font-semibold text-pink-300">
                 Blumen 🌸 ({myFlowers.length})
               </span>
@@ -697,7 +694,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-yellow-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Bug className="h-5 w-5 mr-2 text-yellow-400" />
               <span className="text-lg font-semibold text-yellow-300">
                 Schmetterlinge 🦋 ({myButterflies.length})
               </span>
@@ -709,8 +705,7 @@ export const InventoryView: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-lg"></div>
                 <div className="relative z-10">
                   <div className="relative mb-6">
-                    <Bug className="h-16 w-16 text-yellow-400 mx-auto animate-bounce" />
-                    <div className="absolute inset-0 h-16 w-16 mx-auto text-yellow-400 animate-ping opacity-20"></div>
+                    <div className="text-6xl animate-bounce mx-auto">🦋</div>
                   </div>
                   <p className="text-slate-300 text-xl mb-3">🦋 Noch keine Schmetterlinge gefangen</p>
                   <p className="text-slate-400 text-lg">Schmetterlinge werden von deinen Blumen angezogen</p>
@@ -756,7 +751,6 @@ export const InventoryView: React.FC = () => {
           
           <CardHeader className="pb-3 relative z-10">
             <CardTitle className="text-white flex items-center">
-              <Star className="h-5 w-5 mr-2 text-pink-400" fill="currentColor" />
               <span className="text-lg font-semibold text-pink-200">
                 VIP Schmetterlinge ✨👑 ({myVipButterflies.length})
               </span>
@@ -768,8 +762,7 @@ export const InventoryView: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 rounded-lg"></div>
                 <div className="relative z-10">
                   <div className="relative mb-6">
-                    <Star className="h-16 w-16 text-pink-400 mx-auto animate-bounce" fill="currentColor" />
-                    <div className="absolute inset-0 h-16 w-16 mx-auto text-pink-400 animate-ping opacity-20"></div>
+                    <div className="text-6xl animate-bounce mx-auto">✨</div>
                   </div>
                   <p className="text-pink-200 text-xl mb-3">✨ Noch keine VIP-Schmetterlinge</p>
                   <p className="text-pink-300 text-lg">Gewinne sie als 1. Preis in Flowerpower-Challenges!</p>
@@ -789,7 +782,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-blue-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Package className="h-5 w-5 mr-2 text-blue-400" />
               <span className="text-lg font-semibold text-blue-300">
                 Fische 🐟 ({myFish.length})
               </span>
@@ -801,8 +793,7 @@ export const InventoryView: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 rounded-lg"></div>
                 <div className="relative z-10">
                   <div className="relative mb-6">
-                    <Package className="h-16 w-16 text-blue-400 mx-auto animate-bounce" />
-                    <div className="absolute inset-0 h-16 w-16 mx-auto text-blue-400 animate-ping opacity-20"></div>
+                    <div className="text-6xl animate-bounce mx-auto">🐟</div>
                   </div>
                   <p className="text-slate-300 text-xl mb-3">🐟 Noch keine Fische gesammelt</p>
                   <p className="text-slate-400 text-lg">Fische können im Teich gefunden werden</p>
@@ -845,7 +836,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-green-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Bug className="h-5 w-5 mr-2 text-green-400" />
               <span className="text-lg font-semibold text-green-300">
                 Raupen 🐛 ({myCaterpillars.length})
               </span>
@@ -857,8 +847,7 @@ export const InventoryView: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 rounded-lg"></div>
                 <div className="relative z-10">
                   <div className="relative mb-6">
-                    <Bug className="h-16 w-16 text-green-400 mx-auto animate-bounce" />
-                    <div className="absolute inset-0 h-16 w-16 mx-auto text-green-400 animate-ping opacity-20"></div>
+                    <div className="text-6xl animate-bounce mx-auto">🐛</div>
                   </div>
                   <p className="text-slate-300 text-xl mb-3">🐛 Noch keine Raupen gesammelt</p>
                   <p className="text-slate-400 text-lg">Raupen können im Teich gefunden werden</p>
@@ -901,7 +890,6 @@ export const InventoryView: React.FC = () => {
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-white flex items-center">
-              <Gem className="h-5 w-5 mr-2 text-purple-400" />
               <span className="text-lg font-semibold text-purple-300">
                 Bouquets 💐 ({myBouquets.filter(b => b.quantity > 0).length})
               </span>
