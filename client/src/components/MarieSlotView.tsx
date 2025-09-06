@@ -366,9 +366,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                           icon = '🐛';
                           break;
                         case 'flower':
-                          fallbackColor = '#dc2626';
-                          icon = '🌸';
-                          break;
+                          // NO EMOJI FALLBACK - hide broken flower images
+                          target.style.display = 'none';
+                          return;
                         case 'sun':
                           fallbackColor = '#f59e0b';
                           icon = '☀️';
