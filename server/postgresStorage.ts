@@ -5474,12 +5474,13 @@ export class PostgresStorage {
   }
 
   private formatRankingResults(results: any[], valueKey: string, currentUserId: number): any[] {
+    console.log(`🏆 formatRankingResults: ${valueKey}, results:`, results);
     return results.map((user, index) => ({
-      id: user.id,
+      id: user.id || user.userId,
       username: user.username,
       value: user[valueKey] || 0,
       rank: index + 1,
-      isCurrentUser: user.id === currentUserId
+      isCurrentUser: (user.id === currentUserId) || (user.userId === currentUserId)
     }));
   }
 }

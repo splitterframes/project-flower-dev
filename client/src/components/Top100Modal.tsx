@@ -80,6 +80,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
     if (!currentUser) return;
     
     setLoading(true);
+    console.log(`🏆 Fetching Top 100 data for category: ${selectedCategory}`);
     try {
       const response = await fetch(`/api/rankings/top100/${selectedCategory}`, {
         headers: {
@@ -88,10 +89,13 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
       });
       if (response.ok) {
         const data = await response.json();
+        console.log(`🏆 Received Top 100 data:`, data);
         setPlayers(data.players || []);
+      } else {
+        console.error(`🏆 Failed to fetch rankings: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Failed to fetch top 100 data:', error);
+      console.error('🏆 Failed to fetch top 100 data:', error);
     } finally {
       setLoading(false);
     }
