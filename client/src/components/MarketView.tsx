@@ -45,18 +45,26 @@ interface MarketListing {
   caterpillarId?: number;
   caterpillarName?: string;
   caterpillarRarity?: string;
+  caterpillarImageUrl?: string;
+  caterpillarIdOriginal?: number;
   // Flower fields
   flowerId?: number;
   flowerName?: string;
   flowerRarity?: string;
+  flowerImageUrl?: string;
+  flowerIdOriginal?: number;
   // Butterfly fields
   butterflyId?: number;
   butterflyName?: string;
   butterflyRarity?: string;
+  butterflyImageUrl?: string;
+  butterflyIdOriginal?: number;
   // Fish fields
   fishId?: number;
   fishName?: string;
   fishRarity?: string;
+  fishImageUrl?: string;
+  fishIdOriginal?: number;
   quantity: number;
   pricePerUnit: number;
   totalPrice: number;
@@ -550,7 +558,7 @@ export const MarketView: React.FC = () => {
                                 listing.itemType === 'butterfly' ? listing.butterflyRarity :
                                 listing.itemType === 'fish' ? listing.fishRarity : 'common';
                   const itemName = listing.itemType === 'seed' ? listing.seedName : 
-                                  listing.itemType === 'caterpillar' ? (listing.caterpillarName || generateLatinCaterpillarName((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0)) :
+                                  listing.itemType === 'caterpillar' ? (listing.caterpillarName || generateLatinCaterpillarName(listing.caterpillarIdOriginal || listing.caterpillarId || 0)) :
                                   listing.itemType === 'flower' ? listing.flowerName :
                                   listing.itemType === 'butterfly' ? listing.butterflyName :
                                   listing.itemType === 'fish' ? listing.fishName : 'Unbekannt';
@@ -606,7 +614,7 @@ export const MarketView: React.FC = () => {
                           />
                         ) : listing.itemType === 'caterpillar' ? (
                           <img
-                            src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                            src={listing.caterpillarImageUrl || `/Raupen/${(listing.caterpillarIdOriginal || listing.caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
