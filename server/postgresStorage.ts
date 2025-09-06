@@ -1002,7 +1002,12 @@ export class PostgresStorage {
       // Add item to buyer's inventory based on type
       switch (listing.itemType) {
         case "seed":
-          await this.addSeedToInventory(buyerId, listing.seedId || 0, quantity);
+          // Create seed inventory directly using copied data from listing
+          await this.db.insert(userSeeds).values({
+            userId: buyerId,
+            seedId: listing.seedId || 0,
+            quantity: quantity
+          });
           break;
           
         case "caterpillar":

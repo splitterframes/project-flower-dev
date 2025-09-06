@@ -163,10 +163,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/market/buy", async (req, res) => {
     try {
+      console.log('🛒 Route handler: Received buy request', req.body);
       const buyData = buyListingSchema.parse(req.body);
       const buyerId = parseInt(req.headers['x-user-id'] as string) || 1;
+      console.log('🛒 Route handler: Parsed data', { buyData, buyerId });
       
       const result = await storage.buyMarketListing(buyerId, buyData);
+      console.log('🛒 Route handler: Buy result', result);
       if (result.success) {
         res.json({ message: "Purchase successful" });
       } else {
@@ -1793,7 +1796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         message: "❌ Error fixing passive income", 
-        error: error.message 
+        error: (error as Error).message 
       });
     }
   });
@@ -1842,18 +1845,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vipButterflies: vipButterflies.length,
         totalCreditsPerHour: (normalButterflies.length * 30) + (vipButterflies.length * 61),
         debugTime: now.toISOString(),
-        normalButterflyList: normalButterflies.map(b => ({ id: b.id, name: b.butterflyName, rarity: b.butterflyRarity, frameIndex: b.frameIndex })),
-        vipButterflyList: vipButterflies.map(b => ({ id: b.id, name: b.butterflyName, frameIndex: b.frameIndex })),
+        normalButterflyList: normalButterflies.map(b => ({ id: b.id, name: b.butterflyName, rarity: b.butterflyRarity, frameId: b.frameId })),
+        vipButterflyList: vipButterflies.map(b => ({ id: b.id, name: b.vipButterflyName, frameId: b.frameId })),
         rawExhibitionCount: rawExhibitionData.length,
         rawVipExhibitionCount: rawVipExhibitionData.length,
         rawExhibitionData: rawExhibitionData,
         rawVipExhibitionData: rawVipExhibitionData,
         allUsersCount: allUsers.length,
-        allUserIds: allUsers.map(u => ({ id: u.id, username: u.username }))
+        allUserIds: allUsers.map((u: any) => ({ id: u.id, username: u.username }))
       });
     } catch (error) {
       console.error('Debug error:', error);
-      res.status(500).json({ error: 'Debug failed', message: error.message });
+      res.status(500).json({ error: 'Debug failed', message: (error as Error).message });
     }
   });
 
@@ -1921,7 +1924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "❌ Error resetting data",
-        error: error.message
+        error: (error as Error).message
       });
     }
   });
