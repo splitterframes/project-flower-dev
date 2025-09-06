@@ -774,7 +774,23 @@ export const TeichView: React.FC = () => {
           isWiggling: true
         }]);
 
-        // Animate butterfly disappearing and spawn caterpillar after 3 seconds
+        // Get wackel time based on butterfly rarity (seltener = länger wackeln)
+        const getWackelTime = (rarity: string): number => {
+          switch (rarity.toLowerCase()) {
+            case 'common': return 2000;      // 2 Sekunden - schnell
+            case 'uncommon': return 3000;    // 3 Sekunden
+            case 'rare': return 4500;        // 4.5 Sekunden
+            case 'super-rare': return 6000;  // 6 Sekunden 
+            case 'epic': return 8000;        // 8 Sekunden
+            case 'legendary': return 10000;  // 10 Sekunden
+            case 'mythical': return 12000;   // 12 Sekunden - am längsten
+            default: return 3000;
+          }
+        };
+
+        const wackelTime = getWackelTime(butterfly.butterflyRarity);
+        
+        // Animate butterfly disappearing and spawn caterpillar after rarity-based time
         setTimeout(async () => {
           // Remove butterfly with burst animation
           setPlacedButterflies(prev => 
@@ -811,7 +827,7 @@ export const TeichView: React.FC = () => {
           } catch (error) {
             console.error('Failed to spawn caterpillar:', error);
           }
-        }, 3000);
+        }, wackelTime);
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');

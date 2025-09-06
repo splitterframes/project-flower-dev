@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpButton } from "./HelpButton";
 
 interface GardenField {
   id: number;
