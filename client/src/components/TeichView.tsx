@@ -877,7 +877,7 @@ export const TeichView: React.FC = () => {
 
             if (caterpillarResponse.ok) {
               console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
-              showNotification('Erfolg', `Eine Raupe wurde aus ${flower.flowerName} geboren!`, 'success');
+              // Removed success notification as requested
               // Refresh data to show spawned caterpillar
               fetchTeichData();
             }
