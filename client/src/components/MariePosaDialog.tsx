@@ -65,8 +65,8 @@ const getItemPrice = (type: string, rarity: number): number => {
       const fishPrices = {
         'common': 80,
         'uncommon': 200,
-        'rare': 500,
-        'super-rare': 900,
+        'rare': 450,
+        'super-rare': 940,
         'epic': 1500,
         'legendary': 2200,
         'mythical': 4000

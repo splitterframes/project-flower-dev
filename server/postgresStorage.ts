@@ -5019,8 +5019,8 @@ export class PostgresStorage {
       switch (rarity) {
         case 'common': return 80;
         case 'uncommon': return 200;
-        case 'rare': return 500;
-        case 'super-rare': return 900;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
         case 'epic': return 1500;
         case 'legendary': return 2200;
         case 'mythical': return 4000;
