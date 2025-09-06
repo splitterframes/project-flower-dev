@@ -37,7 +37,7 @@ import { HelpButton } from './HelpButton';
 interface MarketListing {
   id: number;
   sellerUsername: string;
-  itemType: 'seed' | 'caterpillar';
+  itemType: 'seed' | 'caterpillar' | 'flower' | 'butterfly' | 'fish';
   // Seed fields
   seedName?: string;
   seedRarity?: string;
@@ -45,6 +45,18 @@ interface MarketListing {
   caterpillarId?: number;
   caterpillarName?: string;
   caterpillarRarity?: string;
+  // Flower fields
+  flowerId?: number;
+  flowerName?: string;
+  flowerRarity?: string;
+  // Butterfly fields
+  butterflyId?: number;
+  butterflyName?: string;
+  butterflyRarity?: string;
+  // Fish fields
+  fishId?: number;
+  fishName?: string;
+  fishRarity?: string;
   quantity: number;
   pricePerUnit: number;
   totalPrice: number;
@@ -68,6 +80,9 @@ export const MarketView: React.FC = () => {
   const [sunOffers, setSunOffers] = useState<any[]>([]);
   const [mySeeds, setMySeeds] = useState<any[]>([]);
   const [myCaterpillars, setMyCaterpillars] = useState<any[]>([]);
+  const [myFlowers, setMyFlowers] = useState<any[]>([]);
+  const [myButterflies, setMyButterflies] = useState<any[]>([]);
+  const [myFish, setMyFish] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"buy" | "sell" | "server">("buy");
   const [isLoading, setIsLoading] = useState(false);
   
@@ -86,9 +101,12 @@ export const MarketView: React.FC = () => {
   
   // Sell form state
   const [sellForm, setSellForm] = useState({
-    itemType: 'seed' as 'seed' | 'caterpillar',
+    itemType: 'seed' as 'seed' | 'caterpillar' | 'flower' | 'butterfly' | 'fish',
     seedId: 0,
     caterpillarId: 0,
+    flowerId: 0,
+    butterflyId: 0,
+    fishId: 0,
     quantity: 1,
     pricePerUnit: 10
   });
@@ -99,6 +117,9 @@ export const MarketView: React.FC = () => {
       fetchServerOffers();
       fetchMySeeds();
       fetchMyCaterpillars();
+      fetchMyFlowers();
+      fetchMyButterflies();
+      fetchMyFish();
     }
   }, [user]);
 
@@ -153,6 +174,45 @@ export const MarketView: React.FC = () => {
     }
   };
 
+  const fetchMyFlowers = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/flowers`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyFlowers(data.flowers || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my flowers:', error);
+    }
+  };
+
+  const fetchMyButterflies = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/butterflies`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyButterflies(data.butterflies || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my butterflies:', error);
+    }
+  };
+
+  const fetchMyFish = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/fish`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyFish(data.fish || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my fish:', error);
+    }
+  };
+
   const buyListing = async (listingId: number, quantity: number, totalCost: number) => {
     if (!user || credits < totalCost) {
       showNotification(`Du brauchst ${totalCost} Cr um dieses Angebot zu kaufen!`, 'warning');
@@ -175,6 +235,9 @@ export const MarketView: React.FC = () => {
         await fetchMarketListings();
         await fetchMySeeds();
         await fetchMyCaterpillars();
+        await fetchMyFlowers();
+        await fetchMyButterflies();
+        await fetchMyFish();
         showNotification('Kauf erfolgreich!', 'success');
       } else {
         const error = await response.json();
@@ -191,13 +254,20 @@ export const MarketView: React.FC = () => {
     if (!user) return;
     if (sellForm.itemType === 'seed' && !sellForm.seedId) return;
     if (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId) return;
+    if (sellForm.itemType === 'flower' && !sellForm.flowerId) return;
+    if (sellForm.itemType === 'butterfly' && !sellForm.butterflyId) return;
+    if (sellForm.itemType === 'fish' && !sellForm.fishId) return;
 
     setIsLoading(true);
     try {
       // Create clean request data - only send relevant fields
       const requestData = {
         itemType: sellForm.itemType,
-        ...(sellForm.itemType === 'seed' ? { seedId: sellForm.seedId } : { caterpillarId: sellForm.caterpillarId }),
+        ...(sellForm.itemType === 'seed' ? { seedId: sellForm.seedId } : 
+            sellForm.itemType === 'caterpillar' ? { caterpillarId: sellForm.caterpillarId } :
+            sellForm.itemType === 'flower' ? { flowerId: sellForm.flowerId } :
+            sellForm.itemType === 'butterfly' ? { butterflyId: sellForm.butterflyId } :
+            sellForm.itemType === 'fish' ? { fishId: sellForm.fishId } : {}),
         quantity: sellForm.quantity,
         pricePerUnit: sellForm.pricePerUnit
       };
@@ -221,15 +291,35 @@ export const MarketView: React.FC = () => {
               ? { ...seed, quantity: Math.max(0, seed.quantity - sellForm.quantity) }
               : seed
           ).filter(seed => seed.quantity > 0));
+        } else if (sellForm.itemType === 'flower' && sellForm.flowerId) {
+          setMyFlowers(prev => prev.map(flower => 
+            flower.id === sellForm.flowerId 
+              ? { ...flower, quantity: Math.max(0, flower.quantity - sellForm.quantity) }
+              : flower
+          ).filter(flower => flower.quantity > 0));
+        } else if (sellForm.itemType === 'butterfly' && sellForm.butterflyId) {
+          setMyButterflies(prev => prev.filter(butterfly => butterfly.id !== sellForm.butterflyId));
+        } else if (sellForm.itemType === 'fish' && sellForm.fishId) {
+          setMyFish(prev => prev.map(fish => 
+            fish.id === sellForm.fishId 
+              ? { ...fish, quantity: Math.max(0, fish.quantity - sellForm.quantity) }
+              : fish
+          ).filter(fish => fish.quantity > 0));
         }
         
         await fetchMarketListings();
         await fetchMySeeds();
         await fetchMyCaterpillars();
+        await fetchMyFlowers();
+        await fetchMyButterflies();
+        await fetchMyFish();
         setSellForm({ 
           itemType: 'seed',
           seedId: 0, 
           caterpillarId: 0,
+          flowerId: 0,
+          butterflyId: 0,
+          fishId: 0,
           quantity: 1, 
           pricePerUnit: 10 
         });
@@ -671,35 +761,80 @@ export const MarketView: React.FC = () => {
               {/* Item Type Selector - Schöne Tab-Buttons */}
               <div className="mb-6">
                 <Label className="text-slate-300 mb-3 block">Was möchtest du verkaufen?</Label>
-                <div className="flex bg-slate-900 rounded-lg border border-slate-700 p-1">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 bg-slate-900 rounded-lg border border-slate-700 p-1">
                   <button
                     type="button"
-                    onClick={() => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
-                    className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-200 font-medium ${
+                    onClick={() => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0, quantity: 1})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
                       sellForm.itemType === 'seed'
                         ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg border-2 border-green-400'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                     }`}
                   >
-                    <span className="text-xl mr-2">🌱</span>
+                    <span className="text-lg mr-1">🌱</span>
                     <div className="flex flex-col items-center">
-                      <span>Samen</span>
-                      <span className="text-xs opacity-75">({mySeeds.length} verfügbar)</span>
+                      <span className="text-sm">Samen</span>
+                      <span className="text-xs opacity-75">({mySeeds.length})</span>
                     </div>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
-                    className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-200 font-medium ${
+                    onClick={() => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
                       sellForm.itemType === 'caterpillar'
                         ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg border-2 border-orange-400'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                     }`}
                   >
-                    <span className="text-xl mr-2">🐛</span>
+                    <span className="text-lg mr-1">🐛</span>
                     <div className="flex flex-col items-center">
-                      <span>Raupen</span>
-                      <span className="text-xs opacity-75">({myCaterpillars.length} verfügbar)</span>
+                      <span className="text-sm">Raupen</span>
+                      <span className="text-xs opacity-75">({myCaterpillars.length})</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'flower', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'flower'
+                        ? 'bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg border-2 border-pink-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-lg mr-1">🌸</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm">Blumen</span>
+                      <span className="text-xs opacity-75">({myFlowers.length})</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'butterfly', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'butterfly'
+                        ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg border-2 border-purple-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-lg mr-1">🦋</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm">Schmetterlinge</span>
+                      <span className="text-xs opacity-75">({myButterflies.length})</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'fish', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'fish'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg border-2 border-blue-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-lg mr-1">🐟</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm">Fische</span>
+                      <span className="text-xs opacity-75">({myFish.length})</span>
                     </div>
                   </button>
                 </div>
@@ -715,6 +850,21 @@ export const MarketView: React.FC = () => {
                 <div className="text-center py-8">
                   <p className="text-slate-400">Du hast noch keine Raupen zum Verkaufen</p>
                   <p className="text-slate-500 text-sm mt-2">Sammel Raupen am Teich um sie zu verkaufen</p>
+                </div>
+              ) : sellForm.itemType === 'flower' && myFlowers.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Du hast noch keine Blumen zum Verkaufen</p>
+                  <p className="text-slate-500 text-sm mt-2">Züchte Blumen im Garten und ernte sie</p>
+                </div>
+              ) : sellForm.itemType === 'butterfly' && myButterflies.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Du hast noch keine Schmetterlinge zum Verkaufen</p>
+                  <p className="text-slate-500 text-sm mt-2">Sammle Schmetterlinge in der Ausstellung</p>
+                </div>
+              ) : sellForm.itemType === 'fish' && myFish.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Du hast noch keine Fische zum Verkaufen</p>
+                  <p className="text-slate-500 text-sm mt-2">Züchte Fische am Teich mit Raupen</p>
                 </div>
               ) : (
                 <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
@@ -738,7 +888,43 @@ export const MarketView: React.FC = () => {
                       ))}
                     </select>
                   </div>
-                ) : (
+                ) : sellForm.itemType === 'flower' ? (
+                  <div>
+                    <Label htmlFor="flowerSelect">Blume auswählen</Label>
+                    <select
+                      id="flowerSelect"
+                      value={sellForm.flowerId}
+                      onChange={(e) => setSellForm({...sellForm, flowerId: Number(e.target.value)})}
+                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
+                      required
+                    >
+                      <option value={0}>-- Blume wählen --</option>
+                      {myFlowers.map((flower) => (
+                        <option key={flower.id} value={flower.id}>
+                          {flower.flowerName} (x{flower.quantity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : sellForm.itemType === 'fish' ? (
+                  <div>
+                    <Label htmlFor="fishSelect">Fisch auswählen</Label>
+                    <select
+                      id="fishSelect"
+                      value={sellForm.fishId}
+                      onChange={(e) => setSellForm({...sellForm, fishId: Number(e.target.value)})}
+                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
+                      required
+                    >
+                      <option value={0}>-- Fisch wählen --</option>
+                      {myFish.map((fish) => (
+                        <option key={fish.id} value={fish.id}>
+                          {fish.fishName} (x{fish.quantity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : sellForm.itemType === 'caterpillar' ? (
                   <div className="relative">
                     <Label>Raupe auswählen</Label>
                     <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
@@ -811,7 +997,75 @@ export const MarketView: React.FC = () => {
                       )}
                     </div>
                   </div>
-                )}
+                ) : sellForm.itemType === 'butterfly' ? (
+                  <div className="relative">
+                    <Label>Schmetterling auswählen</Label>
+                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
+                      {myButterflies.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400">
+                          Keine Schmetterlinge verfügbar
+                        </div>
+                      ) : (
+                        myButterflies.map((butterfly) => {
+                          const isSelected = sellForm.butterflyId === butterfly.id;
+                          
+                          return (
+                            <div
+                              key={butterfly.id}
+                              onClick={() => setSellForm({...sellForm, butterflyId: butterfly.id})}
+                              className={`cursor-pointer rounded-lg p-3 border-2 transition-all duration-200 hover:scale-[1.02] ${
+                                isSelected 
+                                  ? `border-purple-400 bg-purple-400/20 shadow-lg` 
+                                  : `hover:border-slate-500 border-slate-600 bg-slate-800`
+                              }`}
+                              style={isSelected ? { borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) } : {}}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div 
+                                  className="w-16 h-16 rounded-lg bg-slate-700 border-2 flex-shrink-0 overflow-hidden"
+                                  style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
+                                >
+                                  <img
+                                    src={butterfly.butterflyImageUrl || `/Schmetterlinge/${(butterfly.butterflyId || 0).toString().padStart(3, '0')}.jpg`}
+                                    alt={butterfly.butterflyName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">🦋</div>';
+                                    }}
+                                  />
+                                </div>
+                                
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="font-bold text-white text-sm">{butterfly.butterflyName}</h4>
+                                    <div className="flex items-center">
+                                      <Star className={`h-3 w-3 mr-1 ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`} />
+                                      <span className={`text-xs font-medium ${getRarityColor(butterfly.butterflyRarity as RarityTier)}`}>
+                                        {butterfly.butterflyRarity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    ID: {butterfly.butterflyId || butterfly.id}
+                                  </div>
+                                </div>
+                                
+                                {isSelected && (
+                                  <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-purple-400 flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">✓</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Quantity for seeds and caterpillars */}
                 <div>
@@ -822,7 +1076,15 @@ export const MarketView: React.FC = () => {
                     min="1"
                     max={sellForm.itemType === 'seed' 
                       ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 1)
-                      : (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 1)
+                      : sellForm.itemType === 'caterpillar'
+                      ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 1)
+                      : sellForm.itemType === 'flower'
+                      ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 1)
+                      : sellForm.itemType === 'butterfly'
+                      ? 1
+                      : sellForm.itemType === 'fish'
+                      ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 1)
+                      : 1
                     }
                     value={sellForm.quantity}
                     onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
@@ -832,7 +1094,15 @@ export const MarketView: React.FC = () => {
                   <p className="text-xs text-slate-400 mt-1">
                     Verfügbar: {sellForm.itemType === 'seed' 
                       ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 0)
-                      : (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 0)
+                      : sellForm.itemType === 'caterpillar'
+                      ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 0)
+                      : sellForm.itemType === 'flower'
+                      ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 0)
+                      : sellForm.itemType === 'butterfly'
+                      ? 1
+                      : sellForm.itemType === 'fish'
+                      ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 0)
+                      : 0
                     }
                   </p>
                 </div>
@@ -861,7 +1131,13 @@ export const MarketView: React.FC = () => {
                 <Button
                   type="submit"
                   className="w-full bg-orange-600 hover:bg-orange-700"
-                  disabled={isLoading || (sellForm.itemType === 'seed' && !sellForm.seedId) || (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId)}
+                  disabled={isLoading || 
+                    (sellForm.itemType === 'seed' && !sellForm.seedId) || 
+                    (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId) ||
+                    (sellForm.itemType === 'flower' && !sellForm.flowerId) ||
+                    (sellForm.itemType === 'butterfly' && !sellForm.butterflyId) ||
+                    (sellForm.itemType === 'fish' && !sellForm.fishId)
+                  }
                 >
                   {isLoading ? "Erstelle Angebot..." : "Angebot erstellen"}
                 </Button>
