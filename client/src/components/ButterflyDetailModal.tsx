@@ -479,9 +479,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                   <div className="text-sm text-slate-400 mb-4">
                     {canSell 
                       ? "Dieser Schmetterling kann jetzt verkauft werden!"
-                      : frameLikes > 0 
-                        ? `Passives Einkommen erhöht durch ${frameLikes} Likes auf diesem Rahmen! (+${frameLikes * 2}%)`
-                        : "Schmetterlinge können nach 72 Stunden verkauft werden"
+                      : "Schmetterlinge können nach 72 Stunden verkauft werden"
                     }
                   </div>
 
