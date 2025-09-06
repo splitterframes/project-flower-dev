@@ -405,7 +405,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <Button
             variant="outline"
             onClick={onBack}
-            className="border-slate-600 text-slate-300 bg-slate-700 hover:bg-slate-600"
+            className="border-blue-700 text-blue-200 bg-blue-800 hover:bg-blue-700"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Zurück
