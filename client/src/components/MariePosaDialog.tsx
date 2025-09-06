@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Crown, Sparkles, ShoppingCart, Fish, Flower2, Bug, ChevronDown, ChevronRight } from 'lucide-react';
 import { useNotification } from '../hooks/useNotification';
 import { getRarityColor, getRarityDisplayName, type RarityTier } from '@shared/rarity';
 
@@ -277,11 +276,11 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
   const getItemIcon = (type: string) => {
     switch (type) {
-      case 'flower': return <Flower2 className="h-4 w-4" />;
-      case 'butterfly': return <Bug className="h-4 w-4" />;
-      case 'caterpillar': return <Bug className="h-4 w-4 text-green-500" />;
-      case 'fish': return <Fish className="h-4 w-4" />;
-      default: return <Sparkles className="h-4 w-4" />;
+      case 'flower': return <span className="text-lg">🌸</span>;
+      case 'butterfly': return <span className="text-lg">🦋</span>;
+      case 'caterpillar': return <span className="text-lg">🐛</span>;
+      case 'fish': return <span className="text-lg">🐟</span>;
+      default: return <span className="text-lg">✨</span>;
     }
   };
 
@@ -326,8 +325,8 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
       <DialogContent className="bg-gradient-to-br from-amber-900/20 to-yellow-900/20 border-2 border-yellow-500/30 text-white max-w-5xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center text-2xl font-bold text-yellow-200">
-            <Crown className="h-8 w-8 mr-3 text-yellow-400 animate-pulse" />
-            👑 Marie Posa - Exklusive Händlerin
+            <span className="text-3xl mr-3 animate-pulse">👑</span>
+            Marie Posa - Exklusive Händlerin
           </DialogTitle>
           <p className="text-yellow-300/80 text-sm">
             Ich kaufe deine wertvollen Items zum halben Marktpreis - sofortige Bezahlung garantiert!
@@ -339,8 +338,8 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
           <Card className="bg-yellow-900/30 border-yellow-500/30">
             <CardContent className="p-4">
               <h3 className="font-bold text-yellow-200 mb-2 flex items-center">
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                📋 Handelsbedingungen
+                <span className="text-lg mr-2">🛒</span>
+                Handelsbedingungen
               </h3>
               <ul className="text-yellow-100/80 text-sm space-y-1">
                 <li>• Maximal 4 Items pro Besuch</li>
@@ -390,13 +389,13 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
                             </Badge>
                           </div>
                           {isExpanded ? (
-                            <ChevronDown className={`h-4 w-4 ${
+                            <span className={`text-lg ${
                               categoryHasSelectedItems(categoryType) ? 'text-yellow-300' : 'text-yellow-200'
-                            }`} />
+                            }`}>⬇️</span>
                           ) : (
-                            <ChevronRight className={`h-4 w-4 ${
+                            <span className={`text-lg ${
                               categoryHasSelectedItems(categoryType) ? 'text-yellow-300' : 'text-yellow-200'
-                            }`} />
+                            }`}>▶️</span>
                           )}
                         </div>
                       </CollapsibleTrigger>
@@ -478,7 +477,7 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
             <div className="border-t border-yellow-500/30 pt-4">
               <div className="flex justify-between items-center">
                 <span className="text-yellow-200 font-medium flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4" />
+                  <span className="text-lg">🛒</span>
                   {selectedItems.length} Item{selectedItems.length > 1 ? 's' : ''} ausgewählt (max. 4)
                 </span>
                 <span className="text-lg text-yellow-300 font-bold">
@@ -515,12 +514,12 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
               </>
             ) : selectedItems.length > 0 ? (
               <>
-                <Crown className="h-4 w-4" />
+                <span className="text-lg">👑</span>
                 An Marie Posa verkaufen ({totalValue} Cr)
               </>
             ) : (
               <>
-                <Crown className="h-4 w-4" />
+                <span className="text-lg">👑</span>
                 Items auswählen zum Verkaufen
               </>
             )}
