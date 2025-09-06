@@ -926,12 +926,12 @@ export const GardenView: React.FC = () => {
                   `}
                   style={{
                     backgroundImage: 'url("/Landschaft/Gardenview.png")',
-                    backgroundSize: '1000% 500%', // Scale image to fit across 10 columns and 5 rows
-                    backgroundPosition: getBackgroundPosition(field.id - 1), // field.id is 1-based, convert to 0-based
+                    backgroundSize: 'calc(10 * 100%) calc(5 * 100%)', // Exact size: 10 fields wide, 5 fields high
+                    backgroundPosition: `${-((field.id - 1) % 10) * 100}% ${-Math.floor((field.id - 1) / 10) * 100}%`,
                     backgroundRepeat: 'no-repeat',
                     minHeight: '44px',
                     minWidth: '44px',
-                    backgroundColor: '#1e293b' // Fallback if image doesn't load
+                    backgroundColor: '#1e293b'
                   }}
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
