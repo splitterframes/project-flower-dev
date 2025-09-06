@@ -131,6 +131,7 @@ export const TeichView: React.FC = () => {
   const [fieldCaterpillars, setFieldCaterpillars] = useState<any[]>([]);
   const [showSeedModal, setShowSeedModal] = useState(false);
   const [showBouquetModal, setShowBouquetModal] = useState(false);
+  const [showButterflyModal, setShowButterflyModal] = useState(false);
   const [selectedField, setSelectedField] = useState<number | null>(null);
   const [shakingField, setShakingField] = useState<number | null>(null);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
