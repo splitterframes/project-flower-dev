@@ -927,6 +927,11 @@ export class PostgresStorage {
 
     // Process purchase based on item type
     if (listing[0].itemType === "seed") {
+      // Use copied seed data from market listing
+      if (!listing[0].seedName || !listing[0].seedRarity) {
+        return { success: false, message: 'Seed data incomplete' };
+      }
+
       // Add seller credits
       const seller = await this.getUser(listing[0].sellerId);
       if (seller) {
@@ -942,8 +947,8 @@ export class PostgresStorage {
         .set({ credits: buyer.credits - totalPrice })
         .where(eq(users.id, buyerId));
 
-      // Add seeds to buyer
-      await this.addSeedToInventory(buyerId, listing[0].seedId, data.quantity);
+      // Add seeds to buyer using copied data (seeds support quantities)
+      await this.addSeedToInventory(buyerId, listing[0].seedIdOriginal || 0, data.quantity);
 
     } else if (listing[0].itemType === "caterpillar") {
       // For caterpillars, quantity is always 1
