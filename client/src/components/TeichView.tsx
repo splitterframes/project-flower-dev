@@ -445,8 +445,7 @@ export const TeichView: React.FC = () => {
         console.log("🌸 FETCHTEICHDATA: setUserBouquets DONE");
         setPlacedBouquets([]);
         console.log("🌸 FETCHTEICHDATA: setPlacedBouquets DONE");
-        setFieldButterflies(fieldButterfliesData.fieldButterflies || []);
-        console.log("🌸 FETCHTEICHDATA: setFieldButterflies DONE");
+        // No field butterflies needed in TeichView - nur pond-spezifische Daten
         setFieldFish(fieldFishData.fieldFish || []);
         console.log("🌸 FETCHTEICHDATA: setFieldFish DONE");
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
