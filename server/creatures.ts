@@ -500,3 +500,42 @@ export function getAvailableFishIds(): number[] {
 export function getAvailableCaterpillarIds(): number[] {
   return [...AVAILABLE_CATERPILLAR_IDS];
 }
+
+// Generate random flower of specific rarity
+export async function generateRandomFlower(rarity: RarityTier): Promise<FlowerData> {
+  // Get all flower IDs that match the requested rarity
+  const matchingIds = Array.from(FLOWER_RARITY_MAP.entries())
+    .filter(([id, assignedRarity]) => assignedRarity === rarity)
+    .map(([id]) => id);
+  
+  // If no flowers of this rarity, fall back to any available ID
+  const availableIds = matchingIds.length > 0 ? matchingIds : AVAILABLE_FLOWER_IDS;
+  const flowerId = availableIds[Math.floor(Math.random() * availableIds.length)];
+  
+  // Generate consistent Latin name using flowerId as seed
+  const { generateLatinFlowerName } = await import('../shared/rarity');
+  const name = generateLatinFlowerName(flowerId);
+
+  return {
+    id: flowerId,
+    name,
+    imageUrl: `/Blumen/${getFlowerImageFilename(flowerId)}`
+  };
+}
+
+// Get flower rarity for specific flower ID
+export function getFlowerRarity(flowerId: number): RarityTier {
+  return FLOWER_RARITY_MAP.get(flowerId) || 'common';
+}
+
+// Export available flower IDs for external use
+export function getAvailableFlowerIds(): number[] {
+  return [...AVAILABLE_FLOWER_IDS];
+}
+
+// FlowerData interface to match other creature interfaces
+interface FlowerData {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
