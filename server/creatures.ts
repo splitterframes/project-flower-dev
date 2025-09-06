@@ -313,6 +313,37 @@ export async function generateRandomCaterpillar(rarity: RarityTier): Promise<Cat
 // ==================== INITIALIZATION ====================
 
 // Initialize both systems
+// ==================== FLOWER SYSTEM ====================
+
+// Initialize available flower IDs
+let AVAILABLE_FLOWER_IDS: number[] = [];
+let TOTAL_FLOWERS = 200; // Default, will be updated
+
+// Get proper filename for flower ID
+function getFlowerImageFilename(id: number): string {
+  return `${id}.jpg`;
+}
+
+// Base rarity distribution for flowers (same percentages as fish/caterpillars)
+const FLOWER_RARITY_DISTRIBUTION_PERCENT = {
+  common: 0.275,       // 27.5% (55/200)
+  uncommon: 0.225,     // 22.5% (45/200)
+  rare: 0.175,         // 17.5% (35/200)
+  'super-rare': 0.125, // 12.5% (25/200)
+  epic: 0.10,          // 10.0% (20/200)
+  legendary: 0.075,    // 7.5%  (15/200)
+  mythical: 0.025      // 2.5%  (5/200)
+};
+
+// Dynamic flower rarity distribution
+let FLOWER_RARITY_DISTRIBUTION = {};
+
+// Create randomized rarity assignments for each flower ID
+const FLOWER_RARITY_MAP = new Map<number, RarityTier>();
+
+// Store original flower rarities (1-200) to preserve existing assignments
+let ORIGINAL_FLOWER_RARITIES: Map<number, RarityTier> | null = null;
+
 // Generate all available flower IDs dynamically from Blumen folder
 async function generateAvailableFlowerIds(): Promise<number[]> {
   try {
@@ -347,6 +378,98 @@ async function generateAvailableFlowerIds(): Promise<number[]> {
       ids.push(i);
     }
     return ids;
+  }
+}
+
+// Initialize flower rarity assignments
+async function initializeFlowerRarities(): Promise<void> {
+  try {
+    // Get available flower IDs
+    AVAILABLE_FLOWER_IDS = await generateAvailableFlowerIds();
+    TOTAL_FLOWERS = AVAILABLE_FLOWER_IDS.length;
+    
+    // Preserve original rarities for existing flowers (1-200) from RARITY_CONFIG
+    if (!ORIGINAL_FLOWER_RARITIES) {
+      ORIGINAL_FLOWER_RARITIES = new Map();
+      
+      // Import RARITY_CONFIG to get original flower rarities
+      const { RARITY_CONFIG } = await import('../shared/rarity');
+      
+      // Create original rarity assignments for flowers 1-200 based on RARITY_CONFIG
+      for (let flowerId = 1; flowerId <= 200; flowerId++) {
+        if (AVAILABLE_FLOWER_IDS.includes(flowerId)) {
+          let rarity: RarityTier = 'common'; // Default fallback
+          
+          // Determine rarity based on RARITY_CONFIG ranges
+          if (flowerId >= 1 && flowerId <= 55) {
+            rarity = 'common';
+          } else if (flowerId >= 56 && flowerId <= 100) {
+            rarity = 'uncommon';
+          } else if (flowerId >= 101 && flowerId <= 135) {
+            rarity = 'rare';
+          } else if (flowerId >= 136 && flowerId <= 160) {
+            rarity = 'super-rare';
+          } else if (flowerId >= 161 && flowerId <= 180) {
+            rarity = 'epic';
+          } else if (flowerId >= 181 && flowerId <= 195) {
+            rarity = 'legendary';
+          } else if (flowerId >= 196 && flowerId <= 200) {
+            rarity = 'mythical';
+          }
+          
+          ORIGINAL_FLOWER_RARITIES.set(flowerId, rarity);
+        }
+      }
+    }
+    
+    // Clear and rebuild flower rarity map
+    FLOWER_RARITY_MAP.clear();
+    
+    // First, add all preserved original rarities
+    for (const [id, rarity] of ORIGINAL_FLOWER_RARITIES) {
+      if (AVAILABLE_FLOWER_IDS.includes(id)) {
+        FLOWER_RARITY_MAP.set(id, rarity);
+      }
+    }
+    
+    // Find new flowers (201+) that need rarity assignment
+    const newFlowerIds = AVAILABLE_FLOWER_IDS.filter(id => id > 200);
+    
+    if (newFlowerIds.length > 0) {
+      // Assign rarities to new flowers using distribution percentages
+      const newRarityAssignments: RarityTier[] = [];
+      
+      for (const [rarity, percentage] of Object.entries(FLOWER_RARITY_DISTRIBUTION_PERCENT) as [RarityTier, number][]) {
+        const count = Math.floor(newFlowerIds.length * percentage);
+        for (let i = 0; i < count; i++) {
+          newRarityAssignments.push(rarity);
+        }
+      }
+      
+      // Fill remaining slots with common rarity
+      while (newRarityAssignments.length < newFlowerIds.length) {
+        newRarityAssignments.push('common');
+      }
+      
+      // Shuffle assignments for randomness
+      const shuffledNewRarities = shuffleArray(newRarityAssignments);
+      
+      // Assign rarities to new flower IDs
+      newFlowerIds.forEach((flowerId, index) => {
+        FLOWER_RARITY_MAP.set(flowerId, shuffledNewRarities[index] || 'common');
+      });
+      
+      console.log(`🌸 Assigned rarities to ${newFlowerIds.length} new flowers (201+)`);
+    }
+    
+    console.log(`🌸 Initialized flower system with ${TOTAL_FLOWERS} flowers`);
+  } catch (error) {
+    console.error('🌸 Error initializing flower rarities:', error);
+    
+    // Fallback: assign common rarity to all available flowers
+    for (const flowerId of AVAILABLE_FLOWER_IDS) {
+      FLOWER_RARITY_MAP.set(flowerId, 'common');
+    }
   }
 }
 
