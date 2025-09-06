@@ -347,24 +347,63 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     alt={symbol.name}
                     className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // Use 0.jpg as fallback for each type
+                      // Robust fallback system - prevent multiple calls
                       const target = e.target as HTMLImageElement;
                       
+                      // Prevent infinite onError loops
+                      if (target.getAttribute('data-fallback-used') === 'true') {
+                        // Ultimate fallback: colored rectangle with type-specific colors and text
+                        let bgColor = '#374151';
+                        let textColor = '#ffffff';
+                        let text = '?';
+                        
+                        switch(symbol.type) {
+                          case 'butterfly':
+                            bgColor = '#7c3aed';
+                            text = 'S';
+                            break;
+                          case 'fish':
+                            bgColor = '#0ea5e9';
+                            text = 'F';
+                            break;
+                          case 'caterpillar':
+                            bgColor = '#16a34a';
+                            text = 'R';
+                            break;
+                          case 'flower':
+                            bgColor = '#dc2626';
+                            text = 'B';
+                            break;
+                          case 'sun':
+                            bgColor = '#f59e0b';
+                            text = '☀';
+                            break;
+                        }
+                        
+                        target.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="160" height="160" fill="${bgColor}" rx="20"/>
+                            <text x="80" y="105" text-anchor="middle" font-size="60" fill="${textColor}" font-weight="bold">${text}</text>
+                          </svg>
+                        `)}`;
+                        return;
+                      }
+                      
+                      // Mark that we're using fallback
+                      target.setAttribute('data-fallback-used', 'true');
+                      
+                      // Try 0.jpg as first fallback
                       switch(symbol.type) {
                         case 'butterfly':
-                          // Fallback to first butterfly image
                           target.src = '/Schmetterlinge/0.jpg';
                           break;
                         case 'fish':
-                          // Fallback to first fish image
                           target.src = '/Fische/0.jpg';
                           break;
                         case 'caterpillar':
-                          // Fallback to first caterpillar image
                           target.src = '/Raupen/0.jpg';
                           break;
                         case 'flower':
-                          // Fallback to first flower image
                           target.src = '/Blumen/0.jpg';
                           break;
                         case 'sun':
