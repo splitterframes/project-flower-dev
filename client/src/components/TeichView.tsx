@@ -1375,6 +1375,22 @@ export const TeichView: React.FC = () => {
                     )}
 
 
+                    {/* Persistent field flowers from database (ALWAYS VISIBLE) */}
+                    {fieldFlowers.find(f => f.fieldIndex === field.id - 1) && (() => {
+                      const dbFlower = fieldFlowers.find(f => f.fieldIndex === field.id - 1)!;
+                      return (
+                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                          <RarityImage
+                            src={dbFlower.flowerImageUrl}
+                            alt={dbFlower.flowerName || "Blume"}
+                            rarity={dbFlower.flowerRarity as RarityTier || "common"}
+                            size="large"
+                            className="w-full h-full"
+                          />
+                        </div>
+                      );
+                    })()}
+
                     {/* Local placed flowers with shimmer and dissolve animations */}
                     {placedFlowers.find(f => f.fieldId === field.id) && (() => {
                       const flower = placedFlowers.find(f => f.fieldId === field.id)!;
