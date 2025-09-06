@@ -452,7 +452,7 @@ export const TeichView: React.FC = () => {
         console.log("🌸 FETCHTEICHDATA: setFieldCaterpillars DONE");
         setSunSpawns([]); // No sun spawns in pond view
         console.log("🌸 FETCHTEICHDATA: setSunSpawns DONE");
-        setUserButterflies(butterfliesData.butterflies || []);
+        setUserButterflies([]); // No butterflies needed in TeichView
         console.log("🌸 FETCHTEICHDATA: setUserButterflies DONE");
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
         console.log("🌸 FETCHTEICHDATA: setUserCaterpillars DONE");
