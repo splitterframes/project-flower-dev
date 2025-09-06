@@ -182,27 +182,39 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     return prices[rarity as keyof typeof prices] || 10;
   };
 
-  // Calculate current Cr/h based on degradation over 72 hours
+  // Calculate current Cr/h based on degradation over 72 hours with like bonus
   const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string): number => {
+    let baseValue: number;
+    
     if (isVip || rarity === 'vip') {
       // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
       const startValue = 60;
       const minValue = 6;
-      return calculateDegradedValue(startValue, minValue, placedAt);
+      baseValue = calculateDegradedValue(startValue, minValue, placedAt);
+    } else {
+      const rarityValues = {
+        'common': { start: 1, min: 1 },       // No degradation for Common
+        'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+      };
+
+      const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
+      baseValue = calculateDegradedValue(values.start, values.min, placedAt);
     }
-
-    const rarityValues = {
-      'common': { start: 1, min: 1 },       // No degradation for Common
-      'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
-      'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
-      'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
-      'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
-      'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
-      'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
-    };
-
-    const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
-    return calculateDegradedValue(values.start, values.min, placedAt);
+    
+    // Apply like bonus: 2% per like for 72 hours
+    if (butterfly?.frameId && frameLikes) {
+      const frameWithLikes = frameLikes.find(f => f.frameId === butterfly.frameId);
+      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+      const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+      baseValue = Math.round(baseValue * likeBonus);
+    }
+    
+    return baseValue;
   };
 
   // Calculate degraded value over 72 hours

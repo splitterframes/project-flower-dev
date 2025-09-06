@@ -206,27 +206,39 @@ export const ExhibitionView: React.FC = () => {
     return Math.round(500 * Math.pow(1.2, frameCount - 1));
   };
 
-  // Calculate current Cr/h based on degradation over 72 hours
-  const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string): number => {
+  // Calculate current Cr/h based on degradation over 72 hours with like bonus
+  const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string, frameId?: number): number => {
+    let baseValue: number;
+    
     if (isVip || rarity === 'vip') {
       // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
       const startValue = 60;
       const minValue = 6;
-      return calculateDegradedValue(startValue, minValue, placedAt);
+      baseValue = calculateDegradedValue(startValue, minValue, placedAt);
+    } else {
+      const rarityValues = {
+        'common': { start: 1, min: 1 },       // No degradation for Common
+        'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+      };
+
+      const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
+      baseValue = calculateDegradedValue(values.start, values.min, placedAt);
     }
-
-    const rarityValues = {
-      'common': { start: 1, min: 1 },       // No degradation for Common
-      'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
-      'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
-      'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
-      'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
-      'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
-      'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
-    };
-
-    const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
-    return calculateDegradedValue(values.start, values.min, placedAt);
+    
+    // Apply like bonus: 2% per like for 72 hours
+    if (frameId && frameLikes) {
+      const frameWithLikes = frameLikes.find(f => f.frameId === frameId);
+      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+      const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+      baseValue = Math.round(baseValue * likeBonus);
+    }
+    
+    return baseValue;
   };
 
   // Calculate degraded value over 72 hours
@@ -251,30 +263,30 @@ export const ExhibitionView: React.FC = () => {
   };
 
   const getFrameHourlyIncome = (frameId: number): number => {
-    // Income from normal butterflies in this frame with time-based degradation
+    // Income from normal butterflies in this frame with time-based degradation and like bonus
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frameId);
     const normalIncome = frameButterflies.reduce((total, butterfly) => {
-      return total + getCurrentCrPerHour(butterfly.butterflyRarity, false, butterfly.placedAt);
+      return total + getCurrentCrPerHour(butterfly.butterflyRarity, false, butterfly.placedAt, butterfly.frameId);
     }, 0);
     
-    // Income from VIP butterflies in this frame with time-based degradation
+    // Income from VIP butterflies in this frame with time-based degradation and like bonus
     const frameVipButterflies = exhibitionVipButterflies.filter(b => b.frameId === frameId);
     const vipIncome = frameVipButterflies.reduce((total, vipButterfly) => {
-      return total + getCurrentCrPerHour('vip', true, vipButterfly.placedAt);
+      return total + getCurrentCrPerHour('vip', true, vipButterfly.placedAt, vipButterfly.frameId);
     }, 0);
     
     return normalIncome + vipIncome;
   };
 
   const getTotalHourlyIncome = (): number => {
-    // Calculate income from normal butterflies with time-based degradation
+    // Calculate income from normal butterflies with time-based degradation and like bonus
     const normalIncome = exhibitionButterflies.reduce((total, butterfly) => {
-      return total + getCurrentCrPerHour(butterfly.butterflyRarity, false, butterfly.placedAt);
+      return total + getCurrentCrPerHour(butterfly.butterflyRarity, false, butterfly.placedAt, butterfly.frameId);
     }, 0);
     
-    // Add income from VIP butterflies with time-based degradation
+    // Add income from VIP butterflies with time-based degradation and like bonus
     const vipIncome = exhibitionVipButterflies.reduce((total, vipButterfly) => {
-      return total + getCurrentCrPerHour('vip', true, vipButterfly.placedAt);
+      return total + getCurrentCrPerHour('vip', true, vipButterfly.placedAt, vipButterfly.frameId);
     }, 0);
     
     return normalIncome + vipIncome;
