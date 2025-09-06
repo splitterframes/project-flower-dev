@@ -994,10 +994,10 @@ export const MarketView: React.FC = () => {
                   <p className="text-slate-500 text-sm mt-2">Züchte Fische am Teich mit Raupen</p>
                 </div>
               ) : (
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                   <form onSubmit={createListing}>
                     {/* Two Column Layout: Selection Left + Form Right */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-2 gap-6">
                       
                       {/* LEFT COLUMN: Item Selection Card */}
                       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-500/30">
