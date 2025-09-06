@@ -777,13 +777,13 @@ export const TeichView: React.FC = () => {
         // Get wackel time based on butterfly rarity (seltener = länger wackeln)
         const getWackelTime = (rarity: string): number => {
           switch (rarity.toLowerCase()) {
-            case 'common': return 2000;      // 2 Sekunden - schnell
-            case 'uncommon': return 3000;    // 3 Sekunden
-            case 'rare': return 4500;        // 4.5 Sekunden
-            case 'super-rare': return 6000;  // 6 Sekunden 
-            case 'epic': return 8000;        // 8 Sekunden
-            case 'legendary': return 10000;  // 10 Sekunden
-            case 'mythical': return 12000;   // 12 Sekunden - am längsten
+            case 'common': return 3000;      // 3 Sekunden - schnellstes Spawnen
+            case 'uncommon': return 5000;    // 5 Sekunden
+            case 'rare': return 8000;        // 8 Sekunden
+            case 'super-rare': return 12000; // 12 Sekunden 
+            case 'epic': return 18000;       // 18 Sekunden
+            case 'legendary': return 20000;  // 20 Sekunden
+            case 'mythical': return 30000;   // 30 Sekunden - längstes Wackeln
             default: return 3000;
           }
         };
