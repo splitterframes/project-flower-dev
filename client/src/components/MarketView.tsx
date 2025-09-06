@@ -553,13 +553,126 @@ export const MarketView: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {marketListings.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400">Noch keine Angebote verfügbar</p>
+            {/* Filter Buttons */}
+            <div className="mb-6">
+              <Label className="text-slate-300 mb-3 block">Angebote filtern:</Label>
+              <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 bg-slate-900 rounded-lg border border-slate-700 p-1">
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('all')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'all'
+                      ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-lg border-2 border-slate-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">📦</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Alle</span>
+                    <span className="text-xs opacity-75">({marketListings.length})</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('seed')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'seed'
+                      ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg border-2 border-green-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">🌱</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Samen</span>
+                    <span className="text-xs opacity-75">({marketListings.filter(l => l.itemType === 'seed').length})</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('flower')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'flower'
+                      ? 'bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg border-2 border-pink-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">🌸</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Blumen</span>
+                    <span className="text-xs opacity-75">({marketListings.filter(l => l.itemType === 'flower').length})</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('butterfly')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'butterfly'
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg border-2 border-purple-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">🦋</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Schmetterlinge</span>
+                    <span className="text-xs opacity-75">({marketListings.filter(l => l.itemType === 'butterfly').length})</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('caterpillar')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'caterpillar'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg border-2 border-orange-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">🐛</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Raupen</span>
+                    <span className="text-xs opacity-75">({marketListings.filter(l => l.itemType === 'caterpillar').length})</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyFilter('fish')}
+                  className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                    buyFilter === 'fish'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg border-2 border-blue-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="text-lg mr-1">🐟</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">Fische</span>
+                    <span className="text-xs opacity-75">({marketListings.filter(l => l.itemType === 'fish').length})</span>
+                  </div>
+                </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {marketListings.map((listing) => {
+            </div>
+
+            {(() => {
+              const filteredListings = buyFilter === 'all' 
+                ? marketListings 
+                : marketListings.filter(listing => listing.itemType === buyFilter);
+              
+              return filteredListings.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">
+                    {buyFilter === 'all' 
+                      ? 'Noch keine Angebote verfügbar' 
+                      : `Noch keine ${
+                          buyFilter === 'seed' ? 'Samen' :
+                          buyFilter === 'flower' ? 'Blumen' :
+                          buyFilter === 'butterfly' ? 'Schmetterling' :
+                          buyFilter === 'caterpillar' ? 'Raupen' :
+                          buyFilter === 'fish' ? 'Fisch' : ''
+                        } Angebote verfügbar`
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredListings.map((listing) => {
                   const rarity = listing.itemType === 'seed' ? listing.seedRarity : 
                                 listing.itemType === 'caterpillar' ? listing.caterpillarRarity :
                                 listing.itemType === 'flower' ? listing.flowerRarity :
