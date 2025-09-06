@@ -1,0 +1,66 @@
+[vite] connecting...
+[vite] connected.
+Updating garden with planted fields: 
+Array []
+New garden state: 
+Array []
+Updating garden with placed bouquets: 
+Array []
+Updating garden with field butterflies: 
+Array []
+Updating garden with sun spawns: 
+Array []
+🌸 FETCHTEICHDATA: Starting to fetch pond data...
+🌸 FETCHTEICHDATA: All API responses received, checking status...
+🌸 FETCHTEICHDATA: All responses OK, parsing JSON...
+🌸 FETCHTEICHDATA: JSON parsed, flowersData = 
+Object {flowers: Array(9)}
+🌸 FETCHTEICHDATA: Starting field processing...
+🌸 FETCHTEICHDATA: About to set userFlowers...
+🌸 FETCHTEICHDATA: userFlowers SET! ✅ Length: 9
+🌊 Updating pond with field caterpillars: 
+Array [{…}]
+🌸 FETCHTEICHDATA CATCH ERROR: 
+ReferenceError {}
+
+🌸 FETCHTEICHDATA: Starting to fetch pond data...
+🌸 FETCHTEICHDATA: All API responses received, checking status...
+🌸 FETCHTEICHDATA: All responses OK, parsing JSON...
+🌸 FETCHTEICHDATA: JSON parsed, flowersData = 
+Object {flowers: Array(9)}
+🌸 FETCHTEICHDATA: Starting field processing...
+🌸 FETCHTEICHDATA: About to set userFlowers...
+🌸 FETCHTEICHDATA: userFlowers SET! ✅ Length: 9
+🌊 Updating pond with field caterpillars: 
+Array [{…}]
+🌸 FETCHTEICHDATA CATCH ERROR: 
+ReferenceError {}
+
+🌸 Debug: userFlowers.length = 9 userButterflies.length = 0
+🌸 Debug: Full userFlowers = 
+(9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+🌸 Opening flower selection for field 11 with 9 flowers
+🌸 PLACEFLOWER: Starting with flowerId: 93 selectedField: 11
+🌸 PLACEFLOWER: Making API call...
+🌸 PLACEFLOWER: API success! 
+Object {message: "Blume erfolgreich platziert!", flower: {…}}
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+🌸 FETCHTEICHDATA: Starting to fetch pond data...
+🌸 FETCHTEICHDATA: All API responses received, checking status...
+🌸 FETCHTEICHDATA: All responses OK, parsing JSON...
+🌸 FETCHTEICHDATA: JSON parsed, flowersData = 
+Object {flowers: Array(8)}
+🌸 FETCHTEICHDATA: Starting field processing...
+🌸 FETCHTEICHDATA: About to set userFlowers...
+🌸 FETCHTEICHDATA: userFlowers SET! ✅ Length: 8
+🌊 Updating pond with field caterpillars: 
+Array [{…}]
+🌸 FETCHTEICHDATA CATCH ERROR: 
+ReferenceError {}
+
+🐛 Caterpillar spawned from Celeste eternus on field 11!
+🌸 FETCHTEICHDATA: Starting to fetch pond data...
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+🌸 FETCHTEICHDATA: All API responses received, checking status...
+🌸 FETCHTEICHDATA: All responses OK, parsing JSON...
+🌸 FETCHTEICHDATA: J
