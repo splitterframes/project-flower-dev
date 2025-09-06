@@ -893,7 +893,29 @@ export const TeichView: React.FC = () => {
 
             if (caterpillarResponse.ok) {
               console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
-              // Removed success notification as requested
+              
+              // ✅ CRITICAL FIX: Remove flower from database field after caterpillar spawns
+              try {
+                const removeFlowerResponse = await fetch('/api/garden/remove-field-flower', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-id': user.id.toString()
+                  },
+                  body: JSON.stringify({
+                    fieldIndex: selectedField - 1
+                  })
+                });
+                
+                if (removeFlowerResponse.ok) {
+                  console.log(`🌸 Field flower removed from database after caterpillar spawn ✅`);
+                } else {
+                  console.error('Failed to remove field flower from database');
+                }
+              } catch (error) {
+                console.error('Error removing field flower:', error);
+              }
+              
               // Refresh data to show spawned caterpillar
               fetchTeichData();
             }
