@@ -1130,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Spawn caterpillar with rarity inheritance
+  // Spawn caterpillar with rarity inheritance (legacy butterfly system)
   app.post("/api/garden/spawn-caterpillar", async (req, res) => {
     try {
       const { fieldIndex, parentRarity } = req.body;
@@ -1151,6 +1151,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('🐛 Error spawning caterpillar:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Spawn caterpillar from flower (new pond system)
+  app.post("/api/garden/spawn-caterpillar-from-flower", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🌸 Spawning caterpillar from flower on field ${fieldIndex} for user ${userId}`);
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      // Check if there's a flower on this field
+      const fieldFlower = await storage.getFieldFlower(userId, fieldIndex);
+      if (!fieldFlower) {
+        return res.status(400).json({ message: 'Keine Blume auf diesem Feld gefunden' });
+      }
+
+      // Spawn caterpillar with flower's rarity
+      const result = await storage.spawnCaterpillarOnField(userId, fieldIndex, fieldFlower.flowerRarity);
+      
+      if (result.success) {
+        // Remove the flower after spawning caterpillar
+        await storage.removeFieldFlower(userId, fieldIndex);
+        console.log(`🌸 Flower consumed after caterpillar spawn on field ${fieldIndex}`);
+        
+        res.json({ 
+          message: 'Caterpillar spawned from flower successfully', 
+          caterpillar: result.caterpillar,
+          consumedFlower: fieldFlower 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('🌸 Error spawning caterpillar from flower:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
