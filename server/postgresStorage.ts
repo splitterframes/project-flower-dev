@@ -5623,7 +5623,7 @@ export class PostgresStorage {
       const flowers = await this.db
         .select()
         .from(fieldFlowers)
-        .where(eq(fieldFlowers.userId, userId))
+        .where(sql`user_id = ${userId}`)
         .orderBy(fieldFlowers.fieldIndex);
       
       console.log(`🌸 Found ${flowers.length} field flowers for user ${userId}`);

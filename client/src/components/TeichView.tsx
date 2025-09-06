@@ -1254,6 +1254,7 @@ export const TeichView: React.FC = () => {
                         }
                         
                         // Blumen-Auswahl Dialog öffnen für neue pond system (nur wenn keine Raupe da ist)
+                        console.log("🌸 Debug: userFlowers.length =", userFlowers.length, "userButterflies.length =", userButterflies.length);
                         if (!isCollectingCaterpillar && userFlowers.length > 0) {
                           console.log("🌸 Opening flower selection for field", field.id, "with", userFlowers.length, "flowers");
                           setSelectedField(field.id);
@@ -1261,7 +1262,7 @@ export const TeichView: React.FC = () => {
                         } else if (isCollectingCaterpillar) {
                           console.log("🐛 Currently collecting caterpillar, skipping butterfly dialog for", field.id);
                         } else {
-                          showNotification('Keine Schmetterlinge', 'Du hast keine Schmetterlinge im Inventar.', 'error');
+                          showNotification('Keine Blumen', 'Du hast keine Blumen im Inventar zum Platzieren.', 'info');
                         }
                         return;
                       }
