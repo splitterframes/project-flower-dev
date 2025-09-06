@@ -150,6 +150,50 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     }
   };
 
+  // Calculate current Cr/h based on degradation over 72 hours
+  const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string): number => {
+    if (isVip || rarity === 'vip') {
+      // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+      const startValue = 60;
+      const minValue = 6;
+      return calculateDegradedValue(startValue, minValue, placedAt);
+    }
+
+    const rarityValues = {
+      'common': { start: 1, min: 1 },       // No degradation for Common
+      'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+      'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+      'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+      'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+      'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+      'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+    };
+
+    const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
+    return calculateDegradedValue(values.start, values.min, placedAt);
+  };
+
+  // Calculate degraded value over 72 hours
+  const calculateDegradedValue = (startValue: number, minValue: number, placedAt?: string): number => {
+    if (!placedAt) return startValue;
+
+    const placedTime = new Date(placedAt).getTime();
+    const now = new Date().getTime();
+    const timeSincePlacement = now - placedTime;
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
+      const valueRange = startValue - minValue;
+      const currentValue = startValue - (valueRange * degradationProgress);
+      return Math.max(Math.round(currentValue), minValue);
+    }
+
+    // After 72 hours, return minimum value
+    return minValue;
+  };
+
   const fetchPassiveIncome = async () => {
     if (!user) return;
     
@@ -161,28 +205,20 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
       
       let hourlyIncome = 0;
       
-      // Calculate income from normal butterflies
+      // Calculate income from normal butterflies with time-based degradation
       if (butterfliesRes.ok) {
         const butterfliesData = await butterfliesRes.json();
         hourlyIncome += (butterfliesData.butterflies || []).reduce((total: number, butterfly: any) => {
-          switch (butterfly.butterflyRarity) {
-            case 'common': return total + 1;
-            case 'uncommon': return total + 2;
-            case 'rare': return total + 5;
-            case 'super-rare': return total + 10;
-            case 'epic': return total + 20;
-            case 'legendary': return total + 50;
-            case 'mythical': return total + 100;
-            default: return total + 1;
-          }
+          return total + getCurrentCrPerHour(butterfly.butterflyRarity, false, butterfly.placedAt);
         }, 0);
       }
       
-      // Calculate income from VIP butterflies (60 credits/hour each)
+      // Calculate income from VIP butterflies with time-based degradation
       if (vipButterfliesRes.ok) {
         const vipButterfliesData = await vipButterfliesRes.json();
-        const vipCount = (vipButterfliesData.vipButterflies || []).length;
-        hourlyIncome += vipCount * 60; // Each VIP = 60 credits/hour
+        hourlyIncome += (vipButterfliesData.vipButterflies || []).reduce((total: number, vipButterfly: any) => {
+          return total + getCurrentCrPerHour('vip', true, vipButterfly.placedAt);
+        }, 0);
       }
       
       setPassiveIncome(hourlyIncome);
