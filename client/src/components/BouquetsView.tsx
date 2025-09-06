@@ -271,11 +271,13 @@ export const BouquetsView: React.FC = () => {
       <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
         <div className="flex items-center justify-between mb-3">
           <div></div> {/* Spacer links */}
-          <div className="text-center flex-1">
-            <h1 className="text-2xl font-bold text-pink-300 mb-1">
-              Bouquet Kollektion
-            </h1>
-            <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+          <div className="flex-1 flex justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-pink-300 mb-1">
+                Bouquet Kollektion
+              </h1>
+              <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+            </div>
           </div>
           <div className="flex justify-end">
             <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
