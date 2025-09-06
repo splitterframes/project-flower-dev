@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/stores/useAuth';
 import { useNotification } from '../hooks/useNotification';
 import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
+import { FishDetailModal } from './FishDetailModal';
 import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight, Fish } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
@@ -88,6 +89,11 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
+  
+  // Fish modal state  
+  const [selectedFish, setSelectedFish] = useState<AquariumFish | null>(null);
+  const [showFishModal, setShowFishModal] = useState(false);
+  const [currentFishIndex, setCurrentFishIndex] = useState<number>(0);
   const [viewMode, setViewMode] = useState<ViewMode>('exhibition');
 
   useEffect(() => {
@@ -542,7 +548,17 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                                 className="aspect-square bg-blue-950/30 border border-blue-400/30 rounded-lg flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow min-h-0"
                               >
                                 {fish ? (
-                                  <div className="w-full h-full relative group cursor-pointer">
+                                  <div 
+                                    className="w-full h-full relative group cursor-pointer"
+                                    onClick={() => {
+                                      console.log("🐟 Foreign Fish clicked:", fish.fishName, fish.id);
+                                      const fishIndex = aquariumFish.findIndex(f => f.id === fish.id);
+                                      setSelectedFish(fish);
+                                      setCurrentFishIndex(fishIndex >= 0 ? fishIndex : 0);
+                                      setShowFishModal(true);
+                                      console.log("🐟 Foreign Fish Modal should open:", fish.fishName);
+                                    }}
+                                  >
                                     <RarityImage
                                       src={fish.fishImageUrl}
                                       alt={fish.fishName}
@@ -612,6 +628,38 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         } : null}
         onSold={() => {}} // Not used in read-only mode
         readOnly={true} // This will hide selling options
+      />
+
+      {/* Fish Detail Modal for viewing other users' fish */}
+      <FishDetailModal
+        isOpen={showFishModal}
+        onClose={() => {
+          setShowFishModal(false);
+          setSelectedFish(null);
+        }}
+        fish={selectedFish ? {
+          id: selectedFish.id,
+          fishName: selectedFish.fishName,
+          fishRarity: selectedFish.fishRarity,
+          fishImageUrl: selectedFish.fishImageUrl,
+          placedAt: selectedFish.placedAt,
+          userId: selectedFish.userId,
+          tankId: selectedFish.tankId
+        } : null}
+        onSold={() => {}} // Not used in read-only mode
+        readOnly={true} // This will hide selling options
+        currentIndex={currentFishIndex}
+        totalCount={aquariumFish.length}
+        onNext={currentFishIndex < aquariumFish.length - 1 ? () => {
+          const nextIndex = currentFishIndex + 1;
+          setCurrentFishIndex(nextIndex);
+          setSelectedFish(aquariumFish[nextIndex]);
+        } : undefined}
+        onPrevious={currentFishIndex > 0 ? () => {
+          const prevIndex = currentFishIndex - 1;
+          setCurrentFishIndex(prevIndex);
+          setSelectedFish(aquariumFish[prevIndex]);
+        } : undefined}
       />
     </div>
   );
