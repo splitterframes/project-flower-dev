@@ -5032,21 +5032,12 @@ export class PostgresStorage {
   }
 
   private getCaterpillarSellPrice(rarity: string): number {
-    // Caterpillar prices are 85% of butterfly prices
-    const basePrice = (() => {
-      switch (rarity) {
-        case 'common': return 50;
-        case 'uncommon': return 100;
-        case 'rare': return 200;
-        case 'super-rare': return 400;
-        case 'epic': return 600;
-        case 'legendary': return 800;
-        case 'mythical': return 1000;
-        default: return 50;
-      }
-    })();
+    // NEW: Caterpillar prices are 30% more than flowers of same rarity (130% of flower price)
+    // First get the flower price for this rarity
+    const flowerPrice = this.getFlowerSellPrice(rarity);
     
-    return Math.floor(basePrice * 0.85); // 85% of butterfly prices
+    // Return 130% of flower price (30% more valuable than flowers)
+    return Math.floor(flowerPrice * 1.3);
   }
 
   // Marie Posa trading system functions
