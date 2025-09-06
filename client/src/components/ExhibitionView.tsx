@@ -600,16 +600,18 @@ export const ExhibitionView: React.FC = () => {
       {/* Exhibition Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-purple-500/30">
         {/* Title Section */}
-        <div className="flex items-center justify-between mb-4">
-          <div></div> {/* Spacer links */}
+        <div className="relative mb-4">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="In der Ausstellung präsentierst du deine schönsten Schmetterlinge in Rahmen! Du verdienst passiv Credits pro Stunde basierend auf der Rarität deiner ausgestellten Schmetterlinge. VIP-Schmetterlinge bringen noch mehr Credits!" viewType="exhibition" />
+          </div>
+          
+          {/* Zentrierter Content */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-purple-300 mb-1">
               Schmetterlingsausstellung 🦋
             </h1>
             <p className="text-slate-400 text-sm">Stelle deine Schmetterlinge aus</p>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="In der Ausstellung präsentierst du deine schönsten Schmetterlinge in Rahmen! Du verdienst passiv Credits pro Stunde basierend auf der Rarität deiner ausgestellten Schmetterlinge. VIP-Schmetterlinge bringen noch mehr Credits!" viewType="exhibition" />
           </div>
         </div>
         

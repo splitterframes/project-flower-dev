@@ -336,16 +336,18 @@ export const MarketView: React.FC = () => {
       {/* Market Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-emerald-500/30">
         {/* Title Section */}
-        <div className="flex items-center justify-between mb-4">
-          <div></div> {/* Spacer links */}
+        <div className="relative mb-4">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Im Markt kaufst du Samen von anderen Spielern oder vom Server. Du kannst auch deine eigenen Samen verkaufen und Credits verdienen. Schau regelmäßig nach neuen Angeboten!" viewType="market" />
+          </div>
+          
+          {/* Zentrierter Content */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-emerald-300 mb-1">
               Samen Markt 🌱
             </h1>
             <p className="text-slate-400 text-sm">Handel mit anderen Spielern</p>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="Im Markt kaufst du Samen von anderen Spielern oder vom Server. Du kannst auch deine eigenen Samen verkaufen und Credits verdienen. Schau regelmäßig nach neuen Angeboten!" viewType="market" />
           </div>
         </div>
         

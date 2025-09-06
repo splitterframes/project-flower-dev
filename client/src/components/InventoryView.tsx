@@ -579,16 +579,18 @@ export const InventoryView: React.FC = () => {
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
       {/* Compact Inventory Header */}
       <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-500/30">
-        <div className="flex items-center justify-between">
-          <div></div> {/* Spacer links */}
+        <div className="relative">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Im Inventar siehst du alle deine gesammelten Gegenstände: Samen, Blumen, Schmetterlinge, Fische und Raupen. Du kannst sie hier verwalten und für verschiedene Zwecke verwenden!" viewType="inventory" />
+          </div>
+          
+          {/* Zentrierter Content */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-indigo-300 mb-1">
               Inventar 🎒
             </h1>
             <p className="text-slate-400 text-sm">Verwalte deine Blumen und Schmetterlinge</p>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="Im Inventar siehst du alle deine gesammelten Gegenstände: Samen, Blumen, Schmetterlinge, Fische und Raupen. Du kannst sie hier verwalten und für verschiedene Zwecke verwenden!" viewType="inventory" />
           </div>
         </div>
       </div>

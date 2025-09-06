@@ -246,8 +246,13 @@ export const FlowerpowerView: React.FC = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div></div> {/* Spacer links */}
+        <div className="relative mb-8">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Bei der Flowerpower Challenge spendest du bestimmte Blumen für die Gemeinschaft! Je mehr Blumen du spendest, desto höher deine Chance auf seltene animierte Schmetterlinge als Belohnung!" viewType="flowerpower" />
+          </div>
+          
+          {/* Zentrierter Content */}
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               <Zap className="h-10 w-10 text-orange-400 mr-3" />
@@ -258,9 +263,6 @@ export const FlowerpowerView: React.FC = () => {
             <p className="text-slate-400 text-lg">
               Woche {challenge?.weekNumber} • Spende Blumen und gewinne animierte Schmetterlinge!
             </p>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="Bei der Flowerpower Challenge spendest du bestimmte Blumen für die Gemeinschaft! Je mehr Blumen du spendest, desto höher deine Chance auf seltene animierte Schmetterlinge als Belohnung!" viewType="flowerpower" />
           </div>
         </div>
 

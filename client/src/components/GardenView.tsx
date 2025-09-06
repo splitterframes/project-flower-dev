@@ -810,16 +810,18 @@ export const GardenView: React.FC = () => {
       {/* Garden Header with Stats */}
       <div className="bg-slate-800/60 p-6 rounded-lg border border-green-500/30">
         {/* Title Section */}
-        <div className="flex items-center justify-between mb-4">
-          <div></div> {/* Spacer links */}
+        <div className="relative mb-4">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Im Mariposa Garten pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick auf Felder für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen!" viewType="garden" />
+          </div>
+          
+          {/* Zentrierter Content */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-green-300 mb-1">
               Mariposa Garten 🌱
             </h1>
             <p className="text-slate-400 text-sm">Züchte Blumen für deine Schmetterlinge</p>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="Im Mariposa Garten pflanzt du Samen, lässt sie wachsen und erstellst Bouquets für deine Schmetterlinge. Links-Klick auf Felder für Samen pflanzen, Rechts-Klick für Bouquets platzieren. Sammle die goldenen Sonnen!" viewType="garden" />
           </div>
         </div>
         
