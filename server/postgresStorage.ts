@@ -996,8 +996,12 @@ export class PostgresStorage {
 
   private async processPurchase(listing: any, buyerId: number, quantity: number, totalPrice: number, buyer: any): Promise<{ success: boolean; message?: string }> {
     try {
-      // Transfer credits between seller and buyer
-      await this.transferCredits(listing.sellerId, buyerId, totalPrice, buyer);
+      // Transfer credits between seller and buyer (skip if self-purchase)
+      if (listing.sellerId === buyerId) {
+        console.log(`🔄 Self-purchase detected: No credit transfer needed`);
+      } else {
+        await this.transferCredits(listing.sellerId, buyerId, totalPrice, buyer);
+      }
 
       // Add item to buyer's inventory based on type
       switch (listing.itemType) {
