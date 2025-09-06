@@ -2753,23 +2753,15 @@ export class PostgresStorage {
     
     if (butterfly.length === 0) return 0;
     
-    // Get likes count for this frame
-    const allFrameLikes = await this.getUserFrameLikes(userId);
-    const frameWithLikes = allFrameLikes.find(f => f.frameId === butterfly[0].frameId);
-    const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
-    
     const now = new Date();
     const placedAt = new Date(butterfly[0].placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
-    // Base time: 72 hours for production
+    // Base time: 72 hours for production (no more likes time reduction)
     const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
     
-    // Likes reduction: 1 hour per like in milliseconds  
-    const likesReductionMs = likesCount * 60 * 60 * 1000;
-    
-    // Required time to sell = 72 hours - (likes * 1 hour)
-    const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
+    // No more likes time reduction - always 72 hours for selling
+    const requiredTimeMs = baseTimeMs;
     
     // Time remaining = required time - elapsed time
     const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
@@ -2873,23 +2865,15 @@ export class PostgresStorage {
     
     if (vipButterfly.length === 0) return 0;
     
-    // Get likes count for this frame (VIP butterflies also benefit from likes)
-    const allFrameLikes = await this.getUserFrameLikes(userId);
-    const frameWithLikes = allFrameLikes.find(f => f.frameId === vipButterfly[0].frameId);
-    const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
-    
     const now = new Date();
     const placedAt = new Date(vipButterfly[0].placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
-    // Base time: 72 hours for production
+    // Base time: 72 hours for production (no more likes time reduction)
     const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
     
-    // Likes reduction: 1 hour per like in milliseconds  
-    const likesReductionMs = likesCount * 60 * 60 * 1000;
-    
-    // Required time to sell = 72 hours - (likes * 1 hour)
-    const requiredTimeMs = Math.max(0, baseTimeMs - likesReductionMs);
+    // No more likes time reduction - always 72 hours for selling
+    const requiredTimeMs = baseTimeMs;
     
     // Time remaining = required time - elapsed time
     const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
