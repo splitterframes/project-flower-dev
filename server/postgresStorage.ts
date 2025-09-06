@@ -13,6 +13,7 @@ import {
   userFish,
   userCaterpillars,
   fieldButterflies,
+  fieldFlowers,
   fieldCaterpillars,
   fedCaterpillars as fedCaterpillarsTable,
   userVipButterflies,
@@ -5511,6 +5512,148 @@ export class PostgresStorage {
       rank: index + 1,
       isCurrentUser: (user.id === currentUserId) || (user.userId === currentUserId)
     }));
+  }
+
+  // ==================== FIELD FLOWERS MANAGEMENT (for Pond Caterpillar Spawning) ====================
+
+  async getUserFlower(userId: number, flowerId: number): Promise<any | null> {
+    try {
+      console.log(`🌸 Getting flower ${flowerId} for user ${userId}`);
+      
+      const flower = await this.db.select().from(userFlowers).where(
+        and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.id, flowerId)
+        )
+      ).limit(1);
+      
+      if (flower.length === 0) {
+        console.log(`🌸 Flower ${flowerId} not found for user ${userId}`);
+        return null;
+      }
+      
+      console.log(`🌸 Found flower: ${flower[0].flowerName} (quantity: ${flower[0].quantity})`);
+      return flower[0];
+    } catch (error) {
+      console.error('🌸 Error getting user flower:', error);
+      return null;
+    }
+  }
+
+  async getFieldFlower(userId: number, fieldIndex: number): Promise<any | null> {
+    try {
+      const flower = await this.db.select().from(fieldFlowers).where(
+        and(
+          eq(fieldFlowers.userId, userId),
+          eq(fieldFlowers.fieldIndex, fieldIndex)
+        )
+      ).limit(1);
+      
+      return flower.length > 0 ? flower[0] : null;
+    } catch (error) {
+      console.error('🌸 Error getting field flower:', error);
+      return null;
+    }
+  }
+
+  async placeFlowerOnField(userId: number, fieldIndex: number, flowerId: number): Promise<{ success: boolean; message?: string; flower?: any }> {
+    console.log(`🌸 Placing flower ${flowerId} on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      // Check if user has this flower
+      const userFlower = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(eq(userFlowers.userId, userId), eq(userFlowers.id, flowerId)));
+
+      if (userFlower.length === 0) {
+        return { success: false, message: "Blume nicht gefunden" };
+      }
+
+      if (userFlower[0].quantity <= 0) {
+        return { success: false, message: "Nicht genügend Blumen im Inventar" };
+      }
+
+      // Check if field already has a flower
+      const existingFlower = await this.db
+        .select()
+        .from(fieldFlowers)
+        .where(and(eq(fieldFlowers.userId, userId), eq(fieldFlowers.fieldIndex, fieldIndex)));
+
+      if (existingFlower.length > 0) {
+        return { success: false, message: "Auf diesem Feld ist bereits eine Blume platziert" };
+      }
+
+      // Place flower on field
+      await this.db.insert(fieldFlowers).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        flowerId: userFlower[0].flowerId,
+        flowerName: userFlower[0].flowerName,
+        flowerRarity: userFlower[0].flowerRarity,
+        flowerImageUrl: userFlower[0].flowerImageUrl,
+        isShrinking: false
+      });
+
+      // Consume flower from user inventory
+      const newQuantity = userFlower[0].quantity - 1;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, flowerId));
+      } else {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: newQuantity })
+          .where(eq(userFlowers.id, flowerId));
+      }
+
+      console.log(`🌸 Flower ${userFlower[0].flowerName} placed on field ${fieldIndex}`);
+      return { success: true, flower: userFlower[0] };
+    } catch (error) {
+      console.error('🌸 Error placing flower on field:', error);
+      return { success: false, message: "Datenbankfehler beim Platzieren der Blume" };
+    }
+  }
+
+  async getFieldFlowers(userId: number): Promise<any[]> {
+    try {
+      console.log(`🌸 Getting field flowers for user ${userId}`);
+      
+      const flowers = await this.db
+        .select()
+        .from(fieldFlowers)
+        .where(eq(fieldFlowers.userId, userId))
+        .orderBy(fieldFlowers.fieldIndex);
+      
+      console.log(`🌸 Found ${flowers.length} field flowers for user ${userId}`);
+      return flowers;
+    } catch (error) {
+      console.error('🌸 Error getting field flowers:', error);
+      return [];
+    }
+  }
+
+  async removeFieldFlower(userId: number, fieldIndex: number): Promise<{ success: boolean; message?: string }> {
+    console.log(`🌸 Removing field flower on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      const result = await this.db
+        .delete(fieldFlowers)
+        .where(and(eq(fieldFlowers.userId, userId), eq(fieldFlowers.fieldIndex, fieldIndex)))
+        .returning();
+
+      console.log(`🌸 Deletion result: ${result.length} rows deleted`);
+
+      if (result.length === 0) {
+        return { success: false, message: 'No flower found on field' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('🌸 Error removing field flower:', error);
+      return { success: false, message: "Datenbankfehler beim Entfernen der Blume" };
+    }
   }
 }
 

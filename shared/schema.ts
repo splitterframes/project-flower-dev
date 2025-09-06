@@ -160,6 +160,11 @@ export const placeButterflyOnFieldSchema = z.object({
   butterflyId: z.number().min(1)
 });
 
+export const placeFlowerOnFieldSchema = z.object({
+  fieldIndex: z.number().min(0).max(49),
+  flowerId: z.number().min(1)
+});
+
 // Sun spawns on garden fields
 export const sunSpawns = pgTable("sun_spawns", {
   id: serial("id").primaryKey(),
@@ -547,6 +552,7 @@ export type ChallengeDonation = typeof challengeDonations.$inferSelect;
 export type ChallengeReward = typeof challengeRewards.$inferSelect;
 export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
 export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldSchema>;
+export type PlaceFlowerOnFieldRequest = z.infer<typeof placeFlowerOnFieldSchema>;
 export type PondFeedingProgress = typeof pondFeedingProgress.$inferSelect;
 export type FieldFish = typeof fieldFish.$inferSelect;
 

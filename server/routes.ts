@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
-import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema, placeFlowerOnFieldSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1033,6 +1033,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('🦋 Error removing butterfly:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ========== FLOWER ON FIELD SYSTEM (for Teich/Pond caterpillar spawning) ==========
+  
+  // Place flower on pond grass field (for caterpillar spawning)
+  app.post("/api/garden/place-flower-on-field", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const data = placeFlowerOnFieldSchema.parse(req.body);
+      
+      console.log(`🌸 Processing flower placement for flower ${data.flowerId} on field ${data.fieldIndex} for user ${userId}`);
+
+      // Check if user has this flower and reduce quantity
+      const flower = await storage.getUserFlower(userId, data.flowerId);
+      
+      if (!flower) {
+        return res.status(400).json({ message: "Blume nicht gefunden" });
+      }
+
+      if (flower.quantity <= 0) {
+        return res.status(400).json({ message: "Nicht genügend Blumen im Inventar" });
+      }
+
+      // Check if field is a valid pond grass field (not water, not regular garden)
+      const row = Math.floor(data.fieldIndex / 10);
+      const col = data.fieldIndex % 10;
+      const isPondWater = row >= 1 && row <= 3 && col >= 1 && col <= 8;
+      
+      if (isPondWater) {
+        return res.status(400).json({ message: "Blumen können nicht auf Wasserfelden platziert werden" });
+      }
+
+      // Check if field already has a flower
+      const existingFlower = await storage.getFieldFlower(userId, data.fieldIndex);
+      if (existingFlower) {
+        return res.status(400).json({ message: "Auf diesem Feld ist bereits eine Blume platziert" });
+      }
+
+      // Place flower on field and consume from inventory
+      const result = await storage.placeFlowerOnField(userId, data.fieldIndex, data.flowerId);
+      
+      if (result.success) {
+        console.log(`🌸 Flower placed successfully on field ${data.fieldIndex}`);
+        res.json({ message: 'Blume erfolgreich platziert!', flower: flower });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('🌸 Error placing flower:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all field flowers for a user
+  app.get("/api/user/:userId/field-flowers", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
+      
+      const fieldFlowers = await storage.getFieldFlowers(userId);
+      res.json({ fieldFlowers });
+    } catch (error) {
+      console.error('🌸 Error getting field flowers:', error);
+      res.status(500).json({ error: "Failed to get field flowers" });
+    }
+  });
+
+  // Remove flower from field (for cleanup after caterpillar spawn)
+  app.post("/api/garden/remove-field-flower", async (req, res) => {
+    try {
+      const { fieldIndex } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🌸 Removing flower from field ${fieldIndex} for user ${userId}`);
+      
+      if (fieldIndex === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex' });
+      }
+
+      const result = await storage.removeFieldFlower(userId, fieldIndex);
+      
+      if (result.success) {
+        res.json({ message: 'Flower removed successfully' });
+      } else {
+        res.status(404).json({ message: 'No flower found on field' });
+      }
+    } catch (error) {
+      console.error('🌸 Error removing flower:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
