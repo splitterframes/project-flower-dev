@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/stores/useAuth';
 import { useNotification } from '../hooks/useNotification';
 import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
-import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight, Fish } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
 interface ExhibitionButterfly {
@@ -35,33 +35,66 @@ interface FrameLike {
   totalLikes: number;
 }
 
+interface AquariumFish {
+  id: number;
+  userId: number;
+  tankId: number;
+  slotIndex: number;
+  fishId: number;
+  fishName: string;
+  fishRarity: string;
+  fishImageUrl: string;
+  placedAt: string;
+  createdAt: string;
+}
+
+interface AquariumTank {
+  id: number;
+  userId: number;
+  tankNumber: number;
+  purchasedAt: string;
+  createdAt: string;
+}
+
+type ViewMode = 'exhibition' | 'aquarium';
+
 interface ForeignExhibitionViewProps {
   ownerId: number;
   ownerName: string;
   onBack: () => void;
 }
 
-export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
+export const ForeignExhibitionViewNew: React.FC<ForeignExhibitionViewProps> = ({
   ownerId,
   ownerName,
   onBack
 }) => {
   const { user } = useAuth();
   const { showNotification } = useNotification();
+  
+  // Exhibition data
   const [butterflies, setButterflies] = useState<ExhibitionButterfly[]>([]);
   const [vipButterflies, setVipButterflies] = useState<any[]>([]);
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  
+  // Aquarium data
+  const [aquariumFish, setAquariumFish] = useState<AquariumFish[]>([]);
+  const [aquariumTanks, setAquariumTanks] = useState<AquariumTank[]>([]);
+  const [currentTankIndex, setCurrentTankIndex] = useState(0);
+  
+  // Common state
   const [loading, setLoading] = useState(true);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyModal, setShowButterflyModal] = useState(false);
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>('exhibition');
 
   useEffect(() => {
     loadForeignExhibition();
     loadFrameLikes();
+    loadForeignAquarium();
   }, [ownerId]);
-
 
   const loadForeignExhibition = async () => {
     try {
@@ -89,10 +122,21 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     }
   };
 
+  const loadForeignAquarium = async () => {
+    try {
+      const response = await fetch(`/api/user/${ownerId}/foreign-aquarium`);
+      const data = await response.json();
+      setAquariumFish(data.fish || []);
+      setAquariumTanks(data.tanks || []);
+    } catch (error) {
+      console.error('Failed to load foreign aquarium:', error);
+    }
+  };
+
   const handleLike = async (frameId: number) => {
     if (!user) return;
 
-    const frameButterflies = frames.get(frameId) || [];
+    const frameButterflies = butterflyFrames.get(frameId) || [];
     const frameLike = frameLikes.find(fl => fl.frameId === frameId);
     const isCurrentlyLiked = frameLike?.isLiked || false;
 
@@ -118,10 +162,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       });
 
       if (response.ok) {
-        // Reload frame likes data from server to ensure consistency
         await loadFrameLikes();
       } else {
-        // Handle server error
         const errorData = await response.json();
         showNotification(errorData.message || 'Fehler beim Liken des Rahmens', 'error');
       }
@@ -133,24 +175,33 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 
   // Group butterflies by frame
   const butterflyFrames = new Map<number, ExhibitionButterfly[]>();
-  const vipButterflyFrames = new Map<number, any[]>();
-  
   butterflies.forEach(butterfly => {
-    const frameButterflies = butterflyFrames.get(butterfly.frameId) || [];
-    frameButterflies.push(butterfly);
-    butterflyFrames.set(butterfly.frameId, frameButterflies);
-  });
-  
-  vipButterflies.forEach(vipButterfly => {
-    const frameVipButterflies = vipButterflyFrames.get(vipButterfly.frameId) || [];
-    frameVipButterflies.push(vipButterfly);
-    vipButterflyFrames.set(vipButterfly.frameId, frameVipButterflies);
+    if (!butterflyFrames.has(butterfly.frameId)) {
+      butterflyFrames.set(butterfly.frameId, []);
+    }
+    butterflyFrames.get(butterfly.frameId)!.push(butterfly);
   });
 
-  // Get all frame IDs with butterflies (both normal and VIP)
+  const vipButterflyFrames = new Map<number, any[]>();
+  vipButterflies.forEach(butterfly => {
+    if (!vipButterflyFrames.has(butterfly.frameId)) {
+      vipButterflyFrames.set(butterfly.frameId, []);
+    }
+    vipButterflyFrames.get(butterfly.frameId)!.push(butterfly);
+  });
+
+  // Group fish by tank
+  const fishTanks = new Map<number, AquariumFish[]>();
+  aquariumFish.forEach(fish => {
+    if (!fishTanks.has(fish.tankId)) {
+      fishTanks.set(fish.tankId, []);
+    }
+    fishTanks.get(fish.tankId)!.push(fish);
+  });
+
   const allFrameIds = new Set([
-    ...Array.from(butterflyFrames.keys()),
-    ...Array.from(vipButterflyFrames.keys())
+    ...butterflies.map(b => b.frameId),
+    ...vipButterflies.map(b => b.frameId)
   ]);
   
   const sortedFrameIds = Array.from(allFrameIds).sort((a, b) => {
@@ -159,6 +210,14 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     return (frameA?.frameNumber || 0) - (frameB?.frameNumber || 0);
   });
 
+  const sortedTankIds = aquariumTanks
+    .map(tank => tank.id)
+    .sort((a, b) => {
+      const tankA = aquariumTanks.find(t => t.id === a);
+      const tankB = aquariumTanks.find(t => t.id === b);
+      return (tankA?.tankNumber || 0) - (tankB?.tankNumber || 0);
+    });
+
   // Reset frame index when frames change
   useEffect(() => {
     if (currentFrameIndex >= sortedFrameIds.length && sortedFrameIds.length > 0) {
@@ -166,11 +225,18 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     }
   }, [sortedFrameIds.length, currentFrameIndex]);
 
+  // Reset tank index when tanks change
+  useEffect(() => {
+    if (currentTankIndex >= sortedTankIds.length && sortedTankIds.length > 0) {
+      setCurrentTankIndex(sortedTankIds.length - 1);
+    }
+  }, [sortedTankIds.length, currentTankIndex]);
+
   if (loading) {
     return (
       <div className="p-8 space-y-6">
         <div className="text-center text-slate-300">
-          Lade Ausstellung von {ownerName}...
+          Lade {viewMode === 'exhibition' ? 'Ausstellung' : 'Aquarium'} von {ownerName}...
         </div>
       </div>
     );
@@ -193,238 +259,360 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">
-                🦋 Ausstellung von {ownerName}
+                {viewMode === 'exhibition' ? '🦋' : '🐠'} {viewMode === 'exhibition' ? 'Ausstellung' : 'Aquarium'} von {ownerName}
               </h1>
               <p className="text-slate-300 mt-2">
-                Entdecke die Schmetterlingssammlung und vergib Likes!
+                {viewMode === 'exhibition' 
+                  ? 'Entdecke die Schmetterlingssammlung und vergib Likes!' 
+                  : 'Betrachte die Fischsammlung im Aquarium!'}
               </p>
+              
+              {/* View Mode Toggle */}
+              <div className="flex space-x-2 mt-4">
+                <Button
+                  onClick={() => setViewMode('exhibition')}
+                  variant={viewMode === 'exhibition' ? 'default' : 'outline'}
+                  size="sm"
+                  className={viewMode === 'exhibition' 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200'}
+                >
+                  <Bug className="h-4 w-4 mr-2" />
+                  Ausstellung
+                </Button>
+                <Button
+                  onClick={() => setViewMode('aquarium')}
+                  variant={viewMode === 'aquarium' ? 'default' : 'outline'}
+                  size="sm"
+                  className={viewMode === 'aquarium' 
+                    ? 'bg-cyan-600 hover:bg-cyan-700 text-white' 
+                    : 'bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200'}
+                >
+                  <Fish className="h-4 w-4 mr-2" />
+                  Aquarium
+                </Button>
+              </div>
             </div>
           </div>
           <div className="text-slate-300">
-            <Bug className="h-8 w-8 inline mr-2 text-blue-400 animate-pulse" />
-            {butterflies.length} Schmetterlinge ausgestellt
+            {viewMode === 'exhibition' ? (
+              <>
+                <Bug className="h-8 w-8 inline mr-2 text-blue-400 animate-pulse" />
+                {butterflies.length} Schmetterlinge ausgestellt
+              </>
+            ) : (
+              <>
+                <Fish className="h-8 w-8 inline mr-2 text-cyan-400 animate-pulse" />
+                {aquariumFish.length} Fische im Aquarium
+              </>
+            )}
           </div>
         </div>
 
-        {/* Frame Navigation */}
-        {sortedFrameIds.length > 0 ? (
-          <div className="space-y-6">
-            {/* Navigation Controls */}
-            <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
-              <Button
-                onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
-                disabled={currentFrameIndex === 0}
-                variant="outline"
-                size="sm"
-                className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              
-              <div className="text-lg font-semibold text-slate-300">
-                #{(frames.find(f => f.id === sortedFrameIds[currentFrameIndex])?.frameNumber || 1)} / {sortedFrameIds.length}
-              </div>
-              
-              <Button
-                onClick={() => setCurrentFrameIndex(Math.min(sortedFrameIds.length - 1, currentFrameIndex + 1))}
-                disabled={currentFrameIndex >= sortedFrameIds.length - 1}
-                variant="outline"
-                size="sm"
-                className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Current Frame */}
-            {sortedFrameIds[currentFrameIndex] && (() => {
-              const frameId = sortedFrameIds[currentFrameIndex];
-              const frameData = frames.find(f => f.id === frameId);
-              const frameNumber = frameData?.frameNumber || 1;
-              const frameButterflies = butterflyFrames.get(frameId) || [];
-              const frameVipButterflies = vipButterflyFrames.get(frameId) || [];
-              const frameLike = frameLikes.find(fl => fl.frameId === frameId);
-              
-              const totalButterflies = frameButterflies.length + frameVipButterflies.length;
-              const isFullFrame = totalButterflies === 6;
-              const canBeLiked = isFullFrame || frameLike?.isLiked;
-              
-              return (
-                <Card 
-                  key={frameId}
-                  className={`bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-2 ${
-                    isFullFrame 
-                      ? 'border-green-500/50 hover:border-green-400/70' 
-                      : 'border-slate-600 hover:border-orange-400/50'
-                  } transition-all duration-300 shadow-xl max-w-2xl mx-auto`}
+        {/* Exhibition Mode */}
+        {viewMode === 'exhibition' && (
+          sortedFrameIds.length > 0 ? (
+            <div className="space-y-6">
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
+                <Button
+                  onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                  disabled={currentFrameIndex === 0}
+                  variant="outline"
+                  size="sm"
+                  className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
                 >
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
-                      <div className="flex items-center">
-                        <span>🖼️ Rahmen #{frameNumber}</span>
-                        {isFullFrame && (
-                          <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse">
-                            Vollständig
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                
+                <div className="text-lg font-semibold text-slate-300">
+                  #{(frames.find(f => f.id === sortedFrameIds[currentFrameIndex])?.frameNumber || 1)} / {sortedFrameIds.length}
+                </div>
+                
+                <Button
+                  onClick={() => setCurrentFrameIndex(Math.min(sortedFrameIds.length - 1, currentFrameIndex + 1))}
+                  disabled={currentFrameIndex >= sortedFrameIds.length - 1}
+                  variant="outline"
+                  size="sm"
+                  className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Current Frame */}
+              {sortedFrameIds[currentFrameIndex] && (() => {
+                const frameId = sortedFrameIds[currentFrameIndex];
+                const frameData = frames.find(f => f.id === frameId);
+                const frameNumber = frameData?.frameNumber || 1;
+                const frameButterflies = butterflyFrames.get(frameId) || [];
+                const frameVipButterflies = vipButterflyFrames.get(frameId) || [];
+                const frameLike = frameLikes.find(fl => fl.frameId === frameId);
+                
+                const totalButterflies = frameButterflies.length + frameVipButterflies.length;
+                const isFullFrame = totalButterflies === 6;
+                const canBeLiked = isFullFrame || frameLike?.isLiked;
+                
+                return (
+                  <Card 
+                    key={frameId}
+                    className={`bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-2 ${
+                      isFullFrame 
+                        ? 'border-green-500/50 hover:border-green-400/70' 
+                        : 'border-slate-600 hover:border-orange-400/50'
+                    } transition-all duration-300 shadow-xl max-w-2xl mx-auto`}
+                  >
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-xl font-bold text-white flex items-center justify-between">
+                        <div className="flex items-center">
+                          <span>🖼️ Rahmen #{frameNumber}</span>
+                          {isFullFrame && (
+                            <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full animate-pulse">
+                              Vollständig
+                            </span>
+                          )}
+                          {!isFullFrame && (
+                            <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
+                              {totalButterflies}/6
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-slate-400">
+                            {frameLike?.totalLikes || 0} <Heart className="h-4 w-4 inline text-pink-400" />
                           </span>
-                        )}
-                        {!isFullFrame && (
-                          <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
-                            {totalButterflies}/6
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => handleLike(frameId)}
-                        variant="outline"
-                        size="sm"
-                        disabled={!canBeLiked}
-                        className={`${
-                          frameLike?.isLiked 
-                            ? 'bg-pink-600 border-pink-500 text-white hover:bg-pink-700' 
-                            : canBeLiked
-                              ? 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
-                              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                        } transition-all duration-300`}
-                        title={!canBeLiked ? 'Nur vollständige Rahmen (6 Schmetterlinge) können geliked werden' : ''}
-                      >
-                        <Heart 
-                          className={`h-4 w-4 mr-2 ${
-                            frameLike?.isLiked ? 'fill-white animate-pulse' : ''
-                          }`} 
-                        />
-                        {frameLike?.totalLikes || 0}
-                        {(frameLike?.totalLikes || 0) > 0 && isFullFrame && (
-                          <span className="ml-1 text-xs text-green-300">(+{(frameLike?.totalLikes || 0) * 2}% Einkommen)</span>
-                        )}
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[400px] bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-4 border border-slate-700">
-                      {[0, 1, 2, 3, 4, 5].map(slotIndex => {
-                        const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
-                        const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
-                        const hasContent = butterfly || vipButterfly;
-                        
-                        return (
-                          <div
-                            key={slotIndex}
-                            className="aspect-square border border-dashed border-slate-600 rounded flex items-center justify-center bg-slate-800/50 hover:border-orange-400/50 transition-all duration-300 min-h-0"
+                          <Button
+                            onClick={() => handleLike(frameId)}
+                            disabled={!canBeLiked}
+                            variant={frameLike?.isLiked ? "default" : "outline"}
+                            size="sm"
+                            className={frameLike?.isLiked 
+                              ? "bg-pink-600 hover:bg-pink-700 text-white" 
+                              : canBeLiked 
+                                ? "bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 hover:border-pink-400" 
+                                : "bg-slate-800 border-slate-600 text-slate-500 cursor-not-allowed"}
                           >
-                            {hasContent ? (
-                              vipButterfly ? (
-                                // VIP Butterfly Display
+                            <Heart className={`h-4 w-4 mr-1 ${frameLike?.isLiked ? 'fill-current' : ''}`} />
+                            {frameLike?.isLiked ? 'Geliked' : 'Liken'}
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Butterfly Display Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
+                          const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex) ||
+                                          frameVipButterflies.find(b => b.slotIndex === slotIndex);
+                          
+                          return (
+                            <div 
+                              key={slotIndex} 
+                              className={`aspect-square border-2 rounded-lg ${
+                                butterfly ? 'border-slate-400' : 'border-slate-600'
+                              } bg-slate-800/50 flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-amber-400/50`}
+                            >
+                              {butterfly ? (
                                 <div 
-                                  className="relative w-full h-full group cursor-pointer bg-gradient-to-br from-pink-800/50 to-purple-800/50 rounded border-2 border-pink-500"
-                                  onClick={() => {
-                                    // Convert VIP butterfly to normal butterfly format for the modal
-                                    const butterflyForModal = {
-                                      id: vipButterfly.id,
-                                      userId: vipButterfly.userId,
-                                      frameId: vipButterfly.frameId,
-                                      slotIndex: vipButterfly.slotIndex,
-                                      butterflyId: vipButterfly.vipButterflyId,
-                                      butterflyName: vipButterfly.vipButterflyName,
-                                      butterflyRarity: 'vip',
-                                      butterflyImageUrl: vipButterfly.vipButterflyImageUrl,
-                                      placedAt: vipButterfly.placedAt,
-                                      createdAt: vipButterfly.createdAt
-                                    };
-                                    setSelectedButterfly(butterflyForModal);
-                                    setShowButterflyModal(true);
-                                  }}
-                                >
-                                  {/* Animated sparkle overlay */}
-                                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded animate-pulse"></div>
-                                  
-                                  <img
-                                    src={vipButterfly.vipButterflyImageUrl}
-                                    alt={vipButterfly.vipButterflyName}
-                                    className="w-full h-full object-cover rounded transition-transform group-hover:scale-105 relative z-10"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                  
-                                  {/* VIP Crown Icon */}
-                                  <div className="absolute top-1 right-1 bg-yellow-400 rounded-full p-1 z-20">
-                                    <Bug className="w-3 h-3 text-yellow-900" />
-                                  </div>
-                                  
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center z-20">
-                                    <div className="text-center text-white text-xs">
-                                      <div className="font-bold text-pink-200">{vipButterfly.vipButterflyName}</div>
-                                      <div className="text-yellow-300 font-semibold">✨ VIP Premium 👑</div>
-                                      <div className="mt-2 text-green-300 font-semibold">
-                                        Klicken für Details
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                // Normal Butterfly Display
-                                <div 
-                                  className="relative w-full h-full group cursor-pointer"
+                                  className="w-full h-full cursor-pointer group relative" 
                                   onClick={() => {
                                     setSelectedButterfly(butterfly);
                                     setShowButterflyModal(true);
                                   }}
                                 >
-                                  <RarityImage
-                                    src={butterfly.butterflyImageUrl}
-                                    alt={butterfly.butterflyName}
-                                    rarity={butterfly.butterflyRarity as RarityTier}
-                                    size="medium"
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
-                                    <div className="text-center text-white text-xs">
-                                      <div className="font-bold">{butterfly.butterflyName}</div>
-                                      <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
-                                        {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
-                                      </div>
-                                      <div className="mt-2 text-green-300 font-semibold">
-                                        Klicken für Details
+                                  <div className="absolute inset-2 rounded-lg overflow-hidden bg-slate-900/80 border-2"
+                                       style={{
+                                         borderColor: getRarityColor(butterfly.butterflyRarity as RarityTier)
+                                       }}>
+                                    <RarityImage
+                                      src={butterfly.butterflyImageUrl}
+                                      alt={butterfly.butterflyName}
+                                      rarity={butterfly.butterflyRarity as RarityTier}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                                      <div className="absolute bottom-1 left-1 right-1 text-center">
+                                        <div className="text-white text-xs font-bold bg-black/60 rounded px-1 py-0.5 mb-1">
+                                          {butterfly.butterflyName}
+                                        </div>
+                                        <div className="text-xs font-semibold"
+                                             style={{
+                                               color: getRarityColor(butterfly.butterflyRarity as RarityTier)
+                                             }}>
+                                          {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                                        </div>
+                                        <div className="mt-2 text-green-300 font-semibold">
+                                          Klicken für Details
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              )
-                            ) : (
-                              <div className="text-slate-500 text-xs text-center">
-                                Leer
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    
-                    {frameButterflies.length > 0 && (
-                      <div className="mt-4 text-center">
-                        <p className="text-slate-400 text-sm">
-                          {frameButterflies.length} von 6 Plätzen belegt
-                        </p>
+                              ) : (
+                                <div className="text-slate-500 text-xs text-center">
+                                  Leer
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })()}
-          </div>
-        ) : (
-          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600">
-            <CardContent className="text-center py-12">
-              <Bug className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-slate-300 mb-2">
-                Keine Ausstellung vorhanden
-              </h3>
-              <p className="text-slate-400">
-                {ownerName} hat noch keine Schmetterlinge ausgestellt.
-              </p>
-            </CardContent>
-          </Card>
+                      
+                      {frameButterflies.length > 0 && (
+                        <div className="mt-4 text-center">
+                          <p className="text-slate-400 text-sm">
+                            {frameButterflies.length} von 6 Plätzen belegt
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
+          ) : (
+            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600">
+              <CardContent className="text-center py-12">
+                <Bug className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-300 mb-2">
+                  Keine Ausstellung vorhanden
+                </h3>
+                <p className="text-slate-400">
+                  {ownerName} hat noch keine Schmetterlinge ausgestellt.
+                </p>
+              </CardContent>
+            </Card>
+          )
+        )}
+
+        {/* Aquarium Mode */}
+        {viewMode === 'aquarium' && (
+          sortedTankIds.length > 0 ? (
+            <div className="space-y-6">
+              {/* Tank Navigation Controls */}
+              <div className="flex items-center justify-center space-x-3 bg-cyan-800/60 rounded-lg p-2 border border-cyan-700">
+                <Button
+                  onClick={() => setCurrentTankIndex(Math.max(0, currentTankIndex - 1))}
+                  disabled={currentTankIndex === 0}
+                  variant="outline"
+                  size="sm"
+                  className="bg-cyan-700 border-cyan-500 hover:bg-cyan-600 text-cyan-200 disabled:opacity-50"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                
+                <div className="text-lg font-semibold text-cyan-300">
+                  🐠 Tank #{(aquariumTanks.find(t => t.id === sortedTankIds[currentTankIndex])?.tankNumber || 1)} / {sortedTankIds.length}
+                </div>
+                
+                <Button
+                  onClick={() => setCurrentTankIndex(Math.min(sortedTankIds.length - 1, currentTankIndex + 1))}
+                  disabled={currentTankIndex >= sortedTankIds.length - 1}
+                  variant="outline"
+                  size="sm"
+                  className="bg-cyan-700 border-cyan-500 hover:bg-cyan-600 text-cyan-200 disabled:opacity-50"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Current Tank */}
+              {sortedTankIds[currentTankIndex] && (() => {
+                const tankId = sortedTankIds[currentTankIndex];
+                const tankData = aquariumTanks.find(t => t.id === tankId);
+                const tankNumber = tankData?.tankNumber || 1;
+                const tankFish = fishTanks.get(tankId) || [];
+                
+                return (
+                  <Card 
+                    key={tankId}
+                    className="bg-gradient-to-br from-cyan-900 via-blue-900 to-slate-950 border-2 border-cyan-600/50 transition-all duration-300 shadow-xl max-w-2xl mx-auto"
+                  >
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-xl font-bold text-white flex items-center justify-center">
+                        <div className="flex items-center">
+                          <span>🐠 Aquarium #{tankNumber}</span>
+                          <span className="ml-2 text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">
+                            {tankFish.length}/6 Fische
+                          </span>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Fish Display Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
+                          const fish = tankFish.find(f => f.slotIndex === slotIndex);
+                          
+                          return (
+                            <div 
+                              key={slotIndex} 
+                              className={`aspect-square border-2 rounded-lg ${
+                                fish ? 'border-cyan-400' : 'border-slate-600'
+                              } bg-slate-800/50 flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-cyan-300/50`}
+                            >
+                              {fish ? (
+                                <div className="w-full h-full relative group">
+                                  <div className="absolute inset-2 rounded-lg overflow-hidden bg-gradient-to-b from-blue-900/80 to-slate-900/80 border-2"
+                                       style={{
+                                         borderColor: getRarityColor(fish.fishRarity as RarityTier)
+                                       }}>
+                                    <RarityImage
+                                      src={fish.fishImageUrl}
+                                      alt={fish.fishName}
+                                      rarity={fish.fishRarity as RarityTier}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                                      <div className="absolute bottom-1 left-1 right-1 text-center">
+                                        <div className="text-white text-xs font-bold bg-black/60 rounded px-1 py-0.5 mb-1">
+                                          {fish.fishName}
+                                        </div>
+                                        <div className="text-xs font-semibold"
+                                             style={{
+                                               color: getRarityColor(fish.fishRarity as RarityTier)
+                                             }}>
+                                          {getRarityDisplayName(fish.fishRarity as RarityTier)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-slate-500 text-xs text-center">
+                                  Leer
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {tankFish.length > 0 && (
+                        <div className="mt-4 text-center">
+                          <p className="text-cyan-300 text-sm">
+                            🐠 {tankFish.length} von 6 Plätzen belegt
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
+          ) : (
+            <Card className="bg-gradient-to-br from-cyan-900 to-slate-900 border-2 border-cyan-600">
+              <CardContent className="text-center py-12">
+                <Fish className="h-16 w-16 text-cyan-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-cyan-300 mb-2">
+                  Kein Aquarium vorhanden
+                </h3>
+                <p className="text-slate-400">
+                  {ownerName} hat noch keine Fische im Aquarium.
+                </p>
+              </CardContent>
+            </Card>
+          )
         )}
       </div>
 
