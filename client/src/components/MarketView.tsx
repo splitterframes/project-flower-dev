@@ -547,7 +547,7 @@ export const MarketView: React.FC = () => {
                 <div className="absolute inset-0 h-8 w-8 mr-3 text-green-400 animate-ping opacity-30"></div>
               </div>
               <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
-                Markt Angebote 🛋️
+                Markt Angebote
               </span>
             </CardTitle>
           </CardHeader>
