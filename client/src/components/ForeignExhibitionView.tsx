@@ -540,8 +540,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     </CardHeader>
                     <CardContent>
                       {/* Fish Display Grid */}
-                      <div className="grid grid-cols-5 gap-3">
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((slotIndex) => {
+<parameter name="div className="grid grid-cols-3 gap-2 h-[720px]">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((slotIndex) => {
                           const fish = tankFish.find(f => f.slotIndex === slotIndex);
                           
                           return (
