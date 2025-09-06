@@ -2541,6 +2541,27 @@ export class PostgresStorage {
     }
   }
 
+  // Calculate degraded value over 72 hours
+  private calculateDegradedValue(startValue: number, minValue: number, placedAt: Date): number {
+    if (!placedAt) return startValue;
+
+    const placedTime = placedAt.getTime();
+    const now = new Date().getTime();
+    const timeSincePlacement = now - placedTime;
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
+      const valueRange = startValue - minValue;
+      const currentValue = startValue - (valueRange * degradationProgress);
+      return Math.max(Math.round(currentValue), minValue);
+    }
+
+    // After 72 hours, return minimum value
+    return minValue;
+  }
+
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
     console.log(`🔍 Processing passive income for user ${userId}...`);
     
@@ -2591,22 +2612,40 @@ export class PostgresStorage {
       return { success: true, creditsEarned: 0 };
     }
     
-    // Calculate total hourly income from ALL butterflies
+    // Calculate total hourly income from ALL butterflies with degradation
     let totalHourlyIncome = 0;
-    const rarityIncomePerHour = { 
-      common: 1, uncommon: 2, rare: 5, 'super-rare': 10, 
-      epic: 20, legendary: 50, mythical: 100, vip: 60  // VIP = 60 credits/hour!
+    
+    // Helper function to calculate degraded income for a butterfly
+    const calculateDegradedIncome = (rarity: string, isVip: boolean, placedAt: Date): number => {
+      if (isVip) {
+        // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+        return this.calculateDegradedValue(60, 6, placedAt);
+      }
+
+      const rarityValues: Record<string, { start: number; min: number }> = {
+        'common': { start: 1, min: 1 },       // No degradation for Common
+        'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+      };
+
+      const values = rarityValues[rarity] || { start: 1, min: 1 };
+      return this.calculateDegradedValue(values.start, values.min, placedAt);
     };
     
-    // Add income from normal butterflies
+    // Add income from normal butterflies (with degradation)
     for (const butterfly of normalButterflies) {
-      const incomePerHour = rarityIncomePerHour[butterfly.butterflyRarity as keyof typeof rarityIncomePerHour] || 1;
-      totalHourlyIncome += incomePerHour;
+      const degradedIncome = calculateDegradedIncome(butterfly.butterflyRarity, false, butterfly.placedAt);
+      totalHourlyIncome += degradedIncome;
     }
     
-    // Add income from VIP butterflies
+    // Add income from VIP butterflies (with degradation)
     for (const vipButterfly of vipButterflies) {
-      totalHourlyIncome += 60; // VIP = 60 credits/hour
+      const degradedIncome = calculateDegradedIncome('vip', true, vipButterfly.placedAt);
+      totalHourlyIncome += degradedIncome;
     }
     
     if (totalHourlyIncome === 0) {
