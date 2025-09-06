@@ -5219,6 +5219,269 @@ export class PostgresStorage {
       return { success: false, message: 'Datenbankfehler beim Verkauf' };
     }
   }
+
+  // ========== TOP 100 RANKINGS METHODS ==========
+
+  async getTop100ByCredits(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        credits: users.credits
+      })
+      .from(users)
+      .orderBy(desc(users.credits))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'credits', currentUserId);
+  }
+
+  async getTop100ByPassiveIncome(currentUserId: number): Promise<any[]> {
+    // Calculate passive income based on exhibition butterflies
+    const userStats = await this.db
+      .select({
+        userId: exhibitionButterflies.userId,
+        username: users.username,
+        passiveIncome: sql<number>`COALESCE(COUNT(${exhibitionButterflies.id}) * 6, 0)`
+      })
+      .from(users)
+      .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${exhibitionButterflies.id}) * 6, 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      passiveIncome: u.passiveIncome
+    })), 'passiveIncome', currentUserId);
+  }
+
+  async getTop100BySuns(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        suns: users.suns
+      })
+      .from(users)
+      .orderBy(desc(users.suns))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'suns', currentUserId);
+  }
+
+  async getTop100ByLikes(currentUserId: number): Promise<any[]> {
+    // Calculate total likes from all exhibition butterflies
+    const userStats = await this.db
+      .select({
+        userId: exhibitionButterflies.userId,
+        username: users.username,
+        totalLikes: sql<number>`COALESCE(SUM(${exhibitionButterflies.likes}), 0)`
+      })
+      .from(users)
+      .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(SUM(${exhibitionButterflies.likes}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      likes: u.totalLikes
+    })), 'likes', currentUserId);
+  }
+
+  async getTop100BySeeds(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userSeeds.userId,
+        username: users.username,
+        totalSeeds: sql<number>`COALESCE(SUM(${userSeeds.quantity}), 0)`
+      })
+      .from(users)
+      .leftJoin(userSeeds, eq(users.id, userSeeds.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(SUM(${userSeeds.quantity}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      seeds: u.totalSeeds
+    })), 'seeds', currentUserId);
+  }
+
+  async getTop100ByFlowers(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userFlowers.userId,
+        username: users.username,
+        totalFlowers: sql<number>`COALESCE(SUM(${userFlowers.quantity}), 0)`
+      })
+      .from(users)
+      .leftJoin(userFlowers, eq(users.id, userFlowers.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(SUM(${userFlowers.quantity}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      flowers: u.totalFlowers
+    })), 'flowers', currentUserId);
+  }
+
+  async getTop100ByBouquets(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userBouquets.userId,
+        username: users.username,
+        totalBouquets: sql<number>`COALESCE(COUNT(${userBouquets.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(userBouquets, eq(users.id, userBouquets.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${userBouquets.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      bouquets: u.totalBouquets
+    })), 'bouquets', currentUserId);
+  }
+
+  async getTop100ByButterflies(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userButterflies.userId,
+        username: users.username,
+        totalButterflies: sql<number>`COALESCE(COUNT(${userButterflies.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(userButterflies, eq(users.id, userButterflies.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${userButterflies.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      butterflies: u.totalButterflies
+    })), 'butterflies', currentUserId);
+  }
+
+  async getTop100ByCaterpillars(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userCaterpillars.userId,
+        username: users.username,
+        totalCaterpillars: sql<number>`COALESCE(COUNT(${userCaterpillars.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(userCaterpillars, eq(users.id, userCaterpillars.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${userCaterpillars.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      caterpillars: u.totalCaterpillars
+    })), 'caterpillars', currentUserId);
+  }
+
+  async getTop100ByFish(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: userFish.userId,
+        username: users.username,
+        totalFish: sql<number>`COALESCE(COUNT(${userFish.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(userFish, eq(users.id, userFish.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${userFish.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      fish: u.totalFish
+    })), 'fish', currentUserId);
+  }
+
+  async getTop100ByExhibitionButterflies(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: exhibitionButterflies.userId,
+        username: users.username,
+        totalExhibitionButterflies: sql<number>`COALESCE(COUNT(${exhibitionButterflies.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${exhibitionButterflies.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      exhibitionButterflies: u.totalExhibitionButterflies
+    })), 'exhibition-butterflies', currentUserId);
+  }
+
+  async getTop100ByExhibitionFish(currentUserId: number): Promise<any[]> {
+    const userStats = await this.db
+      .select({
+        userId: exhibitionFish.userId,
+        username: users.username,
+        totalExhibitionFish: sql<number>`COALESCE(COUNT(${exhibitionFish.id}), 0)`
+      })
+      .from(users)
+      .leftJoin(exhibitionFish, eq(users.id, exhibitionFish.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(${exhibitionFish.id}), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      exhibitionFish: u.totalExhibitionFish
+    })), 'exhibition-fish', currentUserId);
+  }
+
+  async getTop100ByBouquetRecipes(currentUserId: number): Promise<any[]> {
+    // Count unique bouquet recipes (assuming different flower combinations)
+    const userStats = await this.db
+      .select({
+        userId: userBouquets.userId,
+        username: users.username,
+        totalRecipes: sql<number>`COALESCE(COUNT(DISTINCT CONCAT(${userBouquets.flower1Id}, '-', ${userBouquets.flower2Id}, '-', ${userBouquets.flower3Id})), 0)`
+      })
+      .from(users)
+      .leftJoin(userBouquets, eq(users.id, userBouquets.userId))
+      .groupBy(users.id, users.username)
+      .orderBy(desc(sql`COALESCE(COUNT(DISTINCT CONCAT(${userBouquets.flower1Id}, '-', ${userBouquets.flower2Id}, '-', ${userBouquets.flower3Id})), 0)`))
+      .limit(100);
+
+    return this.formatRankingResults(userStats.map(u => ({
+      id: u.userId,
+      username: u.username,
+      bouquetRecipes: u.totalRecipes
+    })), 'bouquet-recipes', currentUserId);
+  }
+
+  private formatRankingResults(results: any[], valueKey: string, currentUserId: number): any[] {
+    return results.map((user, index) => ({
+      id: user.id,
+      username: user.username,
+      value: user[valueKey] || 0,
+      rank: index + 1,
+      isCurrentUser: user.id === currentUserId
+    }));
+  }
 }
 
 export const postgresStorage = new PostgresStorage();
