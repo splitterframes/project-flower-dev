@@ -526,7 +526,7 @@ export const AquariumView: React.FC = () => {
                     key={fish.id}
                     className="bg-gradient-to-br from-blue-900/20 to-blue-700/10 border-2 rounded-lg p-3 text-center hover:from-blue-800/30 hover:to-blue-600/20 transition-all cursor-pointer"
                     style={{ borderColor: getRarityColor(fish.fishRarity) }}
-                    onClick={() => {
+                    onDoubleClick={() => {
                       const tank = tanks.get(currentTankIndex + 1);
                       if (tank) {
                         const tankFish = getFishInTank(currentTankIndex + 1);
@@ -548,6 +548,22 @@ export const AquariumView: React.FC = () => {
                       } else {
                         showNotification('Kaufe zuerst ein Aquarium!', 'warning');
                       }
+                    }}
+                    onClick={() => {
+                      console.log("🐟 Inventory Fish clicked:", fish.fishName, fish.id);
+                      // Create a compatible fish object for the modal
+                      setSelectedFish({
+                        id: fish.id,
+                        fishName: fish.fishName,
+                        fishRarity: fish.fishRarity,
+                        fishImageUrl: fish.fishImageUrl,
+                        placedAt: new Date().toISOString(), // Use current time for inventory fish
+                        userId: fish.userId,
+                        tankId: 0 // Inventory fish don't have tankId
+                      });
+                      setCurrentFishIndex(0);
+                      setShowFishModal(true);
+                      console.log("🐟 Inventory Modal should open:", fish.fishName);
                     }}
                   >
                     <img
