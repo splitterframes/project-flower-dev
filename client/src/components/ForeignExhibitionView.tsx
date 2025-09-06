@@ -313,33 +313,6 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {viewMode === 'exhibition' && (
           sortedFrameIds.length > 0 ? (
             <div className="space-y-6 max-w-7xl mx-auto">
-              {/* Navigation Controls */}
-              <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
-                <Button
-                  onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
-                  disabled={currentFrameIndex === 0}
-                  variant="outline"
-                  size="sm"
-                  className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                
-                <div className="text-lg font-semibold text-slate-300">
-                  #{(frames.find(f => f.id === sortedFrameIds[currentFrameIndex])?.frameNumber || 1)} / {sortedFrameIds.length}
-                </div>
-                
-                <Button
-                  onClick={() => setCurrentFrameIndex(Math.min(sortedFrameIds.length - 1, currentFrameIndex + 1))}
-                  disabled={currentFrameIndex >= sortedFrameIds.length - 1}
-                  variant="outline"
-                  size="sm"
-                  className="bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
-
               {/* Current Frame */}
               {sortedFrameIds[currentFrameIndex] && (() => {
                 const frameId = sortedFrameIds[currentFrameIndex];
@@ -381,6 +354,36 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                               <span className="text-base">{frameLike?.totalLikes}</span>
                             </div>
                           )}
+                          
+                          {/* Navigation Controls */}
+                          {sortedFrameIds.length > 1 && (
+                            <div className="flex items-center space-x-3 bg-amber-800/60 rounded-lg px-3 py-2 border border-amber-600">
+                              <Button
+                                onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                                disabled={currentFrameIndex === 0}
+                                variant="outline"
+                                size="sm"
+                                className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-8 w-8 p-0"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                              
+                              <div className="text-base font-semibold text-amber-100 px-3">
+                                #{frameNumber} / {sortedFrameIds.length}
+                              </div>
+                              
+                              <Button
+                                onClick={() => setCurrentFrameIndex(Math.min(sortedFrameIds.length - 1, currentFrameIndex + 1))}
+                                disabled={currentFrameIndex >= sortedFrameIds.length - 1}
+                                variant="outline"
+                                size="sm"
+                                className="bg-amber-700 border-amber-500 hover:bg-amber-600 text-amber-100 disabled:opacity-50 h-8 w-8 p-0"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                          
                           <Button
                             onClick={() => handleLike(frameId)}
                             disabled={!canBeLiked}
@@ -475,33 +478,6 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {viewMode === 'aquarium' && (
           sortedTankIds.length > 0 ? (
             <div className="space-y-6 max-w-7xl mx-auto">
-              {/* Tank Navigation Controls */}
-              <div className="flex items-center justify-center space-x-3 bg-cyan-800/60 rounded-lg p-2 border border-cyan-700">
-                <Button
-                  onClick={() => setCurrentTankIndex(Math.max(0, currentTankIndex - 1))}
-                  disabled={currentTankIndex === 0}
-                  variant="outline"
-                  size="sm"
-                  className="bg-cyan-700 border-cyan-500 hover:bg-cyan-600 text-cyan-200 disabled:opacity-50"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                
-                <div className="text-lg font-semibold text-cyan-300">
-                  🐠 Tank #{(aquariumTanks.find(t => t.id === sortedTankIds[currentTankIndex])?.tankNumber || 1)} / {sortedTankIds.length}
-                </div>
-                
-                <Button
-                  onClick={() => setCurrentTankIndex(Math.min(sortedTankIds.length - 1, currentTankIndex + 1))}
-                  disabled={currentTankIndex >= sortedTankIds.length - 1}
-                  variant="outline"
-                  size="sm"
-                  className="bg-cyan-700 border-cyan-500 hover:bg-cyan-600 text-cyan-200 disabled:opacity-50"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
-
               {/* Current Tank */}
               {sortedTankIds[currentTankIndex] && (() => {
                 const tankId = sortedTankIds[currentTankIndex];
@@ -521,6 +497,37 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                           <span className="ml-3 text-sm bg-blue-600 text-blue-100 px-3 py-1 rounded-full">
                             {tankFish.length}/6 Fische
                           </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          {/* Navigation Controls */}
+                          {sortedTankIds.length > 1 && (
+                            <div className="flex items-center space-x-3 bg-blue-800/60 rounded-lg px-3 py-2 border border-blue-600">
+                              <Button
+                                onClick={() => setCurrentTankIndex(Math.max(0, currentTankIndex - 1))}
+                                disabled={currentTankIndex === 0}
+                                variant="outline"
+                                size="sm"
+                                className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                              
+                              <div className="text-base font-semibold text-blue-100 px-3">
+                                #{tankNumber} / {sortedTankIds.length}
+                              </div>
+                              
+                              <Button
+                                onClick={() => setCurrentTankIndex(Math.min(sortedTankIds.length - 1, currentTankIndex + 1))}
+                                disabled={currentTankIndex >= sortedTankIds.length - 1}
+                                variant="outline"
+                                size="sm"
+                                className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </CardTitle>
                     </CardHeader>
