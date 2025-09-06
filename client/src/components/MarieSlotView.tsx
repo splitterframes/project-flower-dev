@@ -347,7 +347,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     alt={symbol.name}
                     className="w-full h-full object-contain rounded border border-gray-600"
                     onError={(e) => {
-                      // Better fallback with type-specific icons
+                      // Better fallback with type-specific icons - NO FISH EMOJI
                       const target = e.target as HTMLImageElement;
                       let fallbackColor = '#374151';
                       let icon = '?';
@@ -358,9 +358,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                           icon = '🦋';
                           break;
                         case 'fish':
-                          fallbackColor = '#0ea5e9';
-                          icon = '🐠';
-                          break;
+                          // NO EMOJI FALLBACK - hide broken fish images
+                          target.style.display = 'none';
+                          return;
                         case 'caterpillar':
                           fallbackColor = '#16a34a';
                           icon = '🐛';
