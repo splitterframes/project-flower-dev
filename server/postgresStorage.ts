@@ -5017,14 +5017,14 @@ export class PostgresStorage {
     // Fish prices - Marie Posa pays 50% of market value
     const basePrice = (() => {
       switch (rarity) {
-        case 'common': return 100;
-        case 'uncommon': return 300;
-        case 'rare': return 800;
-        case 'super-rare': return 2000;
-        case 'epic': return 5000;
-        case 'legendary': return 9000;  // Updated to user's price
-        case 'mythical': return 15000;  // Updated to user's price
-        default: return 100;
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 500;
+        case 'super-rare': return 900;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
       }
     })();
     

@@ -63,15 +63,15 @@ const getItemPrice = (type: string, rarity: number): number => {
     }
     case 'fish': {
       const fishPrices = {
-        'common': 100,
-        'uncommon': 300,
-        'rare': 800,
-        'super-rare': 2000,
-        'epic': 5000,
-        'legendary': 9000,   // Updated to user's price
-        'mythical': 15000    // Updated to user's price
+        'common': 80,
+        'uncommon': 200,
+        'rare': 500,
+        'super-rare': 900,
+        'epic': 1500,
+        'legendary': 2200,
+        'mythical': 4000
       };
-      return fishPrices[rarityTier as keyof typeof fishPrices] || 100;
+      return fishPrices[rarityTier as keyof typeof fishPrices] || 80;
     }
     case 'flower': {
       const butterflyPrices = {
