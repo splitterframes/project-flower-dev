@@ -410,7 +410,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     <CardContent>
                       {/* Wood frame effect */}
                       <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
-                        <div className="bg-slate-100 p-7 rounded grid grid-cols-3 grid-rows-2 gap-3 place-items-center max-h-[600px] overflow-y-auto">
+                        <div className="bg-slate-100 p-7 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[350px] overflow-y-auto">
                           {Array.from({ length: 6 }, (_, slotIndex) => {
                             const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                             const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
@@ -538,7 +538,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     <CardContent>
                       {/* Aquarium water effect */}
                       <div className="p-3 bg-gradient-to-br from-blue-900/20 to-teal-900/10 rounded-lg border border-blue-500/20">
-                        <div className="grid grid-cols-3 grid-rows-2 gap-3 place-items-center max-h-[600px] overflow-y-auto">
+                        <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[350px] overflow-y-auto">
                           {Array.from({ length: 6 }, (_, slotIndex) => {
                             const fish = tankFish.find(f => f.slotIndex === slotIndex);
                             
