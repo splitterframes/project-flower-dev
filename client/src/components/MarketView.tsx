@@ -227,6 +227,10 @@ export const MarketView: React.FC = () => {
       return;
     }
 
+    // Check if this is a self-purchase (user buying their own listing)
+    const listing = marketListings.find(l => l.id === listingId);
+    const isSelfPurchase = listing && listing.sellerId === user.id;
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/market/buy', {
@@ -239,7 +243,10 @@ export const MarketView: React.FC = () => {
       });
 
       if (response.ok) {
-        await updateCredits(user.id, -totalCost);
+        // Only deduct credits if it's NOT a self-purchase
+        if (!isSelfPurchase) {
+          await updateCredits(user.id, -totalCost);
+        }
         await fetchMarketListings();
         await fetchMySeeds();
         await fetchMyCaterpillars();
