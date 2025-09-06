@@ -235,6 +235,7 @@ export const AquariumView: React.FC = () => {
 
   // Navigation functions
   const handleFishSelect = (fish: AquariumFish) => {
+    console.log("🐟 Fish clicked:", fish.fishName, fish.id);
     const allFish = getAllPlacedFish();
     const index = allFish.findIndex(f => f.id === fish.id);
     
@@ -249,6 +250,7 @@ export const AquariumView: React.FC = () => {
     });
     setCurrentFishIndex(index);
     setShowFishModal(true);
+    console.log("🐟 Modal should open:", showFishModal, selectedFish);
   };
 
   const handleNextFish = () => {
