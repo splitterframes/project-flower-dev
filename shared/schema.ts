@@ -301,6 +301,20 @@ export const fieldButterflies = pgTable("field_butterflies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Flowers placed on pond fields (for caterpillar spawning)
+export const fieldFlowers = pgTable("field_flowers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldIndex: integer("field_index").notNull(), // 0-49 for the 50 garden fields, specifically pond fields
+  flowerId: integer("flower_id").notNull(),
+  flowerName: text("flower_name").notNull(),
+  flowerRarity: text("flower_rarity").notNull(),
+  flowerImageUrl: text("flower_image_url").notNull(),
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+  isShrinking: boolean("is_shrinking").notNull().default(false), // Backend managed shrinking state for animation
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // VIP Butterflies - Premium animated butterflies (GIF format)
 export const userVipButterflies = pgTable("user_vip_butterflies", {
   id: serial("id").primaryKey(),
