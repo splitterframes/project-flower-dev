@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, X, Eye, Bug, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/stores/useAuth";
+import { Top100Modal } from "@/components/Top100Modal";
 
 interface UserListData {
   id: number;
@@ -35,6 +36,7 @@ export const UserListModal: React.FC<UserListModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>('butterflies');
+  const [isTop100Open, setIsTop100Open] = useState(false);
   const { user: currentUser } = useAuth();
   
   const itemsPerPage = 12;
@@ -122,7 +124,8 @@ export const UserListModal: React.FC<UserListModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-500/30 text-white max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <DialogHeader className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-t-lg -mx-6 -my-2"></div>
@@ -140,7 +143,10 @@ export const UserListModal: React.FC<UserListModalProps> = ({
         <div className="space-y-6">
           {/* TOP 100 SPIELER Button */}
           <div className="flex justify-center">
-            <button className="relative group">
+            <button 
+              onClick={() => setIsTop100Open(true)}
+              className="relative group"
+            >
               {/* Main button with golden gradient */}
               <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-400 text-black font-bold text-2xl px-12 py-6 rounded-xl border-4 border-yellow-300 shadow-2xl transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-yellow-500/50">
                 {/* Animated glow effect */}
@@ -336,6 +342,13 @@ export const UserListModal: React.FC<UserListModalProps> = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+      
+      {/* TOP 100 Modal */}
+      <Top100Modal
+        isOpen={isTop100Open}
+        onClose={() => setIsTop100Open(false)}
+      />
+    </>
   );
 };
