@@ -5447,12 +5447,12 @@ export class PostgresStorage {
         .select({
           id: users.id,
           username: users.username,
-          exhibitionFish: sql<number>`COALESCE(COUNT(${exhibitionFish.id}), 0)`
+          exhibitionFish: sql<number>`COALESCE(COUNT(${aquariumFish.id}), 0)`
         })
         .from(users)
-        .leftJoin(exhibitionFish, eq(users.id, exhibitionFish.userId))
+        .leftJoin(aquariumFish, eq(users.id, aquariumFish.userId))
         .groupBy(users.id, users.username)
-        .orderBy(desc(sql`COALESCE(COUNT(${exhibitionFish.id}), 0)`))
+        .orderBy(desc(sql`COALESCE(COUNT(${aquariumFish.id}), 0)`))
         .limit(100);
 
       return this.formatRankingResults(userStats, 'exhibitionFish', currentUserId);
