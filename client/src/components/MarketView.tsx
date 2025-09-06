@@ -544,11 +544,21 @@ export const MarketView: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {marketListings.map((listing) => {
-                  const rarity = listing.itemType === 'seed' ? listing.seedRarity : listing.caterpillarRarity;
-                  const itemName = listing.itemType === 'seed' 
-                    ? listing.seedName 
-                    : (listing.caterpillarName || generateLatinCaterpillarName((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0));
-                  const itemIcon = listing.itemType === 'seed' ? '🌱' : '🐛';
+                  const rarity = listing.itemType === 'seed' ? listing.seedRarity : 
+                                listing.itemType === 'caterpillar' ? listing.caterpillarRarity :
+                                listing.itemType === 'flower' ? listing.flowerRarity :
+                                listing.itemType === 'butterfly' ? listing.butterflyRarity :
+                                listing.itemType === 'fish' ? listing.fishRarity : 'common';
+                  const itemName = listing.itemType === 'seed' ? listing.seedName : 
+                                  listing.itemType === 'caterpillar' ? (listing.caterpillarName || generateLatinCaterpillarName((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0)) :
+                                  listing.itemType === 'flower' ? listing.flowerName :
+                                  listing.itemType === 'butterfly' ? listing.butterflyName :
+                                  listing.itemType === 'fish' ? listing.fishName : 'Unbekannt';
+                  const itemIcon = listing.itemType === 'seed' ? '🌱' : 
+                                  listing.itemType === 'caterpillar' ? '🐛' :
+                                  listing.itemType === 'flower' ? '🌸' :
+                                  listing.itemType === 'butterfly' ? '🦋' :
+                                  listing.itemType === 'fish' ? '🐟' : '❓';
                   
                   return (
                     <div
@@ -560,6 +570,10 @@ export const MarketView: React.FC = () => {
                       <div className="flex items-center">
                         {/* Item Icon/Image */}
                         {listing.itemType === 'seed' ? (
+                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                        ) : listing.itemType === 'flower' ? (
+                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                        ) : listing.itemType === 'fish' ? (
                           <span className="mr-2 text-2xl">{itemIcon}</span>
                         ) : (
                           <HoverCard>
@@ -640,7 +654,13 @@ export const MarketView: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-slate-400 text-sm mb-3">Von: {listing.sellerUsername}</p>
-                    <p className="text-slate-300 text-xs mb-3">Typ: {listing.itemType === 'seed' ? 'Samen' : 'Raupe'}</p>
+                    <p className="text-slate-300 text-xs mb-3">Typ: {
+                      listing.itemType === 'seed' ? 'Samen' : 
+                      listing.itemType === 'caterpillar' ? 'Raupe' :
+                      listing.itemType === 'flower' ? 'Blume' :
+                      listing.itemType === 'butterfly' ? 'Schmetterling' :
+                      listing.itemType === 'fish' ? 'Fisch' : 'Unbekannt'
+                    }</p>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-slate-400">Menge:</span>
