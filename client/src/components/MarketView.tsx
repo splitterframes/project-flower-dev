@@ -230,7 +230,7 @@ export const MarketView: React.FC = () => {
 
     // Check if this is a self-purchase (user buying their own listing)
     const listing = marketListings.find(l => l.id === listingId);
-    const isSelfPurchase = listing && listing.sellerId === user.id;
+    const isSelfPurchase = listing && (listing as any).sellerId === user.id;
 
     setIsLoading(true);
     try {
@@ -994,32 +994,43 @@ export const MarketView: React.FC = () => {
                   <p className="text-slate-500 text-sm mt-2">Züchte Fische am Teich mit Raupen</p>
                 </div>
               ) : (
-                <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
+                <div className="max-w-7xl mx-auto">
+                  <form onSubmit={createListing} className="space-y-6">
+                    {/* Two Column Layout: Selection Left + Form Right */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                      
+                      {/* LEFT COLUMN: Item Selection */}
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
+                          {sellForm.itemType === 'seed' ? '🌱 Samen auswählen' :
+                           sellForm.itemType === 'flower' ? '🌸 Blume auswählen' :
+                           sellForm.itemType === 'butterfly' ? '🦋 Schmetterling auswählen' :
+                           sellForm.itemType === 'caterpillar' ? '🐛 Raupe auswählen' :
+                           sellForm.itemType === 'fish' ? '🐟 Fisch auswählen' : 'Item auswählen'}
+                        </h3>
 
-                {/* Item Selector based on type */}
-                {sellForm.itemType === 'seed' ? (
-                  <div>
-                    <Label htmlFor="seedSelect">Samen auswählen</Label>
-                    <select
-                      id="seedSelect"
-                      value={sellForm.seedId}
-                      onChange={(e) => setSellForm({...sellForm, seedId: Number(e.target.value)})}
-                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-white"
-                      required
-                    >
-                      <option value={0}>-- Samen wählen --</option>
-                      {mySeeds.map((seed) => (
-                        <option key={seed.id} value={seed.seedId}>
-                          {seed.seedName} (x{seed.quantity})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                        {/* Item Selector based on type */}
+                        {sellForm.itemType === 'seed' ? (
+                          <div>
+                            <select
+                              id="seedSelect"
+                              value={sellForm.seedId}
+                              onChange={(e) => setSellForm({...sellForm, seedId: Number(e.target.value)})}
+                              className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                              required
+                            >
+                              <option value={0}>-- Samen wählen --</option>
+                              {mySeeds.map((seed) => (
+                                <option key={seed.id} value={seed.seedId}>
+                                  {seed.seedName} (x{seed.quantity})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                 ) : sellForm.itemType === 'flower' ? (
-                  <div className="relative">
-                    <Label>Blume auswählen</Label>
-                    <div className="space-y-3 max-h-64 overflow-y-auto" style={{ position: 'relative' }}>
-                      {myFlowers.length === 0 ? (
+                          <div className="relative">
+                            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                              {myFlowers.length === 0 ? (
                         <div className="text-center py-4 text-slate-400">
                           Keine Blumen verfügbar
                         </div>
@@ -1298,83 +1309,104 @@ export const MarketView: React.FC = () => {
                       )}
                     </div>
                   </div>
-                ) : null}
+                        ) : null}
+                      </div>
 
-                {/* Quantity for seeds and caterpillars */}
-                <div>
-                  <Label htmlFor="quantity">Menge</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    max={sellForm.itemType === 'seed' 
-                      ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 1)
-                      : sellForm.itemType === 'caterpillar'
-                      ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 1)
-                      : sellForm.itemType === 'flower'
-                      ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 1)
-                      : sellForm.itemType === 'butterfly'
-                      ? 1
-                      : sellForm.itemType === 'fish'
-                      ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 1)
-                      : 1
-                    }
-                    value={sellForm.quantity}
-                    onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
-                    className="bg-slate-900 border-slate-600 text-white"
-                    required
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    Verfügbar: {sellForm.itemType === 'seed' 
-                      ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 0)
-                      : sellForm.itemType === 'caterpillar'
-                      ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 0)
-                      : sellForm.itemType === 'flower'
-                      ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 0)
-                      : sellForm.itemType === 'butterfly'
-                      ? 1
-                      : sellForm.itemType === 'fish'
-                      ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 0)
-                      : 0
-                    }
-                  </p>
+                      {/* RIGHT COLUMN: Form Fields */}
+                      <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
+                          💰 Verkaufsdetails
+                        </h3>
+
+                        {/* Quantity Input */}
+                        <div className="space-y-2">
+                          <Label htmlFor="quantity" className="text-white font-medium">Menge</Label>
+                          <Input
+                            id="quantity"
+                            type="number"
+                            min="1"
+                            max={sellForm.itemType === 'seed' 
+                              ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 1)
+                              : sellForm.itemType === 'caterpillar'
+                              ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 1)
+                              : sellForm.itemType === 'flower'
+                              ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 1)
+                              : sellForm.itemType === 'butterfly'
+                              ? 1
+                              : sellForm.itemType === 'fish'
+                              ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 1)
+                              : 1
+                            }
+                            value={sellForm.quantity}
+                            onChange={(e) => setSellForm({...sellForm, quantity: Number(e.target.value)})}
+                            className="bg-slate-900 border-slate-600 text-white h-12"
+                            required
+                          />
+                          <p className="text-xs text-slate-400">
+                            Verfügbar: {sellForm.itemType === 'seed' 
+                              ? (mySeeds.find(s => s.seedId === sellForm.seedId)?.quantity || 0)
+                              : sellForm.itemType === 'caterpillar'
+                              ? (myCaterpillars.find(c => c.id === sellForm.caterpillarId)?.quantity || 0)
+                              : sellForm.itemType === 'flower'
+                              ? (myFlowers.find(f => f.id === sellForm.flowerId)?.quantity || 0)
+                              : sellForm.itemType === 'butterfly'
+                              ? 1
+                              : sellForm.itemType === 'fish'
+                              ? (myFish.find(f => f.id === sellForm.fishId)?.quantity || 0)
+                              : 0
+                            }
+                          </p>
+                        </div>
+
+                        {/* Price Input */}
+                        <div className="space-y-2">
+                          <Label htmlFor="pricePerUnit" className="text-white font-medium">Preis pro Stück (Cr)</Label>
+                          <Input
+                            id="pricePerUnit"
+                            type="number"
+                            min="1"
+                            value={sellForm.pricePerUnit}
+                            onChange={(e) => setSellForm({...sellForm, pricePerUnit: Number(e.target.value)})}
+                            className="bg-slate-900 border-slate-600 text-white h-12"
+                            required
+                          />
+                        </div>
+
+                        {/* Total Price Preview */}
+                        <div className="bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border border-orange-500/30 rounded-lg p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-300 font-medium">Gesamtpreis:</span>
+                            <span className="text-orange-400 font-bold text-xl">
+                              {sellForm.quantity * sellForm.pricePerUnit} Cr
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <Button
+                          type="submit"
+                          className="w-full bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 text-white font-bold py-4 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                          disabled={isLoading || 
+                            (sellForm.itemType === 'seed' && !sellForm.seedId) || 
+                            (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId) ||
+                            (sellForm.itemType === 'flower' && !sellForm.flowerId) ||
+                            (sellForm.itemType === 'butterfly' && !sellForm.butterflyId) ||
+                            (sellForm.itemType === 'fish' && !sellForm.fishId)
+                          }
+                        >
+                          {isLoading ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                              Erstelle Angebot...
+                            </div>
+                          ) : (
+                            "💰 Angebot erstellen"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
                 </div>
-
-                <div>
-                  <Label htmlFor="pricePerUnit">Preis pro Stück (Cr)</Label>
-                  <Input
-                    id="pricePerUnit"
-                    type="number"
-                    min="1"
-                    value={sellForm.pricePerUnit}
-                    onChange={(e) => setSellForm({...sellForm, pricePerUnit: Number(e.target.value)})}
-                    className="bg-slate-900 border-slate-600 text-white"
-                    required
-                  />
-                </div>
-
-                <div className="bg-slate-900 p-3 rounded-md">
-                  <p className="text-slate-300">
-                    Gesamtpreis: <span className="text-orange-400 font-bold">
-                      {sellForm.quantity * sellForm.pricePerUnit} Cr
-                    </span>
-                  </p>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-orange-600 hover:bg-orange-700"
-                  disabled={isLoading || 
-                    (sellForm.itemType === 'seed' && !sellForm.seedId) || 
-                    (sellForm.itemType === 'caterpillar' && !sellForm.caterpillarId) ||
-                    (sellForm.itemType === 'flower' && !sellForm.flowerId) ||
-                    (sellForm.itemType === 'butterfly' && !sellForm.butterflyId) ||
-                    (sellForm.itemType === 'fish' && !sellForm.fishId)
-                  }
-                >
-                  {isLoading ? "Erstelle Angebot..." : "Angebot erstellen"}
-                </Button>
-              </form>
               )}
             </div>
           </CardContent>
