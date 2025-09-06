@@ -2240,7 +2240,10 @@ export class PostgresStorage {
     // Deduct credits (only if cost > 0)
     let updatedUser = user;
     if (cost > 0) {
-      updatedUser = await this.updateUserCredits(userId, -cost); // Use negative delta to deduct credits
+      const creditResult = await this.updateUserCredits(userId, -cost); // Use negative delta to deduct credits
+      if (creditResult) {
+        updatedUser = creditResult;
+      }
     }
 
     console.log(`🖼️ User ${userId} purchased frame ${frameNumber} for ${cost} credits`);
@@ -2485,7 +2488,7 @@ export class PostgresStorage {
     };
 
     const baseSeeds = Math.floor(Math.random() * 3) + 1; // 1-3 base seeds
-    const multiplier = rarityMultipliers[bouquetRarity] || 1;
+    const multiplier = rarityMultipliers[bouquetRarity as keyof typeof rarityMultipliers] || 1;
     
     return Math.min(5, Math.floor(baseSeeds * multiplier)); // Max 5 seeds
   }
@@ -2514,7 +2517,7 @@ export class PostgresStorage {
       'mythical': { 'rare': 5, 'super-rare': 4.5, 'epic': 4, 'legendary': 3.5, 'mythical': 3 }
     };
 
-    const boostFactors = rarityBoostFactors[bouquetRarity] || rarityBoostFactors['common'];
+    const boostFactors = rarityBoostFactors[bouquetRarity as keyof typeof rarityBoostFactors] || rarityBoostFactors['common'];
 
     // Apply boosts to weights
     const modifiedWeights = {
@@ -3850,7 +3853,7 @@ export class PostgresStorage {
         .where(and(
           eq(sunSpawns.fieldIndex, fieldIndex),
           eq(sunSpawns.isActive, true),
-          lt(now, sunSpawns.expiresAt) // Not expired yet
+          gt(sunSpawns.expiresAt, now) // Not expired yet
         ))
         .limit(1);
 
@@ -3914,7 +3917,7 @@ export class PostgresStorage {
         .where(and(
           eq(sunSpawns.fieldIndex, fieldIndex),
           eq(sunSpawns.isActive, true),
-          lt(now, sunSpawns.expiresAt)
+          gt(sunSpawns.expiresAt, now)
         ))
         .limit(1);
 
@@ -4333,8 +4336,8 @@ export class PostgresStorage {
       
       // Get stored caterpillar rarities for this field from database
       const fedCaterpillars = await this.getFieldCaterpillars(userId);
-      const fieldCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === pondFieldIndex);
-      const rarities = fieldCaterpillars.map(c => c.caterpillarRarity);
+      const pondCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === pondFieldIndex);
+      const rarities = pondCaterpillars.map(c => c.caterpillarRarity);
       
       console.log(`🐟 Fed caterpillar rarities for average calculation:`, rarities);
       
@@ -4378,7 +4381,7 @@ export class PostgresStorage {
         isShrinking: false
       });
       
-      // Clean up fed caterpillars after creating fish
+      // Clean up fed caterpillars after creating fish  
       await this.db.delete(fieldCaterpillars)
         .where(and(
           eq(fieldCaterpillars.userId, userId),
