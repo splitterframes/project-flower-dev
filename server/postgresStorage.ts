@@ -948,7 +948,7 @@ export class PostgresStorage {
         .where(eq(users.id, buyerId));
 
       // Add seeds to buyer using copied data (seeds support quantities)
-      await this.addSeedToInventory(buyerId, listing[0].seedIdOriginal || 0, data.quantity);
+      await this.addSeedToInventory(buyerId, listing[0].seedId || 0, data.quantity);
 
     } else if (listing[0].itemType === "caterpillar") {
       // For caterpillars, quantity is always 1
