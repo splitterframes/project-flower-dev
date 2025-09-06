@@ -890,7 +890,20 @@ export const GardenView: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
+          {/* Panorama Background Container */}
+          <div className="relative">
+            {/* Panorama Background Layer */}
+            <div 
+              className="absolute inset-0 rounded-lg overflow-hidden opacity-60"
+              style={{
+                backgroundImage: 'url("/Landschaft/Gardenview.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                zIndex: 0
+              }}
+            />
+            {/* Garden Grid with transparent backgrounds */}
+            <div className="relative z-10 grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
             {gardenFields.map((field) => {
               // Check if field is adjacent to any unlocked field
               const isNextToUnlock = !field.isUnlocked && (() => {
@@ -925,9 +938,11 @@ export const GardenView: React.FC = () => {
                     }
                   `}
                   style={{
-                    backgroundImage: 'url("/Landschaft/gras.png")',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundColor: field.isUnlocked 
+                      ? 'rgba(34, 197, 94, 0.1)' // Transparent green for unlocked
+                      : isNextToUnlock 
+                        ? 'rgba(249, 115, 22, 0.2)' // Transparent orange for next to unlock
+                        : 'rgba(51, 65, 85, 0.3)', // Transparent slate for locked
                     minHeight: '44px',
                     minWidth: '44px'
                   }}
@@ -1272,6 +1287,7 @@ export const GardenView: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         </CardContent>
       </Card>
