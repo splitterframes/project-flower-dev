@@ -563,7 +563,7 @@ export const ExhibitionView: React.FC = () => {
     const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
     const frameVipButterflies = exhibitionVipButterflies.filter(b => b.frameId === frame.id);
     const totalButterflies = frameButterflies.length + frameVipButterflies.length;
-    const isFullFrame = totalButterflies === 6;
+    const isFullFrame = totalButterflies === 10;
     const frameLike = frameLikes.find(fl => fl.frameId === frame.id);
     
     return (
@@ -631,8 +631,8 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-5 rounded grid grid-cols-3 grid-rows-2 gap-4 h-[520px]">
-              {Array.from({ length: 6 }, (_, slotIndex) => {
+            <div className="bg-slate-100 p-5 rounded grid grid-cols-5 grid-rows-2 gap-3 h-[520px]">
+              {Array.from({ length: 10 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
                 const hasContent = butterfly || vipButterfly;

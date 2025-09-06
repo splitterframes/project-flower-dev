@@ -140,9 +140,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     const frameLike = frameLikes.find(fl => fl.frameId === frameId);
     const isCurrentlyLiked = frameLike?.isLiked || false;
 
-    // Check if frame has 6 butterflies before allowing like
-    if (!isCurrentlyLiked && frameButterflies.length < 6) {
-      showNotification('Du kannst nur volle Rahmen mit 6 Schmetterlingen liken!', 'warning');
+    // Check if frame has 10 butterflies before allowing like
+    if (!isCurrentlyLiked && frameButterflies.length < 10) {
+      showNotification('Du kannst nur volle Rahmen mit 10 Schmetterlingen liken!', 'warning');
       return;
     }
 
@@ -350,7 +350,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                 const frameLike = frameLikes.find(fl => fl.frameId === frameId);
                 
                 const totalButterflies = frameButterflies.length + frameVipButterflies.length;
-                const isFullFrame = totalButterflies === 6;
+                const isFullFrame = totalButterflies === 10;
                 const canBeLiked = isFullFrame || frameLike?.isLiked;
                 
                 return (
@@ -373,7 +373,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                           )}
                           {!isFullFrame && (
                             <span className="ml-2 text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">
-                              {totalButterflies}/6
+                              {totalButterflies}/10
                             </span>
                           )}
                         </div>
@@ -400,8 +400,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     </CardHeader>
                     <CardContent>
                       {/* Butterfly Display Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
+                      <div className="grid grid-cols-5 gap-3">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((slotIndex) => {
                           const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex) ||
                                           frameVipButterflies.find(b => b.slotIndex === slotIndex);
                           
@@ -461,7 +461,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                       {frameButterflies.length > 0 && (
                         <div className="mt-4 text-center">
                           <p className="text-slate-400 text-sm">
-                            {frameButterflies.length} von 6 Plätzen belegt
+                            {frameButterflies.length} von 10 Plätzen belegt
                           </p>
                         </div>
                       )}
@@ -533,15 +533,15 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                         <div className="flex items-center">
                           <span>🐠 Aquarium #{tankNumber}</span>
                           <span className="ml-2 text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">
-                            {tankFish.length}/6 Fische
+                            {tankFish.length}/10 Fische
                           </span>
                         </div>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {/* Fish Display Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
+                      <div className="grid grid-cols-5 gap-3">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((slotIndex) => {
                           const fish = tankFish.find(f => f.slotIndex === slotIndex);
                           
                           return (
@@ -591,7 +591,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                       {tankFish.length > 0 && (
                         <div className="mt-4 text-center">
                           <p className="text-cyan-300 text-sm">
-                            🐠 {tankFish.length} von 6 Plätzen belegt
+                            🐠 {tankFish.length} von 10 Plätzen belegt
                           </p>
                         </div>
                       )}
