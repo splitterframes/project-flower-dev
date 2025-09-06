@@ -669,34 +669,40 @@ export const MarketView: React.FC = () => {
           </CardHeader>
           <CardContent className="overflow-visible">
             <div className="relative">
-              {/* Item Type Selector - IMMER sichtbar */}
+              {/* Item Type Selector - Schöne Tab-Buttons */}
               <div className="mb-6">
-                <Label>Was möchtest du verkaufen?</Label>
-                <div className="flex space-x-4 mt-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="itemType"
-                      value="seed"
-                      checked={sellForm.itemType === 'seed'}
-                      onChange={(e) => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
-                      className="mr-2"
-                    />
-                    <span className="text-white">🌱 Samen</span>
-                    <span className="text-slate-400 text-sm ml-2">({mySeeds.length})</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="itemType"
-                      value="caterpillar"
-                      checked={sellForm.itemType === 'caterpillar'}
-                      onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
-                      className="mr-2"
-                    />
-                    <span className="text-white">🐛 Raupen</span>
-                    <span className="text-slate-400 text-sm ml-2">({myCaterpillars.length})</span>
-                  </label>
+                <Label className="text-slate-300 mb-3 block">Was möchtest du verkaufen?</Label>
+                <div className="flex bg-slate-900 rounded-lg border border-slate-700 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
+                    className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'seed'
+                        ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg border-2 border-green-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-xl mr-2">🌱</span>
+                    <div className="flex flex-col items-center">
+                      <span>Samen</span>
+                      <span className="text-xs opacity-75">({mySeeds.length} verfügbar)</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
+                    className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'caterpillar'
+                        ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg border-2 border-orange-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-xl mr-2">🐛</span>
+                    <div className="flex flex-col items-center">
+                      <span>Raupen</span>
+                      <span className="text-xs opacity-75">({myCaterpillars.length} verfügbar)</span>
+                    </div>
+                  </button>
                 </div>
               </div>
 
