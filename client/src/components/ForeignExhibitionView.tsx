@@ -512,66 +512,54 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                 return (
                   <Card 
                     key={tankId}
-                    className="bg-gradient-to-br from-cyan-900 via-blue-900 to-slate-950 border-2 border-cyan-600/50 transition-all duration-300 shadow-xl max-w-2xl mx-auto"
+                    className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-2xl"
                   >
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-xl font-bold text-white flex items-center justify-center">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-blue-300 text-center flex items-center justify-between text-xl">
                         <div className="flex items-center">
-                          <span>🐠 Aquarium #{tankNumber}</span>
-                          <span className="ml-2 text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">
-                            {tankFish.length}/10 Fische
+                          <span>🐠 {ownerName}s Aquarium #{tankNumber}</span>
+                          <span className="ml-3 text-sm bg-blue-600 text-blue-100 px-3 py-1 rounded-full">
+                            {tankFish.length}/6 Fische
                           </span>
                         </div>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Fish Display Grid */}
-                      <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[800px] place-items-center">
-                        {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
-                          const fish = tankFish.find(f => f.slotIndex === slotIndex);
-                          
-                          return (
-                            <div 
-                              key={slotIndex} 
-                              className={`aspect-square border-2 rounded-lg ${
-                                fish ? 'border-cyan-400' : 'border-slate-600'
-                              } bg-slate-800/50 flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-cyan-300/50`}
-                            >
-                              {fish ? (
-                                <div className="w-full h-full relative group">
-                                  <div className="absolute inset-2 rounded-lg overflow-hidden bg-gradient-to-b from-blue-900/80 to-slate-900/80 border-2"
-                                       style={{
-                                         borderColor: getRarityColor(fish.fishRarity as RarityTier)
-                                       }}>
+                      {/* Aquarium water effect */}
+                      <div className="p-3 bg-gradient-to-br from-blue-900/20 to-teal-900/10 rounded-lg border border-blue-500/20">
+                        <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[800px] place-items-center">
+                          {Array.from({ length: 6 }, (_, slotIndex) => {
+                            const fish = tankFish.find(f => f.slotIndex === slotIndex);
+                            
+                            return (
+                              <div 
+                                key={slotIndex}
+                                className="aspect-square bg-blue-950/30 border border-blue-400/30 rounded-lg flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow min-h-0"
+                              >
+                                {fish ? (
+                                  <div className="w-full h-full relative group cursor-pointer">
                                     <RarityImage
                                       src={fish.fishImageUrl}
                                       alt={fish.fishName}
                                       rarity={fish.fishRarity as RarityTier}
-                                      className="w-full h-full object-cover"
+                                      size="medium"
+                                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                                      <div className="absolute bottom-1 left-1 right-1 text-center">
-                                        <div className="text-white text-xs font-bold bg-black/60 rounded px-1 py-0.5 mb-1">
-                                          {fish.fishName}
-                                        </div>
-                                        <div className="text-xs font-semibold"
-                                             style={{
-                                               color: getRarityColor(fish.fishRarity as RarityTier)
-                                             }}>
-                                          {getRarityDisplayName(fish.fishRarity as RarityTier)}
-                                        </div>
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded flex items-center justify-center">
+                                      <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {fish.fishName}
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="text-slate-500 text-xs text-center">
-                                  Leer
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                ) : (
+                                  <div className="text-blue-400/60 text-sm text-center">
+                                    Leer
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                       
                       {tankFish.length > 0 && (
