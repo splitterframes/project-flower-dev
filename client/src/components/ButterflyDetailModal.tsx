@@ -362,7 +362,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-7xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-orange-500/30 text-white max-w-7xl w-full shadow-2xl">
         <DialogHeader className="relative mb-4">
           {/* Enhanced Header Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-t-lg -mx-6 -my-2"></div>
