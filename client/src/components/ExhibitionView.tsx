@@ -28,6 +28,7 @@ export const ExhibitionView: React.FC = () => {
   const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
   const [userVipButterflies, setUserVipButterflies] = useState<UserVipButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
+  const [sellStatuses, setSellStatuses] = useState<{[key: string]: {canSell: boolean, timeRemainingMs: number}}>({});
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
   const [currentButterflyIndex, setCurrentButterflyIndex] = useState<number>(0);
@@ -36,6 +37,47 @@ export const ExhibitionView: React.FC = () => {
   const [showInventoryDialog, setShowInventoryDialog] = useState(false);
   const [showVipInventoryDialog, setShowVipInventoryDialog] = useState(false);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+
+  const loadSellStatuses = async () => {
+    if (!user) return;
+    
+    try {
+      const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+      
+      // Load sell statuses for all exhibition butterflies
+      const loadPromises = exhibitionButterflies.map(async (butterfly) => {
+        try {
+          const response = await fetch(`/api/exhibition/butterfly/${butterfly.id}/sell-status`);
+          const data = await response.json();
+          statuses[`normal-${butterfly.id}`] = {
+            canSell: data.canSell,
+            timeRemainingMs: data.timeRemainingMs || 0
+          };
+        } catch (error) {
+          console.error(`Failed to load sell status for butterfly ${butterfly.id}:`, error);
+        }
+      });
+      
+      // Load sell statuses for all VIP butterflies
+      const vipLoadPromises = exhibitionVipButterflies.map(async (vipButterfly) => {
+        try {
+          const response = await fetch(`/api/exhibition/vip-butterfly/${vipButterfly.id}/sell-status`);
+          const data = await response.json();
+          statuses[`vip-${vipButterfly.id}`] = {
+            canSell: data.canSell,
+            timeRemainingMs: data.timeRemainingMs || 0
+          };
+        } catch (error) {
+          console.error(`Failed to load sell status for VIP butterfly ${vipButterfly.id}:`, error);
+        }
+      });
+      
+      await Promise.all([...loadPromises, ...vipLoadPromises]);
+      setSellStatuses(statuses);
+    } catch (error) {
+      console.error('Failed to load sell statuses:', error);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -46,6 +88,15 @@ export const ExhibitionView: React.FC = () => {
       // No need to manually process passive income anymore - it's automatic
     }
   }, [user]);
+  
+  useEffect(() => {
+    if (exhibitionButterflies.length > 0 || exhibitionVipButterflies.length > 0) {
+      loadSellStatuses();
+      // Refresh sell statuses every 30 seconds
+      const interval = setInterval(loadSellStatuses, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [exhibitionButterflies, exhibitionVipButterflies]);
 
   // Set to newest frame with butterflies when frames are loaded, or reset frame index when frames change
   useEffect(() => {
@@ -556,6 +607,9 @@ export const ExhibitionView: React.FC = () => {
                           butterflyImageUrl={vipButterfly.vipButterflyImageUrl}
                           butterflyName={vipButterfly.vipButterflyName}
                           rarity="vip" as any
+                          placedAt={vipButterfly.placedAt}
+                          canSell={sellStatuses[`vip-${vipButterfly.id}`]?.canSell}
+                          timeRemainingMs={sellStatuses[`vip-${vipButterfly.id}`]?.timeRemainingMs}
                         >
                           <div 
                             className="w-full h-full cursor-pointer relative group bg-gradient-to-br from-pink-800/50 to-purple-800/50 rounded border-2 border-pink-500"
@@ -589,6 +643,9 @@ export const ExhibitionView: React.FC = () => {
                           butterflyImageUrl={butterfly.butterflyImageUrl}
                           butterflyName={butterfly.butterflyName}
                           rarity={butterfly.butterflyRarity as RarityTier}
+                          placedAt={butterfly.placedAt}
+                          canSell={sellStatuses[`normal-${butterfly.id}`]?.canSell}
+                          timeRemainingMs={sellStatuses[`normal-${butterfly.id}`]?.timeRemainingMs}
                         >
                           <div 
                             className="w-full h-full cursor-pointer relative group"
