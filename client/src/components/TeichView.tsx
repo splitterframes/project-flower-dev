@@ -354,6 +354,16 @@ export const TeichView: React.FC = () => {
           fieldFishRes.json()
         ]);
         console.log("🌸 FETCHTEICHDATA: JSON parsed, flowersData =", flowersData);
+        console.log("🌸 FETCHTEICHDATA: Starting field processing...");
+
+        // *** EMERGENCY FIX: Try setUserFlowers in try-catch ***
+        try {
+          console.log("🌸 FETCHTEICHDATA: About to set userFlowers...");
+          setUserFlowers(flowersData.flowers || []);
+          console.log("🌸 FETCHTEICHDATA: userFlowers SET! ✅ Length:", flowersData.flowers?.length);
+        } catch (setError) {
+          console.error("🌸 ERROR setting userFlowers:", setError);
+        }
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
 
@@ -416,19 +426,31 @@ export const TeichView: React.FC = () => {
           };
         });
 
+        console.log("🌸 FETCHTEICHDATA: About to setGardenFields...");
         setGardenFields(updatedFields);
+        console.log("🌸 FETCHTEICHDATA: setGardenFields DONE");
         // Clear garden-specific data for pond view
         setUserSeeds([]);
+        console.log("🌸 FETCHTEICHDATA: setUserSeeds DONE");
         setUserBouquets([]);
+        console.log("🌸 FETCHTEICHDATA: setUserBouquets DONE");
         setPlacedBouquets([]);
+        console.log("🌸 FETCHTEICHDATA: setPlacedBouquets DONE");
         setFieldButterflies(fieldButterfliesData.fieldButterflies || []);
+        console.log("🌸 FETCHTEICHDATA: setFieldButterflies DONE");
         setFieldFish(fieldFishData.fieldFish || []);
+        console.log("🌸 FETCHTEICHDATA: setFieldFish DONE");
         setFieldCaterpillars(caterpillarData.fieldCaterpillars);
+        console.log("🌸 FETCHTEICHDATA: setFieldCaterpillars DONE");
         setSunSpawns([]); // No sun spawns in pond view
+        console.log("🌸 FETCHTEICHDATA: setSunSpawns DONE");
         setUserButterflies(butterfliesData.butterflies || []);
+        console.log("🌸 FETCHTEICHDATA: setUserButterflies DONE");
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
+        console.log("🌸 FETCHTEICHDATA: setUserCaterpillars DONE");
         console.log("🌸 FETCHTEICHDATA: Setting userFlowers to:", flowersData.flowers);
         setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
+        console.log("🌸 FETCHTEICHDATA: setUserFlowers COMPLETED ✅");
       } else {
         console.error("🌸 FETCHTEICHDATA ERROR: Some API responses failed", {
           caterpillar: caterpillarRes.status,
