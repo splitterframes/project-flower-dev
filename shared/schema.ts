@@ -35,17 +35,45 @@ export const marketListings = pgTable("market_listings", {
   id: serial("id").primaryKey(),
   sellerId: integer("seller_id").notNull().references(() => users.id),
   itemType: varchar("item_type", { length: 20 }).notNull().default("seed"), // "seed" | "caterpillar" | "flower" | "butterfly" | "fish"
-  seedId: integer("seed_id").references(() => seeds.id), // For seed listings
-  caterpillarId: integer("caterpillar_id").references(() => userCaterpillars.id), // For caterpillar listings
-  flowerId: integer("flower_id").references(() => userFlowers.id), // For flower listings
-  butterflyId: integer("butterfly_id").references(() => userButterflies.id), // For butterfly listings
-  fishId: integer("fish_id").references(() => userFish.id), // For fish listings
   quantity: integer("quantity").notNull(),
   pricePerUnit: integer("price_per_unit").notNull(),
   totalPrice: integer("total_price").notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  
+  // Seeds - reference to static seeds table
+  seedId: integer("seed_id").references(() => seeds.id),
+  seedName: text("seed_name"),
+  seedRarity: text("seed_rarity"),
+  
+  // Caterpillars - copy data from user inventory
+  caterpillarId: integer("caterpillar_id"), // Reference to user_caterpillars.id
+  caterpillarName: text("caterpillar_name"),
+  caterpillarRarity: text("caterpillar_rarity"), 
+  caterpillarImageUrl: text("caterpillar_image_url"),
+  caterpillarIdOriginal: integer("caterpillar_id_original"), // Original caterpillar game ID
+  
+  // Flowers - copy data from user inventory
+  flowerId: integer("flower_id"), // Reference to user_flowers.id
+  flowerName: text("flower_name"),
+  flowerRarity: text("flower_rarity"),
+  flowerImageUrl: text("flower_image_url"), 
+  flowerIdOriginal: integer("flower_id_original"), // Original flower game ID
+  
+  // Butterflies - copy data from user inventory
+  butterflyId: integer("butterfly_id"), // Reference to user_butterflies.id
+  butterflyName: text("butterfly_name"),
+  butterflyRarity: text("butterfly_rarity"),
+  butterflyImageUrl: text("butterfly_image_url"),
+  butterflyIdOriginal: integer("butterfly_id_original"), // Original butterfly game ID
+  
+  // Fish - copy data from user inventory
+  fishId: integer("fish_id"), // Reference to user_fish.id
+  fishName: text("fish_name"),
+  fishRarity: text("fish_rarity"),
+  fishImageUrl: text("fish_image_url"),
+  fishIdOriginal: integer("fish_id_original"), // Original fish game ID
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

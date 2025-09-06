@@ -574,6 +574,7 @@ export class PostgresStorage {
 
   // Market methods
   async getMarketListings(): Promise<any[]> {
+    // Get all market listings with their copied data - only one JOIN needed for seller username
     const listings = await this.db
       .select({
         id: marketListings.id,
@@ -589,37 +590,29 @@ export class PostgresStorage {
         totalPrice: marketListings.totalPrice,
         createdAt: marketListings.createdAt,
         sellerUsername: users.username,
-        // Seed data (for seed listings)
-        seedName: seeds.name,
-        seedRarity: seeds.rarity,
-        // Caterpillar data (for caterpillar listings)
-        caterpillarName: userCaterpillars.caterpillarName,
-        caterpillarRarity: userCaterpillars.caterpillarRarity,
-        caterpillarImageUrl: userCaterpillars.caterpillarImageUrl,
-        caterpillarIdOriginal: userCaterpillars.caterpillarId,
-        // Flower data (for flower listings)
-        flowerName: userFlowers.flowerName,
-        flowerRarity: userFlowers.flowerRarity,
-        flowerImageUrl: userFlowers.flowerImageUrl,
-        flowerIdOriginal: userFlowers.flowerId,
-        // Butterfly data (for butterfly listings)
-        butterflyName: userButterflies.butterflyName,
-        butterflyRarity: userButterflies.butterflyRarity,
-        butterflyImageUrl: userButterflies.butterflyImageUrl,
-        butterflyIdOriginal: userButterflies.butterflyId,
-        // Fish data (for fish listings)
-        fishName: userFish.fishName,
-        fishRarity: userFish.fishRarity,
-        fishImageUrl: userFish.fishImageUrl,
-        fishIdOriginal: userFish.fishId,
+        // Item data (directly stored in market_listings - no inventory JOINs needed!)
+        seedName: marketListings.seedName,
+        seedRarity: marketListings.seedRarity,
+        caterpillarName: marketListings.caterpillarName,
+        caterpillarRarity: marketListings.caterpillarRarity,
+        caterpillarImageUrl: marketListings.caterpillarImageUrl,
+        caterpillarIdOriginal: marketListings.caterpillarIdOriginal,
+        flowerName: marketListings.flowerName,
+        flowerRarity: marketListings.flowerRarity,
+        flowerImageUrl: marketListings.flowerImageUrl,
+        flowerIdOriginal: marketListings.flowerIdOriginal,
+        butterflyName: marketListings.butterflyName,
+        butterflyRarity: marketListings.butterflyRarity,
+        butterflyImageUrl: marketListings.butterflyImageUrl,
+        butterflyIdOriginal: marketListings.butterflyIdOriginal,
+        fishName: marketListings.fishName,
+        fishRarity: marketListings.fishRarity,
+        fishImageUrl: marketListings.fishImageUrl,
+        fishIdOriginal: marketListings.fishIdOriginal,
       })
       .from(marketListings)
       .leftJoin(users, eq(marketListings.sellerId, users.id))
-      .leftJoin(seeds, eq(marketListings.seedId, seeds.id))
-      .leftJoin(userCaterpillars, eq(marketListings.caterpillarId, userCaterpillars.id))
-      .leftJoin(userFlowers, eq(marketListings.flowerId, userFlowers.id))
-      .leftJoin(userButterflies, eq(marketListings.butterflyId, userButterflies.id))
-      .leftJoin(userFish, eq(marketListings.fishId, userFish.id));
+      .where(eq(marketListings.isActive, true));
     
     return listings;
   }
@@ -669,19 +662,44 @@ export class PostgresStorage {
         throw new Error('Insufficient caterpillars');
       }
 
-      // Create caterpillar listing with specified quantity
+      const caterpillar = caterpillarResult[0];
+
+      // Create caterpillar listing with COPIED data (no more JOINs needed!)
       const listing = await this.db.insert(marketListings).values({
         sellerId,
         itemType: "caterpillar",
-        seedId: null,
-        caterpillarId: data.caterpillarId!,
         quantity: data.quantity,
         pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit * data.quantity
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy caterpillar data directly into listing
+        caterpillarId: data.caterpillarId!,
+        caterpillarName: caterpillar.caterpillarName,
+        caterpillarRarity: caterpillar.caterpillarRarity,
+        caterpillarImageUrl: caterpillar.caterpillarImageUrl,
+        caterpillarIdOriginal: caterpillar.caterpillarId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        flowerId: null,
+        flowerName: null,
+        flowerRarity: null,
+        flowerImageUrl: null,
+        flowerIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
+        fishId: null,
+        fishName: null,
+        fishRarity: null,
+        fishImageUrl: null,
+        fishIdOriginal: null,
       }).returning();
 
       // Update caterpillar quantity in seller's inventory
-      const newQuantity = caterpillarResult[0].quantity - data.quantity;
+      const newQuantity = caterpillar.quantity - data.quantity;
       if (newQuantity <= 0) {
         // Remove caterpillar entirely if no more left
         await this.db
@@ -711,22 +729,44 @@ export class PostgresStorage {
         throw new Error('Insufficient flowers');
       }
 
-      // Create flower listing
+      const flower = flowerResult[0];
+
+      // Create flower listing with COPIED data
       const listing = await this.db.insert(marketListings).values({
         sellerId,
         itemType: "flower",
-        seedId: null,
-        caterpillarId: null,
-        flowerId: data.flowerId!,
-        butterflyId: null,
-        fishId: null,
         quantity: data.quantity,
         pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit * data.quantity
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy flower data directly into listing
+        flowerId: data.flowerId!,
+        flowerName: flower.flowerName,
+        flowerRarity: flower.flowerRarity,
+        flowerImageUrl: flower.flowerImageUrl,
+        flowerIdOriginal: flower.flowerId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        caterpillarId: null,
+        caterpillarName: null,
+        caterpillarRarity: null,
+        caterpillarImageUrl: null,
+        caterpillarIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
+        fishId: null,
+        fishName: null,
+        fishRarity: null,
+        fishImageUrl: null,
+        fishIdOriginal: null,
       }).returning();
 
       // Update flower quantity
-      const newQuantity = flowerResult[0].quantity - data.quantity;
+      const newQuantity = flower.quantity - data.quantity;
       if (newQuantity <= 0) {
         await this.db
           .delete(userFlowers)
@@ -755,18 +795,40 @@ export class PostgresStorage {
         throw new Error('Butterflies can only be sold one at a time');
       }
 
-      // Create butterfly listing
+      const butterfly = butterflyResult[0];
+
+      // Create butterfly listing with COPIED data
       const listing = await this.db.insert(marketListings).values({
         sellerId,
         itemType: "butterfly",
-        seedId: null,
-        caterpillarId: null,
-        flowerId: null,
-        butterflyId: data.butterflyId!,
-        fishId: null,
         quantity: 1,
         pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit
+        totalPrice: data.pricePerUnit,
+        // Copy butterfly data directly into listing
+        butterflyId: data.butterflyId!,
+        butterflyName: butterfly.butterflyName,
+        butterflyRarity: butterfly.butterflyRarity,
+        butterflyImageUrl: butterfly.butterflyImageUrl,
+        butterflyIdOriginal: butterfly.butterflyId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        caterpillarId: null,
+        caterpillarName: null,
+        caterpillarRarity: null,
+        caterpillarImageUrl: null,
+        caterpillarIdOriginal: null,
+        flowerId: null,
+        flowerName: null,
+        flowerRarity: null,
+        flowerImageUrl: null,
+        flowerIdOriginal: null,
+        fishId: null,
+        fishName: null,
+        fishRarity: null,
+        fishImageUrl: null,
+        fishIdOriginal: null,
       }).returning();
 
       // Remove butterfly from seller's inventory
@@ -790,22 +852,44 @@ export class PostgresStorage {
         throw new Error('Insufficient fish');
       }
 
-      // Create fish listing
+      const fish = fishResult[0];
+
+      // Create fish listing with COPIED data
       const listing = await this.db.insert(marketListings).values({
         sellerId,
         itemType: "fish",
-        seedId: null,
-        caterpillarId: null,
-        flowerId: null,
-        butterflyId: null,
-        fishId: data.fishId!,
         quantity: data.quantity,
         pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit * data.quantity
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy fish data directly into listing
+        fishId: data.fishId!,
+        fishName: fish.fishName,
+        fishRarity: fish.fishRarity,
+        fishImageUrl: fish.fishImageUrl,
+        fishIdOriginal: fish.fishId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        caterpillarId: null,
+        caterpillarName: null,
+        caterpillarRarity: null,
+        caterpillarImageUrl: null,
+        caterpillarIdOriginal: null,
+        flowerId: null,
+        flowerName: null,
+        flowerRarity: null,
+        flowerImageUrl: null,
+        flowerIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
       }).returning();
 
       // Update fish quantity
-      const newQuantity = fishResult[0].quantity - data.quantity;
+      const newQuantity = fish.quantity - data.quantity;
       if (newQuantity <= 0) {
         await this.db
           .delete(userFish)
