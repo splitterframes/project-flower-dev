@@ -2398,6 +2398,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== TOP 100 RANKINGS SYSTEM ==========
+  
+  app.get("/api/rankings/top100/:category", async (req, res) => {
+    try {
+      const category = req.params.category;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🏆 Loading Top 100 rankings for category: ${category}`);
+      
+      let players = [];
+      
+      switch (category) {
+        case 'credits':
+          players = await storage.getTop100ByCredits(userId);
+          break;
+        case 'passive-income':
+          players = await storage.getTop100ByPassiveIncome(userId);
+          break;
+        case 'suns':
+          players = await storage.getTop100BySuns(userId);
+          break;
+        case 'likes':
+          players = await storage.getTop100ByLikes(userId);
+          break;
+        case 'seeds':
+          players = await storage.getTop100BySeeds(userId);
+          break;
+        case 'flowers':
+          players = await storage.getTop100ByFlowers(userId);
+          break;
+        case 'bouquets':
+          players = await storage.getTop100ByBouquets(userId);
+          break;
+        case 'butterflies':
+          players = await storage.getTop100ByButterflies(userId);
+          break;
+        case 'caterpillars':
+          players = await storage.getTop100ByCaterpillars(userId);
+          break;
+        case 'fish':
+          players = await storage.getTop100ByFish(userId);
+          break;
+        case 'exhibition-butterflies':
+          players = await storage.getTop100ByExhibitionButterflies(userId);
+          break;
+        case 'exhibition-fish':
+          players = await storage.getTop100ByExhibitionFish(userId);
+          break;
+        case 'bouquet-recipes':
+          players = await storage.getTop100ByBouquetRecipes(userId);
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid ranking category" });
+      }
+      
+      console.log(`🏆 Found ${players.length} players for ${category} rankings`);
+      res.json({ players });
+    } catch (error) {
+      console.error('🏆 Error loading Top 100 rankings:', error);
+      res.status(500).json({ message: "Error loading rankings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
