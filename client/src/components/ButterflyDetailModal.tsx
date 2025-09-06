@@ -476,12 +476,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                     </div>
                   )}
 
-                  <div className="text-sm text-slate-400 mb-4">
-                    {canSell 
-                      ? "Dieser Schmetterling kann jetzt verkauft werden!"
-                      : "Schmetterlinge können nach 72 Stunden verkauft werden"
-                    }
-                  </div>
+                  {canSell && (
+                    <div className="text-sm text-slate-400 mb-4">
+                      Dieser Schmetterling kann jetzt verkauft werden!
+                    </div>
+                  )}
 
                   {/* Sonnen-Boost Panel */}
                   {!canSell && (
