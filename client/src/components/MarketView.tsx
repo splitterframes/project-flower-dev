@@ -566,106 +566,85 @@ export const MarketView: React.FC = () => {
                     className="bg-slate-900 rounded-lg p-4 border-2"
                     style={{ borderColor: getBorderColor(rarity as RarityTier) }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        {/* Item Icon/Image */}
+                    <div className="flex items-start gap-3 mb-3">
+                      {/* 80x80 Item Bild */}
+                      <div className="w-20 h-20 rounded-lg border-2 bg-slate-700 flex-shrink-0 overflow-hidden shadow-md"
+                           style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
                         {listing.itemType === 'seed' ? (
-                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                          <div className="w-full h-full flex items-center justify-center text-4xl">
+                            {itemIcon}
+                          </div>
                         ) : listing.itemType === 'flower' ? (
-                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                          <img
+                            src={listing.flowerImageUrl || `/Blumen/${(listing.flowerIdOriginal || listing.flowerId || 1).toString().padStart(3, '0')}.jpg`}
+                            alt={itemName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🌸</div>';
+                            }}
+                          />
                         ) : listing.itemType === 'fish' ? (
-                          <span className="mr-2 text-2xl">{itemIcon}</span>
+                          <img
+                            src={listing.fishImageUrl || `/Fische/${(listing.fishIdOriginal || listing.fishId || 1).toString().padStart(3, '0')}.jpg`}
+                            alt={itemName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐟</div>';
+                            }}
+                          />
+                        ) : listing.itemType === 'butterfly' ? (
+                          <img
+                            src={listing.butterflyImageUrl || `/Schmetterlinge/${(listing.butterflyIdOriginal || listing.butterflyId || 1).toString().padStart(3, '0')}.jpg`}
+                            alt={itemName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🦋</div>';
+                            }}
+                          />
                         ) : (
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <div className="w-16 h-16 rounded-lg border-2 mr-3 bg-slate-700 flex-shrink-0 overflow-hidden shadow-md cursor-pointer hover:scale-105 transition-transform"
-                                   style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
-                                <img
-                                  src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
-                                  alt={itemName}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg">🐛</div>';
-                                  }}
-                                />
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80 p-4">
-                              <div className="flex flex-col space-y-3">
-                                {/* Großes Raupenbild */}
-                                <div className="flex justify-center">
-                                  <div className="w-50 h-50 rounded-xl border-4 bg-slate-700 overflow-hidden shadow-lg"
-                                       style={{ borderColor: getBorderColor(rarity as RarityTier) }}>
-                                    <img
-                                      src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
-                                      alt={itemName}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                        e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">🐛</div>';
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                                
-                                {/* Raupe-Details */}
-                                <div className="text-center space-y-2">
-                                  <h3 className="font-bold text-lg text-white">{itemName}</h3>
-                                  <div className="flex items-center justify-center space-x-1">
-                                    <Star className={`h-5 w-5 ${getRarityColor(rarity as RarityTier)}`} />
-                                    <span className={`text-sm font-semibold ${getRarityColor(rarity as RarityTier)}`}>
-                                      {rarity?.toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <p className="text-slate-400 text-sm">
-                                    ID: {(listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0}
-                                  </p>
-                                  
-                                  {/* Preis-Infos */}
-                                  <div className="mt-3 p-3 bg-slate-800/50 rounded-lg">
-                                    <div className="flex justify-between text-sm">
-                                      <span className="text-slate-300">Anzahl:</span>
-                                      <span className="text-white font-medium">{listing.quantity}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm mt-1">
-                                      <span className="text-slate-300">Preis/Stück:</span>
-                                      <span className="text-orange-400 font-medium">{listing.pricePerUnit} Cr</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm mt-1 pt-2 border-t border-slate-600">
-                                      <span className="text-slate-300 font-medium">Gesamt:</span>
-                                      <span className="text-orange-400 font-bold">{listing.totalPrice} Cr</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
+                          <img
+                            src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
+                            alt={itemName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐛</div>';
+                            }}
+                          />
                         )}
-                        <h4 className="font-bold text-white">
-                          {itemName}
-                        </h4>
                       </div>
-                      <div className="flex items-center">
-                        <Star className={`h-4 w-4 mr-1 ${getRarityColor(rarity as RarityTier)}`} />
-                        <span className={`text-xs ${getRarityColor(rarity as RarityTier)}`}>
-                          {rarity}
-                        </span>
+                      
+                      {/* Item Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-white truncate">
+                            {itemName}
+                          </h4>
+                          <div className="flex items-center ml-2">
+                            <Star className={`h-4 w-4 mr-1 ${getRarityColor(rarity as RarityTier)}`} />
+                            <span className={`text-xs ${getRarityColor(rarity as RarityTier)}`}>
+                              {rarity}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-slate-400 text-sm mb-2">Von: {listing.sellerUsername}</p>
+                        {/* Typ und Menge in einer Zeile */}
+                        <div className="flex justify-between text-xs text-slate-300 mb-2">
+                          <span>Typ: {
+                            listing.itemType === 'seed' ? 'Samen' : 
+                            listing.itemType === 'caterpillar' ? 'Raupe' :
+                            listing.itemType === 'flower' ? 'Blume' :
+                            listing.itemType === 'butterfly' ? 'Schmetterling' :
+                            listing.itemType === 'fish' ? 'Fisch' : 'Unbekannt'
+                          }</span>
+                          <span>Menge: {listing.quantity}</span>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-slate-400 text-sm mb-3">Von: {listing.sellerUsername}</p>
-                    <p className="text-slate-300 text-xs mb-3">Typ: {
-                      listing.itemType === 'seed' ? 'Samen' : 
-                      listing.itemType === 'caterpillar' ? 'Raupe' :
-                      listing.itemType === 'flower' ? 'Blume' :
-                      listing.itemType === 'butterfly' ? 'Schmetterling' :
-                      listing.itemType === 'fish' ? 'Fisch' : 'Unbekannt'
-                    }</p>
                     <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Menge:</span>
-                        <span className="text-white">{listing.quantity}</span>
-                      </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">Preis/Stück:</span>
                         <span className="text-orange-400">{listing.pricePerUnit} Cr</span>
