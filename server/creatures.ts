@@ -313,12 +313,50 @@ export async function generateRandomCaterpillar(rarity: RarityTier): Promise<Cat
 // ==================== INITIALIZATION ====================
 
 // Initialize both systems
+// Generate all available flower IDs dynamically from Blumen folder
+async function generateAvailableFlowerIds(): Promise<number[]> {
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    const flowerDir = path.join(process.cwd(), 'client/public/Blumen');
+    const files = await fs.readdir(flowerDir);
+    
+    // Extract flower numbers from xxx.jpg files
+    const ids: number[] = [];
+    files.forEach(file => {
+      const match = file.match(/^(\d+)\.jpg$/i);
+      if (match) {
+        const id = parseInt(match[1]);
+        if (!isNaN(id)) {
+          ids.push(id);
+        }
+      }
+    });
+    
+    // Sort IDs numerically
+    const sortedIds = ids.sort((a, b) => a - b);
+    console.log(`🌸 Found ${sortedIds.length} flower images: ${Math.min(...sortedIds)}-${Math.max(...sortedIds)}`);
+    
+    return sortedIds.length > 0 ? sortedIds : [1]; // Fallback to just 1 if none found
+  } catch (error) {
+    console.error('🌸 Error reading Blumen directory:', error);
+    // Fallback to original range from RARITY_CONFIG if scanning fails
+    const ids: number[] = [];
+    for (let i = 1; i <= 200; i++) {
+      ids.push(i);
+    }
+    return ids;
+  }
+}
+
 export async function initializeCreatureSystems(): Promise<void> {
   await Promise.all([
     initializeFishRarities(),
-    initializeCaterpillarRarities()
+    initializeCaterpillarRarities(),
+    initializeFlowerRarities()
   ]);
-  console.log(`🌊 Creature systems initialized: ${TOTAL_FISH} fish, ${TOTAL_CATERPILLARS} caterpillars`);
+  console.log(`🌊 Creature systems initialized: ${TOTAL_FISH} fish, ${TOTAL_CATERPILLARS} caterpillars, ${TOTAL_FLOWERS} flowers`);
 }
 
 // Get fish rarity for specific fish ID
