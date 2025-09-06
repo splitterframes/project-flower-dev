@@ -650,29 +650,24 @@ export const MarketView: React.FC = () => {
               </div>
             </div>
 
-            {(() => {
-              const filteredListings = buyFilter === 'all' 
-                ? marketListings 
-                : marketListings.filter(listing => listing.itemType === buyFilter);
-              
-              return filteredListings.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-slate-400">
-                    {buyFilter === 'all' 
-                      ? 'Noch keine Angebote verfügbar' 
-                      : `Noch keine ${
-                          buyFilter === 'seed' ? 'Samen' :
-                          buyFilter === 'flower' ? 'Blumen' :
-                          buyFilter === 'butterfly' ? 'Schmetterling' :
-                          buyFilter === 'caterpillar' ? 'Raupen' :
-                          buyFilter === 'fish' ? 'Fisch' : ''
-                        } Angebote verfügbar`
-                    }
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredListings.map((listing) => {
+            {(buyFilter === 'all' ? marketListings : marketListings.filter(listing => listing.itemType === buyFilter)).length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400">
+                  {buyFilter === 'all' 
+                    ? 'Noch keine Angebote verfügbar' 
+                    : `Noch keine ${
+                        buyFilter === 'seed' ? 'Samen' :
+                        buyFilter === 'flower' ? 'Blumen' :
+                        buyFilter === 'butterfly' ? 'Schmetterling' :
+                        buyFilter === 'caterpillar' ? 'Raupen' :
+                        buyFilter === 'fish' ? 'Fisch' : ''
+                      } Angebote verfügbar`
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(buyFilter === 'all' ? marketListings : marketListings.filter(listing => listing.itemType === buyFilter)).map((listing) => {
                   const rarity = listing.itemType === 'seed' ? listing.seedRarity : 
                                 listing.itemType === 'caterpillar' ? listing.caterpillarRarity :
                                 listing.itemType === 'flower' ? listing.flowerRarity :
