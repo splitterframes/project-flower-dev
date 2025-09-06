@@ -321,14 +321,6 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
             </span>
           </DialogTitle>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-full transition-all duration-200 z-10"
-          >
-            <X className="h-5 w-5" />
-          </Button>
         </DialogHeader>
 
         {/* Top Section: Name/Rarity left, Navigation right */}
