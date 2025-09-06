@@ -423,6 +423,7 @@ export const TeichView: React.FC = () => {
         setSunSpawns([]); // No sun spawns in pond view
         setUserButterflies(butterfliesData.butterflies || []);
         setUserCaterpillars(userCaterpillarsData.caterpillars || []);
+        setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
       }
     } catch (error) {
       console.error('Failed to fetch garden data:', error);
