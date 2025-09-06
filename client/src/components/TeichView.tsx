@@ -366,6 +366,10 @@ export const TeichView: React.FC = () => {
         }
 
         console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
+        
+        // 🐛 DEBUG: Check fieldCaterpillars state update
+        setFieldCaterpillars(caterpillarData.fieldCaterpillars || []);
+        console.log('🐛 fieldCaterpillars state updated with length:', caterpillarData.fieldCaterpillars?.length);
 
         // Update pond fields with caterpillars and butterflies (no sun spawns in pond view)
         const updatedFields = gardenFields.map((field) => {
@@ -374,8 +378,13 @@ export const TeichView: React.FC = () => {
           // Check for caterpillar (only on grass fields)
           const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldIndex === fieldIndex) : null;
           
+          // 🐛 DEBUG: Log caterpillar check for specific fields
+          if (fieldIndex === 20 || fieldIndex === 10 || fieldIndex === 2) {
+            console.log(`🐛 Field ${field.id} (index ${fieldIndex}): isPond=${field.isPond}, caterpillar=${!!caterpillar}`);
+          }
+          
           // Check for butterfly - should show both on grass fields AND pond fields as small colored dots
-          const butterfly = fieldButterfliesData.fieldButterflies.find((b: any) => b.fieldIndex === fieldIndex);
+          const butterfly = null; // No butterflies in pond view
           
           // Removed debug logging - bug fixed!
           
