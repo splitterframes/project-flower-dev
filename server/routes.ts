@@ -486,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       ({ userId, caterpillarId, fieldIndex } = req.body);
 
-      if (!userId || !caterpillarId || fieldIndex === undefined) {
+      if (!userId || caterpillarId === undefined || caterpillarId === null || fieldIndex === undefined) {
         return res.status(400).json({ message: 'Missing required parameters' });
       }
 
