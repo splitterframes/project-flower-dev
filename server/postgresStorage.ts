@@ -4331,9 +4331,10 @@ export class PostgresStorage {
     try {
       console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId} with AVERAGE rarity`);
       
-      // Get stored caterpillar rarities for this field
-      const key = this.getFedCaterpillarsKey(userId, pondFieldIndex);
-      const rarities = this.fedCaterpillarRarities.get(key) || [];
+      // Get stored caterpillar rarities for this field from database
+      const fedCaterpillars = await this.getFieldCaterpillars(userId);
+      const fieldCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === pondFieldIndex);
+      const rarities = fieldCaterpillars.map(c => c.caterpillarRarity);
       
       console.log(`🐟 Fed caterpillar rarities for average calculation:`, rarities);
       
@@ -4377,8 +4378,12 @@ export class PostgresStorage {
         isShrinking: false
       });
       
-      // Clean up stored rarities after creating fish
-      this.fedCaterpillarRarities.delete(key);
+      // Clean up fed caterpillars after creating fish
+      await this.db.delete(fieldCaterpillars)
+        .where(and(
+          eq(fieldCaterpillars.userId, userId),
+          eq(fieldCaterpillars.fieldIndex, pondFieldIndex)
+        ));
       console.log(`🐟 Cleaned up stored caterpillar rarities for field ${pondFieldIndex}`);
       
       console.log(`🐟 Successfully spawned ${fishData.name} (${averageRarity}) on pond field ${pondFieldIndex} based on average caterpillar rarity`);
