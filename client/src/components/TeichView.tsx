@@ -798,7 +798,7 @@ export const TeichView: React.FC = () => {
         },
         body: JSON.stringify({
           fieldIndex: selectedField - 1, // Convert to 0-based index
-          flowerId: flower.flowerId  // ✅ FIX: Use flower.flowerId instead of butterflyId
+          flowerId: flower.id  // ✅ CRITICAL FIX: Use flower.id (userFlower DB ID), not flower.flowerId!
         })
       });
 
