@@ -1089,7 +1089,10 @@ export const GardenView: React.FC = () => {
                       const scale = getGrowthScale();
                       
                       return (
-                        <div className="relative w-full h-full flex items-center justify-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="relative w-full h-full flex items-center justify-center cursor-pointer">
                           <div 
                             className="transition-transform duration-1000 ease-out"
                             style={{ transform: `scale(${scale})` }}
@@ -1102,16 +1105,18 @@ export const GardenView: React.FC = () => {
                               className="field-image"
                             />
                           </div>
-                          {status && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="bg-green-500/80 border border-green-400 rounded-lg px-2 py-1 backdrop-blur-sm">
-                                <div className="text-xs font-bold text-white text-center animate-pulse">
-                                  ⏱️ {status.remainingTime}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-slate-800 border-slate-600 text-green-300">
+                              <div className="text-center">
+                                <div className="font-bold text-sm">🌱 Wächst</div>
+                                <div className="text-xs">
+                                  ⏱️ {status?.remainingTime || '00:00'}
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       );
                     } else {
                       // Fallback to icon
