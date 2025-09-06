@@ -92,6 +92,7 @@ export const MarketView: React.FC = () => {
   const [myButterflies, setMyButterflies] = useState<any[]>([]);
   const [myFish, setMyFish] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"buy" | "sell" | "server">("buy");
+  const [buyFilter, setBuyFilter] = useState<'all' | 'seed' | 'flower' | 'butterfly' | 'caterpillar' | 'fish'>('all');
   const [isLoading, setIsLoading] = useState(false);
   
   const getBorderColor = (rarity: RarityTier): string => {
