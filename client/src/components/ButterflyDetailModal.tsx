@@ -482,7 +482,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                       </div>
                       
                       <div className="text-sm text-slate-400 mb-3">
-                        Verkürze den Countdown mit Sonnen: 10 ☀️ = 1 Minute weniger
+                        Verkürze den Countdown: 10 ☀️ = 1 Minute weniger
                       </div>
 
                       <div className="flex gap-3 items-end">
