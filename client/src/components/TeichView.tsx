@@ -1302,7 +1302,15 @@ export const TeichView: React.FC = () => {
                           return; // Caterpillar-Clicks werden von deren eigenem onClick gehandelt
                         }
                         
-                        // Blumen-Auswahl Dialog öffnen für neue pond system (nur wenn keine Raupe da ist)
+                        // Check if temporary flower is present - dann NICHT den Dialog öffnen
+                        const temporaryFlowerOnField = placedFlowers.find(f => f.fieldId === field.id);
+                        
+                        if (temporaryFlowerOnField) {
+                          console.log("🌸 Temporary flower present on field", field.id, "- ignoring field click");
+                          return; // Feld mit Blume soll nicht anklickbar sein
+                        }
+                        
+                        // Blumen-Auswahl Dialog öffnen für neue pond system (nur wenn keine Raupe UND keine Blume da ist)
                         console.log("🌸 Debug: userFlowers.length =", userFlowers.length, "userButterflies.length =", userButterflies.length);
         console.log("🌸 Debug: Full userFlowers =", userFlowers);
                         if (!isCollectingCaterpillar && userFlowers.length > 0) {
