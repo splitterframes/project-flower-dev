@@ -212,6 +212,17 @@ export const MarketView: React.FC = () => {
       });
 
       if (response.ok) {
+        // Immediately remove the sold item from local state for instant UI update
+        if (sellForm.itemType === 'caterpillar' && sellForm.caterpillarId) {
+          setMyCaterpillars(prev => prev.filter(cat => cat.id !== sellForm.caterpillarId));
+        } else if (sellForm.itemType === 'seed' && sellForm.seedId) {
+          setMySeeds(prev => prev.map(seed => 
+            seed.seedId === sellForm.seedId 
+              ? { ...seed, quantity: Math.max(0, seed.quantity - sellForm.quantity) }
+              : seed
+          ).filter(seed => seed.quantity > 0));
+        }
+        
         await fetchMarketListings();
         await fetchMySeeds();
         await fetchMyCaterpillars();
