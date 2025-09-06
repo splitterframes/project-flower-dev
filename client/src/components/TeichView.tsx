@@ -824,7 +824,9 @@ export const TeichView: React.FC = () => {
           flowerImageUrl: flower.flowerImageUrl,
           flowerName: flower.flowerName,
           flowerRarity: flower.flowerRarity as RarityTier,
-          placedAt: new Date()
+          placedAt: new Date(),
+          isShimmering: true,  // ✅ FIX: Start with shimmer animation
+          isDissolving: false  // ✅ FIX: Not dissolving yet
         }]);
 
         // Get spawn time based on flower rarity (seltener = länger bis Raupe spawnt)
@@ -845,8 +847,19 @@ export const TeichView: React.FC = () => {
         
         // Animate flower disappearing and spawn caterpillar after rarity-based time
         setTimeout(async () => {
-          // Remove flower completely after spawn time
-          setPlacedFlowers(prev => prev.filter(f => f.id !== tempFlowerId));
+          // Phase 1: Stop shimmering, start dissolving
+          setPlacedFlowers(prev => 
+            prev.map(f => 
+              f.id === tempFlowerId 
+                ? { ...f, isShimmering: false, isDissolving: true }
+                : f
+            )
+          );
+          
+          // Phase 2: Remove flower completely after dissolve animation
+          setTimeout(() => {
+            setPlacedFlowers(prev => prev.filter(f => f.id !== tempFlowerId));
+          }, 1500); // 1.5 seconds for dissolve animation
 
           // Spawn caterpillar on the field
           try {
