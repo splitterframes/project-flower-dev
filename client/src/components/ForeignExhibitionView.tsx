@@ -500,34 +500,32 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                         </div>
                         
                         <div className="flex items-center space-x-3">
-                          {/* Navigation Controls */}
-                          {sortedTankIds.length > 1 && (
-                            <div className="flex items-center space-x-3 bg-blue-800/60 rounded-lg px-3 py-2 border border-blue-600">
-                              <Button
-                                onClick={() => setCurrentTankIndex(Math.max(0, currentTankIndex - 1))}
-                                disabled={currentTankIndex === 0}
-                                variant="outline"
-                                size="sm"
-                                className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
-                              >
-                                <ChevronLeft className="h-4 w-4" />
-                              </Button>
-                              
-                              <div className="text-base font-semibold text-blue-100 px-3">
-                                #{tankNumber} / {sortedTankIds.length}
-                              </div>
-                              
-                              <Button
-                                onClick={() => setCurrentTankIndex(Math.min(sortedTankIds.length - 1, currentTankIndex + 1))}
-                                disabled={currentTankIndex >= sortedTankIds.length - 1}
-                                variant="outline"
-                                size="sm"
-                                className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
-                              >
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
+                          {/* Navigation Controls - immer anzeigen für Konsistenz */}
+                          <div className="flex items-center space-x-3 bg-blue-800/60 rounded-lg px-3 py-2 border border-blue-600">
+                            <Button
+                              onClick={() => setCurrentTankIndex(Math.max(0, currentTankIndex - 1))}
+                              disabled={currentTankIndex === 0 || sortedTankIds.length <= 1}
+                              variant="outline"
+                              size="sm"
+                              className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="text-base font-semibold text-blue-100 px-3">
+                              #{tankNumber} / {sortedTankIds.length}
                             </div>
-                          )}
+                            
+                            <Button
+                              onClick={() => setCurrentTankIndex(Math.min(sortedTankIds.length - 1, currentTankIndex + 1))}
+                              disabled={currentTankIndex >= sortedTankIds.length - 1 || sortedTankIds.length <= 1}
+                              variant="outline"
+                              size="sm"
+                              className="bg-blue-700 border-blue-500 hover:bg-blue-600 text-blue-100 disabled:opacity-50 h-8 w-8 p-0"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardTitle>
                     </CardHeader>
