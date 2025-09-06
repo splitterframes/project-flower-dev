@@ -75,7 +75,7 @@ export default function MariePosaButton({ userId }: MariePosaButtonProps) {
       >
         <Crown className={`h-4 w-4 sm:mr-2 ${isAvailable ? 'text-yellow-400' : 'text-slate-400'}`} />
         <span className="hidden sm:inline">
-          {isAvailable ? "👑 Marie" : "👑 Marie"}
+          {isAvailable ? "Marie" : "Marie"}
         </span>
       </Button>
 
