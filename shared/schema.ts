@@ -34,9 +34,12 @@ export const userSeeds = pgTable("user_seeds", {
 export const marketListings = pgTable("market_listings", {
   id: serial("id").primaryKey(),
   sellerId: integer("seller_id").notNull().references(() => users.id),
-  itemType: varchar("item_type", { length: 20 }).notNull().default("seed"), // "seed" | "caterpillar"
-  seedId: integer("seed_id").references(() => seeds.id), // Optional for caterpillars
+  itemType: varchar("item_type", { length: 20 }).notNull().default("seed"), // "seed" | "caterpillar" | "flower" | "butterfly" | "fish"
+  seedId: integer("seed_id").references(() => seeds.id), // For seed listings
   caterpillarId: integer("caterpillar_id").references(() => userCaterpillars.id), // For caterpillar listings
+  flowerId: integer("flower_id").references(() => userFlowers.id), // For flower listings
+  butterflyId: integer("butterfly_id").references(() => userButterflies.id), // For butterfly listings
+  fishId: integer("fish_id").references(() => userFish.id), // For fish listings
   quantity: integer("quantity").notNull(),
   pricePerUnit: integer("price_per_unit").notNull(),
   totalPrice: integer("total_price").notNull(),
@@ -56,18 +59,24 @@ export const loginSchema = z.object({
 });
 
 export const createMarketListingSchema = z.object({
-  itemType: z.enum(["seed", "caterpillar"]).default("seed"),
-  seedId: z.number().min(1).optional(), // Optional for caterpillars
-  caterpillarId: z.number().min(1).optional(), // Optional for seeds
+  itemType: z.enum(["seed", "caterpillar", "flower", "butterfly", "fish"]).default("seed"),
+  seedId: z.number().min(1).optional(), // For seed listings
+  caterpillarId: z.number().min(1).optional(), // For caterpillar listings
+  flowerId: z.number().min(1).optional(), // For flower listings
+  butterflyId: z.number().min(1).optional(), // For butterfly listings
+  fishId: z.number().min(1).optional(), // For fish listings
   quantity: z.number().min(1),
   pricePerUnit: z.number().min(1),
 }).refine(data => {
-  // Ensure either seedId or caterpillarId is provided based on itemType
+  // Ensure the correct ID is provided based on itemType
   if (data.itemType === "seed") return data.seedId !== undefined;
   if (data.itemType === "caterpillar") return data.caterpillarId !== undefined;
+  if (data.itemType === "flower") return data.flowerId !== undefined;
+  if (data.itemType === "butterfly") return data.butterflyId !== undefined;
+  if (data.itemType === "fish") return data.fishId !== undefined;
   return false;
 }, {
-  message: "seedId is required for seed listings, caterpillarId is required for caterpillar listings"
+  message: "Corresponding ID is required for each item type"
 });
 
 export const buyListingSchema = z.object({
