@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, X, Eye, Bug } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, X, Eye, Bug, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/stores/useAuth";
 
 interface UserListData {
@@ -21,6 +23,8 @@ interface UserListModalProps {
   onVisitExhibition: (userId: number, username: string) => void;
 }
 
+type SortOption = 'username' | 'butterflies' | 'likes' | 'online';
+
 export const UserListModal: React.FC<UserListModalProps> = ({
   isOpen,
   onClose,
@@ -28,7 +32,12 @@ export const UserListModal: React.FC<UserListModalProps> = ({
 }) => {
   const [users, setUsers] = useState<UserListData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortOption>('butterflies');
   const { user: currentUser } = useAuth();
+  
+  const itemsPerPage = 12;
 
   useEffect(() => {
     if (isOpen) {
@@ -63,6 +72,53 @@ export const UserListModal: React.FC<UserListModalProps> = ({
 
   const getOnlineColor = (user: UserListData) => {
     return user.isOnline ? 'text-green-400' : 'text-slate-400';
+  };
+
+  // Filter and sort users
+  const filteredAndSortedUsers = useMemo(() => {
+    let filtered = users.filter(user => 
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Sort users
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'username':
+          return a.username.localeCompare(b.username);
+        case 'butterflies':
+          return b.exhibitionButterflies - a.exhibitionButterflies;
+        case 'likes':
+          return (b.totalLikes || 0) - (a.totalLikes || 0);
+        case 'online':
+          if (a.isOnline && !b.isOnline) return -1;
+          if (!a.isOnline && b.isOnline) return 1;
+          return b.exhibitionButterflies - a.exhibitionButterflies;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [users, searchQuery, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredAndSortedUsers.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy]);
+
+  const getSortLabel = (option: SortOption) => {
+    switch (option) {
+      case 'username': return '📝 Name A-Z';
+      case 'butterflies': return '🦋 Schmetterlinge';
+      case 'likes': return '❤️ Likes';
+      case 'online': return '🟢 Online Status';
+      default: return '';
+    }
   };
 
   return (
