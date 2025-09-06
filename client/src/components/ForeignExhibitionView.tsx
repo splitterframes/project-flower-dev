@@ -318,7 +318,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Exhibition Mode */}
         {viewMode === 'exhibition' && (
           sortedFrameIds.length > 0 ? (
-            <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="space-y-6 max-w-7xl mx-auto max-h-[85vh] overflow-y-auto pr-2">
               {/* Current Frame */}
               {sortedFrameIds[currentFrameIndex] && (() => {
                 const frameId = sortedFrameIds[currentFrameIndex];
@@ -483,7 +483,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Aquarium Mode */}
         {viewMode === 'aquarium' && (
           sortedTankIds.length > 0 ? (
-            <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="space-y-6 max-w-7xl mx-auto max-h-[85vh] overflow-y-auto pr-2">
               {/* Current Tank */}
               {sortedTankIds[currentTankIndex] && (() => {
                 const tankId = sortedTankIds[currentTankIndex];
