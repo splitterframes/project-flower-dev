@@ -46,7 +46,7 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
   const [selectedItem, setSelectedItem] = useState<FeedingItem | null>(null);
 
   // Convert caterpillars to feeding items (filter out items with 0 quantity)
-  const feedingItems: FeedingItem[] = caterpillars.filter(cat => cat.quantity > 0).map(cat => ({
+  const feedingItems: FeedingItem[] = (caterpillars || []).filter(cat => cat.quantity > 0).map(cat => ({
     id: cat.id,
     name: cat.caterpillarName,
     rarity: cat.caterpillarRarity,
