@@ -908,181 +908,200 @@ export class PostgresStorage {
   }
 
   async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
-    const listing = await this.db
-      .select()
-      .from(marketListings)
-      .where(eq(marketListings.id, data.listingId));
+    try {
+      console.log(`🛒 Buying listing ${data.listingId} for user ${buyerId}, quantity: ${data.quantity}`);
+      
+      // Step 1: Get listing
+      const listings = await this.db
+        .select()
+        .from(marketListings)
+        .where(eq(marketListings.id, data.listingId));
 
-    if (listing.length === 0) {
-      return { success: false, message: 'Listing not found' };
+      if (listings.length === 0) {
+        console.log(`❌ Listing ${data.listingId} not found`);
+        return { success: false, message: 'Listing not found' };
+      }
+
+      const listing = listings[0];
+      const totalPrice = listing.pricePerUnit * data.quantity;
+      
+      console.log(`💰 Total price: ${totalPrice} credits for ${data.quantity} ${listing.itemType}(s)`);
+
+      // Step 2: Validate buyer credits
+      const buyer = await this.getUser(buyerId);
+      if (!buyer) {
+        return { success: false, message: 'Buyer not found' };
+      }
+      
+      if (buyer.credits < totalPrice) {
+        return { success: false, message: 'Insufficient credits' };
+      }
+
+      // Step 3: Validate listing data completeness
+      const validationResult = this.validateListingData(listing);
+      if (!validationResult.isValid) {
+        return { success: false, message: validationResult.message };
+      }
+
+      // Step 4: Process the purchase
+      const purchaseResult = await this.processPurchase(listing, buyerId, data.quantity, totalPrice, buyer);
+      if (!purchaseResult.success) {
+        return purchaseResult;
+      }
+
+      // Step 5: Update or remove listing
+      await this.updateListingAfterPurchase(listing, data.quantity);
+
+      console.log(`✅ Purchase completed successfully`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error in buyMarketListing:', error);
+      return { success: false, message: 'Purchase failed due to system error' };
+    }
+  }
+
+  private validateListingData(listing: any): { isValid: boolean; message?: string } {
+    switch (listing.itemType) {
+      case "seed":
+        if (!listing.seedName || !listing.seedRarity) {
+          return { isValid: false, message: 'Seed data incomplete' };
+        }
+        break;
+      case "caterpillar":
+        if (!listing.caterpillarName || !listing.caterpillarRarity) {
+          return { isValid: false, message: 'Caterpillar data incomplete' };
+        }
+        break;
+      case "flower":
+        if (!listing.flowerName || !listing.flowerRarity) {
+          return { isValid: false, message: 'Flower data incomplete' };
+        }
+        break;
+      case "butterfly":
+        if (!listing.butterflyName || !listing.butterflyRarity) {
+          return { isValid: false, message: 'Butterfly data incomplete' };
+        }
+        break;
+      case "fish":
+        if (!listing.fishName || !listing.fishRarity) {
+          return { isValid: false, message: 'Fish data incomplete' };
+        }
+        break;
+      default:
+        return { isValid: false, message: 'Unknown item type' };
+    }
+    return { isValid: true };
+  }
+
+  private async processPurchase(listing: any, buyerId: number, quantity: number, totalPrice: number, buyer: any): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Transfer credits between seller and buyer
+      await this.transferCredits(listing.sellerId, buyerId, totalPrice, buyer);
+
+      // Add item to buyer's inventory based on type
+      switch (listing.itemType) {
+        case "seed":
+          await this.addSeedToInventory(buyerId, listing.seedId || 0, quantity);
+          break;
+          
+        case "caterpillar":
+          if (quantity !== 1) {
+            return { success: false, message: 'Caterpillars can only be purchased one at a time' };
+          }
+          await this.db.insert(userCaterpillars).values({
+            userId: buyerId,
+            caterpillarId: listing.caterpillarIdOriginal || 0,
+            caterpillarName: listing.caterpillarName,
+            caterpillarRarity: listing.caterpillarRarity,
+            caterpillarImageUrl: listing.caterpillarImageUrl || '',
+            quantity: 1
+          });
+          break;
+          
+        case "flower":
+          await this.addFlowerToInventoryWithQuantity(
+            buyerId, 
+            listing.flowerIdOriginal || 0, 
+            listing.flowerName, 
+            listing.flowerRarity, 
+            listing.flowerImageUrl || '', 
+            quantity
+          );
+          break;
+          
+        case "butterfly":
+          if (quantity !== 1) {
+            return { success: false, message: 'Butterflies can only be purchased one at a time' };
+          }
+          await this.db.insert(userButterflies).values({
+            userId: buyerId,
+            butterflyId: listing.butterflyIdOriginal || 0,
+            butterflyName: listing.butterflyName,
+            butterflyRarity: listing.butterflyRarity,
+            butterflyImageUrl: listing.butterflyImageUrl || '',
+            quantity: 1
+          });
+          break;
+          
+        case "fish":
+          await this.addFishToInventoryWithQuantity(
+            buyerId, 
+            listing.fishIdOriginal || 0, 
+            listing.fishName, 
+            listing.fishRarity, 
+            listing.fishImageUrl || '', 
+            quantity
+          );
+          break;
+          
+        default:
+          return { success: false, message: 'Unsupported item type' };
+      }
+
+      console.log(`📦 Added ${quantity} ${listing.itemType}(s) to buyer ${buyerId}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error processing purchase:', error);
+      return { success: false, message: 'Failed to process purchase' };
+    }
+  }
+
+  private async transferCredits(sellerId: number, buyerId: number, amount: number, buyer: any): Promise<void> {
+    // Add credits to seller
+    const seller = await this.getUser(sellerId);
+    if (seller) {
+      await this.db
+        .update(users)
+        .set({ credits: seller.credits + amount })
+        .where(eq(users.id, sellerId));
+      console.log(`💰 Seller ${sellerId}: +${amount} credits`);
     }
 
-    const totalPrice = listing[0].pricePerUnit * data.quantity;
-    
-    // Check buyer credits
-    const buyer = await this.getUser(buyerId);
-    if (!buyer || buyer.credits < totalPrice) {
-      return { success: false, message: 'Insufficient credits' };
-    }
+    // Deduct credits from buyer
+    await this.db
+      .update(users)
+      .set({ credits: buyer.credits - amount })
+      .where(eq(users.id, buyerId));
+    console.log(`💰 Buyer ${buyerId}: -${amount} credits`);
+  }
 
-    // Process purchase based on item type
-    if (listing[0].itemType === "seed") {
-      // Use copied seed data from market listing
-      if (!listing[0].seedName || !listing[0].seedRarity) {
-        return { success: false, message: 'Seed data incomplete' };
-      }
-
-      // Add seller credits
-      const seller = await this.getUser(listing[0].sellerId);
-      if (seller) {
-        await this.db
-          .update(users)
-          .set({ credits: seller.credits + totalPrice })
-          .where(eq(users.id, listing[0].sellerId));
-      }
-
-      // Deduct buyer credits
-      await this.db
-        .update(users)
-        .set({ credits: buyer.credits - totalPrice })
-        .where(eq(users.id, buyerId));
-
-      // Add seeds to buyer using copied data (seeds support quantities)
-      await this.addSeedToInventory(buyerId, listing[0].seedId || 0, data.quantity);
-
-    } else if (listing[0].itemType === "caterpillar") {
-      // For caterpillars, quantity is always 1
-      if (data.quantity !== 1) {
-        return { success: false, message: 'Caterpillars can only be purchased one at a time' };
-      }
-
-      // Use copied caterpillar data from market listing
-      if (!listing[0].caterpillarName || !listing[0].caterpillarRarity) {
-        return { success: false, message: 'Caterpillar data incomplete' };
-      }
-
-      // Add seller credits
-      const seller = await this.getUser(listing[0].sellerId);
-      if (seller) {
-        await this.db
-          .update(users)
-          .set({ credits: seller.credits + totalPrice })
-          .where(eq(users.id, listing[0].sellerId));
-      }
-
-      // Deduct buyer credits
-      await this.db
-        .update(users)
-        .set({ credits: buyer.credits - totalPrice })
-        .where(eq(users.id, buyerId));
-
-      // Create new caterpillar for buyer using copied data
-      await this.db.insert(userCaterpillars).values({
-        userId: buyerId,
-        caterpillarId: listing[0].caterpillarIdOriginal || 0,
-        caterpillarName: listing[0].caterpillarName,
-        caterpillarRarity: listing[0].caterpillarRarity,
-        caterpillarImageUrl: listing[0].caterpillarImageUrl || '',
-        quantity: 1
-      });
-    } else if (listing[0].itemType === "flower") {
-      // Use copied flower data from market listing
-      if (!listing[0].flowerName || !listing[0].flowerRarity) {
-        return { success: false, message: 'Flower data incomplete' };
-      }
-
-      // Add seller credits
-      const seller = await this.getUser(listing[0].sellerId);
-      if (seller) {
-        await this.db
-          .update(users)
-          .set({ credits: seller.credits + totalPrice })
-          .where(eq(users.id, listing[0].sellerId));
-      }
-
-      // Deduct buyer credits
-      await this.db
-        .update(users)
-        .set({ credits: buyer.credits - totalPrice })
-        .where(eq(users.id, buyerId));
-
-      // Add flowers to buyer's inventory using copied data
-      await this.addFlowerToInventoryWithQuantity(buyerId, listing[0].flowerIdOriginal || 0, listing[0].flowerName, listing[0].flowerRarity, listing[0].flowerImageUrl || '', data.quantity);
-
-    } else if (listing[0].itemType === "butterfly") {
-      // For butterflies, quantity is always 1
-      if (data.quantity !== 1) {
-        return { success: false, message: 'Butterflies can only be purchased one at a time' };
-      }
-
-      // Use copied butterfly data from market listing
-      if (!listing[0].butterflyName || !listing[0].butterflyRarity) {
-        return { success: false, message: 'Butterfly data incomplete' };
-      }
-
-      // Add seller credits
-      const seller = await this.getUser(listing[0].sellerId);
-      if (seller) {
-        await this.db
-          .update(users)
-          .set({ credits: seller.credits + totalPrice })
-          .where(eq(users.id, listing[0].sellerId));
-      }
-
-      // Deduct buyer credits
-      await this.db
-        .update(users)
-        .set({ credits: buyer.credits - totalPrice })
-        .where(eq(users.id, buyerId));
-
-      // Create new butterfly for buyer using copied data
-      await this.db.insert(userButterflies).values({
-        userId: buyerId,
-        butterflyId: listing[0].butterflyIdOriginal || 0,
-        butterflyName: listing[0].butterflyName,
-        butterflyRarity: listing[0].butterflyRarity,
-        butterflyImageUrl: listing[0].butterflyImageUrl || '',
-        quantity: 1
-      });
-
-    } else if (listing[0].itemType === "fish") {
-      // Use copied fish data from market listing
-      if (!listing[0].fishName || !listing[0].fishRarity) {
-        return { success: false, message: 'Fish data incomplete' };
-      }
-
-      // Add seller credits
-      const seller = await this.getUser(listing[0].sellerId);
-      if (seller) {
-        await this.db
-          .update(users)
-          .set({ credits: seller.credits + totalPrice })
-          .where(eq(users.id, listing[0].sellerId));
-      }
-
-      // Deduct buyer credits
-      await this.db
-        .update(users)
-        .set({ credits: buyer.credits - totalPrice })
-        .where(eq(users.id, buyerId));
-
-      // Add fish to buyer's inventory using copied data
-      await this.addFishToInventoryWithQuantity(buyerId, listing[0].fishIdOriginal || 0, listing[0].fishName, listing[0].fishRarity, listing[0].fishImageUrl || '', data.quantity);
-    }
-
-    // Update listing quantity or remove
-    if (listing[0].quantity > data.quantity) {
+  private async updateListingAfterPurchase(listing: any, purchaseQuantity: number): Promise<void> {
+    if (listing.quantity > purchaseQuantity) {
+      // Partial purchase - update quantity
       await this.db
         .update(marketListings)
-        .set({ quantity: listing[0].quantity - data.quantity })
-        .where(eq(marketListings.id, data.listingId));
+        .set({ quantity: listing.quantity - purchaseQuantity })
+        .where(eq(marketListings.id, listing.id));
+      console.log(`📋 Updated listing ${listing.id}: quantity ${listing.quantity} → ${listing.quantity - purchaseQuantity}`);
     } else {
+      // Complete purchase - remove listing
       await this.db
         .delete(marketListings)
-        .where(eq(marketListings.id, data.listingId));
+        .where(eq(marketListings.id, listing.id));
+      console.log(`🗑️ Removed completed listing ${listing.id}`);
     }
-
-    return { success: true };
   }
 
   async getUserSeeds(userId: number): Promise<any[]> {
