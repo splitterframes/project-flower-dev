@@ -157,11 +157,46 @@ export const UserListModal: React.FC<UserListModalProps> = ({
             </button>
           </div>
 
-          {/* User List */}
+          {/* Search and Controls */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent flex items-center">
-              👥 Spieler-Liste ({users.length} Spieler)
-            </h3>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Input
+                  placeholder="🔍 Spieler suchen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-cyan-400"
+                />
+              </div>
+              
+              {/* Sort Dropdown */}
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="butterflies" className="text-white hover:bg-slate-700">🦋 Schmetterlinge</SelectItem>
+                  <SelectItem value="likes" className="text-white hover:bg-slate-700">❤️ Likes</SelectItem>
+                  <SelectItem value="online" className="text-white hover:bg-slate-700">🟢 Online Status</SelectItem>
+                  <SelectItem value="username" className="text-white hover:bg-slate-700">📝 Name A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Results Summary */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent flex items-center">
+                👥 Spieler-Liste ({filteredAndSortedUsers.length} gefunden)
+              </h3>
+              
+              {totalPages > 1 && (
+                <div className="text-sm text-slate-400">
+                  Seite {currentPage} von {totalPages}
+                </div>
+              )}
+            </div>
             
             {loading ? (
               <div className="text-center py-12 relative">
@@ -237,6 +272,55 @@ export const UserListModal: React.FC<UserListModalProps> = ({
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Zurück
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (pageNum > totalPages) return null;
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={currentPage === pageNum 
+                          ? "bg-cyan-600 hover:bg-cyan-700 text-white"
+                          : "bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                        }
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                >
+                  Weiter
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
             )}
           </div>
