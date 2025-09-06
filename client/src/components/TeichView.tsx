@@ -472,6 +472,9 @@ export const TeichView: React.FC = () => {
       }
     } catch (error) {
       console.error('🌸 FETCHTEICHDATA CATCH ERROR:', error);
+      console.error('🌸 ERROR NAME:', error?.name);
+      console.error('🌸 ERROR MESSAGE:', error?.message);
+      console.error('🌸 ERROR STACK:', error?.stack);
     }
   };
 
