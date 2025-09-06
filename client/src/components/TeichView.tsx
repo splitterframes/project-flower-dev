@@ -765,9 +765,13 @@ export const TeichView: React.FC = () => {
 
   const placeFlowerOnField = async (flowerId: number) => {
     if (!user || selectedField === null) return;
+    console.log("🌸 PLACEFLOWER: Starting with flowerId:", flowerId, "selectedField:", selectedField);
 
     const flower = userFlowers.find(f => f.id === flowerId);
-    if (!flower) return;
+    if (!flower) {
+      console.error("🌸 PLACEFLOWER ERROR: Flower not found", flowerId);
+      return;
+    }
 
     // Check if flower quantity is available
     if (flower.quantity <= 0) {
@@ -780,11 +784,12 @@ export const TeichView: React.FC = () => {
     const existingDbFlower = fieldFlowers.find(f => f.fieldIndex === selectedField - 1);
     
     if (existingLocalFlower || existingDbFlower) {
-      showNotification('Auf diesem Feld ist bereits eine Blume platziert.', 'info');
+      showNotification('Fehler', 'Auf diesem Feld ist bereits eine Blume platziert.', 'info');
       return;
     }
 
     try {
+      console.log("🌸 PLACEFLOWER: Making API call...");
       const response = await fetch('/api/garden/place-flower-on-field', {
         method: 'POST',
         headers: { 
@@ -793,37 +798,37 @@ export const TeichView: React.FC = () => {
         },
         body: JSON.stringify({
           fieldIndex: selectedField - 1, // Convert to 0-based index
-          flowerId: butterflyId  // Still using butterfly selection for now
+          flowerId: flower.flowerId  // ✅ FIX: Use flower.flowerId instead of butterflyId
         })
       });
 
       if (response.ok) {
         const result = await response.json();
+        console.log("🌸 PLACEFLOWER: API success!", result);
         
-        // Update local state - reduce butterfly quantity
-        setUserButterflies(prev => 
-          prev.map(b => 
-            b.id === butterflyId 
-              ? { ...b, quantity: Math.max(0, b.quantity - 1) }
-              : b
+        // ✅ FIX: Update local state - reduce FLOWER quantity, not butterfly
+        setUserFlowers(prev => 
+          prev.map(f => 
+            f.id === flowerId 
+              ? { ...f, quantity: Math.max(0, f.quantity - 1) }
+              : f
           )
         );
 
-        // 🦋 NEW: Schmetterling verschwindet automatisch und spawnt Raupe
-        // Add temporary visual butterfly that will disappear
-        const tempButterflyId = Date.now();
-        setPlacedButterflies(prev => [...prev, {
-          id: tempButterflyId,
+        // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe
+        // Add temporary visual flower that will spawn a caterpillar
+        const tempFlowerId = Date.now();
+        setPlacedFlowers(prev => [...prev, {
+          id: tempFlowerId,
           fieldId: selectedField,
-          butterflyImageUrl: butterfly.butterflyImageUrl,
-          butterflyName: butterfly.butterflyName,
-          butterflyRarity: butterfly.butterflyRarity as RarityTier,
-          placedAt: new Date(),
-          isWiggling: true
+          flowerImageUrl: flower.flowerImageUrl,
+          flowerName: flower.flowerName,
+          flowerRarity: flower.flowerRarity as RarityTier,
+          placedAt: new Date()
         }]);
 
-        // Get wackel time based on butterfly rarity (seltener = länger wackeln)
-        const getWackelTime = (rarity: string): number => {
+        // Get spawn time based on flower rarity (seltener = länger bis Raupe spawnt)
+        const getSpawnTime = (rarity: string): number => {
           switch (rarity.toLowerCase()) {
             case 'common': return 3000;      // 3 Sekunden - schnellstes Spawnen
             case 'uncommon': return 5000;    // 5 Sekunden
@@ -836,23 +841,12 @@ export const TeichView: React.FC = () => {
           }
         };
 
-        const wackelTime = getWackelTime(butterfly.butterflyRarity);
+        const spawnTime = getSpawnTime(flower.flowerRarity);
         
-        // Animate butterfly disappearing and spawn caterpillar after rarity-based time
+        // Animate flower disappearing and spawn caterpillar after rarity-based time
         setTimeout(async () => {
-          // Remove butterfly with burst animation
-          setPlacedButterflies(prev => 
-            prev.map(b => 
-              b.id === tempButterflyId 
-                ? { ...b, isWiggling: false, isBursting: true }
-                : b
-            )
-          );
-
-          // Remove butterfly completely after burst animation
-          setTimeout(() => {
-            setPlacedButterflies(prev => prev.filter(b => b.id !== tempButterflyId));
-          }, 1000);
+          // Remove flower completely after spawn time
+          setPlacedFlowers(prev => prev.filter(f => f.id !== tempFlowerId));
 
           // Spawn caterpillar on the field
           try {
@@ -864,29 +858,32 @@ export const TeichView: React.FC = () => {
               },
               body: JSON.stringify({
                 fieldIndex: selectedField - 1,
-                parentRarity: butterfly.butterflyRarity
+                parentRarity: flower.flowerRarity
               })
             });
 
             if (caterpillarResponse.ok) {
+              console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
+              showNotification('Erfolg', `Eine Raupe wurde aus ${flower.flowerName} geboren!`, 'success');
               // Refresh data to show spawned caterpillar
               fetchTeichData();
             }
           } catch (error) {
             console.error('Failed to spawn caterpillar:', error);
           }
-        }, wackelTime);
+        }, spawnTime);
       } else {
         const error = await response.json();
-        showNotification('Fehler', error.message || 'Butterfly konnte nicht platziert werden.', 'error');
+        console.error("🌸 PLACEFLOWER API ERROR:", error);
+        showNotification('Fehler', error.message || 'Blume konnte nicht platziert werden.', 'error');
       }
 
     } catch (error) {
-      console.error('Failed to place butterfly:', error);
-      showNotification('Fehler', 'Fehler beim Platzieren des Schmetterlings.', 'error');
+      console.error('🌸 PLACEFLOWER CATCH ERROR:', error);
+      showNotification('Fehler', 'Fehler beim Platzieren der Blume.', 'error');
     }
 
-    setShowButterflyModal(false);
+    setShowFlowerModal(false);
     setSelectedField(null);
   };
 
