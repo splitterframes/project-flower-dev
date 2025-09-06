@@ -276,25 +276,23 @@ export const BouquetsView: React.FC = () => {
               <h1 className="text-2xl font-bold text-pink-300 mb-1">
                 Bouquet Kollektion
               </h1>
-              <p className="text-slate-400 text-sm">Erstelle Blumensträuße aus deinen Blumen</p>
+              <p className="text-slate-400 text-sm mb-3">Erstelle Blumensträuße aus deinen Blumen</p>
+              <div className="flex justify-center gap-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Flower2 className="h-4 w-4 text-blue-400" />
+                  <span className="text-white font-semibold">{myFlowers.length}</span>
+                  <span className="text-slate-400">Blumen</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Gift className="h-4 w-4 text-pink-400" />
+                  <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
+                  <span className="text-slate-400">Rezepte</span>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex justify-end">
             <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
-          </div>
-        </div>
-        
-        {/* Compact Stats */}
-        <div className="flex justify-center gap-6 text-sm">
-          <div className="flex items-center space-x-2">
-            <Flower2 className="h-4 w-4 text-blue-400" />
-            <span className="text-white font-semibold">{myFlowers.length}</span>
-            <span className="text-slate-400">Blumen</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Gift className="h-4 w-4 text-pink-400" />
-            <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
-            <span className="text-slate-400">Rezepte</span>
           </div>
         </div>
       </div>
