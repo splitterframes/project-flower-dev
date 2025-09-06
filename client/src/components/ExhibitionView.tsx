@@ -499,7 +499,7 @@ export const ExhibitionView: React.FC = () => {
                   <Star className="h-5 w-5 mr-2 fill-pink-300" />
                   <span className="text-base">{frameLike?.totalLikes}</span>
                   {isFullFrame && (
-                    <span className="ml-2 text-sm text-green-300">(-{frameLike?.totalLikes}min)</span>
+                    <span className="ml-2 text-sm text-green-300">(+{frameLike?.totalLikes * 2}% Einkommen)</span>
                   )}
                 </div>
               )}

@@ -294,7 +294,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                         />
                         {frameLike?.totalLikes || 0}
                         {(frameLike?.totalLikes || 0) > 0 && isFullFrame && (
-                          <span className="ml-1 text-xs text-green-300">(-{frameLike?.totalLikes}min)</span>
+                          <span className="ml-1 text-xs text-green-300">(+{(frameLike?.totalLikes || 0) * 2}% Einkommen)</span>
                         )}
                       </Button>
                     </CardTitle>
