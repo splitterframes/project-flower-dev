@@ -262,10 +262,10 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                 <h3 className="text-2xl font-bold text-white">{fish.fishName}</h3>
                 <Badge 
                   className="text-base font-bold px-3 py-1"
-                  style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
+                  style={{ backgroundColor: getRarityColor(fish.fishRarity as any) }}
                 >
                   <Fish className="h-4 w-4 mr-2" />
-                  {getRarityDisplayName(fish.fishRarity)}
+                  {getRarityDisplayName(fish.fishRarity as any)}
                 </Badge>
               </div>
 
@@ -310,7 +310,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
             <Card className="bg-gradient-to-br from-blue-950/50 to-teal-950/30 border-blue-500/30 shadow-lg relative overflow-hidden">
               <div 
                 className="absolute inset-0 rounded-lg opacity-20"
-                style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
+                style={{ backgroundColor: getRarityColor(fish.fishRarity as any) }}
               />
               
               <CardContent className="p-4 relative z-10 text-center">
@@ -320,19 +320,19 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
                     alt={fish.fishName}
                     className="w-[600px] h-[600px] object-contain mx-auto border-4 rounded-lg shadow-lg"
                     style={{
-                      borderColor: getRarityColor(fish.fishRarity),
+                      borderColor: getRarityColor(fish.fishRarity as any),
                       filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
                     }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling!.style.display = 'flex';
+                      (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
                     }}
                   />
                   <div
                     className="w-[600px] h-[600px] bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center text-8xl border-4 shadow-lg mx-auto"
                     style={{ 
                       display: 'none',
-                      borderColor: getRarityColor(fish.fishRarity),
+                      borderColor: getRarityColor(fish.fishRarity as any),
                       filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
                     }}
                   >
