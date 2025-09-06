@@ -951,15 +951,9 @@ export class PostgresStorage {
         return { success: false, message: 'Caterpillars can only be purchased one at a time' };
       }
 
-      // Get the original caterpillar data from the listing
-      const caterpillarData = await this.db
-        .select()
-        .from(userCaterpillars)
-        .where(eq(userCaterpillars.id, listing[0].caterpillarId!))
-        .limit(1);
-
-      if (caterpillarData.length === 0) {
-        return { success: false, message: 'Caterpillar data not found' };
+      // Use copied caterpillar data from market listing
+      if (!listing[0].caterpillarName || !listing[0].caterpillarRarity) {
+        return { success: false, message: 'Caterpillar data incomplete' };
       }
 
       // Add seller credits
@@ -977,12 +971,21 @@ export class PostgresStorage {
         .set({ credits: buyer.credits - totalPrice })
         .where(eq(users.id, buyerId));
 
-      // Transfer caterpillar to buyer
-      await this.db
-        .update(userCaterpillars)
-        .set({ userId: buyerId })
-        .where(eq(userCaterpillars.id, listing[0].caterpillarId!));
+      // Create new caterpillar for buyer using copied data
+      await this.db.insert(userCaterpillars).values({
+        userId: buyerId,
+        caterpillarId: listing[0].caterpillarIdOriginal || 0,
+        caterpillarName: listing[0].caterpillarName,
+        caterpillarRarity: listing[0].caterpillarRarity,
+        caterpillarImageUrl: listing[0].caterpillarImageUrl || '',
+        quantity: 1
+      });
     } else if (listing[0].itemType === "flower") {
+      // Use copied flower data from market listing
+      if (!listing[0].flowerName || !listing[0].flowerRarity) {
+        return { success: false, message: 'Flower data incomplete' };
+      }
+
       // Add seller credits
       const seller = await this.getUser(listing[0].sellerId);
       if (seller) {
@@ -998,19 +1001,8 @@ export class PostgresStorage {
         .set({ credits: buyer.credits - totalPrice })
         .where(eq(users.id, buyerId));
 
-      // Get the flower data for transfer
-      const flowerData = await this.db
-        .select()
-        .from(userFlowers)
-        .where(eq(userFlowers.id, listing[0].flowerId!))
-        .limit(1);
-
-      if (flowerData.length === 0) {
-        return { success: false, message: 'Flower data not found' };
-      }
-
-      // Add flowers to buyer's inventory
-      await this.addFlowerToInventoryWithQuantity(buyerId, flowerData[0].flowerId, flowerData[0].flowerName, flowerData[0].flowerRarity, flowerData[0].flowerImageUrl, data.quantity);
+      // Add flowers to buyer's inventory using copied data
+      await this.addFlowerToInventoryWithQuantity(buyerId, listing[0].flowerIdOriginal || 0, listing[0].flowerName, listing[0].flowerRarity, listing[0].flowerImageUrl || '', data.quantity);
 
     } else if (listing[0].itemType === "butterfly") {
       // For butterflies, quantity is always 1
@@ -1018,15 +1010,9 @@ export class PostgresStorage {
         return { success: false, message: 'Butterflies can only be purchased one at a time' };
       }
 
-      // Get the butterfly data for transfer
-      const butterflyData = await this.db
-        .select()
-        .from(userButterflies)
-        .where(eq(userButterflies.id, listing[0].butterflyId!))
-        .limit(1);
-
-      if (butterflyData.length === 0) {
-        return { success: false, message: 'Butterfly data not found' };
+      // Use copied butterfly data from market listing
+      if (!listing[0].butterflyName || !listing[0].butterflyRarity) {
+        return { success: false, message: 'Butterfly data incomplete' };
       }
 
       // Add seller credits
@@ -1044,17 +1030,22 @@ export class PostgresStorage {
         .set({ credits: buyer.credits - totalPrice })
         .where(eq(users.id, buyerId));
 
-      // Transfer butterfly to buyer by creating new entry
+      // Create new butterfly for buyer using copied data
       await this.db.insert(userButterflies).values({
         userId: buyerId,
-        butterflyId: butterflyData[0].butterflyId,
-        butterflyName: butterflyData[0].butterflyName,
-        butterflyRarity: butterflyData[0].butterflyRarity,
-        butterflyImageUrl: butterflyData[0].butterflyImageUrl,
+        butterflyId: listing[0].butterflyIdOriginal || 0,
+        butterflyName: listing[0].butterflyName,
+        butterflyRarity: listing[0].butterflyRarity,
+        butterflyImageUrl: listing[0].butterflyImageUrl || '',
         quantity: 1
       });
 
     } else if (listing[0].itemType === "fish") {
+      // Use copied fish data from market listing
+      if (!listing[0].fishName || !listing[0].fishRarity) {
+        return { success: false, message: 'Fish data incomplete' };
+      }
+
       // Add seller credits
       const seller = await this.getUser(listing[0].sellerId);
       if (seller) {
@@ -1070,19 +1061,8 @@ export class PostgresStorage {
         .set({ credits: buyer.credits - totalPrice })
         .where(eq(users.id, buyerId));
 
-      // Get the fish data for transfer
-      const fishData = await this.db
-        .select()
-        .from(userFish)
-        .where(eq(userFish.id, listing[0].fishId!))
-        .limit(1);
-
-      if (fishData.length === 0) {
-        return { success: false, message: 'Fish data not found' };
-      }
-
-      // Add fish to buyer's inventory
-      await this.addFishToInventoryWithQuantity(buyerId, fishData[0].fishId, fishData[0].fishName, fishData[0].fishRarity, fishData[0].fishImageUrl, data.quantity);
+      // Add fish to buyer's inventory using copied data
+      await this.addFishToInventoryWithQuantity(buyerId, listing[0].fishIdOriginal || 0, listing[0].fishName, listing[0].fishRarity, listing[0].fishImageUrl || '', data.quantity);
     }
 
     // Update listing quantity or remove
