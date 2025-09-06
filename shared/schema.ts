@@ -530,6 +530,7 @@ export type UserBouquet = typeof userBouquets.$inferSelect;
 export type PlacedBouquet = typeof placedBouquets.$inferSelect;
 export type UserButterfly = typeof userButterflies.$inferSelect;
 export type FieldButterfly = typeof fieldButterflies.$inferSelect;
+export type FieldFlower = typeof fieldFlowers.$inferSelect;
 export type UserVipButterfly = typeof userVipButterflies.$inferSelect;
 export type UserFish = typeof userFish.$inferSelect;
 export type UserCaterpillar = typeof userCaterpillars.$inferSelect;
