@@ -809,64 +809,49 @@ export const TeichView: React.FC = () => {
     }
 
     try {
-      console.log("🌸 PLACEFLOWER: Making API call...");
-      const response = await fetch('/api/garden/place-flower-on-field', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': user.id.toString()
-        },
-        body: JSON.stringify({
-          fieldIndex: selectedField - 1, // Convert to 0-based index
-          flowerId: flower.id  // ✅ CRITICAL FIX: Use flower.id (userFlower DB ID), not flower.flowerId!
-        })
-      });
+      console.log("🌸 PLACEFLOWER: Creating temporary flower (NO database save)");
+      
+      // ✅ FIX: Update local state - reduce FLOWER quantity, not butterfly
+      setUserFlowers(prev => 
+        prev.map(f => 
+          f.id === flowerId 
+            ? { ...f, quantity: Math.max(0, f.quantity - 1) }
+            : f
+        )
+      );
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("🌸 PLACEFLOWER: API success!", result);
-        
-        // ✅ FIX: Update local state - reduce FLOWER quantity, not butterfly
-        setUserFlowers(prev => 
-          prev.map(f => 
-            f.id === flowerId 
-              ? { ...f, quantity: Math.max(0, f.quantity - 1) }
-              : f
-          )
-        );
+      // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (NO database save)
+      // Add temporary visual flower that will spawn a caterpillar
+      const tempFlowerId = Date.now();
+      setPlacedFlowers(prev => [...prev, {
+        id: tempFlowerId,
+        fieldId: selectedField,
+        flowerImageUrl: flower.flowerImageUrl,
+        flowerName: flower.flowerName,
+        flowerRarity: flower.flowerRarity as RarityTier,
+        placedAt: new Date(),
+        isShimmering: true,  // ✅ FIX: Start with shimmer animation
+        isDissolving: false  // ✅ FIX: Not dissolving yet
+      }]);
 
-        // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe
-        // Add temporary visual flower that will spawn a caterpillar
-        const tempFlowerId = Date.now();
-        setPlacedFlowers(prev => [...prev, {
-          id: tempFlowerId,
-          fieldId: selectedField,
-          flowerImageUrl: flower.flowerImageUrl,
-          flowerName: flower.flowerName,
-          flowerRarity: flower.flowerRarity as RarityTier,
-          placedAt: new Date(),
-          isShimmering: true,  // ✅ FIX: Start with shimmer animation
-          isDissolving: false  // ✅ FIX: Not dissolving yet
-        }]);
+      // Get spawn time based on flower rarity (seltener = länger bis Raupe spawnt)
+      const getSpawnTime = (rarity: string): number => {
+        switch (rarity.toLowerCase()) {
+          case 'common': return 3000;      // 3 Sekunden - schnellstes Spawnen
+          case 'uncommon': return 5000;    // 5 Sekunden
+          case 'rare': return 8000;        // 8 Sekunden
+          case 'super-rare': return 12000; // 12 Sekunden 
+          case 'epic': return 18000;       // 18 Sekunden
+          case 'legendary': return 20000;  // 20 Sekunden
+          case 'mythical': return 30000;   // 30 Sekunden - längstes Wackeln
+          default: return 3000;
+        }
+      };
 
-        // Get spawn time based on flower rarity (seltener = länger bis Raupe spawnt)
-        const getSpawnTime = (rarity: string): number => {
-          switch (rarity.toLowerCase()) {
-            case 'common': return 3000;      // 3 Sekunden - schnellstes Spawnen
-            case 'uncommon': return 5000;    // 5 Sekunden
-            case 'rare': return 8000;        // 8 Sekunden
-            case 'super-rare': return 12000; // 12 Sekunden 
-            case 'epic': return 18000;       // 18 Sekunden
-            case 'legendary': return 20000;  // 20 Sekunden
-            case 'mythical': return 30000;   // 30 Sekunden - längstes Wackeln
-            default: return 3000;
-          }
-        };
-
-        const spawnTime = getSpawnTime(flower.flowerRarity);
-        
-        // Animate flower disappearing and spawn caterpillar after rarity-based time
-        setTimeout(async () => {
+      const spawnTime = getSpawnTime(flower.flowerRarity);
+      
+      // Animate flower disappearing and spawn caterpillar after rarity-based time
+      setTimeout(async () => {
           // Phase 1: Stop shimmering, start dissolving
           setPlacedFlowers(prev => 
             prev.map(f => 
@@ -905,11 +890,6 @@ export const TeichView: React.FC = () => {
             console.error('Failed to spawn caterpillar:', error);
           }
         }, spawnTime);
-      } else {
-        const error = await response.json();
-        console.error("🌸 PLACEFLOWER API ERROR:", error);
-        showNotification('Fehler', error.message || 'Blume konnte nicht platziert werden.', 'error');
-      }
 
     } catch (error) {
       console.error('🌸 PLACEFLOWER CATCH ERROR:', error);
