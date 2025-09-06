@@ -71,11 +71,11 @@ const getBackgroundPosition = (fieldIndex: number) => {
   const column = fieldIndex % 10; // 0-9 columns
   const row = Math.floor(fieldIndex / 10); // 0-4 rows
   
-  // Since we scale the image to 1000% width (10 fields) and 500% height (5 rows),
-  // each field needs to show 1/10th of the width and 1/5th of the height
-  // Background position moves the image to show the correct segment
-  const posX = -(column * 100); // Move left: 0%, -100%, -200%, ..., -900%
-  const posY = -(row * 100); // Move up: 0%, -100%, -200%, -300%, -400%
+  // For background-position with backgroundSize 1000% 500%:
+  // We need to position the scaled image so each field shows the right segment
+  // Position calculation spreads from 0% to -100% across the grid
+  const posX = column === 0 ? 0 : -(column / 9) * 100; // 0% to -100% across 10 columns
+  const posY = row === 0 ? 0 : -(row / 4) * 100; // 0% to -100% across 5 rows
   
   return `${posX}% ${posY}%`;
 };
