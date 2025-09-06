@@ -774,19 +774,25 @@ export const TeichView: React.FC = () => {
     setSelectedField(null);
   };
 
+  const [isPlacingFlower, setIsPlacingFlower] = useState(false);
+
   const placeFlowerOnField = async (flowerId: number) => {
-    if (!user || selectedField === null) return;
+    if (!user || selectedField === null || isPlacingFlower) return;
+    
+    setIsPlacingFlower(true);
     console.log("🌸 PLACEFLOWER: Starting with flowerId:", flowerId, "selectedField:", selectedField);
 
     const flower = userFlowers.find(f => f.id === flowerId);
     if (!flower) {
       console.error("🌸 PLACEFLOWER ERROR: Flower not found", flowerId);
+      setIsPlacingFlower(false);
       return;
     }
 
     // Check if flower quantity is available
     if (flower.quantity <= 0) {
       showNotification('Fehler', 'Diese Blume ist nicht mehr verfügbar.', 'error');
+      setIsPlacingFlower(false);
       return;
     }
 
@@ -796,6 +802,7 @@ export const TeichView: React.FC = () => {
     
     if (existingLocalFlower || existingDbFlower) {
       showNotification('Fehler', 'Auf diesem Feld ist bereits eine Blume platziert.', 'info');
+      setIsPlacingFlower(false);
       return;
     }
 
@@ -905,6 +912,8 @@ export const TeichView: React.FC = () => {
     } catch (error) {
       console.error('🌸 PLACEFLOWER CATCH ERROR:', error);
       showNotification('Fehler', 'Fehler beim Platzieren der Blume.', 'error');
+    } finally {
+      setIsPlacingFlower(false);
     }
 
     setShowFlowerModal(false);
