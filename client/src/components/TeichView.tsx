@@ -126,7 +126,7 @@ export const TeichView: React.FC = () => {
   const [userSeeds, setUserSeeds] = useState<UserSeed[]>([]);
   const [userBouquets, setUserBouquets] = useState<UserBouquet[]>([]);
   const [userCaterpillars, setUserCaterpillars] = useState<UserCaterpillar[]>([]);
-  const [fieldButterflies, setFieldButterflies] = useState<FieldButterfly[]>([]);
+  const [userButterflies, setUserButterflies] = useState<any[]>([]); // Legacy for feeding system
   const [fieldFish, setFieldFish] = useState<FieldFish[]>([]);
   const [fieldCaterpillars, setFieldCaterpillars] = useState<any[]>([]);
   const [showSeedModal, setShowSeedModal] = useState(false);
@@ -716,29 +716,29 @@ export const TeichView: React.FC = () => {
     setSelectedField(null);
   };
 
-  const placeButterflyOnField = async (butterflyId: number) => {
+  const placeFlowerOnField = async (flowerId: number) => {
     if (!user || selectedField === null) return;
 
-    const butterfly = userButterflies.find(b => b.id === butterflyId);
-    if (!butterfly) return;
+    const flower = userFlowers.find(f => f.id === flowerId);
+    if (!flower) return;
 
-    // Check if butterfly quantity is available
-    if (butterfly.quantity <= 0) {
-      showNotification('Fehler', 'Dieser Schmetterling ist nicht mehr verfügbar.', 'error');
+    // Check if flower quantity is available
+    if (flower.quantity <= 0) {
+      showNotification('Fehler', 'Diese Blume ist nicht mehr verfügbar.', 'error');
       return;
     }
 
-    // Check if field already has a placed butterfly (both local state and database)
-    const existingLocalButterfly = placedButterflies.find(b => b.fieldId === selectedField);
-    const existingDbButterfly = fieldButterflies.find(b => b.fieldIndex === selectedField - 1);
+    // Check if field already has a placed flower (both local state and database)
+    const existingLocalFlower = placedFlowers.find(f => f.fieldId === selectedField);
+    const existingDbFlower = fieldFlowers.find(f => f.fieldIndex === selectedField - 1);
     
-    if (existingLocalButterfly || existingDbButterfly) {
-      showNotification('Auf diesem Feld ist bereits ein Schmetterling platziert.', 'info');
+    if (existingLocalFlower || existingDbFlower) {
+      showNotification('Auf diesem Feld ist bereits eine Blume platziert.', 'info');
       return;
     }
 
     try {
-      const response = await fetch('/api/garden/place-butterfly', {
+      const response = await fetch('/api/garden/place-flower-on-field', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -746,7 +746,7 @@ export const TeichView: React.FC = () => {
         },
         body: JSON.stringify({
           fieldIndex: selectedField - 1, // Convert to 0-based index
-          butterflyId: butterflyId
+          flowerId: butterflyId  // Still using butterfly selection for now
         })
       });
 
@@ -1294,21 +1294,21 @@ export const TeichView: React.FC = () => {
                     )}
 
 
-                    {/* Local placed butterflies with wiggle and burst animations */}
-                    {placedButterflies.find(b => b.fieldId === field.id) && (() => {
-                      const butterfly = placedButterflies.find(b => b.fieldId === field.id)!;
+                    {/* Local placed flowers with shimmer and dissolve animations */}
+                    {placedFlowers.find(f => f.fieldId === field.id) && (() => {
+                      const flower = placedFlowers.find(f => f.fieldId === field.id)!;
                       return (
                         <div 
                           className={`absolute inset-0 flex items-center justify-center cursor-pointer ${
-                            butterfly.isWiggling ? 'animate-wiggle' : ''
+                            flower.isShimmering ? 'animate-shimmer' : ''
                           } ${
-                            butterfly.isBursting ? 'animate-burst' : ''
+                            flower.isDissolving ? 'animate-dissolve' : ''
                           }`}
                         >
                           <RarityImage
-                            src={butterfly.butterflyImageUrl}
-                            alt={butterfly.butterflyName || "Schmetterling"}
-                            rarity={butterfly.butterflyRarity as RarityTier || "common"}
+                            src={flower.flowerImageUrl}
+                            alt={flower.flowerName || "Blume"}
+                            rarity={flower.flowerRarity as RarityTier || "common"}
                             size="large"
                             className="w-full h-full"
                           />
