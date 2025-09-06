@@ -65,6 +65,19 @@ interface UserSeed {
   quantity: number;
 }
 
+// Calculate background position for panoramic garden image
+// 50 fields in 10x5 grid from one 2:1 ratio image (Gardenview.png)
+const getBackgroundPosition = (fieldIndex: number) => {
+  const column = fieldIndex % 10; // 0-9 columns
+  const row = Math.floor(fieldIndex / 10); // 0-4 rows
+  
+  // Each segment is 10% width (100% / 10 columns) and 20% height (100% / 5 rows)
+  const posX = -(column * 10); // Move left by column * segment width
+  const posY = -(row * 20); // Move up by row * segment height
+  
+  return `${posX}% ${posY}%`;
+};
+
 export const GardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, updateCredits } = useCredits();
@@ -909,9 +922,10 @@ export const GardenView: React.FC = () => {
                     }
                   `}
                   style={{
-                    backgroundImage: 'url("/Landschaft/gras.png")',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundImage: 'url("/Landschaft/Gardenview.png")',
+                    backgroundSize: '1000% 500%', // 10 columns × 5 rows = 1000% × 500%
+                    backgroundPosition: getBackgroundPosition(field.id - 1), // field.id is 1-based, convert to 0-based
+                    backgroundRepeat: 'no-repeat',
                     minHeight: '44px',
                     minWidth: '44px'
                   }}
