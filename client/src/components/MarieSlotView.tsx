@@ -17,8 +17,14 @@ interface SlotSymbol {
   name: string;
 }
 
-// Create symbol pools - only 5 specific symbols for slot machine
+// Create symbol pools - only 5 specific symbols for slot machine with random images
 const createSymbolPools = (): SlotSymbol[] => {
+  // Generate random IDs for each symbol type
+  const randomCaterpillarId = Math.floor(Math.random() * 124); // 0-123
+  const randomFlowerId = Math.floor(Math.random() * 200) + 1; // 1-200
+  const randomButterflyId = Math.floor(Math.random() * 1000) + 1; // 1-1000
+  const randomFishId = Math.floor(Math.random() * 224); // 0-223
+  
   const symbols: SlotSymbol[] = [
     // Sun symbol (new 5th symbol) - will use fallback
     {
@@ -27,40 +33,45 @@ const createSymbolPools = (): SlotSymbol[] => {
       imageUrl: '/nonexistent/sun.jpg', // Intentionally use fallback
       name: 'Sonne'
     },
-    // One specific caterpillar
+    // Random caterpillar
     {
-      id: 'caterpillar-1',
+      id: `caterpillar-${randomCaterpillarId}`,
       type: 'caterpillar', 
-      imageUrl: `/Raupen/1.jpg`,
+      imageUrl: `/Raupen/${randomCaterpillarId}.jpg`,
       name: 'Raupe'
     },
-    // One specific flower
+    // Random flower
     {
-      id: 'flower-2',
+      id: `flower-${randomFlowerId}`,
       type: 'flower',
-      imageUrl: `/Blumen/2.jpg`, 
+      imageUrl: `/Blumen/${randomFlowerId.toString().padStart(3, '0')}.jpg`, 
       name: 'Blume'
     },
-    // One specific butterfly
+    // Random butterfly
     {
-      id: 'butterfly-1',
+      id: `butterfly-${randomButterflyId}`,
       type: 'butterfly',
-      imageUrl: `/Schmetterlinge/1.jpg`,
+      imageUrl: `/Schmetterlinge/${randomButterflyId.toString().padStart(3, '0')}.jpg`,
       name: 'Schmetterling'
     },
-    // One specific fish
+    // Random fish
     {
-      id: 'fish-1',
+      id: `fish-${randomFishId}`,
       type: 'fish',
-      imageUrl: `/Fische/1.jpg`,
+      imageUrl: `/Fische/${randomFishId.toString().padStart(3, '0')}.jpg`,
       name: 'Fisch'
     }
   ];
   
+  console.log('🎰 Mari-Slot: Generated random symbols:', {
+    caterpillar: randomCaterpillarId,
+    flower: randomFlowerId, 
+    butterfly: randomButterflyId,
+    fish: randomFishId
+  });
+  
   return symbols;
 };
-
-const SYMBOLS = createSymbolPools();
 const REEL_HEIGHT = 480; // Height of visible reel area für quadratische Bilder
 const SYMBOL_HEIGHT = 160; // Height of each symbol (480px / 3 = 160px)
 const SYMBOLS_PER_REEL = 3; // Only show 3 symbols per reel
@@ -91,10 +102,10 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const spinCost = 5;
 
   // Create a drum with 15 symbols (each of the 5 symbols appears 3 times, shuffled)
-  const createDrum = (): SlotSymbol[] => {
+  const createDrum = (symbolsToUse: SlotSymbol[]): SlotSymbol[] => {
     const drum: SlotSymbol[] = [];
     // Add each symbol 3 times
-    SYMBOLS.forEach(symbol => {
+    symbolsToUse.forEach(symbol => {
       for (let i = 0; i < 3; i++) {
         drum.push(symbol);
       }
@@ -109,15 +120,22 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return drum;
   };
 
+  // Generate new random symbols each time the component mounts
+  const [symbols, setSymbols] = useState<SlotSymbol[]>([]);
+
   // Initialize reels
   useEffect(() => {
+    // Create new random symbols each time
+    const newSymbols = createSymbolPools();
+    setSymbols(newSymbols);
+    
     const initReels = Array(5).fill(null).map(() => {
       return {
-        symbols: createDrum(),
+        symbols: createDrum(newSymbols),
         position: 0,
         isSpinning: false,
         targetPosition: 0,
-        finalSymbol: SYMBOLS[0]
+        finalSymbol: newSymbols[0]
       };
     });
     
@@ -127,14 +145,15 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // Get random symbol of specific type
   const getRandomSymbolOfType = (type: string): SlotSymbol => {
-    const typeSymbols = SYMBOLS.filter(s => s.type === type);
+    if (symbols.length === 0) return symbols[0]; // Safety fallback
+    const typeSymbols = symbols.filter(s => s.type === type);
     return typeSymbols[Math.floor(Math.random() * typeSymbols.length)];
   };
 
   // Create spinning reel with final symbol in middle - FIXED
   const createSpinningReel = (finalSymbol: SlotSymbol): SlotSymbol[] => {
     // Create a new shuffled drum for spinning
-    const drum = createDrum();
+    const drum = createDrum(symbols);
     
     // CRITICAL FIX: Ensure the final symbol is at the EXACT middle position for payline
     const middlePosition = Math.floor(drum.length / 2);
@@ -186,8 +205,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       const paylineFromServer = data.payline || data.reels.slice(0, 5); // Fallback for old format
       const finalSymbols = paylineFromServer.map((symbolType: string, index: number) => {
         // Use first available symbol of this type (consistent display)
-        const typeSymbols = SYMBOLS.filter(s => s.type === symbolType);
-        return typeSymbols[0]; // Always use first symbol of type for consistency
+        const typeSymbols = symbols.filter(s => s.type === symbolType);
+        return typeSymbols.length > 0 ? typeSymbols[0] : symbols[0]; // Safety fallback
       });
       
       console.log('🎰 Final symbols for display:', finalSymbols.map((s: SlotSymbol) => s.type));
@@ -389,10 +408,10 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
   };
 
-  if (reels.length === 0) {
+  if (reels.length === 0 || symbols.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-xl">Lade Marie-Slot...</div>
+        <div className="text-white text-xl">🎰 Lade Marie-Slot mit zufälligen Bildern...</div>
       </div>
     );
   }
