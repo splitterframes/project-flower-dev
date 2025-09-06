@@ -269,30 +269,30 @@ export const BouquetsView: React.FC = () => {
     <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
       {/* Compact Bouquets Header */}
       <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
-        <div className="flex items-center justify-between mb-3">
-          <div></div> {/* Spacer links */}
-          <div className="flex-1 flex justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-pink-300 mb-1">
-                Bouquet Kollektion
-              </h1>
-              <p className="text-slate-400 text-sm mb-3">Erstelle Blumensträuße aus deinen Blumen</p>
-              <div className="flex justify-center gap-6 text-sm">
-                <div className="flex items-center space-x-2">
-                  <Flower2 className="h-4 w-4 text-blue-400" />
-                  <span className="text-white font-semibold">{myFlowers.length}</span>
-                  <span className="text-slate-400">Blumen</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Gift className="h-4 w-4 text-pink-400" />
-                  <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
-                  <span className="text-slate-400">Rezepte</span>
-                </div>
+        <div className="relative mb-3">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
+          </div>
+          
+          {/* Zentrierter Content */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-pink-300 mb-1">
+              Bouquet Kollektion
+            </h1>
+            <p className="text-slate-400 text-sm mb-3">Erstelle Blumensträuße aus deinen Blumen</p>
+            <div className="flex justify-center gap-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <Flower2 className="h-4 w-4 text-blue-400" />
+                <span className="text-white font-semibold">{myFlowers.length}</span>
+                <span className="text-slate-400">Blumen</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Gift className="h-4 w-4 text-pink-400" />
+                <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
+                <span className="text-slate-400">Rezepte</span>
               </div>
             </div>
-          </div>
-          <div className="flex justify-end">
-            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
           </div>
         </div>
       </div>
