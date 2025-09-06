@@ -5464,17 +5464,17 @@ export class PostgresStorage {
 
   async getTop100ByBouquetRecipes(currentUserId: number): Promise<any[]> {
     try {
-      // Count unique bouquet recipes (assuming different flower combinations)
+      // Count bouquet recipes created by each user
       const userStats = await this.db
         .select({
           id: users.id,
           username: users.username,
-          bouquetRecipes: sql<number>`COALESCE(COUNT(DISTINCT ${userBouquets.bouquetId}), 0)`
+          bouquetRecipes: sql<number>`COALESCE(COUNT(${bouquets.id}), 0)`
         })
         .from(users)
-        .leftJoin(userBouquets, eq(users.id, userBouquets.userId))
+        .leftJoin(bouquets, eq(users.id, bouquets.createdByUserId))
         .groupBy(users.id, users.username)
-        .orderBy(desc(sql`COALESCE(COUNT(DISTINCT ${userBouquets.bouquetId}), 0)`))
+        .orderBy(desc(sql`COALESCE(COUNT(${bouquets.id}), 0)`))
         .limit(100);
 
       return this.formatRankingResults(userStats, 'bouquetRecipes', currentUserId);
