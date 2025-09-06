@@ -802,11 +802,8 @@ export const TeichView: React.FC = () => {
     const existingLocalFlower = placedFlowers.find(f => f.fieldId === selectedField);
     const existingDbFlower = fieldFlowers.find(f => f.fieldIndex === selectedField - 1);
     
-    console.log(`🌸 DEBUG Field ${selectedField}: local=${!!existingLocalFlower}, db=${!!existingDbFlower}`);
-    console.log(`🌸 DEBUG fieldFlowers:`, fieldFlowers.map(f => `field ${f.fieldIndex + 1}`));
-    
     if (existingLocalFlower || existingDbFlower) {
-      showNotification('Fehler', 'Auf diesem Feld ist bereits eine Blume platziert.', 'info');
+      showNotification('Fehler', `Feld ${selectedField} ist bereits belegt. Wählen Sie ein leeres Grasfeld.`, 'info');
       setIsPlacingFlower(false);
       return;
     }
