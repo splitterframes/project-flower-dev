@@ -442,7 +442,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
               icon: <Clock className="h-6 w-6 text-blue-400" />,
               content: [
                 'Schmetterlinge können nach 72 Stunden verkauft werden',
-                '❤️ Likes von anderen Spielern verkürzen Wartezeit',
+                '❤️ Likes von anderen Spielern geben +2% passives Einkommen',
                 '☀️ Sonnen-Boost für sofortige Zeit-Reduktion',
                 'Strategisches Timing maximiert Gewinne'
               ]
@@ -460,7 +460,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
           ],
           tips: [
             'Priorisiere VIP-Schmetterlinge für maximales Einkommen',
-            'Nutze Likes strategisch für wertvollste Exemplare',
+            'Sammle Likes für langfristige Einkommens-Boni',
             'Tausche regelmäßig gegen bessere Schmetterlinge',
             'Behalte deine seltensten Exemplare dauerhaft'
           ]
