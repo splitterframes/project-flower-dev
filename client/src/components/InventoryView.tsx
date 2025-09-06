@@ -335,7 +335,7 @@ export const InventoryView: React.FC = () => {
             className="bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-all duration-200 hover:scale-105 min-w-[40px] justify-center"
             title={`Verkaufe für ${getButterflyToSunsPrice(butterfly.butterflyRarity)} Sonnen`}
           >
-            <Sun className="w-3 h-3" />
+            <span className="text-xs">☀️</span>
             {getButterflyToSunsPrice(butterfly.butterflyRarity)}
           </button>
         </div>
@@ -366,7 +366,7 @@ export const InventoryView: React.FC = () => {
             />
             {/* VIP Crown Icon */}
             <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
-              <Star className="w-3 h-3 text-yellow-900" fill="currentColor" />
+              <span className="text-xs text-yellow-900">⭐</span>
             </div>
           </div>
         </ButterflyHoverPreview>
