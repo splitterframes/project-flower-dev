@@ -604,7 +604,7 @@ export const MarketView: React.FC = () => {
                               e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🦋</div>';
                             }}
                           />
-                        ) : (
+                        ) : listing.itemType === 'caterpillar' ? (
                           <img
                             src={(listing as any).caterpillarImageUrl || `/Raupen/${((listing as any).caterpillarIdOriginal || (listing as any).caterpillarId || 0).toString().padStart(3, '0')}.jpg`}
                             alt={itemName}
@@ -614,6 +614,10 @@ export const MarketView: React.FC = () => {
                               e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">🐛</div>';
                             }}
                           />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">
+                            {itemIcon}
+                          </div>
                         )}
                       </div>
                       
