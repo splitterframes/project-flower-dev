@@ -797,21 +797,6 @@ export const MarketView: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
-                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
-                      sellForm.itemType === 'caterpillar'
-                        ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg border-2 border-orange-400'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <span className="text-lg mr-1">🐛</span>
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm">Raupen</span>
-                      <span className="text-xs opacity-75">({myCaterpillars.length})</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setSellForm({...sellForm, itemType: 'flower', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
                     className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
                       sellForm.itemType === 'flower'
@@ -838,6 +823,21 @@ export const MarketView: React.FC = () => {
                     <div className="flex flex-col items-center">
                       <span className="text-sm">Schmetterlinge</span>
                       <span className="text-xs opacity-75">({myButterflies.length})</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0, flowerId: 0, butterflyId: 0, fishId: 0})}
+                    className={`flex items-center justify-center py-3 px-2 rounded-md transition-all duration-200 font-medium ${
+                      sellForm.itemType === 'caterpillar'
+                        ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg border-2 border-orange-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="text-lg mr-1">🐛</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm">Raupen</span>
+                      <span className="text-xs opacity-75">({myCaterpillars.length})</span>
                     </div>
                   </button>
                   <button
