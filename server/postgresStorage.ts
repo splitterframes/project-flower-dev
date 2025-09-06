@@ -5469,12 +5469,12 @@ export class PostgresStorage {
         .select({
           id: users.id,
           username: users.username,
-          bouquetRecipes: sql<number>`COALESCE(COUNT(DISTINCT CONCAT(${userBouquets.flower1Id}, '-', ${userBouquets.flower2Id}, '-', ${userBouquets.flower3Id})), 0)`
+          bouquetRecipes: sql<number>`COALESCE(COUNT(DISTINCT ${userBouquets.bouquetId}), 0)`
         })
         .from(users)
         .leftJoin(userBouquets, eq(users.id, userBouquets.userId))
         .groupBy(users.id, users.username)
-        .orderBy(desc(sql`COALESCE(COUNT(DISTINCT CONCAT(${userBouquets.flower1Id}, '-', ${userBouquets.flower2Id}, '-', ${userBouquets.flower3Id})), 0)`))
+        .orderBy(desc(sql`COALESCE(COUNT(DISTINCT ${userBouquets.bouquetId}), 0)`))
         .limit(100);
 
       return this.formatRankingResults(userStats, 'bouquetRecipes', currentUserId);

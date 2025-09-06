@@ -148,7 +148,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
               <div className="absolute inset-0 h-10 w-10 mr-4 text-yellow-400 animate-ping opacity-30"></div>
             </div>
             <span className="text-4xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-              🏆 TOP 100 RANGLISTE
+              TOP 100 RANGLISTE
             </span>
           </DialogTitle>
         </DialogHeader>
