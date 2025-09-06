@@ -459,6 +459,8 @@ export const TeichView: React.FC = () => {
         console.log("🌸 FETCHTEICHDATA: Setting userFlowers to:", flowersData.flowers);
         setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
         console.log("🌸 FETCHTEICHDATA: setUserFlowers COMPLETED ✅");
+        setFieldFlowers(fieldFlowersData.fieldFlowers || []);  // 🔧 CRITICAL FIX: This was completely missing!
+        console.log("🌸 FETCHTEICHDATA: setFieldFlowers COMPLETED ✅");
       } else {
         console.error("🌸 FETCHTEICHDATA ERROR: Some API responses failed", {
           caterpillar: caterpillarRes.status,
