@@ -668,51 +668,51 @@ export const MarketView: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="overflow-visible">
-            {(sellForm.itemType === 'seed' && mySeeds.length === 0) || (sellForm.itemType === 'caterpillar' && myCaterpillars.length === 0) ? (
-              <div className="text-center py-8">
-                {sellForm.itemType === 'seed' ? (
-                  <>
-                    <p className="text-slate-400">Du hast noch keine Samen zum Verkaufen</p>
-                    <p className="text-slate-500 text-sm mt-2">Züchte Blumen im Garten um Samen zu erhalten</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-slate-400">Du hast noch keine Raupen zum Verkaufen</p>
-                    <p className="text-slate-500 text-sm mt-2">Sammel Raupen am Teich um sie zu verkaufen</p>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="relative">
-                <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
-                {/* Item Type Selector */}
-                <div>
-                  <Label>Was möchtest du verkaufen?</Label>
-                  <div className="flex space-x-4 mt-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="itemType"
-                        value="seed"
-                        checked={sellForm.itemType === 'seed'}
-                        onChange={(e) => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
-                        className="mr-2"
-                      />
-                      <span className="text-white">🌱 Samen</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="itemType"
-                        value="caterpillar"
-                        checked={sellForm.itemType === 'caterpillar'}
-                        onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
-                        className="mr-2"
-                      />
-                      <span className="text-white">🐛 Raupen</span>
-                    </label>
-                  </div>
+            <div className="relative">
+              {/* Item Type Selector - IMMER sichtbar */}
+              <div className="mb-6">
+                <Label>Was möchtest du verkaufen?</Label>
+                <div className="flex space-x-4 mt-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="itemType"
+                      value="seed"
+                      checked={sellForm.itemType === 'seed'}
+                      onChange={(e) => setSellForm({...sellForm, itemType: 'seed', seedId: 0, caterpillarId: 0, quantity: 1})}
+                      className="mr-2"
+                    />
+                    <span className="text-white">🌱 Samen</span>
+                    <span className="text-slate-400 text-sm ml-2">({mySeeds.length})</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="itemType"
+                      value="caterpillar"
+                      checked={sellForm.itemType === 'caterpillar'}
+                      onChange={(e) => setSellForm({...sellForm, itemType: 'caterpillar', seedId: 0, caterpillarId: 0})}
+                      className="mr-2"
+                    />
+                    <span className="text-white">🐛 Raupen</span>
+                    <span className="text-slate-400 text-sm ml-2">({myCaterpillars.length})</span>
+                  </label>
                 </div>
+              </div>
+
+              {/* Conditional Content based on selection */}
+              {sellForm.itemType === 'seed' && mySeeds.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Du hast noch keine Samen zum Verkaufen</p>
+                  <p className="text-slate-500 text-sm mt-2">Züchte Blumen im Garten um Samen zu erhalten</p>
+                </div>
+              ) : sellForm.itemType === 'caterpillar' && myCaterpillars.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Du hast noch keine Raupen zum Verkaufen</p>
+                  <p className="text-slate-500 text-sm mt-2">Sammel Raupen am Teich um sie zu verkaufen</p>
+                </div>
+              ) : (
+                <form onSubmit={createListing} className="space-y-4 max-w-md mx-auto">
 
                 {/* Item Selector based on type */}
                 {sellForm.itemType === 'seed' ? (
@@ -861,8 +861,8 @@ export const MarketView: React.FC = () => {
                   {isLoading ? "Erstelle Angebot..." : "Angebot erstellen"}
                 </Button>
               </form>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
