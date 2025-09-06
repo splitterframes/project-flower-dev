@@ -389,8 +389,7 @@ export const MarketView: React.FC = () => {
           } px-8 py-3 font-bold text-lg`}
         >
           <div className="flex items-center">
-            <ShoppingCart className="h-5 w-5 mr-3" />
-            <span>🛋️ Kaufen</span>
+            <span>🛒 Kaufen</span>
           </div>
           {activeTab === "buy" && (
             <div className="absolute inset-0 bg-green-400 rounded opacity-20 animate-ping"></div>
@@ -406,7 +405,6 @@ export const MarketView: React.FC = () => {
           } px-8 py-3 font-bold text-lg`}
         >
           <div className="flex items-center">
-            <Store className="h-5 w-5 mr-3" />
             <span>🏪 Shop</span>
           </div>
           {activeTab === "server" && (
@@ -423,7 +421,6 @@ export const MarketView: React.FC = () => {
           } px-8 py-3 font-bold text-lg`}
         >
           <div className="flex items-center">
-            <HandCoins className="h-5 w-5 mr-3" />
             <span>💰 Verkaufen</span>
           </div>
           {activeTab === "sell" && (
