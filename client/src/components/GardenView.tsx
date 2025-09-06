@@ -925,13 +925,11 @@ export const GardenView: React.FC = () => {
                     }
                   `}
                   style={{
-                    backgroundImage: 'url("/Landschaft/Gardenview.png")',
-                    backgroundSize: 'calc(10 * 100%) calc(5 * 100%)', // Exact size: 10 fields wide, 5 fields high
-                    backgroundPosition: `${-((field.id - 1) % 10) * 100}% ${-Math.floor((field.id - 1) / 10) * 100}%`,
-                    backgroundRepeat: 'no-repeat',
+                    backgroundImage: 'url("/Landschaft/gras.png")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     minHeight: '44px',
-                    minWidth: '44px',
-                    backgroundColor: '#1e293b'
+                    minWidth: '44px'
                   }}
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
