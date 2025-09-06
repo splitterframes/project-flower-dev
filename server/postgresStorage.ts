@@ -581,6 +581,9 @@ export class PostgresStorage {
         itemType: marketListings.itemType,
         seedId: marketListings.seedId,
         caterpillarId: marketListings.caterpillarId,
+        flowerId: marketListings.flowerId,
+        butterflyId: marketListings.butterflyId,
+        fishId: marketListings.fishId,
         quantity: marketListings.quantity,
         pricePerUnit: marketListings.pricePerUnit,
         totalPrice: marketListings.totalPrice,
@@ -594,11 +597,29 @@ export class PostgresStorage {
         caterpillarRarity: userCaterpillars.caterpillarRarity,
         caterpillarImageUrl: userCaterpillars.caterpillarImageUrl,
         caterpillarIdOriginal: userCaterpillars.caterpillarId,
+        // Flower data (for flower listings)
+        flowerName: userFlowers.flowerName,
+        flowerRarity: userFlowers.flowerRarity,
+        flowerImageUrl: userFlowers.flowerImageUrl,
+        flowerIdOriginal: userFlowers.flowerId,
+        // Butterfly data (for butterfly listings)
+        butterflyName: userButterflies.butterflyName,
+        butterflyRarity: userButterflies.butterflyRarity,
+        butterflyImageUrl: userButterflies.butterflyImageUrl,
+        butterflyIdOriginal: userButterflies.butterflyId,
+        // Fish data (for fish listings)
+        fishName: userFish.fishName,
+        fishRarity: userFish.fishRarity,
+        fishImageUrl: userFish.fishImageUrl,
+        fishIdOriginal: userFish.fishId,
       })
       .from(marketListings)
       .leftJoin(users, eq(marketListings.sellerId, users.id))
       .leftJoin(seeds, eq(marketListings.seedId, seeds.id))
-      .leftJoin(userCaterpillars, eq(marketListings.caterpillarId, userCaterpillars.id));
+      .leftJoin(userCaterpillars, eq(marketListings.caterpillarId, userCaterpillars.id))
+      .leftJoin(userFlowers, eq(marketListings.flowerId, userFlowers.id))
+      .leftJoin(userButterflies, eq(marketListings.butterflyId, userButterflies.id))
+      .leftJoin(userFish, eq(marketListings.fishId, userFish.id));
     
     return listings;
   }
@@ -672,6 +693,128 @@ export class PostgresStorage {
           .update(userCaterpillars)
           .set({ quantity: newQuantity })
           .where(eq(userCaterpillars.id, data.caterpillarId!));
+      }
+
+      return listing[0];
+    } else if (data.itemType === "flower") {
+      // Check if user has the flower
+      const flowerResult = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(eq(userFlowers.userId, sellerId), eq(userFlowers.id, data.flowerId!)));
+      
+      if (flowerResult.length === 0) {
+        throw new Error('Flower not found');
+      }
+
+      if (flowerResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient flowers');
+      }
+
+      // Create flower listing
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "flower",
+        seedId: null,
+        caterpillarId: null,
+        flowerId: data.flowerId!,
+        butterflyId: null,
+        fishId: null,
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity
+      }).returning();
+
+      // Update flower quantity
+      const newQuantity = flowerResult[0].quantity - data.quantity;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, data.flowerId!));
+      } else {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: newQuantity })
+          .where(eq(userFlowers.id, data.flowerId!));
+      }
+
+      return listing[0];
+    } else if (data.itemType === "butterfly") {
+      // Check if user has the butterfly (from inventory, not exhibition)
+      const butterflyResult = await this.db
+        .select()
+        .from(userButterflies)
+        .where(and(eq(userButterflies.userId, sellerId), eq(userButterflies.id, data.butterflyId!)));
+      
+      if (butterflyResult.length === 0) {
+        throw new Error('Butterfly not found or in exhibition');
+      }
+
+      // Butterflies are unique items (quantity = 1)
+      if (data.quantity !== 1) {
+        throw new Error('Butterflies can only be sold one at a time');
+      }
+
+      // Create butterfly listing
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "butterfly",
+        seedId: null,
+        caterpillarId: null,
+        flowerId: null,
+        butterflyId: data.butterflyId!,
+        fishId: null,
+        quantity: 1,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit
+      }).returning();
+
+      // Remove butterfly from seller's inventory
+      await this.db
+        .delete(userButterflies)
+        .where(eq(userButterflies.id, data.butterflyId!));
+
+      return listing[0];
+    } else if (data.itemType === "fish") {
+      // Check if user has the fish
+      const fishResult = await this.db
+        .select()
+        .from(userFish)
+        .where(and(eq(userFish.userId, sellerId), eq(userFish.id, data.fishId!)));
+      
+      if (fishResult.length === 0) {
+        throw new Error('Fish not found');
+      }
+
+      if (fishResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient fish');
+      }
+
+      // Create fish listing
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "fish",
+        seedId: null,
+        caterpillarId: null,
+        flowerId: null,
+        butterflyId: null,
+        fishId: data.fishId!,
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity
+      }).returning();
+
+      // Update fish quantity
+      const newQuantity = fishResult[0].quantity - data.quantity;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, data.fishId!));
+      } else {
+        await this.db
+          .update(userFish)
+          .set({ quantity: newQuantity })
+          .where(eq(userFish.id, data.fishId!));
       }
 
       return listing[0];
@@ -755,6 +898,107 @@ export class PostgresStorage {
         .update(userCaterpillars)
         .set({ userId: buyerId })
         .where(eq(userCaterpillars.id, listing[0].caterpillarId!));
+    } else if (listing[0].itemType === "flower") {
+      // Add seller credits
+      const seller = await this.getUser(listing[0].sellerId);
+      if (seller) {
+        await this.db
+          .update(users)
+          .set({ credits: seller.credits + totalPrice })
+          .where(eq(users.id, listing[0].sellerId));
+      }
+
+      // Deduct buyer credits
+      await this.db
+        .update(users)
+        .set({ credits: buyer.credits - totalPrice })
+        .where(eq(users.id, buyerId));
+
+      // Get the flower data for transfer
+      const flowerData = await this.db
+        .select()
+        .from(userFlowers)
+        .where(eq(userFlowers.id, listing[0].flowerId!))
+        .limit(1);
+
+      if (flowerData.length === 0) {
+        return { success: false, message: 'Flower data not found' };
+      }
+
+      // Add flowers to buyer's inventory
+      await this.addFlowerToInventory(buyerId, flowerData[0].flowerId, flowerData[0].flowerRarity, data.quantity);
+
+    } else if (listing[0].itemType === "butterfly") {
+      // For butterflies, quantity is always 1
+      if (data.quantity !== 1) {
+        return { success: false, message: 'Butterflies can only be purchased one at a time' };
+      }
+
+      // Get the butterfly data for transfer
+      const butterflyData = await this.db
+        .select()
+        .from(userButterflies)
+        .where(eq(userButterflies.id, listing[0].butterflyId!))
+        .limit(1);
+
+      if (butterflyData.length === 0) {
+        return { success: false, message: 'Butterfly data not found' };
+      }
+
+      // Add seller credits
+      const seller = await this.getUser(listing[0].sellerId);
+      if (seller) {
+        await this.db
+          .update(users)
+          .set({ credits: seller.credits + totalPrice })
+          .where(eq(users.id, listing[0].sellerId));
+      }
+
+      // Deduct buyer credits
+      await this.db
+        .update(users)
+        .set({ credits: buyer.credits - totalPrice })
+        .where(eq(users.id, buyerId));
+
+      // Transfer butterfly to buyer by creating new entry
+      await this.db.insert(userButterflies).values({
+        userId: buyerId,
+        butterflyId: butterflyData[0].butterflyId,
+        butterflyName: butterflyData[0].butterflyName,
+        butterflyRarity: butterflyData[0].butterflyRarity,
+        butterflyImageUrl: butterflyData[0].butterflyImageUrl,
+        quantity: 1
+      });
+
+    } else if (listing[0].itemType === "fish") {
+      // Add seller credits
+      const seller = await this.getUser(listing[0].sellerId);
+      if (seller) {
+        await this.db
+          .update(users)
+          .set({ credits: seller.credits + totalPrice })
+          .where(eq(users.id, listing[0].sellerId));
+      }
+
+      // Deduct buyer credits
+      await this.db
+        .update(users)
+        .set({ credits: buyer.credits - totalPrice })
+        .where(eq(users.id, buyerId));
+
+      // Get the fish data for transfer
+      const fishData = await this.db
+        .select()
+        .from(userFish)
+        .where(eq(userFish.id, listing[0].fishId!))
+        .limit(1);
+
+      if (fishData.length === 0) {
+        return { success: false, message: 'Fish data not found' };
+      }
+
+      // Add fish to buyer's inventory
+      await this.addFishToInventory(buyerId, fishData[0].fishId, fishData[0].fishRarity, data.quantity);
     }
 
     // Update listing quantity or remove
