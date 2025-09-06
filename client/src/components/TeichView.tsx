@@ -1163,7 +1163,20 @@ export const TeichView: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
+            {/* Pond Panorama Background Container */}
+            <div className="relative">
+              {/* Pond Panorama Background Layer */}
+              <div 
+                className="absolute inset-0 rounded-lg overflow-hidden opacity-60"
+                style={{
+                  backgroundImage: 'url("/Landschaft/Pond.png")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  zIndex: 0
+                }}
+              />
+              {/* Pond Grid with transparent backgrounds */}
+              <div className="relative z-10 grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2 garden-grid-mobile sm:garden-grid-desktop">
               {gardenFields.map((field) => {
                 // In TeichView, no unlock logic needed since grass fields are auto-unlocked
                 const isNextToUnlock = false;
@@ -1184,9 +1197,9 @@ export const TeichView: React.FC = () => {
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
                     style={{
-                      backgroundImage: field.isPond ? 'url("/Landschaft/teich.png")' : 'url("/Landschaft/gras.png")',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      backgroundColor: field.isPond 
+                        ? 'rgba(34, 118, 182, 0.2)' // Transparent blue for pond fields
+                        : 'rgba(34, 197, 94, 0.1)', // Transparent green for grass fields
                       minHeight: '44px',
                       minWidth: '44px',
                       animation: shakingField === field.id ? 'pond-wobble 1.5s ease-in-out infinite' : 'none'
@@ -1589,6 +1602,7 @@ export const TeichView: React.FC = () => {
                 );
               })}
             </div>
+          </div>
           </CardContent>
         </Card>
 
