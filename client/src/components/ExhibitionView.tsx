@@ -631,7 +631,7 @@ export const ExhibitionView: React.FC = () => {
         <CardContent>
           {/* Wood frame effect */}
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
-            <div className="bg-slate-100 p-5 rounded grid grid-cols-5 grid-rows-2 gap-3 h-[520px]">
+            <div className="bg-slate-100 p-6 rounded grid grid-cols-5 grid-rows-2 gap-2 h-[600px]">
               {Array.from({ length: 10 }, (_, slotIndex) => {
                 const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
                 const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
@@ -786,7 +786,7 @@ export const ExhibitionView: React.FC = () => {
 
       {/* Frame Display */}
       {frames.length > 0 && (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
         </div>
       )}

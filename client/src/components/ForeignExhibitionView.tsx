@@ -312,7 +312,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Exhibition Mode */}
         {viewMode === 'exhibition' && (
           sortedFrameIds.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-7xl mx-auto">
               {/* Navigation Controls */}
               <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
                 <Button
@@ -400,7 +400,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                     </CardHeader>
                     <CardContent>
                       {/* Butterfly Display Grid */}
-                      <div className="grid grid-cols-5 gap-3">
+                      <div className="grid grid-cols-5 gap-2 h-[600px]">
                         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((slotIndex) => {
                           const butterfly = frameButterflies.find(b => b.slotIndex === slotIndex) ||
                                           frameVipButterflies.find(b => b.slotIndex === slotIndex);
@@ -488,7 +488,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Aquarium Mode */}
         {viewMode === 'aquarium' && (
           sortedTankIds.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-7xl mx-auto">
               {/* Tank Navigation Controls */}
               <div className="flex items-center justify-center space-x-3 bg-cyan-800/60 rounded-lg p-2 border border-cyan-700">
                 <Button
