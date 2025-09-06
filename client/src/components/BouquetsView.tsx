@@ -271,7 +271,7 @@ export const BouquetsView: React.FC = () => {
       <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
         <div className="flex items-center justify-between mb-3">
           <div></div> {/* Spacer links */}
-          <div className="text-center">
+          <div className="text-center flex-1">
             <h1 className="text-2xl font-bold text-pink-300 mb-1">
               Bouquet Kollektion
             </h1>
@@ -304,7 +304,7 @@ export const BouquetsView: React.FC = () => {
             <div className="flex items-center justify-center">
               <Palette className="h-6 w-6 mr-2 text-orange-400" />
               <span className="text-xl font-bold text-orange-300">
-                🎨 Bouquet Werkstatt
+                Bouquet Werkstatt
               </span>
             </div>
           </CardTitle>
@@ -333,7 +333,7 @@ export const BouquetsView: React.FC = () => {
                   size="lg"
                 >
                   <Heart className="h-6 w-6 mr-2 animate-pulse" />
-                  🌸 BOUQUET ERSTELLEN
+                  BOUQUET ERSTELLEN
                   <Sparkles className="h-6 w-6 ml-2 animate-pulse" />
                 </Button>
               </div>
@@ -341,7 +341,7 @@ export const BouquetsView: React.FC = () => {
               <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-lg p-4 border border-purple-400/30 max-w-md mx-auto">
                 <div className="flex items-center mb-3">
                   <Heart className="h-5 w-5 text-purple-400 mr-2" />
-                  <h4 className="text-white font-semibold text-sm">🌸 Erstellung</h4>
+                  <h4 className="text-white font-semibold text-sm">Erstellung</h4>
                 </div>
                 <ul className="text-slate-300 space-y-1 text-sm">
                   <li className="flex items-center">
