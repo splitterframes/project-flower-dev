@@ -64,7 +64,7 @@ interface ForeignExhibitionViewProps {
   onBack: () => void;
 }
 
-export const ForeignExhibitionViewNew: React.FC<ForeignExhibitionViewProps> = ({
+export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   ownerId,
   ownerName,
   onBack
