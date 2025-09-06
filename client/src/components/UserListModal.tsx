@@ -82,23 +82,23 @@ export const UserListModal: React.FC<UserListModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Info Box */}
-          <div className="bg-gradient-to-r from-cyan-800/30 to-blue-800/30 rounded-xl p-6 border-2 border-cyan-500/30 shadow-xl relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-xl"></div>
-            <div className="relative z-10">
-              <div className="flex items-center mb-4">
-                <div className="relative">
-                  <Eye className="h-6 w-6 mr-3 text-cyan-400 animate-pulse" />
-                  <div className="absolute inset-0 h-6 w-6 mr-3 text-cyan-400 animate-ping opacity-20"></div>
+          {/* TOP 100 SPIELER Button */}
+          <div className="flex justify-center">
+            <button className="relative group">
+              {/* Main button with golden gradient */}
+              <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-400 text-black font-bold text-2xl px-12 py-6 rounded-xl border-4 border-yellow-300 shadow-2xl transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-yellow-500/50">
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-400 rounded-xl blur-lg opacity-75 animate-pulse"></div>
+                {/* Button text with relative positioning */}
+                <div className="relative z-10 flex items-center">
+                  <span className="mr-2">🏆</span>
+                  TOP 100 SPIELER
+                  <span className="ml-2">🏆</span>
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">Spieler-Übersicht 👥</span>
               </div>
-              <ul className="text-slate-300 space-y-2 text-lg">
-                <li className="flex items-center">🟢 Grün = Spieler ist gerade online</li>
-                <li className="flex items-center">🔴 Grau = Spieler war zuletzt online</li>
-                <li className="flex items-center">🦋 Zeigt die Anzahl Schmetterlinge in der Ausstellung</li>
-              </ul>
-            </div>
+              {/* Additional outer glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-xl blur-xl opacity-30 animate-ping"></div>
+            </button>
           </div>
 
           {/* User List */}
