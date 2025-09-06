@@ -134,7 +134,7 @@ export const TeichView: React.FC = () => {
   const [selectedField, setSelectedField] = useState<number | null>(null);
   const [shakingField, setShakingField] = useState<number | null>(null);
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
-  const [showButterflyModal, setShowButterflyModal] = useState(false);
+  const [showFlowerModal, setShowFlowerModal] = useState(false);
   const [showFishModal, setShowFishModal] = useState(false);
   const [showFeedingDialog, setShowFeedingDialog] = useState(false);
   const [isCollectingCaterpillar, setIsCollectingCaterpillar] = useState(false);
@@ -148,17 +148,18 @@ export const TeichView: React.FC = () => {
     fishImageUrl: string;
     rarity: string;
   } | null>(null);
-  // Caterpillar modal removed - they spawn automatically
-  const [userButterflies, setUserButterflies] = useState<any[]>([]);
-  const [placedButterflies, setPlacedButterflies] = useState<{
+  // Caterpillar modal removed - they spawn automatically from flowers
+  const [userFlowers, setUserFlowers] = useState<any[]>([]);
+  const [fieldFlowers, setFieldFlowers] = useState<any[]>([]);
+  const [placedFlowers, setPlacedFlowers] = useState<{
     id: number;
     fieldId: number;
-    butterflyImageUrl: string;
-    butterflyName: string;
-    butterflyRarity: string;
+    flowerImageUrl: string;
+    flowerName: string;
+    flowerRarity: string;
     placedAt: Date;
-    isWiggling: boolean;
-    isBursting: boolean;
+    isShimmering: boolean;
+    isDissolving: boolean;
   }[]>([]);
   const [placedFish, setPlacedFish] = useState<{
     id: number;
@@ -329,22 +330,22 @@ export const TeichView: React.FC = () => {
 
     try {
       // Fetch pond-specific data including feeding progress
-      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, butterfliesRes, fieldButterfliesRes, fieldFishRes] = await Promise.all([
+      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, flowersRes, fieldFlowersRes, fieldFishRes] = await Promise.all([
         fetch(`/api/user/${user.id}/field-caterpillars`),
         fetch(`/api/user/${user.id}/caterpillars`),
         fetch(`/api/user/${user.id}/pond-progress`),
-        fetch(`/api/user/${user.id}/butterflies`),
-        fetch(`/api/user/${user.id}/field-butterflies`),
+        fetch(`/api/user/${user.id}/flowers`),
+        fetch(`/api/user/${user.id}/field-flowers`),
         fetch(`/api/user/${user.id}/field-fish`)
       ]);
 
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && butterfliesRes.ok && fieldButterfliesRes.ok && fieldFishRes.ok) {
-        const [caterpillarData, userCaterpillarsData, pondProgressData, butterfliesData, fieldButterfliesData, fieldFishData] = await Promise.all([
+      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && flowersRes.ok && fieldFlowersRes.ok && fieldFishRes.ok) {
+        const [caterpillarData, userCaterpillarsData, pondProgressData, flowersData, fieldFlowersData, fieldFishData] = await Promise.all([
           caterpillarRes.json(),
           userCaterpillarsRes.json(),
           pondProgressRes.json(),
-          butterfliesRes.json(),
-          fieldButterfliesRes.json(),
+          flowersRes.json(),
+          fieldFlowersRes.json(),
           fieldFishRes.json()
         ]);
 
