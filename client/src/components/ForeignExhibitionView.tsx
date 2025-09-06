@@ -146,9 +146,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     const frameLike = frameLikes.find(fl => fl.frameId === frameId);
     const isCurrentlyLiked = frameLike?.isLiked || false;
 
-    // Check if frame has 10 butterflies before allowing like
-    if (!isCurrentlyLiked && frameButterflies.length < 10) {
-      showNotification('Du kannst nur volle Rahmen mit 10 Schmetterlingen liken!', 'warning');
+    // Check if frame has 6 butterflies before allowing like
+    if (!isCurrentlyLiked && frameButterflies.length < 6) {
+      showNotification('Du kannst nur volle Rahmen mit 6 Schmetterlingen liken!', 'warning');
       return;
     }
 
