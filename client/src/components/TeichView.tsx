@@ -868,6 +868,12 @@ export const TeichView: React.FC = () => {
   const collectFish = async (fieldId: number) => {
     if (!user) return;
     
+    // Prevent double-clicking/race conditions
+    if (collectingFish.has(fieldId)) {
+      console.log(`🐟 Already collecting fish on field ${fieldId}`);
+      return;
+    }
+    
     // Find the fish on this field (using correct 0-based index conversion)
     const fishOnField = fieldFish.find(f => f.fieldIndex === fieldId - 1);
     if (!fishOnField) {
@@ -876,6 +882,9 @@ export const TeichView: React.FC = () => {
     }
     
     console.log(`🐟 Attempting to collect fish on field ${fieldId}`, fishOnField);
+    
+    // Lock this field during collection
+    setCollectingFish(prev => new Set([...prev, fieldId]));
     
     try {
       const response = await fetch('/api/garden/collect-field-fish', {
@@ -907,6 +916,13 @@ export const TeichView: React.FC = () => {
       }
     } catch (error) {
       console.error('Collect fish error:', error);
+    } finally {
+      // Always unlock the field after collection (success or failure)
+      setCollectingFish(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldId);
+        return newSet;
+      });
     }
   };
 
@@ -1188,9 +1204,11 @@ export const TeichView: React.FC = () => {
                         } else {
                           // Try to collect fish from pond field (convert field.id to 0-based index)
                           const fishOnField = fieldFish.find(f => f.fieldIndex === field.id - 1);
-                          if (fishOnField) {
+                          if (fishOnField && !collectingFish.has(field.id)) {
                             console.log("🐟 Attempting to collect fish on field", field.id);
                             collectFish(field.id);
+                          } else if (collectingFish.has(field.id)) {
+                            console.log("🐟 Already collecting fish on field", field.id);
                           } else {
                             console.log("🐟 Check for fish on pond field", field.id);
                           }
@@ -1498,7 +1516,12 @@ export const TeichView: React.FC = () => {
                             ? 'opacity-0 scale-50 transition-all duration-300' 
                             : 'animate-bounce opacity-100 scale-100'
                         }`}
-                        onClick={() => collectingFish.has(field.id) ? null : collectFish(field.id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent field click handler from also firing
+                          if (!collectingFish.has(field.id)) {
+                            collectFish(field.id);
+                          }
+                        }}
                       >
                         <div className={`relative transform transition-transform duration-200 ${
                           collectingFish.has(field.id) ? '' : 'group-hover:scale-110'
