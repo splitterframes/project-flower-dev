@@ -310,6 +310,144 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
+  // Handle spin (Credits version)
+  const handleSpinCredits = async () => {
+    if (!user || isSpinning) return;
+    
+    if (credits < spinCostCredits) {
+      showNotification('Nicht genügend Credits! Du brauchst 10 Credits zum Spielen.', 'error');
+      return;
+    }
+
+    setIsSpinning(true);
+    // Gewinnzeile bleibt während dem Drehen stehen
+    setBlinkCount(0); // Stoppe aktuelles Blinken
+
+    try {
+      // Call server API for credits version
+      const response = await fetch(`/api/user/${user.id}/marie-slot-play-credits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setLastWinMessage(data.message || 'Ein Fehler ist aufgetreten');
+        setIsWinning(false);
+        setBlinkCount(3); // Blink 3x for error
+        setIsSpinning(false);
+        return;
+      }
+
+      // Update global credit count immediately for consistent UI
+      const newCreditCount = credits - spinCostCredits;
+      setCredits(newCreditCount);
+
+      // Convert server response to final symbols - FIXED: Use exact symbols from server
+      console.log('🎰 Credit-Server response:', data);
+      console.log('🎰 Credit-Server payline:', data.payline);
+      
+      // Use the exact payline symbols from server (no random generation)
+      const paylineFromServer = data.payline || data.reels.slice(0, 5); // Fallback for old format
+      const finalSymbols = paylineFromServer.map((symbolType: string, index: number) => {
+        // Use first available symbol of this type (consistent display)
+        const typeSymbols = symbols.filter(s => s.type === symbolType);
+        return typeSymbols.length > 0 ? typeSymbols[0] : symbols[0]; // Safety fallback
+      });
+      
+      console.log('🎰 Credit-Final symbols for display:', finalSymbols.map((s: SlotSymbol) => s.type));
+      console.log('🎰 Credit-Exact payline should be:', paylineFromServer);
+
+      // Create new spinning reels with final symbols
+      const newReels = reels.map((reel, index) => ({
+        ...reel,
+        symbols: createSpinningReel(finalSymbols[index]),
+        isSpinning: true,
+        position: 0,
+        targetPosition: SYMBOL_HEIGHT * (Math.floor(SYMBOLS_PER_DRUM / 2) - 1), // Position to show final symbol in middle row (PAYLINE)
+        finalSymbol: finalSymbols[index]
+      }));
+
+      setReels(newReels);
+
+      // Start spinning animations - each reel stops after a delay (longer spinning)
+      const spinDurations = [3000, 3500, 4000, 4500, 5000]; // Longer staggered stopping times
+      
+      spinDurations.forEach((duration, reelIndex) => {
+        // Clear any existing timeout
+        if (animationRefs.current[reelIndex]) {
+          clearTimeout(animationRefs.current[reelIndex]!);
+        }
+        
+        // Set new timeout to stop this reel
+        animationRefs.current[reelIndex] = setTimeout(() => {
+          // Rückstoss-Effekt kurz vor dem Stoppen (Trommel rutscht nach oben und fällt zurück)
+          setRecoilStates(prev => {
+            const newStates = [...prev];
+            newStates[reelIndex] = true;
+            return newStates;
+          });
+
+          // Nach 400ms Rückstoss die Trommel stoppen
+          setTimeout(() => {
+            setReels(prevReels => {
+              const updatedReels = [...prevReels];
+              updatedReels[reelIndex] = {
+                ...updatedReels[reelIndex],
+                isSpinning: false,
+                position: updatedReels[reelIndex].targetPosition
+              };
+              return updatedReels;
+            });
+
+            // Rückstoss ausschalten
+            setRecoilStates(prev => {
+              const newStates = [...prev];
+              newStates[reelIndex] = false;
+              return newStates;
+            });
+          }, 400);
+
+          // Check if all reels have stopped
+          if (reelIndex === spinDurations.length - 1) {
+            setTimeout(() => {
+              setIsSpinning(false);
+              
+              // Handle win results
+              if (data.matchCount >= 2) {
+                setIsWinning(true);
+                setLastWinMessage(data.message);
+                
+                // Update global state immediately based on reward  
+                if (data.reward?.type === 'suns') {
+                  setSuns(suns + data.reward.amount);
+                } else if (data.reward?.type === 'credits') {
+                  const currentCredits = credits - spinCostCredits; // Recalculate current credit count
+                  const newCreditTotal = currentCredits + data.reward.amount;
+                  setCredits(newCreditTotal);
+                }
+                
+                setBlinkCount(3); // Blink 3x gold for win
+              } else {
+                setLastWinMessage(data.message);
+                setIsWinning(false);
+                setBlinkCount(0); // Keine Blinks für Verlust
+              }
+            }, 500);
+          }
+        }, duration);
+      });
+
+    } catch (error) {
+      console.error('Error spinning credit slot machine:', error);
+      setLastWinMessage('Verbindungsfehler beim Credit-Slot-Spiel');
+      setIsWinning(false);
+      setBlinkCount(3); // Blink 3x for error
+      setIsSpinning(false);
+    }
+  };
+
   // Handle blinking animation
   useEffect(() => {
     if (blinkCount > 0) {
@@ -405,7 +543,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <Coins className="h-10 w-10 text-yellow-400" />
               Marie-Slot
               <Coins className="h-10 w-10 text-yellow-400" />
-              <HelpButton helpText="Marie-Slot ist dein Glücksspielautomat! Setze 5 Sonnen und drehe die Rollen. Nur die mittleren Symbole (Payline) zählen für Gewinne: 2 gleiche = 3 Sonnen, 3 Sonnen = 50 Credits, 3 andere = seltener Samen!" viewType="marie-slot" />
+              <HelpButton helpText="Marie-Slot ist dein Glücksspielautomat! Setze 5 Sonnen oder 10 Credits und drehe die Rollen. Nur die mittleren Symbole (Payline) zählen für Gewinne: 2 gleiche = 3 Sonnen, 3 Sonnen = 50 Credits, 3 andere = seltener Samen!" viewType="marie-slot" />
             </h1>
             <p className="text-purple-200 text-lg">Achtung! - Glücksspiel kann süchtig machen!</p>
           </div>
@@ -416,6 +554,12 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <span className="font-bold text-2xl">{suns}</span>
             </div>
             <div className="text-sm text-purple-200">Sonnen</div>
+            
+            <div className="flex items-center gap-2 mb-1 mt-3">
+              <Coins className="h-6 w-6 text-yellow-400" />
+              <span className="font-bold text-2xl">{credits}</span>
+            </div>
+            <div className="text-sm text-purple-200">Credits</div>
           </div>
         </div>
 
@@ -444,33 +588,63 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Spin Button */}
+            {/* Spin Buttons */}
             <div className="text-center">
-              <Button
-                onClick={handleSpin}
-                disabled={isSpinning || suns < spinCost}
-                className={`px-12 py-6 text-2xl font-bold rounded-xl transition-all transform hover:scale-105 ${
-                  isSpinning 
-                    ? 'bg-gray-600 cursor-not-allowed' 
-                    : suns >= spinCost
-                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black shadow-lg animate-pulse'
-                      : 'bg-gray-600 cursor-not-allowed text-gray-400'
-                }`}
-              >
-                {isSpinning ? (
-                  <>
-                    <Zap className="h-6 w-6 mr-2 animate-spin" />
-                    Dreht sich...
-                  </>
-                ) : suns >= spinCost ? (
-                  <>
-                    <Zap className="h-6 w-6 mr-2" />
-                    DREHEN! (5 <Sun className="h-5 w-5 inline" />)
-                  </>
-                ) : (
-                  'Nicht genug Sonnen'
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                {/* Sonnen-Spin Button */}
+                <Button
+                  onClick={handleSpin}
+                  disabled={isSpinning || suns < spinCost}
+                  className={`px-8 py-4 text-xl font-bold rounded-xl transition-all transform hover:scale-105 ${
+                    isSpinning 
+                      ? 'bg-gray-600 cursor-not-allowed' 
+                      : suns >= spinCost
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black shadow-lg animate-pulse'
+                        : 'bg-gray-600 cursor-not-allowed text-gray-400'
+                  }`}
+                >
+                  {isSpinning ? (
+                    <>
+                      <Zap className="h-5 w-5 mr-2 animate-spin" />
+                      Dreht sich...
+                    </>
+                  ) : suns >= spinCost ? (
+                    <>
+                      <Zap className="h-5 w-5 mr-2" />
+                      DREHEN! (5 <Sun className="h-4 w-4 inline" />)
+                    </>
+                  ) : (
+                    'Nicht genug Sonnen'
+                  )}
+                </Button>
+                
+                {/* Credits-Spin Button */}
+                <Button
+                  onClick={handleSpinCredits}
+                  disabled={isSpinning || credits < spinCostCredits}
+                  className={`px-8 py-4 text-xl font-bold rounded-xl transition-all transform hover:scale-105 ${
+                    isSpinning 
+                      ? 'bg-gray-600 cursor-not-allowed' 
+                      : credits >= spinCostCredits
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg animate-pulse'
+                        : 'bg-gray-600 cursor-not-allowed text-gray-400'
+                  }`}
+                >
+                  {isSpinning ? (
+                    <>
+                      <Zap className="h-5 w-5 mr-2 animate-spin" />
+                      Dreht sich...
+                    </>
+                  ) : credits >= spinCostCredits ? (
+                    <>
+                      <Zap className="h-5 w-5 mr-2" />
+                      DREHEN! (10 <Coins className="h-4 w-4 inline" />)
+                    </>
+                  ) : (
+                    'Nicht genug Credits'
+                  )}
+                </Button>
+              </div>
               
               {/* Schöne Gewinnübersicht */}
               <div className="mt-8 bg-gradient-to-r from-slate-800/80 to-slate-700/80 rounded-xl p-6 border-2 border-yellow-600/50">
