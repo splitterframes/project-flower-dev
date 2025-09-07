@@ -188,9 +188,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } else if (item.type === 'fish') {
             await storage.deleteFishEntry(item.id);
+          } else if (item.type === 'butterfly') {
+            await storage.consumeButterfly(userId, item.id);
+          } else if (item.type === 'seed') {
+            // Use existing logic similar to plantSeed
+            const userSeedsResult = await storage.getUserSeeds(userId);
+            const userSeed = userSeedsResult.find(s => s.id === item.id);
+            if (userSeed && userSeed.quantity > 0) {
+              const newQuantity = userSeed.quantity - 1;
+              if (newQuantity <= 0) {
+                // Delete the seed entry completely
+                await storage.db.delete(storage.userSeeds).where(
+                  storage.eq(storage.userSeeds.id, item.id)
+                );
+              } else {
+                // Reduce quantity
+                await storage.db.update(storage.userSeeds)
+                  .set({ quantity: newQuantity })
+                  .where(storage.eq(storage.userSeeds.id, item.id));
+              }
+            }
+          } else if (item.type === 'flower') {
+            // Use existing logic similar to createBouquet
+            const userFlowersResult = await storage.getUserFlowers(userId);
+            const userFlower = userFlowersResult.find(f => f.id === item.id);
+            if (userFlower && userFlower.quantity > 0) {
+              const newQuantity = userFlower.quantity - 1;
+              if (newQuantity <= 0) {
+                // Delete the flower entry completely
+                await storage.db.delete(storage.userFlowers).where(
+                  storage.eq(storage.userFlowers.id, item.id)
+                );
+              } else {
+                // Reduce quantity
+                await storage.db.update(storage.userFlowers)
+                  .set({ quantity: newQuantity })
+                  .where(storage.eq(storage.userFlowers.id, item.id));
+              }
+            }
           }
-          // Note: For now, only caterpillars and fish are consumed
-          // Seeds, flowers, and butterflies need additional storage methods to be fully implemented
         } catch (itemError) {
           console.error(`Error consuming item ${item.id} of type ${item.type}:`, itemError);
           // Continue with other items even if one fails
