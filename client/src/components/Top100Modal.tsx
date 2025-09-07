@@ -82,7 +82,9 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
     setLoading(true);
     console.log(`🏆 Fetching Top 100 data for category: ${selectedCategory}`);
     try {
-      const response = await fetch(`/api/rankings/top100/${selectedCategory}`, {
+      // Add cache-busting timestamp to ensure fresh data
+      const timestamp = Date.now();
+      const response = await fetch(`/api/rankings/top100/${selectedCategory}?t=${timestamp}`, {
         headers: {
           'X-User-Id': currentUser.id.toString()
         }
