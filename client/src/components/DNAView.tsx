@@ -464,7 +464,7 @@ export const DNAView: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* 3x3 Grid */}
-            <div className="grid grid-cols-3 gap-2 p-4 bg-slate-800 rounded-lg">
+            <div className="grid grid-cols-3 gap-1.5 p-3 bg-slate-800 rounded-lg">
               {sequencerGrid.map((row, rowIndex) =>
                 row.map((slot, colIndex) => (
                   <div
