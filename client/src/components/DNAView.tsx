@@ -676,7 +676,11 @@ export const DNAView: React.FC = () => {
                   <div
                     key={`${item.type}-${item.id}`}
                     onClick={() => handleItemSelection(item)}
-                    className="cursor-pointer p-3 rounded border-2 border-slate-600 hover:border-teal-400 bg-slate-700 hover:bg-slate-600 transition-all flex flex-col items-center text-xs space-y-2"
+                    className="cursor-pointer p-3 rounded border-2 hover:border-teal-400 transition-all flex flex-col items-center text-xs space-y-2"
+                    style={{
+                      backgroundColor: getRarityColor(item.rarity) + '20',
+                      borderColor: getRarityColor(item.rarity)
+                    }}
                   >
                     <img 
                       src={item.imageUrl} 
