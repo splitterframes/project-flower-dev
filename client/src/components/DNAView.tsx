@@ -449,7 +449,13 @@ export const DNAView: React.FC = () => {
                       ${isSequencing ? 'cursor-not-allowed opacity-50' : ''}
                     `}
                     style={slot.item ? {
-                      borderColor: getRarityColor(slot.item.rarity)
+                      borderColor: slot.item.rarity === 'common' ? '#fbbf24' :
+                                 slot.item.rarity === 'uncommon' ? '#10b981' :
+                                 slot.item.rarity === 'rare' ? '#3b82f6' :
+                                 slot.item.rarity === 'super-rare' ? '#06b6d4' :
+                                 slot.item.rarity === 'epic' ? '#8b5cf6' :
+                                 slot.item.rarity === 'legendary' ? '#f97316' :
+                                 slot.item.rarity === 'mythical' ? '#ef4444' : '#6b7280'
                     } : undefined}
                   >
                     {slot.item ? (
