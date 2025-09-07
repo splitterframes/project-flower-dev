@@ -14,7 +14,7 @@ import { getRarityColor } from '@shared/rarity';
 interface HelpDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  viewType: 'garden' | 'pond' | 'market' | 'inventory' | 'bouquets' | 'aquarium' | 'flowerpower' | 'exhibition' | 'marie-slot';
+  viewType: 'garden' | 'pond' | 'market' | 'inventory' | 'bouquets' | 'aquarium' | 'flowerpower' | 'exhibition' | 'marie-slot' | 'dna';
 }
 
 export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewType }) => {
@@ -521,6 +521,56 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
             'Setze dir ein Limit und halte dich daran',
             'Große Gewinne sind möglich aber selten',
             'Genieße das Spiel - Glück kommt und geht!'
+          ]
+        };
+
+      case 'dna':
+        return {
+          title: '🧬 DNA-Labor',
+          subtitle: 'Zentrum für DNA-Sequenzierung und Item-Upgrades',
+          icon: <Zap className="h-8 w-8 text-teal-400" />,
+          gradient: 'from-teal-500/20 to-cyan-500/20',
+          border: 'border-teal-400/30',
+          sections: [
+            {
+              title: '🧪 DNA-Sequenzer',
+              icon: <Target className="h-6 w-6 text-teal-400" />,
+              content: [
+                'Platziere Items im 3x3 Grid um DNA zu generieren',
+                'DNA Berechnung: BaseValue × (1 + Anzahl Nachbarn)',
+                'Items mit mehr Nachbarn geben exponentiell mehr DNA',
+                'Verschiedene Item-Typen haben unterschiedliche BaseValues',
+                'Strategische Platzierung maximiert DNA-Ausbeute'
+              ]
+            },
+            {
+              title: '⚡ D-Nator Upgrades',
+              icon: <TrendingUp className="h-6 w-6 text-purple-400" />,
+              content: [
+                'Verwende DNA um Items auf höhere Raritäten zu upgraden',
+                'Wähle Kategorie-Filter für bessere Übersicht',
+                'Upgrade-Kosten: (Platz-Differenz)² × Rarität-Faktor + Grundwert',
+                'Höhere Raritäten kosten exponentiell mehr DNA',
+                'Upgrade-Ketten: Common → Uncommon → Rare → etc.'
+              ]
+            },
+            {
+              title: '💡 DNA-Strategien',
+              icon: <Star className="h-6 w-6 text-yellow-400" />,
+              content: [
+                'Platziere Items strategisch - jeder Nachbar verdoppelt die DNA',
+                'Mitte-Felder haben bis zu 4 Nachbarn (5x DNA)',
+                'Ecken-Felder haben nur 2 Nachbarn (3x DNA)',
+                'Sammle DNA mit günstigeren Items, upgrade dann wertvollere',
+                'Rare Items haben höhere BaseValues als Common Items'
+              ]
+            }
+          ],
+          tips: [
+            'Beginne mit Common Items zum DNA sammeln',
+            'Nutze die Mitte des Grids für maximale DNA-Generation',
+            'Plane deine Upgrades - höhere Raritäten sind viel teurer',
+            'Tausche günstige Items regelmäßig aus für mehr DNA'
           ]
         };
 

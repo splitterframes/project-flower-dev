@@ -4,7 +4,7 @@ import { HelpDialog } from './HelpDialog';
 
 interface HelpButtonProps {
   helpText: string;
-  viewType: 'garden' | 'pond' | 'market' | 'inventory' | 'bouquets' | 'aquarium' | 'flowerpower' | 'exhibition' | 'marie-slot';
+  viewType: 'garden' | 'pond' | 'market' | 'inventory' | 'bouquets' | 'aquarium' | 'flowerpower' | 'exhibition' | 'marie-slot' | 'dna';
 }
 
 export const HelpButton: React.FC<HelpButtonProps> = ({ helpText, viewType }) => {
