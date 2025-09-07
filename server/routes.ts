@@ -2722,6 +2722,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marie-Slot machine endpoint (Credits version)
+  app.post("/api/user/:userId/marie-slot-play-credits", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // Check if user has enough credits (10 credits to play)
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.credits < 10) {
+        return res.status(400).json({ message: "Nicht genügend Credits! Du brauchst 10 Credits zum Spielen." });
+      }
+
+      // Deduct 10 credits
+      await storage.updateUserCredits(userId, -10);
+      console.log(`🎰 User ${userId} spent 10 credits on Marie-Slot`);
+
+      // Generate slot machine result (5 reels with 3 symbols each) - Payline system
+      const symbols = ['caterpillar', 'flower', 'butterfly', 'fish', 'sun'];
+      const reels: string[][] = [];
+      const paylineSymbols: string[] = []; // Only middle symbols count for wins
+      
+      for (let i = 0; i < 5; i++) {
+        const reelSymbols: string[] = [];
+        for (let j = 0; j < 3; j++) {
+          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+          reelSymbols.push(randomSymbol);
+          // Middle symbol (index 1) goes to payline
+          if (j === 1) {
+            paylineSymbols.push(randomSymbol);
+          }
+        }
+        reels.push(reelSymbols);
+      }
+
+      console.log(`🎰 Credit-Slot result (all): ${reels.map(reel => reel.join('|')).join(' - ')}`);
+      console.log(`🎰 Credit-Slot Payline (middle): ${paylineSymbols.join(' - ')}`);
+
+      // Check for wins on payline (middle symbols only) - FIXED!
+      const symbolCounts = new Map<string, number>();
+      paylineSymbols.forEach(symbol => {
+        symbolCounts.set(symbol, (symbolCounts.get(symbol) || 0) + 1);
+      });
+      
+      console.log(`🎰 Credit-Slot Symbol counts on payline:`, Object.fromEntries(symbolCounts));
+
+      let maxCount = 0;
+      let winningSymbol = '';
+      for (const [symbol, count] of symbolCounts) {
+        if (count > maxCount) {
+          maxCount = count;
+          winningSymbol = symbol;
+        }
+      }
+
+      let reward: any = null;
+      let message = "Leider kein Gewinn! Probier's nochmal!";
+
+      // Determine reward based on matching symbols
+      if (maxCount >= 2) {
+        console.log(`🎰 Credit-Slot Win detected: ${maxCount} matching ${winningSymbol} symbols`);
+        
+        if (maxCount === 2) {
+          // 2 matching = 3 suns
+          await storage.updateUserSuns(userId, 3);
+          reward = { type: 'suns', amount: 3 };
+          message = "🌞 2 gleiche Symbole! Du gewinnst 3 Sonnen!";
+          console.log(`🎰 Credit-Slot Rewarded 3 suns to user ${userId}`);
+        } else if (maxCount === 3) {
+          // 3 matching = different rewards based on symbol type
+          if (winningSymbol === 'sun') {
+            // 3 suns = 50 credits (special sun bonus)
+            await storage.updateUserCredits(userId, 50);
+            reward = { type: 'credits', amount: 50 };
+            message = "☀️ 3 Sonnen! Du gewinnst 50 Credits!";
+            console.log(`🎰 Credit-Slot Rewarded 50 credits for 3 suns to user ${userId}`);
+          } else {
+            // 3 other symbols = 1 rare seed
+            await storage.addSeedToInventory(userId, 'rare', 1);
+            reward = { type: 'seeds', rarity: 'rare', amount: 1 };
+            message = "🌱 3 gleiche Symbole! Du gewinnst 1 rare Samen!";
+            console.log(`🎰 Credit-Slot Rewarded 1 rare seed for 3 ${winningSymbol} to user ${userId}`);
+          }
+        } else if (maxCount === 4) {
+          // 4 matching = legendary butterfly
+          const butterflyResult = await storage.addButterflyToInventory(userId, 'legendary', 1);
+          reward = { type: 'butterfly', rarity: 'legendary', amount: 1 };
+          message = "🦋 4 gleiche Symbole! Du gewinnst einen legendären Schmetterling!";
+          console.log(`🎰 Credit-Slot Rewarded 1 legendary butterfly to user ${userId}`);
+        } else if (maxCount === 5) {
+          // 5 matching = 1000 credits (jackpot!)
+          await storage.updateUserCredits(userId, 1000);
+          reward = { type: 'credits', amount: 1000 };
+          message = "💰 JACKPOT! 5 gleiche Symbole! Du gewinnst 1000 Credits!";
+          console.log(`🎰 Credit-Slot JACKPOT! Rewarded 1000 credits to user ${userId}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        reels: reels.flat(), // Send all 15 symbols (3 per reel) to frontend
+        payline: paylineSymbols, // The 5 middle symbols that count for wins
+        matchCount: maxCount,
+        winningSymbol: maxCount >= 2 ? winningSymbol : null,
+        reward,
+        message
+      });
+
+    } catch (error) {
+      console.error('🎰 Error in Marie-Slot credit play:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // ========== TOP 100 RANKINGS SYSTEM ==========
   
   app.get("/api/rankings/top100/:category", async (req, res) => {

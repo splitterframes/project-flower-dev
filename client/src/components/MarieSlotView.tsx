@@ -108,6 +108,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const animationRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
 
   const spinCost = 5;
+  const spinCostCredits = 10;
 
   // Create a drum with 15 symbols (each of the 5 symbols appears 3 times, shuffled)
   const createDrum = (symbolsToUse: SlotSymbol[]): SlotSymbol[] => {
@@ -171,7 +172,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return drum;
   };
 
-  // Handle spin
+  // Handle spin (Suns version)
   const handleSpin = async () => {
     if (!user || isSpinning) return;
     
