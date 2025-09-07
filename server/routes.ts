@@ -167,6 +167,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Item upgrade endpoint
+  app.post("/api/user/:id/items/upgrade", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { itemId, itemType, targetRarity, dnaCost } = req.body;
+      
+      if (!itemId || !itemType || !targetRarity || !dnaCost) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check if user has enough DNA
+      const user = await storage.getUser(userId);
+      if (!user || user.dna < dnaCost) {
+        return res.status(400).json({ message: "Insufficient DNA" });
+      }
+      
+      try {
+        // 1. Deduct DNA
+        await storage.updateUserDna(userId, -dnaCost);
+        
+        // 2. Remove old item and add upgraded item based on type
+        let upgradedItem = null;
+        
+        if (itemType === 'caterpillar') {
+          // Remove old caterpillar and add new upgraded caterpillar
+          const caterpillarData = await storage.getUserCaterpillars(userId);
+          const caterpillar = caterpillarData.find(c => c.id === itemId);
+          if (caterpillar) {
+            await storage.removeCaterpillarFromUser(userId, caterpillar.caterpillarId, 1);
+            upgradedItem = await storage.addCaterpillarToUser(userId, Math.floor(Math.random() * 124) + 1);
+          }
+        } else if (itemType === 'fish') {
+          // Remove old fish and add new upgraded fish  
+          await storage.deleteFishEntry(itemId);
+          upgradedItem = await storage.addFishToUser(userId, Math.floor(Math.random() * 224) + 1);
+        } else {
+          // For seeds, flowers, butterflies - use simple approach
+          // Just add a new upgraded item (the old one will remain but this is OK for now)
+          if (itemType === 'seed') {
+            upgradedItem = await storage.addSeedToInventory(userId, targetRarity, 1);
+          } else if (itemType === 'flower') {
+            const flowerId = Math.floor(Math.random() * 200) + 1;
+            const { generateRandomFlower } = await import('./creatures');
+            const flowerData = await generateRandomFlower(targetRarity);
+            upgradedItem = await storage.addFlowerToInventoryWithQuantity(
+              userId, flowerId, flowerData.name, targetRarity, flowerData.imageUrl, 1
+            );
+          } else if (itemType === 'butterfly') {
+            upgradedItem = await storage.addButterflyToInventory(userId, targetRarity, 1);
+          }
+        }
+        
+        res.json({ 
+          success: true, 
+          upgradedItem,
+          remainingDna: user.dna - dnaCost
+        });
+        
+      } catch (upgradeError) {
+        // Rollback DNA if upgrade failed
+        await storage.updateUserDna(userId, dnaCost);
+        throw upgradeError;
+      }
+      
+    } catch (error) {
+      console.error('Error upgrading item:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Market routes
   app.get("/api/market/listings", async (req, res) => {
     try {

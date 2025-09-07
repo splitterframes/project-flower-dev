@@ -375,21 +375,31 @@ export const DNAView: React.FC = () => {
 
   const completeUpgrade = async () => {
     try {
-      // Deduct DNA cost
-      const response = await fetch(`/api/user/${user!.id}/dna`, {
-        method: 'PATCH',
+      if (!selectedUpgradeItem) return;
+      
+      // Call upgrade API
+      const response = await fetch(`/api/user/${user!.id}/items/upgrade`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: -upgradeCost })
+        body: JSON.stringify({
+          itemId: selectedUpgradeItem.id,
+          itemType: selectedUpgradeItem.type,
+          targetRarity: targetRarity,
+          dnaCost: upgradeCost
+        })
       });
       
       if (response.ok) {
         const data = await response.json();
-        setDna(data.dna);
+        setDna(data.remainingDna);
         showNotification(`✨ Item zu ${getRarityDisplayName(targetRarity)} aufgewertet!`, 'success');
         
-        // TODO: Actually upgrade the item in the database
+        // Clear selection and reload inventory
         setSelectedUpgradeItem(null);
         loadInventory();
+      } else {
+        const error = await response.json();
+        showNotification(error.message || 'Fehler beim Upgraden des Items', 'error');
       }
     } catch (error) {
       showNotification('Fehler beim Upgraden des Items', 'error');
