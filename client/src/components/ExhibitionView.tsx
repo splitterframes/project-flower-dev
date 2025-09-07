@@ -299,12 +299,12 @@ export const ExhibitionView: React.FC = () => {
     return Math.round(500 * Math.pow(1.2, frameCount - 1));
   };
 
-  // Calculate current Cr/h based on degradation over 168 hours (1 week) with like bonus
+  // Calculate current Cr/h based on degradation over 72 hours with like bonus
   const getCurrentCrPerHour = (rarity: string, isVip?: boolean, placedAt?: string, frameId?: number): number => {
     let baseValue: number;
     
     if (isVip || rarity === 'vip') {
-      // VIP butterflies: 60 Cr/h → 6 Cr/h over 168 hours (1 week)
+      // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
       const startValue = 60;
       const minValue = 6;
       baseValue = calculateDegradedValue(startValue, minValue, placedAt);
@@ -312,18 +312,18 @@ export const ExhibitionView: React.FC = () => {
       const rarityValues = {
         'common': { start: 1, min: 1 },       // No degradation for Common
         'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
-        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h over 1 week
-        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h over 1 week
-        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h over 1 week
-        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h over 1 week
-        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h over 1 week
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
       };
 
       const values = rarityValues[rarity as keyof typeof rarityValues] || { start: 1, min: 1 };
       baseValue = calculateDegradedValue(values.start, values.min, placedAt);
     }
     
-    // Apply like bonus: 2% per like for 168 hours (1 week)
+    // Apply like bonus: 2% per like for 72 hours
     if (frameId && frameLikes) {
       const frameWithLikes = frameLikes.find(f => f.frameId === frameId);
       const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
@@ -334,24 +334,24 @@ export const ExhibitionView: React.FC = () => {
     return baseValue;
   };
 
-  // Calculate degraded value over 168 hours (1 week)
+  // Calculate degraded value over 72 hours
   const calculateDegradedValue = (startValue: number, minValue: number, placedAt?: string): number => {
     if (!placedAt) return startValue;
 
     const placedTime = new Date(placedAt).getTime();
     const now = new Date().getTime();
     const timeSincePlacement = now - placedTime;
-    const ONE_WEEK = 168 * 60 * 60 * 1000; // 7 days = 168 hours
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
 
-    // If less than 168 hours (1 week) have passed, calculate degradation
-    if (timeSincePlacement < ONE_WEEK) {
-      const degradationProgress = timeSincePlacement / ONE_WEEK; // 0 to 1
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
       const valueRange = startValue - minValue;
       const currentValue = startValue - (valueRange * degradationProgress);
       return Math.max(Math.round(currentValue), minValue);
     }
 
-    // After 168 hours (1 week), return minimum value
+    // After 72 hours, return minimum value
     return minValue;
   };
 
