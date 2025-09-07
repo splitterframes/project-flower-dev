@@ -245,17 +245,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let upgradedItem = null;
         
         if (itemType === 'caterpillar') {
-          // Remove old caterpillar and add new upgraded caterpillar
+          // Remove old caterpillar and add new upgraded caterpillar with target rarity
           const caterpillarData = await storage.getUserCaterpillars(userId);
           const caterpillar = caterpillarData.find(c => c.id === itemId);
           if (caterpillar) {
             await storage.removeCaterpillarFromUser(userId, caterpillar.caterpillarId, 1);
-            upgradedItem = await storage.addCaterpillarToUser(userId, Math.floor(Math.random() * 124) + 1);
+            const { generateRandomCaterpillar } = await import('./creatures');
+            const newCaterpillarData = await generateRandomCaterpillar(targetRarity);
+            upgradedItem = await storage.addCaterpillarToInventory(
+              userId, newCaterpillarData.id, newCaterpillarData.name, targetRarity, newCaterpillarData.imageUrl
+            );
           }
         } else if (itemType === 'fish') {
-          // Remove old fish and add new upgraded fish  
+          // Remove old fish and add new upgraded fish with target rarity
           await storage.deleteFishEntry(itemId);
-          upgradedItem = await storage.addFishToUser(userId, Math.floor(Math.random() * 224) + 1);
+          const { generateRandomFish } = await import('./creatures');
+          const fishData = await generateRandomFish(targetRarity);
+          upgradedItem = await storage.addFishToInventoryWithQuantity(
+            userId, fishData.id, fishData.name, targetRarity, fishData.imageUrl, 1
+          );
         } else {
           // For seeds, flowers, butterflies - use simple approach
           // Just add a new upgraded item (the old one will remain but this is OK for now)
