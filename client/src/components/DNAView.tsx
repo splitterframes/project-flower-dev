@@ -443,11 +443,14 @@ export const DNAView: React.FC = () => {
                       aspect-square border-2 border-dashed rounded-lg cursor-pointer
                       flex items-center justify-center relative
                       ${slot.item 
-                        ? 'border-teal-400 bg-teal-900/30' 
+                        ? 'bg-slate-900/30' 
                         : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
                       }
                       ${isSequencing ? 'cursor-not-allowed opacity-50' : ''}
                     `}
+                    style={slot.item ? {
+                      borderColor: getRarityColor(slot.item.rarity)
+                    } : undefined}
                   >
                     {slot.item ? (
                       <div className="w-full h-full p-1">
