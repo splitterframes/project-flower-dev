@@ -678,9 +678,20 @@ export const DNAView: React.FC = () => {
                     onClick={() => handleItemSelection(item)}
                     className="cursor-pointer p-3 rounded border-4 hover:border-teal-400 transition-all flex flex-col items-center text-xs space-y-2"
                     style={{
-                      backgroundColor: getRarityColor(item.rarity),
-                      opacity: '0.9',
-                      borderColor: getRarityColor(item.rarity)
+                      backgroundColor: item.rarity === 'common' ? '#fbbf24' :
+                                     item.rarity === 'uncommon' ? '#10b981' :
+                                     item.rarity === 'rare' ? '#3b82f6' :
+                                     item.rarity === 'super-rare' ? '#06b6d4' :
+                                     item.rarity === 'epic' ? '#8b5cf6' :
+                                     item.rarity === 'legendary' ? '#f97316' :
+                                     item.rarity === 'mythical' ? '#ef4444' : '#6b7280',
+                      borderColor: item.rarity === 'common' ? '#fbbf24' :
+                                 item.rarity === 'uncommon' ? '#10b981' :
+                                 item.rarity === 'rare' ? '#3b82f6' :
+                                 item.rarity === 'super-rare' ? '#06b6d4' :
+                                 item.rarity === 'epic' ? '#8b5cf6' :
+                                 item.rarity === 'legendary' ? '#f97316' :
+                                 item.rarity === 'mythical' ? '#ef4444' : '#6b7280'
                     }}
                   >
                     <img 
