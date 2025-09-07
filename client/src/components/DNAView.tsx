@@ -166,7 +166,7 @@ export const DNAView: React.FC = () => {
           type: 'seed',
           name: seed.seedName,
           rarity: seed.seedRarity as RarityTier,
-          imageUrl: '/Samen/0.jpg', // Universal seed image
+          imageUrl: '/Blumen/0.jpg', // Universal seed image wie im Inventar
           quantity: seed.quantity
         });
       });
