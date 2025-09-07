@@ -313,8 +313,13 @@ export const DNAView: React.FC = () => {
       item.id === selectedItem.id && item.type === selectedItem.type
     ).length;
     
-    if (itemsInGrid >= selectedItem.quantity) {
-      showNotification('Du hast nicht genug von diesem Item!', 'warning');
+    // Get original item quantity from inventory to check against
+    const originalItem = inventory.find(item => 
+      item.id === selectedItem.id && item.type === selectedItem.type
+    );
+    
+    if (!originalItem || itemsInGrid >= originalItem.quantity) {
+      showNotification(`Du hast bereits alle deine ${selectedItem.name} im Grid verwendet!`, 'warning');
       return;
     }
     
@@ -464,7 +469,8 @@ export const DNAView: React.FC = () => {
       
       return {
         ...item,
-        quantity: Math.max(0, item.quantity - usedInGrid)
+        quantity: Math.max(0, item.quantity - usedInGrid),
+        originalQuantity: item.quantity // Zeige ursprüngliche Menge für bessere UX
       };
     }).filter(item => item.quantity > 0); // Only show items with available quantity
   };
