@@ -692,7 +692,6 @@ export const DNAView: React.FC = () => {
                         {item.name}
                       </div>
                       <div className="text-slate-400">Anzahl: {item.quantity}</div>
-                      <div className="text-teal-400 font-bold">{baseValue} DNA (Basis)</div>
                       <Badge 
                         className="text-xs" 
                         style={{ 
