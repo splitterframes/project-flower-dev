@@ -448,7 +448,29 @@ export const DNAView: React.FC = () => {
           </Badge>
         </div>
         <HelpButton 
-          helpText="DNA-Sequenzer: Platziere Items im 3x3 Grid um DNA zu generieren. D-Nator: Verwende DNA um Items zu upgraden. Upgrade-Kosten: DNA-Kosten = (Platz-Differenz)² × Rarität-Faktor + Grundwert"
+          helpText="🧬 DNA-LABOR FUNKTIONEN:
+
+📋 DNA-SEQUENZER (Links):
+• Platziere Items im 3x3 Grid um DNA zu generieren
+• DNA Berechnung: BaseValue × (1 + Anzahl Nachbarn)
+• Items mit mehr Nachbarn geben mehr DNA
+• Klicke auf Felder um Items zu platzieren/entfernen
+• Verschiedene Item-Typen haben unterschiedliche BaseValues
+• Nach Platzierung: 'DNA Sequenzieren' klicken
+
+⚡ D-NATOR (Rechts):
+• Verwende DNA um Items zu upgraden
+• Wähle Kategorie-Filter (Alle, Samen, Blumen, etc.)
+• Klicke Item aus Liste → Wähle Ziel-Rarität
+• Upgrade-Kosten: (Platz-Differenz)² × Rarität-Faktor + Grundwert
+• Höhere Raritäten kosten exponentiell mehr DNA
+
+💡 STRATEGIEN:
+• Platziere Items strategisch - jeder Nachbar = +100% DNA
+• Ecken (2 Nachbarn) vs Mitte (4 Nachbarn)
+• Sammle DNA im Sequenzer, nutze sie im D-Nator
+• Upgrade-Ketten: Common → Uncommon → Rare → etc.
+• Rarere Items haben höhere BaseValues"
           viewType="garden"
         />
       </div>
