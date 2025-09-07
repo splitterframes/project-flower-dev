@@ -130,6 +130,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DNA routes
+  app.get("/api/user/:id/dna", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ dna: user.dna || 0 });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/:id/dna", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { amount } = req.body;
+      
+      if (typeof amount !== 'number') {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
+
+      const user = await storage.updateUserDna(userId, amount);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ dna: user.dna });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Market routes
   app.get("/api/market/listings", async (req, res) => {
     try {

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun } from "lucide-react";
+import { useDna } from "@/lib/stores/useDna";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, Zap } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
   const { user, logout } = useAuth();
   const { credits, setCredits } = useCredits();
   const { suns, setSuns } = useSuns();
+  const { dna, setDna } = useDna();
   const [inventoryCounts, setInventoryCounts] = useState({
     seeds: 0,
     flowers: 0,
@@ -75,10 +77,25 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     }
   };
 
+  const fetchDna = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/dna`);
+      if (response.ok) {
+        const data = await response.json();
+        setDna(data.dna);
+      }
+    } catch (error) {
+      console.error('Failed to fetch DNA:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchCredits();
       fetchSuns();
+      fetchDna();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -89,6 +106,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     if (user && refreshTrigger !== undefined) {
       fetchCredits();
       fetchSuns();
+      fetchDna();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -101,6 +119,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     const interval = setInterval(() => {
       fetchCredits();
       fetchSuns();
+      fetchDna();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }, 10000); // Update every 10 seconds
@@ -271,6 +290,12 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border border-yellow-500">
                 <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
                 <span className="text-yellow-400 font-semibold text-sm sm:text-base">{suns} ☀️</span>
+              </div>
+
+              {/* DNA Display - Turquoise style */}
+              <div className="flex items-center space-x-2 bg-slate-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border border-teal-500">
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-teal-400" />
+                <span className="text-teal-400 font-semibold text-sm sm:text-base">{dna} 🧬</span>
               </div>
 
               {/* Passive Income Display */}
