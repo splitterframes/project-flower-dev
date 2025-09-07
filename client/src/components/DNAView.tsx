@@ -37,7 +37,7 @@ interface GridSlot {
 }
 
 // DNA calculation constants based on the requirements
-const RARITY_MULTIPLIERS: Record<RarityTier, number> = {
+const RARITY_MULTIPLIERS = {
   'common': 1,
   'uncommon': 2,
   'rare': 3,
@@ -45,7 +45,9 @@ const RARITY_MULTIPLIERS: Record<RarityTier, number> = {
   'epic': 5,
   'legendary': 6,
   'mythical': 7
-};
+} as const;
+
+type DnaRarityTier = keyof typeof RARITY_MULTIPLIERS;
 
 const BASE_DNA_COSTS = {
   'uncommon': 20,
@@ -191,7 +193,7 @@ export const DNAView: React.FC = () => {
     
     placedItems.forEach(slot => {
       if (slot.item) {
-        const rarityMultiplier = RARITY_MULTIPLIERS[slot.item.rarity];
+        const rarityMultiplier = RARITY_MULTIPLIERS[slot.item.rarity as DnaRarityTier] || 1;
         // Base DNA generation is 10 per item, multiplied by rarity
         totalDna += 10 * rarityMultiplier;
       }
@@ -218,7 +220,7 @@ export const DNAView: React.FC = () => {
     
     // Calculate cost using the formula: DNA-Kosten = (Platz-Differenz)² × Rarität-Faktor + Grundwert
     const placeDifference = targetRarityIndex - currentRarityIndex;
-    const rarityFactor = RARITY_MULTIPLIERS[targetRarity];
+    const rarityFactor = RARITY_MULTIPLIERS[targetRarity as DnaRarityTier] || 1;
     const baseCost = BASE_DNA_COSTS[targetRarity as keyof typeof BASE_DNA_COSTS] || 0;
     
     const cost = Math.pow(placeDifference, 2) * rarityFactor + baseCost;
@@ -358,8 +360,8 @@ export const DNAView: React.FC = () => {
           </Badge>
         </div>
         <HelpButton 
-          title="DNA-System Hilfe"
-          content="DNA-Sequenzer: Platziere Items im 3x3 Grid um DNA zu generieren. D-Nator: Verwende DNA um Items zu upgraden. Upgrade-Kosten: DNA-Kosten = (Platz-Differenz)² × Rarität-Faktor + Grundwert"
+          helpText="DNA-Sequenzer: Platziere Items im 3x3 Grid um DNA zu generieren. D-Nator: Verwende DNA um Items zu upgraden. Upgrade-Kosten: DNA-Kosten = (Platz-Differenz)² × Rarität-Faktor + Grundwert"
+          viewType="garden"
         />
       </div>
 
