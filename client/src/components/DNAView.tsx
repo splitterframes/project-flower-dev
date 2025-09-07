@@ -471,7 +471,7 @@ export const DNAView: React.FC = () => {
 • Sammle DNA im Sequenzer, nutze sie im D-Nator
 • Upgrade-Ketten: Common → Uncommon → Rare → etc.
 • Rarere Items haben höhere BaseValues"
-          viewType="garden"
+          viewType="dna"
         />
       </div>
 
