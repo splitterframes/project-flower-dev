@@ -377,6 +377,92 @@ export class PostgresStorage {
     }
   }
 
+  async consumeSeed(userId: number, seedId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🌱 Consuming seed ${seedId} for user ${userId}`);
+      
+      const seed = await this.db.select().from(userSeeds).where(
+        and(
+          eq(userSeeds.userId, userId),
+          eq(userSeeds.id, seedId)
+        )
+      ).limit(1);
+      
+      if (seed.length === 0) {
+        return { success: false, message: 'Samen nicht gefunden' };
+      }
+      
+      const seedData = seed[0];
+      
+      if (seedData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Samen im Inventar' };
+      }
+
+      if (seedData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userSeeds)
+          .set({ quantity: seedData.quantity - 1 })
+          .where(eq(userSeeds.id, seedId));
+        console.log(`🌱 Reduced seed quantity to ${seedData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userSeeds)
+          .where(eq(userSeeds.id, seedId));
+        console.log(`🌱 Removed seed from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🌱 Error consuming seed:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
+  async consumeFlower(userId: number, flowerId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🌸 Consuming flower ${flowerId} for user ${userId}`);
+      
+      const flower = await this.db.select().from(userFlowers).where(
+        and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.id, flowerId)
+        )
+      ).limit(1);
+      
+      if (flower.length === 0) {
+        return { success: false, message: 'Blume nicht gefunden' };
+      }
+      
+      const flowerData = flower[0];
+      
+      if (flowerData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Blumen im Inventar' };
+      }
+
+      if (flowerData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flowerData.quantity - 1 })
+          .where(eq(userFlowers.id, flowerId));
+        console.log(`🌸 Reduced flower ${flowerData.flowerName} quantity to ${flowerData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, flowerId));
+        console.log(`🌸 Removed flower ${flowerData.flowerName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🌸 Error consuming flower:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
   // ==================== CATERPILLAR MANAGEMENT ====================
 
   async addCaterpillarToUser(userId: number, caterpillarId: number): Promise<UserCaterpillar | null> {

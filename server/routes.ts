@@ -191,9 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.consumeFish(userId, item.id);
           } else if (item.type === 'butterfly') {
             await storage.consumeButterfly(userId, item.id);
+          } else if (item.type === 'seed') {
+            await storage.consumeSeed(userId, item.id);
+          } else if (item.type === 'flower') {
+            await storage.consumeFlower(userId, item.id);
           }
-          // Note: Seeds and flowers consumption requires direct database access
-          // For now, only caterpillars, fish, and butterflies are fully consumed
         } catch (itemError) {
           console.error(`Error consuming item ${item.id} of type ${item.type}:`, itemError);
           // Continue with other items even if one fails
