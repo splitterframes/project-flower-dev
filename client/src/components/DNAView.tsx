@@ -475,9 +475,19 @@ export const DNAView: React.FC = () => {
     }).filter(item => item.quantity > 0); // Only show items with available quantity
   };
 
+  // Sort items by rarity (ascending: common -> mythical)
+  const sortByRarity = (items: InventoryItem[]) => {
+    const rarityOrder = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    return items.sort((a, b) => {
+      const aIndex = rarityOrder.indexOf(a.rarity);
+      const bIndex = rarityOrder.indexOf(b.rarity);
+      return aIndex - bIndex;
+    });
+  };
+
   const filteredInventory = selectedCategory === 'all' 
-    ? getAvailableInventory()
-    : getAvailableInventory().filter(item => item.type === selectedCategory);
+    ? sortByRarity(getAvailableInventory())
+    : sortByRarity(getAvailableInventory().filter(item => item.type === selectedCategory));
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 space-y-6">
