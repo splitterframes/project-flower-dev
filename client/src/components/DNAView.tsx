@@ -275,6 +275,19 @@ export const DNAView: React.FC = () => {
     setUpgradeCost(cost);
   };
 
+  // Helper function to get all items currently in the grid
+  const getItemsInGrid = () => {
+    const items: InventoryItem[] = [];
+    for (const row of sequencerGrid) {
+      for (const slot of row) {
+        if (slot.item) {
+          items.push(slot.item);
+        }
+      }
+    }
+    return items;
+  };
+
   const handleGridSlotClick = (row: number, col: number) => {
     if (isSequencing) return;
     
@@ -294,6 +307,16 @@ export const DNAView: React.FC = () => {
   
   const handleItemSelection = (selectedItem: InventoryItem) => {
     if (!selectedGridPosition || selectedItem.quantity <= 0) return;
+    
+    // Check if user has enough items available (not already used in grid)
+    const itemsInGrid = getItemsInGrid().filter(item => 
+      item.id === selectedItem.id && item.type === selectedItem.type
+    ).length;
+    
+    if (itemsInGrid >= selectedItem.quantity) {
+      showNotification('Du hast nicht genug von diesem Item!', 'warning');
+      return;
+    }
     
     const newGrid = [...sequencerGrid];
     newGrid[selectedGridPosition.row][selectedGridPosition.col].item = { ...selectedItem };
@@ -430,9 +453,25 @@ export const DNAView: React.FC = () => {
     }
   };
 
+  // Filter inventory and subtract items already used in grid
+  const getAvailableInventory = () => {
+    const itemsInGrid = getItemsInGrid();
+    
+    return inventory.map(item => {
+      const usedInGrid = itemsInGrid.filter(gridItem => 
+        gridItem.id === item.id && gridItem.type === item.type
+      ).length;
+      
+      return {
+        ...item,
+        quantity: Math.max(0, item.quantity - usedInGrid)
+      };
+    }).filter(item => item.quantity > 0); // Only show items with available quantity
+  };
+
   const filteredInventory = selectedCategory === 'all' 
-    ? inventory 
-    : inventory.filter(item => item.type === selectedCategory);
+    ? getAvailableInventory()
+    : getAvailableInventory().filter(item => item.type === selectedCategory);
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 space-y-6">
