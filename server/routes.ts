@@ -167,6 +167,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DNA Sequencing endpoint (consumes items)
+  app.post("/api/user/:id/dna/sequence", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { items, dnaAmount } = req.body;
+      
+      if (!items || !Array.isArray(items) || !dnaAmount) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Consume all items from the sequencer grid
+      for (const item of items) {
+        try {
+          if (item.type === 'caterpillar') {
+            const caterpillarData = await storage.getUserCaterpillars(userId);
+            const caterpillar = caterpillarData.find(c => c.id === item.id);
+            if (caterpillar) {
+              await storage.removeCaterpillarFromUser(userId, caterpillar.caterpillarId, 1);
+            }
+          } else if (item.type === 'fish') {
+            await storage.deleteFishEntry(item.id);
+          }
+          // Note: For now, only caterpillars and fish are consumed
+          // Seeds, flowers, and butterflies need additional storage methods to be fully implemented
+        } catch (itemError) {
+          console.error(`Error consuming item ${item.id} of type ${item.type}:`, itemError);
+          // Continue with other items even if one fails
+        }
+      }
+      
+      // Award DNA to user
+      const updatedUser = await storage.updateUserDna(userId, dnaAmount);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ 
+        success: true,
+        dna: updatedUser.dna,
+        itemsConsumed: items.length
+      });
+      
+    } catch (error) {
+      console.error('Error processing DNA sequence:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Item upgrade endpoint
   app.post("/api/user/:id/items/upgrade", async (req, res) => {
     try {

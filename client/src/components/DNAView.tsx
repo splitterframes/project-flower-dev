@@ -325,17 +325,35 @@ export const DNAView: React.FC = () => {
 
   const completeSequencing = async () => {
     try {
-      // Award DNA to user
-      const response = await fetch(`/api/user/${user!.id}/dna`, {
-        method: 'PATCH',
+      // Collect all items from the sequencer grid
+      const placedItems = [];
+      for (const row of sequencerGrid) {
+        for (const slot of row) {
+          if (slot.item) {
+            placedItems.push({
+              id: slot.item.id,
+              type: slot.item.type,
+              name: slot.item.name,
+              rarity: slot.item.rarity
+            });
+          }
+        }
+      }
+      
+      // Call new sequencing API that consumes items
+      const response = await fetch(`/api/user/${user!.id}/dna/sequence`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: dnaToGenerate })
+        body: JSON.stringify({ 
+          items: placedItems,
+          dnaAmount: dnaToGenerate 
+        })
       });
       
       if (response.ok) {
         const data = await response.json();
         setDna(data.dna);
-        showNotification(`🧬 ${dnaToGenerate} DNA generiert!`, 'success');
+        showNotification(`🧬 ${dnaToGenerate} DNA generiert! ${data.itemsConsumed} Items verbraucht.`, 'success');
         
         // Clear grid and reload inventory
         setSequencerGrid(Array(3).fill(null).map((_, row) => 
@@ -345,6 +363,9 @@ export const DNAView: React.FC = () => {
           }))
         ));
         loadInventory();
+      } else {
+        const error = await response.json();
+        showNotification(error.message || 'Fehler beim Generieren von DNA', 'error');
       }
     } catch (error) {
       showNotification('Fehler beim Generieren von DNA', 'error');
