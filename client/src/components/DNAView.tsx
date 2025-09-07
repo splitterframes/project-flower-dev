@@ -580,7 +580,7 @@ export const DNAView: React.FC = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-3 max-h-[28rem] overflow-y-auto bg-slate-800 rounded p-3">
+              <div className="grid grid-cols-2 gap-3 max-h-[34rem] overflow-y-auto bg-slate-800 rounded p-3">
                 {filteredInventory.slice(0, 24).map(item => (
                   <div
                     key={`${item.type}-${item.id}`}
