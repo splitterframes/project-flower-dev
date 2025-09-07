@@ -52,22 +52,22 @@ const RARITY_MULTIPLIERS = {
 
 type DnaRarityTier = keyof typeof RARITY_MULTIPLIERS;
 
-// Item base values for DNA calculation (Type + Rarity specific)
+// Item base values for DNA calculation based on ranking position (1-35)
 const ITEM_BASE_VALUES = {
   'seed': {
-    'common': 8, 'uncommon': 12, 'rare': 16, 'super-rare': 20, 'epic': 24, 'legendary': 28, 'mythical': 32
+    'common': 1, 'uncommon': 4, 'rare': 8, 'super-rare': 13, 'epic': 18, 'legendary': 24, 'mythical': 28
   },
   'flower': {
-    'common': 9, 'uncommon': 13, 'rare': 17, 'super-rare': 21, 'epic': 25, 'legendary': 29, 'mythical': 33
+    'common': 2, 'uncommon': 7, 'rare': 12, 'super-rare': 16, 'epic': 21, 'legendary': 27, 'mythical': 31
   },
   'butterfly': {
-    'common': 10, 'uncommon': 14, 'rare': 18, 'super-rare': 22, 'epic': 26, 'legendary': 30, 'mythical': 34
+    'common': 3, 'uncommon': 9, 'rare': 14, 'super-rare': 19, 'epic': 23, 'legendary': 29, 'mythical': 33
   },
   'caterpillar': {
-    'common': 11, 'uncommon': 15, 'rare': 19, 'super-rare': 23, 'epic': 27, 'legendary': 31, 'mythical': 35
+    'common': 5, 'uncommon': 10, 'rare': 15, 'super-rare': 20, 'epic': 25, 'legendary': 30, 'mythical': 34
   },
   'fish': {
-    'common': 7, 'uncommon': 11, 'rare': 15, 'super-rare': 19, 'epic': 23, 'legendary': 27, 'mythical': 31
+    'common': 6, 'uncommon': 11, 'rare': 17, 'super-rare': 22, 'epic': 26, 'legendary': 32, 'mythical': 35
   }
 };
 
