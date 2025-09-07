@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useDna } from "@/lib/stores/useDna";
 import { useNotification } from "../hooks/useNotification";
@@ -17,7 +18,9 @@ import {
   TrendingUp,
   Plus,
   Minus,
-  RotateCcw
+  RotateCcw,
+  X,
+  Package
 } from "lucide-react";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 
@@ -75,6 +78,10 @@ export const DNAView: React.FC = () => {
   const [isSequencing, setIsSequencing] = useState(false);
   const [sequenceProgress, setSequenceProgress] = useState(0);
   const [dnaToGenerate, setDnaToGenerate] = useState(0);
+  
+  // Item selection modal state
+  const [showItemSelection, setShowItemSelection] = useState(false);
+  const [selectedGridPosition, setSelectedGridPosition] = useState<{row: number, col: number} | null>(null);
   
   // D-Nator state (right side)
   const [selectedUpgradeItem, setSelectedUpgradeItem] = useState<InventoryItem | null>(null);
@@ -239,12 +246,21 @@ export const DNAView: React.FC = () => {
       return;
     }
     
-    // Find first available item from inventory (simple selection for now)
-    const availableItem = inventory.find(item => item.quantity > 0);
-    if (availableItem) {
-      newGrid[row][col].item = { ...availableItem };
-      setSequencerGrid(newGrid);
-    }
+    // Open item selection modal for empty slots
+    setSelectedGridPosition({ row, col });
+    setShowItemSelection(true);
+  };
+  
+  const handleItemSelection = (selectedItem: InventoryItem) => {
+    if (!selectedGridPosition || selectedItem.quantity <= 0) return;
+    
+    const newGrid = [...sequencerGrid];
+    newGrid[selectedGridPosition.row][selectedGridPosition.col].item = { ...selectedItem };
+    setSequencerGrid(newGrid);
+    
+    // Close modal
+    setShowItemSelection(false);
+    setSelectedGridPosition(null);
   };
 
   const handleStartSequencing = async () => {
@@ -579,6 +595,100 @@ export const DNAView: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Item Selection Modal */}
+      <Dialog open={showItemSelection} onOpenChange={setShowItemSelection}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center space-x-2">
+              <Package className="h-5 w-5 text-teal-400" />
+              <span>Item für Sequenzer auswählen</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Category Filter */}
+            <div className="flex flex-wrap gap-1">
+              {(['all', 'seed', 'flower', 'butterfly', 'caterpillar', 'fish'] as const).map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="text-xs px-3 py-1"
+                >
+                  {category === 'all' ? 'Alle' : 
+                   category === 'seed' ? 'Samen' :
+                   category === 'flower' ? 'Blumen' :
+                   category === 'butterfly' ? 'Schmetterlinge' :
+                   category === 'caterpillar' ? 'Raupen' : 'Fische'}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Item Grid */}
+            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto bg-slate-800 rounded p-4">
+              {filteredInventory.filter(item => item.quantity > 0).map(item => {
+                const rarityMultiplier = RARITY_MULTIPLIERS[item.rarity as DnaRarityTier] || 1;
+                const dnaValue = 10 * rarityMultiplier;
+                
+                return (
+                  <div
+                    key={`${item.type}-${item.id}`}
+                    onClick={() => handleItemSelection(item)}
+                    className="cursor-pointer p-3 rounded border-2 border-slate-600 hover:border-teal-400 bg-slate-700 hover:bg-slate-600 transition-all flex flex-col items-center text-xs space-y-2"
+                  >
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.name}
+                      className="w-12 h-12 object-cover rounded"
+                      style={{ borderColor: getRarityColor(item.rarity), borderWidth: '2px' }}
+                    />
+                    <div className="text-center space-y-1">
+                      <div 
+                        className="font-medium truncate w-full" 
+                        style={{ color: getRarityColor(item.rarity) }}
+                      >
+                        {item.name}
+                      </div>
+                      <div className="text-slate-400">Anzahl: {item.quantity}</div>
+                      <div className="text-teal-400 font-bold">{dnaValue} DNA</div>
+                      <Badge 
+                        className="text-xs" 
+                        style={{ 
+                          backgroundColor: getRarityColor(item.rarity) + '20',
+                          color: getRarityColor(item.rarity)
+                        }}
+                      >
+                        {getRarityDisplayName(item.rarity)}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {filteredInventory.filter(item => item.quantity > 0).length === 0 && (
+              <div className="text-center py-8 text-slate-400">
+                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Keine Items in dieser Kategorie verfügbar</p>
+              </div>
+            )}
+            
+            {/* Close Button */}
+            <div className="flex justify-end pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => setShowItemSelection(false)}
+                className="flex items-center space-x-2"
+              >
+                <X className="h-4 w-4" />
+                <span>Abbrechen</span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
