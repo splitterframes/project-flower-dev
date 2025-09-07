@@ -11,6 +11,7 @@ import { HelpButton } from './HelpButton';
 import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
+import { FishSelectionModal } from "./FishSelectionModal";
 
 // Types for aquarium system
 interface AquariumFish {
@@ -68,6 +69,10 @@ export const AquariumView: React.FC = () => {
   const [currentFishIndex, setCurrentFishIndex] = useState<number>(0);
   const [showFishModal, setShowFishModal] = useState(false);
   const [currentTankIndex, setCurrentTankIndex] = useState(0);
+  
+  // Fish selection modal states
+  const [selectedTankForFish, setSelectedTankForFish] = useState<number | null>(null);
+  const [selectedSlotForFish, setSelectedSlotForFish] = useState<number | null>(null);
 
   // Tank purchasing states
   const [purchasingTank, setPurchasingTank] = useState<number | null>(null);
@@ -122,6 +127,15 @@ export const AquariumView: React.FC = () => {
       tanksMap.set(tank.tankNumber, tank);
     });
     setTanks(tanksMap);
+  };
+
+  // Fish selection callback - adapts to existing handlePlaceFish API
+  const handleFishSelectionCallback = async (fishId: number, fishImageUrl: string, fishName: string, rarity: string) => {
+    if (selectedTankForFish !== null && selectedSlotForFish !== null) {
+      await handlePlaceFish(selectedTankForFish, selectedSlotForFish, fishId);
+      setSelectedTankForFish(null);
+      setSelectedSlotForFish(null);
+    }
   };
 
   const handlePurchaseTank = async (tankNumber: number) => {
@@ -345,8 +359,9 @@ export const AquariumView: React.FC = () => {
         className="w-full h-full bg-blue-950/30 border-2 border-blue-700/50 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-900/40 hover:border-blue-600/70 transition-all"
         onClick={() => {
           if (tank && userFish.length > 0) {
-            // Open fish selection modal (to be implemented)
-            showNotification('Fisch-Auswahl wird in Kürze verfügbar sein!', 'info');
+            setSelectedTankForFish(tank.tankNumber);
+            setSelectedSlotForFish(slotIndex);
+            setShowFishModal(true);
           } else if (!tank) {
             showNotification('Kaufe zuerst dieses Aquarium!', 'warning');
           } else {
@@ -603,17 +618,32 @@ export const AquariumView: React.FC = () => {
 
       {/* Fish Detail Modal */}
       <FishDetailModal
-        isOpen={showFishModal}
-        onClose={() => setShowFishModal(false)}
+        isOpen={showFishModal && selectedFish !== null}
+        onClose={() => {
+          setShowFishModal(false);
+          setSelectedFish(null);
+        }}
         fish={selectedFish}
         onSold={() => {
           setShowFishModal(false);
+          setSelectedFish(null);
           loadData();
         }}
         currentIndex={currentFishIndex}
         totalCount={getAllPlacedFish().length}
         onNext={currentFishIndex < getAllPlacedFish().length - 1 ? handleNextFish : undefined}
         onPrevious={currentFishIndex > 0 ? handlePreviousFish : undefined}
+      />
+
+      {/* Fish Selection Modal */}
+      <FishSelectionModal
+        isOpen={showFishModal && selectedTankForFish !== null && selectedSlotForFish !== null}
+        onClose={() => {
+          setShowFishModal(false);
+          setSelectedTankForFish(null);
+          setSelectedSlotForFish(null);
+        }}
+        onFishSelected={handleFishSelectionCallback}
       />
     </div>
   );
