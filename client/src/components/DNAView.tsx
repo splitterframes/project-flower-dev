@@ -678,20 +678,8 @@ export const DNAView: React.FC = () => {
                     onClick={() => handleItemSelection(item)}
                     className="cursor-pointer p-3 rounded border-4 hover:border-teal-400 transition-all flex flex-col items-center text-xs space-y-2"
                     style={{
-                      backgroundColor: item.rarity === 'common' ? '#fbbf24' :
-                                     item.rarity === 'uncommon' ? '#10b981' :
-                                     item.rarity === 'rare' ? '#3b82f6' :
-                                     item.rarity === 'super-rare' ? '#06b6d4' :
-                                     item.rarity === 'epic' ? '#8b5cf6' :
-                                     item.rarity === 'legendary' ? '#f97316' :
-                                     item.rarity === 'mythical' ? '#ef4444' : '#6b7280',
-                      borderColor: item.rarity === 'common' ? '#fbbf24' :
-                                 item.rarity === 'uncommon' ? '#10b981' :
-                                 item.rarity === 'rare' ? '#3b82f6' :
-                                 item.rarity === 'super-rare' ? '#06b6d4' :
-                                 item.rarity === 'epic' ? '#8b5cf6' :
-                                 item.rarity === 'legendary' ? '#f97316' :
-                                 item.rarity === 'mythical' ? '#ef4444' : '#6b7280'
+                      backgroundColor: '#374151',
+                      borderColor: '#6b7280'
                     }}
                   >
                     <img 
@@ -702,15 +690,22 @@ export const DNAView: React.FC = () => {
                     />
                     <div className="text-center space-y-1">
                       <div 
-                        className="font-medium truncate w-full text-white" 
+                        className="font-medium truncate w-full" 
+                        style={{ color: getRarityColor(item.rarity) }}
                       >
                         {item.name}
                       </div>
-                      <div className="text-white">Anzahl: {item.quantity}</div>
+                      <div className="text-slate-400">Anzahl: {item.quantity}</div>
                       <div 
                         className="inline-block text-xs font-bold px-2 py-1 rounded-full text-white text-center min-w-[60px]"
                         style={{ 
-                          backgroundColor: getRarityColor(item.rarity),
+                          backgroundColor: item.rarity === 'common' ? '#fbbf24' :
+                                         item.rarity === 'uncommon' ? '#10b981' :
+                                         item.rarity === 'rare' ? '#3b82f6' :
+                                         item.rarity === 'super-rare' ? '#06b6d4' :
+                                         item.rarity === 'epic' ? '#8b5cf6' :
+                                         item.rarity === 'legendary' ? '#f97316' :
+                                         item.rarity === 'mythical' ? '#ef4444' : '#6b7280',
                           color: 'white'
                         }}
                       >
