@@ -265,11 +265,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId, fishData.id, fishData.name, targetRarity, fishData.imageUrl, 1
           );
         } else {
-          // For seeds, flowers, butterflies - use simple approach
-          // Just add a new upgraded item (the old one will remain but this is OK for now)
+          // For seeds, flowers, butterflies - remove old item first, then add upgraded one
           if (itemType === 'seed') {
+            // Remove old seed first using consume function
+            await storage.consumeSeed(userId, itemId);
             upgradedItem = await storage.addSeedToInventory(userId, targetRarity, 1);
           } else if (itemType === 'flower') {
+            // Remove old flower first using consume function
+            await storage.consumeFlower(userId, itemId);
             const flowerId = Math.floor(Math.random() * 200) + 1;
             const { generateRandomFlower } = await import('./creatures');
             const flowerData = await generateRandomFlower(targetRarity);
@@ -277,6 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userId, flowerId, flowerData.name, targetRarity, flowerData.imageUrl, 1
             );
           } else if (itemType === 'butterfly') {
+            // Remove old butterfly first using consume function
+            await storage.consumeButterfly(userId, itemId);
             upgradedItem = await storage.addButterflyToInventory(userId, targetRarity, 1);
           }
         }
