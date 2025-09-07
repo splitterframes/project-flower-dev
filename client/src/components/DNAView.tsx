@@ -693,10 +693,10 @@ export const DNAView: React.FC = () => {
                       </div>
                       <div className="text-slate-400">Anzahl: {item.quantity}</div>
                       <Badge 
-                        className="text-xs" 
+                        className="text-xs font-bold border-0" 
                         style={{ 
-                          backgroundColor: getRarityColor(item.rarity) + '20',
-                          color: getRarityColor(item.rarity)
+                          backgroundColor: getRarityColor(item.rarity),
+                          color: 'white'
                         }}
                       >
                         {getRarityDisplayName(item.rarity)}
