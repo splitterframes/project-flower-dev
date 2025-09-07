@@ -65,16 +65,17 @@ const getItemPrice = (type: string, rarity: number): number => {
   
   switch (type) {
     case 'butterfly': {
+      // FIXED: Must match Exhibition system prices exactly!
       const butterflyPrices = {
-        'common': 50,
-        'uncommon': 100,
-        'rare': 200,
-        'super-rare': 400,
-        'epic': 600,
-        'legendary': 800,
+        'common': 10,
+        'uncommon': 25,
+        'rare': 50,
+        'super-rare': 100,
+        'epic': 200,
+        'legendary': 500,
         'mythical': 1000
       };
-      return butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50;
+      return butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 10;
     }
     case 'fish': {
       const fishPrices = {
@@ -89,26 +90,28 @@ const getItemPrice = (type: string, rarity: number): number => {
       return fishPrices[rarityTier as keyof typeof fishPrices] || 80;
     }
     case 'flower': {
+      // FIXED: Use correct Exhibition-based butterfly prices!
       const butterflyPrices = {
-        'common': 50,
-        'uncommon': 100,
-        'rare': 200,
-        'super-rare': 400,
-        'epic': 600,
-        'legendary': 800,
+        'common': 10,
+        'uncommon': 25,
+        'rare': 50,
+        'super-rare': 100,
+        'epic': 200,
+        'legendary': 500,
         'mythical': 1000
       };
       // Blumenpreise = 30% der Schmetterlingspreise
-      return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50) * 0.3);
+      return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 10) * 0.3);
     }
     case 'caterpillar': {
+      // FIXED: Use correct Exhibition-based butterfly prices!
       const butterflyPrices = {
-        'common': 50,
-        'uncommon': 100,
-        'rare': 200,
-        'super-rare': 400,
-        'epic': 600,
-        'legendary': 800,
+        'common': 10,
+        'uncommon': 25,
+        'rare': 50,
+        'super-rare': 100,
+        'epic': 200,
+        'legendary': 500,
         'mythical': 1000
       };
       // Raupenpreise = 85% der Schmetterlingspreise

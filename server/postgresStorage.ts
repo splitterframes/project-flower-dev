@@ -5167,6 +5167,25 @@ export class PostgresStorage {
     return Math.floor(flowerPrice * 1.3);
   }
 
+  private getButterflySellPrice(rarity: string): number {
+    // Butterfly prices for Marie Posa - consistent with Exhibition system
+    // Marie Posa pays 50% of Exhibition market value
+    const exhibitionPrice = (() => {
+      switch (rarity) {
+        case 'common': return 10;
+        case 'uncommon': return 25;
+        case 'rare': return 50;
+        case 'super-rare': return 100;
+        case 'epic': return 200;
+        case 'legendary': return 500;
+        case 'mythical': return 1000;
+        default: return 10;
+      }
+    })();
+    
+    return Math.floor(exhibitionPrice * 0.5); // Marie Posa pays 50% of Exhibition value
+  }
+
   // Marie Posa trading system functions
   async getMariePosaLastTrade(userId: number): Promise<{ lastTradeAt: Date | null }> {
     try {
@@ -5203,8 +5222,75 @@ export class PostgresStorage {
       // Begin transaction to ensure all operations succeed or fail together
       for (const item of items) {
         let deleteResult = false;
+        let actualSellPrice = 0;
         
-        // Delete the item from user's inventory based on type
+        // FIRST: Calculate sell price based on item data BEFORE deletion
+        switch (item.type) {
+          case 'flower':
+            const flowerData = await this.db
+              .select()
+              .from(userFlowers)
+              .where(and(
+                eq(userFlowers.id, item.originalId),
+                eq(userFlowers.userId, userId)
+              ))
+              .limit(1);
+            if (flowerData.length > 0) {
+              const flowerInfo = await this.getFlowerInfo(flowerData[0].flowerId);
+              actualSellPrice = this.getFlowerSellPrice(flowerInfo.rarity);
+            }
+            break;
+            
+          case 'butterfly':
+            const butterflyData = await this.db
+              .select()
+              .from(userButterflies)
+              .where(and(
+                eq(userButterflies.id, item.originalId),
+                eq(userButterflies.userId, userId)
+              ))
+              .limit(1);
+            if (butterflyData.length > 0) {
+              actualSellPrice = this.getButterflySellPrice(butterflyData[0].butterflyRarity);
+            }
+            break;
+            
+          case 'fish':
+            const fishDataForPrice = await this.db
+              .select()
+              .from(userFish)
+              .where(and(
+                eq(userFish.id, item.originalId),
+                eq(userFish.userId, userId)
+              ))
+              .limit(1);
+            if (fishDataForPrice.length > 0) {
+              const fishInfo = await this.getFishInfo(fishDataForPrice[0].fishId);
+              actualSellPrice = this.getFishSellPrice(fishInfo.rarity);
+            }
+            break;
+            
+          case 'caterpillar':
+            const caterpillarDataForPrice = await this.db
+              .select()
+              .from(userCaterpillars)
+              .where(and(
+                eq(userCaterpillars.id, item.originalId),
+                eq(userCaterpillars.userId, userId)
+              ))
+              .limit(1);
+            if (caterpillarDataForPrice.length > 0) {
+              actualSellPrice = this.getCaterpillarSellPrice(caterpillarDataForPrice[0].caterpillarRarity);
+            }
+            break;
+            
+          default:
+            console.warn(`Unknown item type for price calculation: ${item.type}`);
+            actualSellPrice = item.sellPrice; // Fallback to client price
+            break;
+        }
+        
+        // SECOND: Delete the item from user's inventory based on type
         switch (item.type) {
           case 'flower':
             const flowerResult = await this.db
@@ -5300,8 +5386,9 @@ export class PostgresStorage {
         }
 
         if (deleteResult) {
-          totalEarned += item.sellPrice;
+          totalEarned += actualSellPrice;
           itemsSold++;
+          console.log(`👑 Marie Posa: Sold ${item.type} (ID: ${item.originalId}) for ${actualSellPrice} credits`);
         } else {
           console.warn(`Failed to delete item ${item.originalId} of type ${item.type} for user ${userId}`);
         }
