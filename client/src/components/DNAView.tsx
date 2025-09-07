@@ -574,29 +574,56 @@ export const DNAView: React.FC = () => {
                 ))}
               </div>
               
-              <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto bg-slate-800 rounded p-2">
-                {filteredInventory.slice(0, 12).map(item => (
+              <div className="grid grid-cols-2 gap-3 max-h-[28rem] overflow-y-auto bg-slate-800 rounded p-3">
+                {filteredInventory.slice(0, 24).map(item => (
                   <div
                     key={`${item.type}-${item.id}`}
                     onClick={() => setSelectedUpgradeItem(item)}
                     className={`
-                      cursor-pointer p-2 rounded border-2 flex flex-col items-center text-xs
+                      cursor-pointer p-3 rounded border-3 flex flex-col items-center text-sm transition-all
                       ${selectedUpgradeItem?.id === item.id && selectedUpgradeItem?.type === item.type
-                        ? 'border-purple-400 bg-purple-900/30' 
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-purple-400 bg-purple-900/30 shadow-lg shadow-purple-400/30' 
+                        : 'border-slate-600 hover:border-slate-500 hover:shadow-md'
                       }
                     `}
                   >
                     <img 
                       src={item.imageUrl} 
                       alt={item.name}
-                      className="w-6 h-6 object-cover rounded mb-1"
+                      className="w-16 h-16 object-cover rounded-lg mb-2 border-4"
+                      style={{ 
+                        borderColor: item.rarity === 'common' ? '#fbbf24' :
+                                   item.rarity === 'uncommon' ? '#10b981' :
+                                   item.rarity === 'rare' ? '#3b82f6' :
+                                   item.rarity === 'super-rare' ? '#06b6d4' :
+                                   item.rarity === 'epic' ? '#8b5cf6' :
+                                   item.rarity === 'legendary' ? '#f97316' :
+                                   item.rarity === 'mythical' ? '#ef4444' : '#6b7280'
+                      }}
                     />
-                    <div className="text-center">
-                      <div className="truncate w-full" style={{ color: getRarityColor(item.rarity) }}>
+                    <div className="text-center w-full">
+                      <div 
+                        className="font-medium truncate w-full mb-1" 
+                        style={{ color: getRarityColor(item.rarity) }}
+                      >
                         {item.name}
                       </div>
-                      <div className="text-slate-400">({item.quantity})</div>
+                      <div className="text-slate-400 text-xs mb-2">Anzahl: {item.quantity}</div>
+                      <div 
+                        className="inline-block text-xs font-bold px-2 py-1 rounded-full text-white text-center min-w-[70px]"
+                        style={{ 
+                          backgroundColor: item.rarity === 'common' ? '#fbbf24' :
+                                         item.rarity === 'uncommon' ? '#10b981' :
+                                         item.rarity === 'rare' ? '#3b82f6' :
+                                         item.rarity === 'super-rare' ? '#06b6d4' :
+                                         item.rarity === 'epic' ? '#8b5cf6' :
+                                         item.rarity === 'legendary' ? '#f97316' :
+                                         item.rarity === 'mythical' ? '#ef4444' : '#6b7280',
+                          color: 'white'
+                        }}
+                      >
+                        {getRarityDisplayName(item.rarity)}
+                      </div>
                     </div>
                   </div>
                 ))}
