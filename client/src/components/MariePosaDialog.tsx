@@ -31,7 +31,8 @@ const mapRarityTierToNumber = (tier: RarityTier): number => {
     'super-rare': 3,
     'epic': 4,
     'legendary': 5,
-    'mythical': 6
+    'mythical': 6,
+    'vip': 7  // VIP hinzugefügt
   };
   return tierMap[tier] || 0;
 };
@@ -173,8 +174,14 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
       // Add butterflies with robust rarity handling
       butterflies.butterflies?.forEach((butterfly: any) => {
         // Calculate rarity dynamically from butterflyId
-        const rarityTier = getRarityFromAssetId('butterfly', butterfly.butterflyId || 0);
+        const butterflyId = butterfly.butterflyId || 0;
+        const rarityTier = getRarityFromAssetId('butterfly', butterflyId);
         const rarity = mapRarityTierToNumber(rarityTier);
+        
+        // Debug-Log für spezifische Schmetterlinge
+        if (butterfly.butterflyName?.includes('Seltener Fuchs') || butterfly.butterflyName?.includes('Tropischer Weißling')) {
+          console.log(`🐛 MARIE POSA DEBUG: ${butterfly.butterflyName} - ID: ${butterflyId}, Rarität: ${rarityTier} (${rarity})`);
+        }
         const normalPrice = getItemPrice('butterfly', rarity);
         items.push({
           id: `butterfly-${butterfly.id}`,
