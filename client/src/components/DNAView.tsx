@@ -779,7 +779,7 @@ export const DNAView: React.FC = () => {
       
       {/* Item Selection Modal */}
       <Dialog open={showItemSelection} onOpenChange={setShowItemSelection}>
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-5xl">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center space-x-2">
               <Package className="h-5 w-5 text-teal-400" />
@@ -808,7 +808,7 @@ export const DNAView: React.FC = () => {
             </div>
             
             {/* Item Grid */}
-            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto bg-slate-800 rounded p-4">
+            <div className="grid grid-cols-6 gap-3 max-h-96 overflow-y-auto bg-slate-800 rounded p-4">
               {filteredInventory.filter(item => item.quantity > 0).map(item => {
                 const baseValue = ITEM_BASE_VALUES[item.type]?.[item.rarity as DnaRarityTier] || 10;
                 
@@ -830,8 +830,9 @@ export const DNAView: React.FC = () => {
                     />
                     <div className="text-center space-y-1">
                       <div 
-                        className="font-medium truncate w-full" 
+                        className="font-medium text-center leading-tight break-words max-w-full" 
                         style={{ color: getRarityColor(item.rarity) }}
+                        title={item.name}
                       >
                         {item.name}
                       </div>
