@@ -676,11 +676,11 @@ export const DNAView: React.FC = () => {
                   <div
                     key={`${item.type}-${item.id}`}
                     onClick={() => handleItemSelection(item)}
-                    className="cursor-pointer p-3 rounded border-2 hover:border-teal-400 transition-all flex flex-col items-center text-xs space-y-2"
+                    className="cursor-pointer p-3 rounded border-4 hover:border-teal-400 transition-all flex flex-col items-center text-xs space-y-2"
                     style={{
-                      backgroundColor: getRarityColor(item.rarity) + '30',
-                      borderColor: getRarityColor(item.rarity),
-                      borderWidth: '2px'
+                      backgroundColor: getRarityColor(item.rarity),
+                      opacity: '0.9',
+                      borderColor: getRarityColor(item.rarity)
                     }}
                   >
                     <img 
@@ -691,12 +691,11 @@ export const DNAView: React.FC = () => {
                     />
                     <div className="text-center space-y-1">
                       <div 
-                        className="font-medium truncate w-full" 
-                        style={{ color: getRarityColor(item.rarity) }}
+                        className="font-medium truncate w-full text-white" 
                       >
                         {item.name}
                       </div>
-                      <div className="text-slate-400">Anzahl: {item.quantity}</div>
+                      <div className="text-white">Anzahl: {item.quantity}</div>
                       <div 
                         className="inline-block text-xs font-bold px-2 py-1 rounded-full text-white text-center min-w-[60px]"
                         style={{ 
