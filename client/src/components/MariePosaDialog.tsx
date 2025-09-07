@@ -173,10 +173,18 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
       // Add butterflies with robust rarity handling
       butterflies.butterflies?.forEach((butterfly: any) => {
-        // Calculate rarity dynamically from butterflyId
-        const butterflyId = butterfly.butterflyId || 0;
-        const rarityTier = getRarityFromAssetId('butterfly', butterflyId);
-        const rarity = mapRarityTierToNumber(rarityTier);
+        // Use stored rarity first, fall back to calculation if missing
+        let rarity = 0;
+        if (butterfly.butterflyRarity && butterfly.butterflyRarity !== null) {
+          // Use stored rarity tier from database
+          const rarityTier = butterfly.butterflyRarity as RarityTier;
+          rarity = mapRarityTierToNumber(rarityTier);
+        } else {
+          // Fallback: Calculate rarity dynamically from butterflyId
+          const butterflyId = butterfly.butterflyId || 0;
+          const rarityTier = getRarityFromAssetId('butterfly', butterflyId);
+          rarity = mapRarityTierToNumber(rarityTier);
+        }
         const normalPrice = getItemPrice('butterfly', rarity);
         items.push({
           id: `butterfly-${butterfly.id}`,
