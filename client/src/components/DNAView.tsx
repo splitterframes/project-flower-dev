@@ -556,22 +556,28 @@ export const DNAView: React.FC = () => {
             {/* Item Selection */}
             <div className="space-y-2">
               <label className="text-sm text-slate-300">Item auswählen:</label>
-              <div className="grid grid-cols-5 gap-1 text-xs">
-                {(['all', 'seed', 'flower', 'butterfly', 'caterpillar', 'fish'] as const).map(category => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className="text-xs px-2 py-1"
-                  >
-                    {category === 'all' ? 'Alle' : 
-                     category === 'seed' ? 'Samen' :
-                     category === 'flower' ? 'Blumen' :
-                     category === 'butterfly' ? 'Schmetterlinge' :
-                     category === 'caterpillar' ? 'Raupen' : 'Fische'}
-                  </Button>
-                ))}
+              <div className="bg-slate-800/50 rounded-lg p-3 mb-4 border border-slate-700">
+                <div className="flex justify-center gap-2 flex-wrap">
+                  {(['all', 'seed', 'flower', 'butterfly', 'caterpillar', 'fish'] as const).map(category => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category)}
+                      className={`text-xs px-3 py-2 transition-all ${
+                        selectedCategory === category 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500' 
+                          : 'hover:bg-slate-700 text-slate-300 border-slate-600'
+                      }`}
+                    >
+                      {category === 'all' ? 'Alle' : 
+                       category === 'seed' ? 'Samen' :
+                       category === 'flower' ? 'Blumen' :
+                       category === 'butterfly' ? 'Schmetterlinge' :
+                       category === 'caterpillar' ? 'Raupen' : 'Fische'}
+                    </Button>
+                  ))}
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3 max-h-[28rem] overflow-y-auto bg-slate-800 rounded p-3">
