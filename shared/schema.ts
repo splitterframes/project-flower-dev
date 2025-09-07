@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   credits: integer("credits").notNull().default(1000),
   suns: integer("suns").notNull().default(100),
+  dna: integer("dna").notNull().default(0),
   lastPassiveIncomeAt: timestamp("last_passive_income_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
