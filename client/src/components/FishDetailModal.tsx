@@ -139,21 +139,21 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   };
 
   const getFishPrice = (rarity: string): number => {
-    // Fish prices are 40% of butterfly prices (doubled from 20%)
+    // Fish sell prices - matches server-side calculation (50% of market value)
     const basePrice = (() => {
       switch (rarity) {
-        case 'common': return 100;
-        case 'uncommon': return 300;
-        case 'rare': return 800;
-        case 'super-rare': return 2000;
-        case 'epic': return 5000;
-        case 'legendary': return 12000;
-        case 'mythical': return 30000;
-        default: return 100;
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
       }
     })();
     
-    return Math.floor(basePrice * 0.4); // 40% of butterfly prices
+    return Math.floor(basePrice * 0.5); // Marie Posa pays 50% of market value
   };
 
   const handleSell = async () => {
