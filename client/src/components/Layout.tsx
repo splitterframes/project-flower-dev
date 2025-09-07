@@ -8,6 +8,7 @@ import { GardenView } from "./GardenView";
 import { TeichView } from "./TeichView";
 import { MarketView } from "./MarketView";
 import { InventoryView } from "./InventoryView";
+import { DNAView } from "./DNAView";
 import { BouquetsView } from "./BouquetsView";
 import { FlowerpowerView } from "./FlowerpowerView";
 import { ExhibitionView } from "./ExhibitionView";
@@ -51,6 +52,8 @@ export const Layout: React.FC = () => {
         return <MarketView />;
       case "inventar":
         return <InventoryView />;
+      case "dna":
+        return <DNAView />;
       case "bouquets":
         return <BouquetsView />;
       case "flowerpower":

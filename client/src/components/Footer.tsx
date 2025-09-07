@@ -9,7 +9,8 @@ import {
   Zap,
   Waves,
   Fish,
-  Coins
+  Coins,
+  Dna
 } from "lucide-react";
 
 interface FooterProps {
@@ -23,6 +24,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
     { id: "teich", label: "Teich", icon: Waves },
     { id: "markt", label: "Markt", icon: Store },
     { id: "inventar", label: "Inventar", icon: Package },
+    { id: "dna", label: "DNA", icon: Dna },
     { id: "bouquets", label: "Bouquets", icon: Flower2 },
     { id: "flowerpower", label: "Flowerpower", icon: Zap },
     { id: "ausstellung", label: "Ausstellung", icon: Trophy },
