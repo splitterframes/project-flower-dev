@@ -139,8 +139,8 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   };
 
   const getFishPrice = (rarity: string): number => {
-    // Fish sell prices - matches server-side calculation (50% of market value)
-    const basePrice = (() => {
+    // Fish market values (100% prices shown in aquarium)
+    const marketPrice = (() => {
       switch (rarity) {
         case 'common': return 80;
         case 'uncommon': return 200;
@@ -153,7 +153,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
       }
     })();
     
-    return Math.floor(basePrice * 0.5); // Marie Posa pays 50% of market value
+    return marketPrice; // Show full market value in aquarium
   };
 
   const handleSell = async () => {
