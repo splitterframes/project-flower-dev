@@ -52,6 +52,38 @@ const RARITY_MULTIPLIERS = {
 
 type DnaRarityTier = keyof typeof RARITY_MULTIPLIERS;
 
+// Item base values for DNA calculation (Type + Rarity specific)
+const ITEM_BASE_VALUES = {
+  'seed': {
+    'common': 8, 'uncommon': 12, 'rare': 16, 'super-rare': 20, 'epic': 24, 'legendary': 28, 'mythical': 32
+  },
+  'flower': {
+    'common': 9, 'uncommon': 13, 'rare': 17, 'super-rare': 21, 'epic': 25, 'legendary': 29, 'mythical': 33
+  },
+  'butterfly': {
+    'common': 10, 'uncommon': 14, 'rare': 18, 'super-rare': 22, 'epic': 26, 'legendary': 30, 'mythical': 34
+  },
+  'caterpillar': {
+    'common': 11, 'uncommon': 15, 'rare': 19, 'super-rare': 23, 'epic': 27, 'legendary': 31, 'mythical': 35
+  },
+  'fish': {
+    'common': 7, 'uncommon': 11, 'rare': 15, 'super-rare': 19, 'epic': 23, 'legendary': 27, 'mythical': 31
+  }
+};
+
+// 3x3 Grid neighbor mapping (orthogonal only)
+const GRID_NEIGHBORS = {
+  0: [1, 3],        // Top-left: 2 neighbors
+  1: [0, 2, 4],     // Top-center: 3 neighbors
+  2: [1, 5],        // Top-right: 2 neighbors
+  3: [0, 4, 6],     // Middle-left: 3 neighbors
+  4: [1, 3, 5, 7],  // Center: 4 neighbors
+  5: [2, 4, 8],     // Middle-right: 3 neighbors
+  6: [3, 7],        // Bottom-left: 2 neighbors
+  7: [4, 6, 8],     // Bottom-center: 3 neighbors
+  8: [5, 7]         // Bottom-right: 2 neighbors
+};
+
 const BASE_DNA_COSTS = {
   'uncommon': 20,
   'rare': 50,
@@ -196,21 +228,30 @@ export const DNAView: React.FC = () => {
 
   const calculateDnaGeneration = () => {
     let totalDna = 0;
-    const placedItems = sequencerGrid.flat().filter(slot => slot.item !== null);
+    const flatGrid = sequencerGrid.flat();
     
-    placedItems.forEach(slot => {
+    // Calculate DNA for each occupied slot based on neighbors
+    flatGrid.forEach((slot, index) => {
       if (slot.item) {
-        const rarityMultiplier = RARITY_MULTIPLIERS[slot.item.rarity as DnaRarityTier] || 1;
-        // Base DNA generation is 10 per item, multiplied by rarity
-        totalDna += 10 * rarityMultiplier;
+        // Get base value for this item type and rarity
+        const baseValue = ITEM_BASE_VALUES[slot.item.type]?.[slot.item.rarity as DnaRarityTier] || 10;
+        
+        // Count neighbors that have items
+        const neighborIndices = GRID_NEIGHBORS[index] || [];
+        const occupiedNeighbors = neighborIndices.filter(neighborIndex => 
+          flatGrid[neighborIndex]?.item !== null
+        ).length;
+        
+        // Calculate DNA: BaseValue × (1 + OccupiedNeighbors)
+        // +1 ensures single items still give their base value
+        const itemDna = baseValue * (1 + occupiedNeighbors);
+        totalDna += itemDna;
+        
+        console.log(`🧬 Slot ${index}: ${slot.item.name} (${slot.item.type}/${slot.item.rarity}) = ${baseValue} × ${1 + occupiedNeighbors} = ${itemDna} DNA`);
       }
     });
     
-    // Bonus for filling entire grid
-    if (placedItems.length === 9) {
-      totalDna *= 1.5; // 50% bonus for full grid
-    }
-    
+    console.log(`🧬 Total DNA Generation: ${totalDna}`);
     setDnaToGenerate(Math.floor(totalDna));
   };
 
@@ -629,8 +670,7 @@ export const DNAView: React.FC = () => {
             {/* Item Grid */}
             <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto bg-slate-800 rounded p-4">
               {filteredInventory.filter(item => item.quantity > 0).map(item => {
-                const rarityMultiplier = RARITY_MULTIPLIERS[item.rarity as DnaRarityTier] || 1;
-                const dnaValue = 10 * rarityMultiplier;
+                const baseValue = ITEM_BASE_VALUES[item.type]?.[item.rarity as DnaRarityTier] || 10;
                 
                 return (
                   <div
@@ -652,7 +692,7 @@ export const DNAView: React.FC = () => {
                         {item.name}
                       </div>
                       <div className="text-slate-400">Anzahl: {item.quantity}</div>
-                      <div className="text-teal-400 font-bold">{dnaValue} DNA</div>
+                      <div className="text-teal-400 font-bold">{baseValue} DNA (Basis)</div>
                       <Badge 
                         className="text-xs" 
                         style={{ 
