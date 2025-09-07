@@ -177,11 +177,6 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
         const butterflyId = butterfly.butterflyId || 0;
         const rarityTier = getRarityFromAssetId('butterfly', butterflyId);
         const rarity = mapRarityTierToNumber(rarityTier);
-        
-        // Debug-Log für spezifische Schmetterlinge
-        if (butterfly.butterflyName?.includes('Seltener Fuchs') || butterfly.butterflyName?.includes('Tropischer Weißling')) {
-          console.log(`🐛 MARIE POSA DEBUG: ${butterfly.butterflyName} - ID: ${butterflyId}, Rarität: ${rarityTier} (${rarity})`);
-        }
         const normalPrice = getItemPrice('butterfly', rarity);
         items.push({
           id: `butterfly-${butterfly.id}`,
