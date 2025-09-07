@@ -409,11 +409,11 @@ export const DNAView: React.FC = () => {
                     `}
                   >
                     {slot.item ? (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full p-1">
                         <img 
                           src={slot.item.imageUrl} 
                           alt={slot.item.name}
-                          className="w-8 h-8 object-cover rounded"
+                          className="w-full h-full object-cover rounded border-2"
                           style={{ borderColor: getRarityColor(slot.item.rarity) }}
                         />
                       </div>
