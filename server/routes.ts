@@ -187,7 +187,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.removeCaterpillarFromUser(userId, caterpillar.caterpillarId, 1);
             }
           } else if (item.type === 'fish') {
-            await storage.deleteFishEntry(item.id);
+            // Use quantity-aware fish consumption instead of deleteFishEntry
+            await storage.consumeFish(userId, item.id);
           } else if (item.type === 'butterfly') {
             await storage.consumeButterfly(userId, item.id);
           }

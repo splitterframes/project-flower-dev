@@ -334,6 +334,49 @@ export class PostgresStorage {
       .where(eq(userFish.id, fishEntryId));
   }
 
+  async consumeFish(userId: number, fishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Consuming fish ${fishId} for user ${userId}`);
+      
+      const fish = await this.db.select().from(userFish).where(
+        and(
+          eq(userFish.userId, userId),
+          eq(userFish.id, fishId)
+        )
+      ).limit(1);
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden' };
+      }
+      
+      const fishData = fish[0];
+      
+      if (fishData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Fische im Inventar' };
+      }
+
+      if (fishData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userFish)
+          .set({ quantity: fishData.quantity - 1 })
+          .where(eq(userFish.id, fishId));
+        console.log(`🐟 Reduced fish ${fishData.fishName} quantity to ${fishData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, fishId));
+        console.log(`🐟 Removed fish ${fishData.fishName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error consuming fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
   // ==================== CATERPILLAR MANAGEMENT ====================
 
   async addCaterpillarToUser(userId: number, caterpillarId: number): Promise<UserCaterpillar | null> {
