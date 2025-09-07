@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useNotification } from '../hooks/useNotification';
-import { getRarityColor, getRarityDisplayName, type RarityTier } from '@shared/rarity';
+import { getRarityColor, getRarityDisplayName, getRarityFromAssetId, type RarityTier } from '@shared/rarity';
 
 // Helper function to map rarity number to RarityTier
 const mapRarityNumberToTier = (rarity: number): RarityTier => {
@@ -20,6 +20,20 @@ const mapRarityNumberToTier = (rarity: number): RarityTier => {
     6: 'mythical'
   };
   return rarityMap[rarity] || 'common';
+};
+
+// Helper function to map RarityTier to number
+const mapRarityTierToNumber = (tier: RarityTier): number => {
+  const tierMap: Record<RarityTier, number> = {
+    'common': 0,
+    'uncommon': 1,
+    'rare': 2,
+    'super-rare': 3,
+    'epic': 4,
+    'legendary': 5,
+    'mythical': 6
+  };
+  return tierMap[tier] || 0;
 };
 
 interface MariePosaDialogProps {
@@ -140,7 +154,9 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
       // Add flowers with robust rarity handling
       flowers.flowers?.forEach((flower: any) => {
-        const rarity = flower.flowerRarity ?? flower.rarity ?? 0; // Fallback für undefined
+        // Calculate rarity dynamically from flowerId
+        const rarityTier = getRarityFromAssetId('flower', flower.flowerId || 0);
+        const rarity = mapRarityTierToNumber(rarityTier);
         const normalPrice = getItemPrice('flower', rarity);
         items.push({
           id: `flower-${flower.id}`,
@@ -156,7 +172,9 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
       // Add butterflies with robust rarity handling
       butterflies.butterflies?.forEach((butterfly: any) => {
-        const rarity = butterfly.butterflyRarity ?? butterfly.rarity ?? 0;
+        // Calculate rarity dynamically from butterflyId
+        const rarityTier = getRarityFromAssetId('butterfly', butterfly.butterflyId || 0);
+        const rarity = mapRarityTierToNumber(rarityTier);
         const normalPrice = getItemPrice('butterfly', rarity);
         items.push({
           id: `butterfly-${butterfly.id}`,
@@ -172,7 +190,9 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
       // Add fish with robust rarity handling
       fish.fish?.forEach((fishItem: any) => {
-        const rarity = fishItem.fishRarity ?? fishItem.rarity ?? 0;
+        // Calculate rarity dynamically from fishId
+        const rarityTier = getRarityFromAssetId('butterfly', fishItem.fishId || 0); // Fish use butterfly ranges
+        const rarity = mapRarityTierToNumber(rarityTier);
         const normalPrice = getItemPrice('fish', rarity);
         items.push({
           id: `fish-${fishItem.id}`,
@@ -188,7 +208,9 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
       // Add caterpillars with robust rarity handling  
       caterpillars.caterpillars?.forEach((caterpillar: any) => {
-        const rarity = caterpillar.caterpillarRarity ?? caterpillar.rarity ?? 0;
+        // Calculate rarity dynamically from caterpillarId
+        const rarityTier = getRarityFromAssetId('butterfly', caterpillar.caterpillarId || 0); // Caterpillars use butterfly ranges
+        const rarity = mapRarityTierToNumber(rarityTier);
         const normalPrice = getItemPrice('caterpillar', rarity);
         items.push({
           id: `caterpillar-${caterpillar.id}`,
