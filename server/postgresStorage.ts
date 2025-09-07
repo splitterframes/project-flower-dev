@@ -2950,27 +2950,6 @@ export class PostgresStorage {
     }
   }
 
-  // Calculate degraded value over 72 hours
-  private calculateDegradedValue(startValue: number, minValue: number, placedAt: Date): number {
-    if (!placedAt) return startValue;
-
-    const placedTime = placedAt.getTime();
-    const now = new Date().getTime();
-    const timeSincePlacement = now - placedTime;
-    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
-
-    // If less than 72 hours have passed, calculate degradation
-    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
-      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
-      const valueRange = startValue - minValue;
-      const currentValue = startValue - (valueRange * degradationProgress);
-      return Math.max(Math.round(currentValue), minValue);
-    }
-
-    // After 72 hours, return minimum value
-    return minValue;
-  }
-
   async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
     console.log(`🔍 Processing passive income for user ${userId}...`);
     
@@ -5248,20 +5227,60 @@ export class PostgresStorage {
 
   async getTop100ByPassiveIncome(currentUserId: number): Promise<any[]> {
     try {
-      // Calculate passive income based on exhibition butterflies
-      const userStats = await this.db
+      // Get all users and calculate their actual passive income
+      const allUsers = await this.db
         .select({
           id: users.id,
-          username: users.username,
-          passiveIncome: sql<number>`COALESCE(COUNT(${exhibitionButterflies.id}) * 6, 0)`
+          username: users.username
         })
-        .from(users)
-        .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
-        .groupBy(users.id, users.username)
-        .orderBy(desc(sql`COALESCE(COUNT(${exhibitionButterflies.id}) * 6, 0)`))
-        .limit(100);
+        .from(users);
 
-      return this.formatRankingResults(userStats, 'passiveIncome', currentUserId);
+      // Calculate actual passive income for each user
+      const userStatsWithIncome = await Promise.all(
+        allUsers.map(async (user) => {
+          const exhibitionButterflies = await this.getExhibitionButterflies(user.id);
+          
+          // Sum up actual passive income from all butterflies
+          let totalPassiveIncome = 0;
+          for (const butterfly of exhibitionButterflies) {
+            // Get frame likes for this butterfly's frame
+            const frameLikes = await this.getFrameLikesCount(butterfly.frameId);
+            
+            totalPassiveIncome += this.getCurrentCrPerHour(
+              butterfly.butterflyRarity || 'common',
+              false, // isVip - handled by rarity
+              new Date(butterfly.placedAt || butterfly.createdAt),
+              frameLikes
+            );
+          }
+          
+          // Add VIP butterflies if they exist
+          const vipButterflies = await this.getExhibitionVipButterflies(user.id);
+          for (const vipButterfly of vipButterflies) {
+            const frameLikes = await this.getFrameLikesCount(vipButterfly.frameId);
+            
+            totalPassiveIncome += this.getCurrentCrPerHour(
+              'vip',
+              true,
+              new Date(vipButterfly.placedAt || vipButterfly.createdAt),
+              frameLikes
+            );
+          }
+          
+          return {
+            id: user.id,
+            username: user.username,
+            passiveIncome: Math.round(totalPassiveIncome) // Round to whole numbers
+          };
+        })
+      );
+
+      // Sort by passive income descending and limit to 100
+      const sortedUsers = userStatsWithIncome
+        .sort((a, b) => b.passiveIncome - a.passiveIncome)
+        .slice(0, 100);
+
+      return this.formatRankingResults(sortedUsers, 'passiveIncome', currentUserId);
     } catch (error) {
       console.error('🏆 Error in getTop100ByPassiveIncome:', error);
       return [];
@@ -5503,6 +5522,71 @@ export class PostgresStorage {
       rank: index + 1,
       isCurrentUser: (user.id === currentUserId) || (user.userId === currentUserId)
     }));
+  }
+
+  // Helper function to get frame likes count
+  private async getFrameLikesCount(frameId: number): Promise<number> {
+    try {
+      const result = await this.db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(exhibitionFrameLikes)
+        .where(eq(exhibitionFrameLikes.frameId, frameId));
+      
+      return Number(result[0]?.count) || 0;
+    } catch (error) {
+      console.error('Error getting frame likes count:', error);
+      return 0;
+    }
+  }
+
+  // Calculate current Cr/h based on degradation over 72 hours with like bonus
+  private getCurrentCrPerHour(rarity: string, isVip: boolean, placedAt: Date, likesCount: number = 0): number {
+    let baseValue: number;
+    
+    if (isVip || rarity === 'vip') {
+      // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+      const startValue = 60;
+      const minValue = 6;
+      baseValue = this.calculateDegradedValue(startValue, minValue, placedAt);
+    } else {
+      const rarityValues: Record<string, { start: number; min: number }> = {
+        'common': { start: 1, min: 1 },       // No degradation for Common
+        'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+      };
+
+      const values = rarityValues[rarity] || { start: 1, min: 1 };
+      baseValue = this.calculateDegradedValue(values.start, values.min, placedAt);
+    }
+    
+    // Apply like bonus: 2% per like
+    const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+    baseValue = Math.round(baseValue * likeBonus);
+    
+    return baseValue;
+  }
+
+  // Calculate degraded value over 72 hours
+  private calculateDegradedValue(startValue: number, minValue: number, placedAt: Date): number {
+    const placedTime = placedAt.getTime();
+    const now = new Date().getTime();
+    const timeSincePlacement = now - placedTime;
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
+      const valueRange = startValue - minValue;
+      const currentValue = startValue - (valueRange * degradationProgress);
+      return Math.max(Math.round(currentValue), minValue);
+    }
+
+    // After 72 hours, return minimum value
+    return minValue;
   }
 
   // ==================== FIELD FLOWERS MANAGEMENT (for Pond Caterpillar Spawning) ====================
