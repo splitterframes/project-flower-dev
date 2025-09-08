@@ -3153,7 +3153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/:userId/unlocked-features', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      const unlockedFeatures = await postgresStorage.getUnlockedFeatures(userId);
+      const unlockedFeatures = await storage.getUnlockedFeatures(userId);
       console.log(`🔓 User ${userId} unlocked features: ${unlockedFeatures.join(', ')}`);
       res.json({ unlockedFeatures });
     } catch (error) {
@@ -3179,7 +3179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid feature name' });
       }
 
-      const result = await postgresStorage.unlockFeature(userId, featureName, creditsRequired);
+      const result = await storage.unlockFeature(userId, featureName, creditsRequired);
       console.log(`🔓 User ${userId} unlocked feature: ${featureName} for ${creditsRequired} credits`);
       
       res.json({ 
