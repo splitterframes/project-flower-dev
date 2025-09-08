@@ -3048,6 +3048,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== CASTLE GARDEN SYSTEM ==========
+  
+  // Get unlocked castle parts for a user
+  app.get("/api/user/:id/castle-unlocked-parts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const unlockedParts = await storage.getCastleUnlockedParts(userId);
+      res.json({ unlockedParts });
+    } catch (error) {
+      console.error('Failed to get castle unlocked parts:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Unlock a castle part
+  app.post("/api/user/:id/castle-unlock-part", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { partName, price } = req.body;
+
+      if (!partName || typeof price !== 'number') {
+        return res.status(400).json({ message: "Invalid part name or price" });
+      }
+
+      const result = await storage.unlockCastlePart(userId, partName, price);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to unlock castle part:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get castle grid state for a user
+  app.get("/api/user/:id/castle-grid-state", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const gridState = await storage.getCastleGridState(userId);
+      res.json({ gridState });
+    } catch (error) {
+      console.error('Failed to get castle grid state:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Place a castle part on the grid
+  app.post("/api/user/:id/castle-place-part", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { gridX, gridY, partName } = req.body;
+
+      if (typeof gridX !== 'number' || typeof gridY !== 'number' || !partName) {
+        return res.status(400).json({ message: "Invalid grid position or part name" });
+      }
+
+      const result = await storage.placeCastlePart(userId, gridX, gridY, partName);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to place castle part:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remove a castle part from the grid
+  app.delete("/api/user/:id/castle-remove-part", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { gridX, gridY } = req.body;
+
+      if (typeof gridX !== 'number' || typeof gridY !== 'number') {
+        return res.status(400).json({ message: "Invalid grid position" });
+      }
+
+      const result = await storage.removeCastlePart(userId, gridX, gridY);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to remove castle part:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -34,6 +34,8 @@ import {
   mariePosaTracker,
   dailyItems,
   dailyRedemptions,
+  castleUnlockedParts,
+  castleGridState,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -68,6 +70,10 @@ import {
   type AquariumTank,
   type AquariumFish,
   type DailyItems,
+  type CastleUnlockedPart,
+  type NewCastleUnlockedPart,
+  type CastleGridState,
+  type NewCastleGridState,
   insertUserSchema
 } from "@shared/schema";
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
@@ -6408,6 +6414,133 @@ export class PostgresStorage {
       fishImageUrl: `/Fische/${fishId}.jpg`,
       quantity: 1
     });
+  }
+
+  // =============================================
+  // CASTLE GARDEN METHODS
+  // =============================================
+
+  // Get unlocked parts for a user
+  async getCastleUnlockedParts(userId: number): Promise<CastleUnlockedPart[]> {
+    return await this.db
+      .select()
+      .from(castleUnlockedParts)
+      .where(eq(castleUnlockedParts.userId, userId));
+  }
+
+  // Unlock a new part for a user
+  async unlockCastlePart(userId: number, partName: string, price: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if user has enough credits
+      const user = await this.getUser(userId);
+      if (!user) {
+        return { success: false, message: 'Benutzer nicht gefunden' };
+      }
+
+      if (user.credits < price) {
+        return { success: false, message: 'Nicht genügend Credits' };
+      }
+
+      // Check if part is already unlocked
+      const existing = await this.db
+        .select()
+        .from(castleUnlockedParts)
+        .where(and(eq(castleUnlockedParts.userId, userId), eq(castleUnlockedParts.partName, partName)));
+
+      if (existing.length > 0) {
+        return { success: false, message: 'Bauteil bereits freigeschaltet' };
+      }
+
+      // Deduct credits and unlock part
+      await this.updateUserCredits(userId, -price);
+      await this.db.insert(castleUnlockedParts).values({
+        userId,
+        partName,
+        price
+      });
+
+      console.log(`🏰 User ${userId} unlocked castle part: ${partName} for ${price} credits`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to unlock castle part:', error);
+      return { success: false, message: 'Fehler beim Freischalten des Bauteils' };
+    }
+  }
+
+  // Get grid state for a user
+  async getCastleGridState(userId: number): Promise<CastleGridState[]> {
+    return await this.db
+      .select()
+      .from(castleGridState)
+      .where(eq(castleGridState.userId, userId));
+  }
+
+  // Place/update a part on the grid
+  async placeCastlePart(userId: number, gridX: number, gridY: number, partName: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if user has the part unlocked
+      const unlockedParts = await this.getCastleUnlockedParts(userId);
+      const hasUnlockedPart = unlockedParts.some(part => part.partName === partName);
+
+      if (!hasUnlockedPart) {
+        return { success: false, message: 'Bauteil nicht freigeschaltet' };
+      }
+
+      // Check if position is already occupied
+      const existing = await this.db
+        .select()
+        .from(castleGridState)
+        .where(and(
+          eq(castleGridState.userId, userId),
+          eq(castleGridState.gridX, gridX),
+          eq(castleGridState.gridY, gridY)
+        ));
+
+      if (existing.length > 0) {
+        // Update existing position
+        await this.db
+          .update(castleGridState)
+          .set({ partName })
+          .where(and(
+            eq(castleGridState.userId, userId),
+            eq(castleGridState.gridX, gridX),
+            eq(castleGridState.gridY, gridY)
+          ));
+      } else {
+        // Insert new position
+        await this.db.insert(castleGridState).values({
+          userId,
+          gridX,
+          gridY,
+          partName
+        });
+      }
+
+      console.log(`🏰 User ${userId} placed ${partName} at position (${gridX}, ${gridY})`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to place castle part:', error);
+      return { success: false, message: 'Fehler beim Platzieren des Bauteils' };
+    }
+  }
+
+  // Remove a part from the grid
+  async removeCastlePart(userId: number, gridX: number, gridY: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      const result = await this.db
+        .delete(castleGridState)
+        .where(and(
+          eq(castleGridState.userId, userId),
+          eq(castleGridState.gridX, gridX),
+          eq(castleGridState.gridY, gridY)
+        ));
+
+      console.log(`🏰 User ${userId} removed part from position (${gridX}, ${gridY})`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to remove castle part:', error);
+      return { success: false, message: 'Fehler beim Entfernen des Bauteils' };
+    }
   }
 }
 
