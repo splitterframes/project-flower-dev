@@ -103,7 +103,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       cost: 10,
       title: 'Gewöhnlicher Samen',
       description: 'Ein einfacher Samen zum Pflanzen',
-      icon: <Sprout className="h-6 w-6" style={{ color: rarityColors[0] }} />,
+      icon: <img src="/Blumen/0.jpg" alt="Samen" className="h-12 w-12 object-cover rounded border-2" style={{ borderColor: rarityColors[0] }} />,
       type: 'seed',
       rarity: 0
     },
@@ -112,7 +112,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       cost: 15,
       title: '7 Sonnen',
       description: 'Sammle sofort 7 Sonnen',
-      icon: <Sun className="h-6 w-6 text-yellow-400" />,
+      icon: <Sun className="h-12 w-12 text-yellow-400" />,
       type: 'suns'
     },
     {
@@ -120,7 +120,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       cost: 25,
       title: 'Rarer Samen',
       description: 'Ein seltener Samen mit besonderen Eigenschaften',
-      icon: <Sprout className="h-6 w-6" style={{ color: rarityColors[2] }} />,
+      icon: <img src="/Blumen/0.jpg" alt="Samen" className="h-12 w-12 object-cover rounded border-2" style={{ borderColor: rarityColors[2] }} />,
       type: 'seed',
       rarity: 2
     },
@@ -199,7 +199,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
                       shadow-lg border-2 transition-all duration-200 hover:scale-105
-                      ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400 opacity-50'}
+                      ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
                     `}
                   >
                     {/* Price Tag */}
@@ -210,7 +210,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     {/* Item Display */}
                     <div className="text-center space-y-2">
                       {/* Icon/Image */}
-                      <div className="flex justify-center items-center h-16 w-16 mx-auto bg-white rounded-lg shadow-inner border">
+                      <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
                         {isDaily && dailyItems ? (
                           <img
                             src={`/images/${
@@ -223,7 +223,12 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                               prize.type === 'caterpillar' ? dailyItems.caterpillar.id : dailyItems.fish.id
                             }.jpg`}
                             alt={prize.title}
-                            className="h-14 w-14 object-cover rounded"
+                            className="h-18 w-18 object-cover rounded border-2"
+                            style={{ borderColor: rarityColors[
+                              prize.type === 'flower' ? dailyItems.flower.rarity : 
+                              prize.type === 'butterfly' ? dailyItems.butterfly.rarity : 
+                              prize.type === 'caterpillar' ? dailyItems.caterpillar.rarity : dailyItems.fish.rarity
+                            ] }}
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
