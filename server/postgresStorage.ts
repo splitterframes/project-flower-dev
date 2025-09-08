@@ -6148,7 +6148,7 @@ export class PostgresStorage {
           await this.addSunsToUser(userId, 5); // Updated to match frontend description
           break;
         case 'rare-seed':
-          await this.addSeedToUser(userId, 2, 1); // Rare seed (seedId 2 = uncommon)
+          await this.addSeedToUser(userId, 3, 1); // Rare seed (seedId 3 = rare)
           break;
         case 'dna':
           await this.updateUserDna(userId, 15);
