@@ -424,12 +424,16 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
             const data = await response.json();
             
             if (response.ok && data.success) {
-              // Refresh user data
+              // Refresh user data immediately
               fetchTickets();
               fetchCredits();
               fetchSuns();
               fetchDna();
-              fetchInventoryCounts();
+              
+              // Small delay for inventory to ensure backend update is complete
+              setTimeout(() => {
+                fetchInventoryCounts();
+              }, 100);
               
               return { success: true, message: data.message || "Preis erfolgreich eingelöst!" };
             } else {
