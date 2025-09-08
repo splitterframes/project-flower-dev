@@ -36,12 +36,23 @@ interface Confetti {
   delay: number;
 }
 
+// Loot interface
+interface Loot {
+  id: string;
+  x: number;
+  y: number;
+  type: 'credit' | 'sun' | 'dna';
+  amount: number;
+}
+
 // Balloon component
 const BalloonComponent: React.FC<{ 
   balloon: Balloon; 
   onPop: (id: string) => void;
   setConfettiParticles: React.Dispatch<React.SetStateAction<Confetti[]>>;
-}> = ({ balloon, onPop, setConfettiParticles }) => {
+  setLootDrops: React.Dispatch<React.SetStateAction<Loot[]>>;
+  awardLoot: (type: 'credit' | 'sun' | 'dna', amount: number) => void;
+}> = ({ balloon, onPop, setConfettiParticles, setLootDrops, awardLoot }) => {
   const [isPopped, setIsPopped] = useState(false);
 
   const handleClick = (event: React.MouseEvent) => {
@@ -75,6 +86,30 @@ const BalloonComponent: React.FC<{
         prev.filter(confetti => !confetti.id.includes(balloon.id))
       );
     }, 1000);
+    
+    // Loot system for balloons without cards (75% chance)
+    if (!balloon.hasCard && Math.random() < 0.75) {
+      const lootTypes = ['credit', 'sun', 'dna'] as const;
+      const lootType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+      
+      const newLoot: Loot = {
+        id: `loot-${balloon.id}`,
+        x: balloonCenterX,
+        y: balloonCenterY,
+        type: lootType,
+        amount: 1
+      };
+      
+      setLootDrops(prev => [...prev, newLoot]);
+      
+      // Award the loot
+      awardLoot(lootType, 1);
+      
+      // Remove loot display after 2 seconds
+      setTimeout(() => {
+        setLootDrops(prev => prev.filter(loot => loot.id !== newLoot.id));
+      }, 2000);
+    }
     
     // Add a small delay for pop animation
     setTimeout(() => onPop(balloon.id), 150);
@@ -179,8 +214,40 @@ export const Layout: React.FC = () => {
   const [headerRefreshTrigger, setHeaderRefreshTrigger] = useState(0);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
+  const [lootDrops, setLootDrops] = useState<Loot[]>([]);
   const { user } = useAuth();
   const { setCredits } = useCredits();
+
+  // Award loot function
+  const awardLoot = async (type: 'credit' | 'sun' | 'dna', amount: number) => {
+    if (!user) return;
+    
+    try {
+      if (type === 'credit') {
+        await fetch(`/api/user/${user.id}/credits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+        // Refresh credits in header
+        setHeaderRefreshTrigger(prev => prev + 1);
+      } else if (type === 'sun') {
+        await fetch(`/api/user/${user.id}/suns`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+      } else if (type === 'dna') {
+        await fetch(`/api/user/${user.id}/dna`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+      }
+    } catch (error) {
+      console.error('Failed to award loot:', error);
+    }
+  };
 
   // Balloon colors
   const balloonColors = [
@@ -297,6 +364,8 @@ export const Layout: React.FC = () => {
           balloon={balloon} 
           onPop={popBalloon}
           setConfettiParticles={setConfettiParticles}
+          setLootDrops={setLootDrops}
+          awardLoot={awardLoot}
         />
       ))}
 
@@ -318,6 +387,36 @@ export const Layout: React.FC = () => {
             animationDelay: `${confetti.delay}s`
           }}
         />
+      ))}
+
+      {/* Loot Drops */}
+      {lootDrops.map((loot) => (
+        <div
+          key={loot.id}
+          className="loot-drop"
+          style={{
+            position: 'fixed',
+            left: `${loot.x}%`,
+            top: `${loot.y}%`,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1002,
+            animation: 'lootPop 2s ease-out forwards',
+            backgroundColor: loot.type === 'credit' ? '#FFD700' : loot.type === 'sun' ? '#FFA500' : '#9B59B6',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '20px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            border: '2px solid rgba(255,255,255,0.3)',
+            pointerEvents: 'none'
+          }}
+        >
+          {loot.type === 'credit' && '💰'}
+          {loot.type === 'sun' && '☀️'}
+          {loot.type === 'dna' && '🧬'}
+          +{loot.amount}
+        </div>
       ))}
 
       {/* Global CSS for Balloon Animations */}
@@ -400,6 +499,25 @@ export const Layout: React.FC = () => {
           @keyframes confettiExplosion-7 {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             100% { transform: translate(70px, -70px) rotate(360deg); opacity: 0; }
+          }
+          
+          @keyframes lootPop {
+            0% { 
+              transform: translate(-50%, -50%) scale(0) rotate(0deg); 
+              opacity: 0;
+            }
+            20% { 
+              transform: translate(-50%, -50%) scale(1.2) rotate(5deg); 
+              opacity: 1;
+            }
+            80% { 
+              transform: translate(-50%, -50%) scale(1) rotate(-2deg); 
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(-50%, -50%) scale(0.8) rotate(0deg); 
+              opacity: 0;
+            }
           }
         `
       }} />
