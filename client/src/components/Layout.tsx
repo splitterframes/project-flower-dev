@@ -57,8 +57,8 @@ const BalloonComponent: React.FC<{
       <div 
         className={`balloon-body ${isPopped ? 'scale-0' : ''}`}
         style={{
-          width: '40px',
-          height: '50px',
+          width: '50px',
+          height: '60px',
           backgroundColor: balloon.color,
           borderRadius: '50% 50% 50% 50% / 35% 35% 65% 65%',
           position: 'relative',
@@ -79,7 +79,8 @@ const BalloonComponent: React.FC<{
             height: balloon.hasCard ? '35px' : '20px',
             backgroundColor: '#8B4513',
             opacity: isPopped ? 0 : 1,
-            transition: 'opacity 0.15s ease-out'
+            transition: 'opacity 0.15s ease-out',
+            zIndex: balloon.hasCard ? -1 : 1
           }}
         />
         
@@ -91,8 +92,8 @@ const BalloonComponent: React.FC<{
               bottom: '-40px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '20px',
-              height: '15px',
+              width: '24px',
+              height: '18px',
               backgroundColor: '#FFE4E1',
               border: '1px solid #DDD',
               borderRadius: '2px',
