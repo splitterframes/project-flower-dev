@@ -305,9 +305,32 @@ export const CastleGardenView: React.FC = () => {
       
       // Herzen basierend auf Flugstrecke UND Bauteil-Wert
       const targetPart = targetField.buildingPart!;
-      const partValue = targetPart.cost || 1;
-      const distanceBonus = Math.floor(distance / 3);
-      const heartAmount = Math.min(5, Math.max(1, partValue + distanceBonus));
+      // Neue Herzen-Berechnung basierend auf Wahrscheinlichkeit
+      const partCost = targetPart.cost || 300; // Fallback auf billigstes
+      const minCost = 300;
+      const maxCost = 25000;
+      const maxDistance = Math.sqrt(24*24 + 14*14); // Maximale Diagonale des Grids
+      
+      // Normalisierung: 0 = billigst/kurz, 1 = teuerst/lang
+      const costFactor = Math.min(1, Math.max(0, (partCost - minCost) / (maxCost - minCost)));
+      const distanceFactor = Math.min(1, distance / maxDistance);
+      
+      // Kombinierte Chance: 5% bis 100% für >3 Herzen
+      const combinedFactor = (costFactor + distanceFactor) / 2;
+      const chanceFor4Plus = 0.05 + (combinedFactor * 0.95); // 5% bis 100%
+      
+      // Herzen-Anzahl bestimmen
+      let heartAmount;
+      if (Math.random() < chanceFor4Plus) {
+        // >3 Herzen: 4 oder 5
+        heartAmount = Math.random() < 0.6 ? 4 : 5;
+      } else {
+        // ≤3 Herzen: 1, 2 oder 3
+        const roll = Math.random();
+        if (roll < 0.5) heartAmount = 1;
+        else if (roll < 0.8) heartAmount = 2;
+        else heartAmount = 3;
+      }
       
       // Ein großes Herz spawnen + Anzahl-Text
       spawnSingleHeart(targetField.x, targetField.y, heartAmount);
@@ -317,7 +340,7 @@ export const CastleGardenView: React.FC = () => {
       setTotalHeartsCollected(prev => prev + heartAmount);
       toast.success(`💖 ${heartAmount} Herzen gesammelt! (+${heartAmount} Credits)`);
       
-      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Wert: ${partValue}, ${heartAmount} Herzen!`);
+      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen!`);
     }, flightDuration);
   };
 
