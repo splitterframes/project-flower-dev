@@ -91,7 +91,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
     setIsRedeeming(true);
     
     try {
-      const response = await fetch(`/api/user/${user.id}/redeem-ticket`, {
+      const response = await fetch(`/api/user/${user.id}/redeem-tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prizeId: prizeType })
@@ -220,9 +220,10 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     key={prize.id}
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-                      shadow-lg border-2 transition-all duration-200 hover:scale-105
+                      shadow-lg border-2 transition-all duration-200 hover:scale-105 z-10
                       ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
                     `}
+                    style={{ isolation: 'isolate' }}
                   >
                     {/* Price Tag */}
                     <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg">
