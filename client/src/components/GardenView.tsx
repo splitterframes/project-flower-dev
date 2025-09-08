@@ -791,7 +791,7 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
         
-        // Wait for 2 rotations to complete (1.4s), then hide image
+        // Wait for 1 rotation to complete (0.8s), then hide image
         setTimeout(() => {
           setHarvestedFields(prev => new Set([...Array.from(prev), fieldIndex]));
           setSpinningFields(prev => {
@@ -799,18 +799,10 @@ export const GardenView: React.FC = () => {
             newSet.delete(fieldIndex);
             return newSet;
           });
-        }, 1400);
-        
-        // Refresh data immediately
-        await fetchPlantedFields();
-        // Remove visual feedback after short delay
-        setTimeout(() => {
-          setHarvestedFields(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(fieldIndex);
-            return newSet;
-          });
         }, 800);
+        
+        // Refresh data immediately  
+        await fetchPlantedFields();
       } else {
         const error = await response.json();
         showNotification(error.message || 'Fehler beim Ernten', 'error');
