@@ -370,7 +370,7 @@ export const CastleGardenView: React.FC = () => {
       offsetX: 0,
       offsetY: 0,
       rotation: 0,
-      scale: 2.5, // Größeres Herz
+      scale: 0.3, // Startet klein
       opacity: 1,
       velocity: {
         x: 0,
@@ -438,7 +438,7 @@ export const CastleGardenView: React.FC = () => {
             ...heart,
             offsetY: newOffsetY,
             opacity: Math.max(0, 1 - progress * 0.6), // Viel langsameres Ausblenden
-            scale: heart.scale * (1 - progress * 0.1) // Minimales Schrumpfen
+            scale: heart.scale * (1 + progress * 7) // Wächst von klein zu groß
           };
         })
       );
