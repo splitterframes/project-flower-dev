@@ -74,7 +74,7 @@ import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
-import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
+import { generateBouquetName, calculateAverageRarity, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
 
 /**
@@ -6224,7 +6224,7 @@ export class PostgresStorage {
             // Convert integer rarity to string rarity name
             const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
             const rarityName = rarityNames[dailyItemsForFish.fishRarity] || 'common';
-            await this.addFishToUser(userId, dailyItemsForFish.fishId, rarityName);
+            await this.addDailyFishToUser(userId, dailyItemsForFish.fishId, rarityName);
           }
           break;
         default:
@@ -6335,8 +6335,8 @@ export class PostgresStorage {
     console.log(`🎫 TICKET-REDEMPTION: ✅ RESULT: Created caterpillar with quantity=${result[0]?.quantity}`);
   }
 
-  // Helper method to add fish to user
-  private async addFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
+  // Helper method to add fish to user for daily redemption
+  private async addDailyFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
     // Generate consistent fish name using fixed ID as seed
     const fishName = generateLatinFishName(fishId);
     
