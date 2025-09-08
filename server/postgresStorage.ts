@@ -6212,7 +6212,7 @@ export class PostgresStorage {
             // Convert rarity integer to string for the rarity tiers
             const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
             const rarityName = rarityNames[dailyItemsForCaterpillar.caterpillarRarity] || 'common';
-            await this.addCaterpillarToUser(userId, dailyItemsForCaterpillar.caterpillarId, rarityName);
+            await this.addCaterpillarForRedemption(userId, dailyItemsForCaterpillar.caterpillarId, rarityName);
           }
           break;
         case 'daily-fish':
@@ -6310,8 +6310,8 @@ export class PostgresStorage {
     });
   }
 
-  // Helper method to add caterpillar to user
-  private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: string): Promise<void> {
+  // Helper method to add caterpillar to user (for ticket redemption)
+  private async addCaterpillarForRedemption(userId: number, caterpillarId: number, rarity: string): Promise<void> {
     // Generate proper caterpillar name using the rarity tier  
     const caterpillarData = generateRandomCaterpillar(rarity as RarityTier);
     const caterpillarName = caterpillarData ? caterpillarData.name : `Raupe ${caterpillarId}`;
