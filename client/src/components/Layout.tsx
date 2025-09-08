@@ -456,18 +456,21 @@ export const Layout: React.FC = () => {
               bottom: -100px;
               transform: translateX(-50%) rotate(-2deg);
             }
-            25% {
-              transform: translateX(-50%) rotate(2deg);
+            20% {
+              transform: translateX(calc(-50% + 20px)) rotate(2deg);
             }
-            50% {
-              transform: translateX(-50%) rotate(-1deg);
+            40% {
+              transform: translateX(calc(-50% - 15px)) rotate(-1deg);
             }
-            75% {
-              transform: translateX(-50%) rotate(1deg);
+            60% {
+              transform: translateX(calc(-50% + 25px)) rotate(3deg);
+            }
+            80% {
+              transform: translateX(calc(-50% - 10px)) rotate(-2deg);
             }
             100% {
               bottom: calc(100vh + 50px);
-              transform: translateX(-50%) rotate(-2deg);
+              transform: translateX(-50%) rotate(1deg);
             }
           }
           
