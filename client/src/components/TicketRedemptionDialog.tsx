@@ -13,10 +13,16 @@ interface TicketRedemptionDialogProps {
 }
 
 interface DailyItems {
-  flower: { id: number; name: string; rarity: number };
-  butterfly: { id: number; name: string; rarity: number };
-  caterpillar: { id: number; name: string; rarity: number };
-  fish: { id: number; name: string; rarity: number };
+  id: number;
+  date: string;
+  flowerId: number;
+  flowerRarity: number;
+  butterflyId: number;
+  butterflyRarity: number;
+  caterpillarId: number;
+  caterpillarRarity: number;
+  fishId: number;
+  fishRarity: number;
 }
 
 interface Prize {
@@ -128,32 +134,32 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       id: 'daily-flower',
       cost: 50,
       title: 'Tägliche Rare Blume',
-      description: `${dailyItems?.flower?.name || 'Lade...'} (${rarityNames[dailyItems?.flower?.rarity || 2]})`,
-      icon: <Flower2 className="h-6 w-6" style={{ color: rarityColors[dailyItems?.flower?.rarity || 2] }} />,
+      description: `Blume ${dailyItems?.flowerId || '...'} (${rarityNames[dailyItems?.flowerRarity || 2]})`,
+      icon: <Flower2 className="h-6 w-6" style={{ color: rarityColors[dailyItems?.flowerRarity || 2] }} />,
       type: 'flower'
     },
     {
       id: 'daily-butterfly',
       cost: 100,
       title: 'Täglicher Rarer Schmetterling',
-      description: `${dailyItems?.butterfly?.name || 'Lade...'} (${rarityNames[dailyItems?.butterfly?.rarity || 2]})`,
-      icon: <Sparkles className="h-6 w-6" style={{ color: rarityColors[dailyItems?.butterfly?.rarity || 2] }} />,
+      description: `Schmetterling ${dailyItems?.butterflyId || '...'} (${rarityNames[dailyItems?.butterflyRarity || 2]})`,
+      icon: <Sparkles className="h-6 w-6" style={{ color: rarityColors[dailyItems?.butterflyRarity || 2] }} />,
       type: 'butterfly'
     },
     {
       id: 'daily-caterpillar',
       cost: 150,
       title: 'Tägliche Rare Raupe',
-      description: `${dailyItems?.caterpillar?.name || 'Lade...'} (${rarityNames[dailyItems?.caterpillar?.rarity || 2]})`,
-      icon: <Bug className="h-6 w-6" style={{ color: rarityColors[dailyItems?.caterpillar?.rarity || 2] }} />,
+      description: `Raupe ${dailyItems?.caterpillarId || '...'} (${rarityNames[dailyItems?.caterpillarRarity || 2]})`,
+      icon: <Bug className="h-6 w-6" style={{ color: rarityColors[dailyItems?.caterpillarRarity || 2] }} />,
       type: 'caterpillar'
     },
     {
       id: 'daily-fish',
       cost: 200,
       title: 'Täglicher Rarer Fisch',
-      description: `${dailyItems?.fish?.name || 'Lade...'} (${rarityNames[dailyItems?.fish?.rarity || 2]})`,
-      icon: <Fish className="h-6 w-6" style={{ color: rarityColors[dailyItems?.fish?.rarity || 2] }} />,
+      description: `Fisch ${dailyItems?.fishId || '...'} (${rarityNames[dailyItems?.fishRarity || 2]})`,
+      icon: <Fish className="h-6 w-6" style={{ color: rarityColors[dailyItems?.fishRarity || 2] }} />,
       type: 'fish'
     },
     {
@@ -216,18 +222,18 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                             src={`/${
                               prize.type === 'flower' ? 'Blumen' : 
                               prize.type === 'butterfly' ? 'Schmetterlinge' : 
-                              prize.type === 'caterpillar' ? 'Caterpillars' : 'Fish'
+                              prize.type === 'caterpillar' ? 'Raupen' : 'Fische'
                             }/${
-                              prize.type === 'flower' ? dailyItems.flower.id : 
-                              prize.type === 'butterfly' ? String(dailyItems.butterfly.id).padStart(3, '0') : 
-                              prize.type === 'caterpillar' ? dailyItems.caterpillar.id : dailyItems.fish.id
+                              prize.type === 'flower' ? dailyItems.flowerId : 
+                              prize.type === 'butterfly' ? String(dailyItems.butterflyId).padStart(3, '0') : 
+                              prize.type === 'caterpillar' ? dailyItems.caterpillarId : dailyItems.fishId
                             }.jpg`}
                             alt={prize.title}
                             className="h-18 w-18 object-cover rounded border-2"
                             style={{ borderColor: rarityColors[
-                              prize.type === 'flower' ? dailyItems.flower.rarity : 
-                              prize.type === 'butterfly' ? dailyItems.butterfly.rarity : 
-                              prize.type === 'caterpillar' ? dailyItems.caterpillar.rarity : dailyItems.fish.rarity
+                              prize.type === 'flower' ? dailyItems.flowerRarity : 
+                              prize.type === 'butterfly' ? dailyItems.butterflyRarity : 
+                              prize.type === 'caterpillar' ? dailyItems.caterpillarRarity : dailyItems.fishRarity
                             ] }}
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
