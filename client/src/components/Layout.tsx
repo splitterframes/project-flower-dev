@@ -146,7 +146,7 @@ const BalloonComponent: React.FC<{
         zIndex: 1000,
         cursor: 'pointer',
         transition: isPopped ? 'all 0.15s ease-out' : 'none',
-        animation: isPopped ? 'none' : 'balloon-float 8s linear forwards'
+        animation: isPopped ? 'none' : 'balloon-float 8s ease-in-out forwards'
       }}
       onClick={handleClick}
     >
@@ -454,23 +454,32 @@ export const Layout: React.FC = () => {
           @keyframes balloon-float {
             0% {
               bottom: -100px;
-              transform: translateX(-50%) rotate(-2deg);
+              transform: translateX(-50%) rotate(-3deg);
             }
-            20% {
-              transform: translateX(calc(-50% + 20px)) rotate(2deg);
+            12% {
+              transform: translateX(calc(-50% + 35px)) rotate(4deg);
             }
-            40% {
-              transform: translateX(calc(-50% - 15px)) rotate(-1deg);
+            25% {
+              transform: translateX(calc(-50% + 45px)) rotate(2deg);
             }
-            60% {
-              transform: translateX(calc(-50% + 25px)) rotate(3deg);
+            37% {
+              transform: translateX(calc(-50% + 20px)) rotate(-1deg);
             }
-            80% {
-              transform: translateX(calc(-50% - 10px)) rotate(-2deg);
+            50% {
+              transform: translateX(calc(-50% - 30px)) rotate(-4deg);
+            }
+            62% {
+              transform: translateX(calc(-50% - 40px)) rotate(-2deg);
+            }
+            75% {
+              transform: translateX(calc(-50% + 15px)) rotate(3deg);
+            }
+            87% {
+              transform: translateX(calc(-50% + 25px)) rotate(1deg);
             }
             100% {
               bottom: calc(100vh + 50px);
-              transform: translateX(-50%) rotate(1deg);
+              transform: translateX(-50%) rotate(-1deg);
             }
           }
           
