@@ -27,15 +27,50 @@ interface Balloon {
   hasCard: boolean; // Some balloons have small cards
 }
 
+// Confetti interface
+interface Confetti {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
+  delay: number;
+}
+
 // Balloon component
 const BalloonComponent: React.FC<{ 
   balloon: Balloon; 
-  onPop: (id: string) => void; 
-}> = ({ balloon, onPop }) => {
+  onPop: (id: string) => void;
+  setConfettiParticles: React.Dispatch<React.SetStateAction<Confetti[]>>;
+}> = ({ balloon, onPop, setConfettiParticles }) => {
   const [isPopped, setIsPopped] = useState(false);
 
   const handleClick = () => {
     setIsPopped(true);
+    
+    // Create confetti explosion
+    const newConfetti: Confetti[] = [];
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+    
+    for (let i = 0; i < 15; i++) {
+      newConfetti.push({
+        id: `confetti-${balloon.id}-${i}`,
+        x: balloon.x,
+        y: 50, // Center of screen approximately
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.3
+      });
+    }
+    
+    // Add confetti to global state
+    setConfettiParticles(prev => [...prev, ...newConfetti]);
+    
+    // Remove confetti after animation
+    setTimeout(() => {
+      setConfettiParticles(prev => 
+        prev.filter(confetti => !confetti.id.includes(balloon.id))
+      );
+    }, 1000);
+    
     // Add a small delay for pop animation
     setTimeout(() => onPop(balloon.id), 150);
   };
@@ -138,6 +173,7 @@ export const Layout: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [headerRefreshTrigger, setHeaderRefreshTrigger] = useState(0);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
+  const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
   const { user } = useAuth();
   const { setCredits } = useCredits();
 
@@ -255,6 +291,27 @@ export const Layout: React.FC = () => {
           key={balloon.id} 
           balloon={balloon} 
           onPop={popBalloon}
+          setConfettiParticles={setConfettiParticles}
+        />
+      ))}
+
+      {/* Confetti Particles */}
+      {confettiParticles.map((confetti, index) => (
+        <div
+          key={confetti.id}
+          className="confetti-particle"
+          style={{
+            position: 'fixed',
+            left: `${confetti.x}%`,
+            top: `${confetti.y}%`,
+            width: '8px',
+            height: '8px',
+            backgroundColor: confetti.color,
+            borderRadius: '2px',
+            zIndex: 1001,
+            animation: `confettiExplosion-${index % 8} 1s ease-out forwards`,
+            animationDelay: `${confetti.delay}s`
+          }}
         />
       ))}
 
@@ -305,6 +362,39 @@ export const Layout: React.FC = () => {
           .balloon-wobble-3 {
             animation: balloonWobble 2.8s ease-in-out infinite;
             animation-delay: 1s;
+          }
+          
+          @keyframes confettiExplosion-0 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-60px, -80px) rotate(180deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-1 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(80px, -60px) rotate(270deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-2 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-40px, -100px) rotate(90deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-3 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(100px, -40px) rotate(360deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-4 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-80px, -60px) rotate(180deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-5 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(60px, -90px) rotate(270deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-6 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-100px, -30px) rotate(90deg); opacity: 0; }
+          }
+          @keyframes confettiExplosion-7 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(70px, -70px) rotate(360deg); opacity: 0; }
           }
         `
       }} />
