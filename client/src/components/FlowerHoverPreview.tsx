@@ -15,61 +15,13 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
   children
 }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
+  const handleMouseEnter = () => {
     setIsHovering(true);
-    updateMousePosition(e);
   };
 
   const handleMouseLeave = () => {
     setIsHovering(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isHovering) {
-      updateMousePosition(e);
-    }
-  };
-
-  const updateMousePosition = (e: React.MouseEvent) => {
-    const absoluteX = e.clientX;
-    const absoluteY = e.clientY;
-    
-    setMousePosition({
-      x: absoluteX,
-      y: absoluteY
-    });
-  };
-
-  const getPreviewPosition = () => {
-    const previewWidth = 400; // 24rem = 384px + padding
-    const previewHeight = 450; // estimated height
-    const margin = 20; // margin from screen edge
-    const offset = 20; // offset from cursor
-    
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    
-    // Determine horizontal position
-    const canFitRight = mousePosition.x + offset + previewWidth + margin <= windowWidth;
-    const canFitLeft = mousePosition.x - offset - previewWidth >= margin;
-    
-    let left: number;
-    if (canFitRight) {
-      left = mousePosition.x + offset;
-    } else if (canFitLeft) {
-      left = mousePosition.x - offset - previewWidth;
-    } else {
-      // Center if neither fits perfectly
-      left = Math.max(margin, Math.min(windowWidth - previewWidth - margin, mousePosition.x - previewWidth / 2));
-    }
-    
-    // Determine vertical position
-    let top = mousePosition.y - previewHeight / 2;
-    top = Math.max(margin, Math.min(windowHeight - previewHeight - margin, top));
-    
-    return { left, top };
   };
 
   return (
@@ -77,15 +29,11 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
       className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
     >
       {children}
       
       {isHovering && (
-        <div 
-          className="fixed z-50 pointer-events-none"
-          style={getPreviewPosition()}
-        >
+        <div className="absolute z-50 pointer-events-none left-full top-0 ml-2">
           <div className="bg-slate-900 border-2 border-slate-600 rounded-lg p-4 shadow-2xl">
             <div className="w-96 h-96 rounded-lg overflow-hidden mb-3">
               <img
