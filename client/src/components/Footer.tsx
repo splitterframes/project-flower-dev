@@ -46,7 +46,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
                 variant={isActive ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewChange(item.id)}
-                className={`flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-2 touch-target ${
+                className={`flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-3 sm:py-2 touch-target min-h-[44px] ${
                   isActive 
                     ? "bg-orange-600 hover:bg-orange-700 text-white" 
                     : "text-slate-400 hover:text-white hover:bg-slate-800"
