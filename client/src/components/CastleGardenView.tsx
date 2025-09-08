@@ -111,12 +111,6 @@ export const CastleGardenView: React.FC = () => {
     localStorage.setItem('castle-balloons-enabled', balloonsEnabled.toString());
     // Globales Flag für Layout setzen (nur wenn im Schlossgarten)
     (window as any).balloonsDisabledInCastle = !balloonsEnabled;
-    
-    // Trigger immediate reset of balloon timers for instant effect
-    if (typeof (window as any).resetBalloonTimers === 'function') {
-      console.log('🔄 Triggering immediate balloon timer reset from castle toggle');
-      (window as any).resetBalloonTimers();
-    }
   }, [balloonsEnabled]);
 
   // Dynamisches Laden der Bauteile aus Castle-Ordner
