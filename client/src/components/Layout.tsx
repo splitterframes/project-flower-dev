@@ -84,7 +84,7 @@ const BalloonComponent: React.FC<{
             backgroundColor: '#8B4513',
             opacity: isPopped ? 0 : 1,
             transition: 'opacity 0.15s ease-out',
-            zIndex: balloon.hasCard ? -1 : 1
+            zIndex: balloon.hasCard ? -2 : 1
           }}
         />
         
@@ -291,9 +291,9 @@ export const Layout: React.FC = () => {
           
           @keyframes balloonWobble {
             0%, 100% { transform: translateX(0px) rotate(0deg); }
-            25% { transform: translateX(1px) rotate(0.5deg); }
-            50% { transform: translateX(-1px) rotate(-0.5deg); }
-            75% { transform: translateX(0.5px) rotate(0.2deg); }
+            25% { transform: translateX(3px) rotate(1.5deg); }
+            50% { transform: translateX(-3px) rotate(-1.5deg); }
+            75% { transform: translateX(1.5px) rotate(0.8deg); }
           }
           .balloon-wobble {
             animation: balloonWobble 2.5s ease-in-out infinite;
