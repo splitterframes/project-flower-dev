@@ -55,7 +55,11 @@ const BalloonComponent: React.FC<{
       onClick={handleClick}
     >
       <div 
-        className={`balloon-body ${isPopped ? 'scale-0' : ''}`}
+        className={`balloon-body ${isPopped ? 'scale-0' : ''} ${
+          isPopped ? '' : 
+          parseInt(balloon.id.slice(-1)) % 3 === 0 ? 'balloon-wobble' :
+          parseInt(balloon.id.slice(-1)) % 3 === 1 ? 'balloon-wobble-2' : 'balloon-wobble-3'
+        }`}
         style={{
           width: '50px',
           height: '60px',
@@ -283,6 +287,24 @@ export const Layout: React.FC = () => {
           
           .balloon-popped .balloon-body {
             transform: scale(0) !important;
+          }
+          
+          @keyframes balloonWobble {
+            0%, 100% { transform: translateX(0px) rotate(0deg); }
+            25% { transform: translateX(1px) rotate(0.5deg); }
+            50% { transform: translateX(-1px) rotate(-0.5deg); }
+            75% { transform: translateX(0.5px) rotate(0.2deg); }
+          }
+          .balloon-wobble {
+            animation: balloonWobble 2.5s ease-in-out infinite;
+          }
+          .balloon-wobble-2 {
+            animation: balloonWobble 3s ease-in-out infinite;
+            animation-delay: 0.5s;
+          }
+          .balloon-wobble-3 {
+            animation: balloonWobble 2.8s ease-in-out infinite;
+            animation-delay: 1s;
           }
         `
       }} />
