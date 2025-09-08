@@ -3,11 +3,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Ticket, Sprout, Sun, Zap, Coins, Flower, Sparkles } from 'lucide-react';
+import { RarityImage } from './RarityImage';
 import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
-import { getRarityColor } from '@shared/rarity';
+import { getRarityColor, getRarityDisplayName } from '@shared/rarity';
+
+// Helper function for rarity borders (same as RarityImage component)
+const getBorderColor = (rarity: any): string => {
+  switch (rarity) {
+    case 'common': return '#fbbf24';      // yellow-400
+    case 'uncommon': return '#4ade80';    // green-400  
+    case 'rare': return '#3b82f6';        // blue-400
+    case 'super-rare': return '#06b6d4';  // cyan-400
+    case 'epic': return '#a855f7';        // purple-400
+    case 'legendary': return '#f97316';   // orange-400
+    case 'mythical': return '#ef4444';    // red-400
+    default: return '#9ca3af';            // gray-400
+  }
+};
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -81,32 +96,32 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     {
       id: 'flower',
       cost: 50,
-      title: 'Tägliche seltene Blume',
-      description: 'Erhalte die heutige seltene Blume',
+      title: 'Seltene Blume',
+      description: 'Erhalte eine seltene Blume',
       icon: <Flower className="h-6 w-6 text-pink-400" />,
       type: 'flower'
     },
     {
       id: 'butterfly',
       cost: 100,
-      title: 'Täglicher seltener Schmetterling',
-      description: 'Erhalte den heutigen seltenen Schmetterling',
+      title: 'Seltener Schmetterling',
+      description: 'Erhalte einen seltenen Schmetterling',
       icon: <Sparkles className="h-6 w-6 text-purple-400" />,
       type: 'butterfly'
     },
     {
       id: 'caterpillar',
       cost: 150,
-      title: 'Tägliche seltene Raupe',
-      description: 'Erhalte die heutige seltene Raupe',
+      title: 'Seltene Raupe',
+      description: 'Erhalte eine seltene Raupe',
       icon: <Sparkles className="h-6 w-6 text-orange-400" />,
       type: 'caterpillar'
     },
     {
       id: 'fish',
       cost: 200,
-      title: 'Täglicher seltener Fisch',
-      description: 'Erhalte den heutigen seltenen Fisch',
+      title: 'Seltener Fisch',
+      description: 'Erhalte einen seltenen Fisch',
       icon: <Sparkles className="h-6 w-6 text-cyan-400" />,
       type: 'fish'
     },
@@ -162,33 +177,50 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           {/* Icon/Image */}
           <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
             {prize.type === 'flower' && dailyItems ? (
-              <img
-                src={`/Blumen/${dailyItems.flowerId}.jpg`}
-                alt={prize.title}
-                className="h-18 w-18 object-cover rounded border-2"
-                style={{ borderColor: getRarityColor(dailyItems.flowerRarity as any) }}
-              />
+              <div className="w-18 h-18 relative">
+                <img
+                  src={`/Blumen/${dailyItems.flowerId}.jpg`}
+                  alt={prize.title}
+                  className="w-full h-full object-cover rounded border-4"
+                  style={{ borderColor: getBorderColor(dailyItems.flowerRarity) }}
+                />
+              </div>
             ) : prize.type === 'butterfly' && dailyItems ? (
-              <img
-                src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-                alt={prize.title}
-                className="h-18 w-18 object-cover rounded border-2"
-                style={{ borderColor: getRarityColor(dailyItems.butterflyRarity as any) }}
-              />
+              <div className="w-18 h-18 relative">
+                <img
+                  src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                  alt={prize.title}
+                  className="w-full h-full object-cover rounded border-4"
+                  style={{ borderColor: getBorderColor(dailyItems.butterflyRarity) }}
+                />
+              </div>
             ) : prize.type === 'caterpillar' && dailyItems ? (
-              <img
-                src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-                alt={prize.title}
-                className="h-18 w-18 object-cover rounded border-2"
-                style={{ borderColor: getRarityColor(dailyItems.caterpillarRarity as any) }}
-              />
+              <div className="w-18 h-18 relative">
+                <img
+                  src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                  alt={prize.title}
+                  className="w-full h-full object-cover rounded border-4"
+                  style={{ borderColor: getBorderColor(dailyItems.caterpillarRarity) }}
+                />
+              </div>
             ) : prize.type === 'fish' && dailyItems ? (
-              <img
-                src={`/Fische/${dailyItems.fishId}.jpg`}
-                alt={prize.title}
-                className="h-18 w-18 object-cover rounded border-2"
-                style={{ borderColor: getRarityColor(dailyItems.fishRarity as any) }}
-              />
+              <div className="w-18 h-18 relative">
+                <img
+                  src={`/Fische/${dailyItems.fishId}.jpg`}
+                  alt={prize.title}
+                  className="w-full h-full object-cover rounded border-4"
+                  style={{ borderColor: getBorderColor(dailyItems.fishRarity) }}
+                />
+              </div>
+            ) : prize.type === 'seed' && (prize.id === 'seed' || prize.id === 'rare-seed') ? (
+              <div className="w-18 h-18 relative">
+                <img
+                  src="/Samen/0.jpg"
+                  alt={prize.title}
+                  className="w-full h-full object-cover rounded border-4"
+                  style={{ borderColor: getBorderColor(prize.id === 'rare-seed' ? 'rare' : 'common') }}
+                />
+              </div>
             ) : (
               <div className="flex justify-center items-center">
                 {prize.icon}
@@ -227,7 +259,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FlowerHoverPreview
           key={prize.id}
           flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-          flowerName="Corona magnificus"
+          flowerName={`${getRarityDisplayName(dailyItems.flowerRarity as any)} Blume`}
           rarity={dailyItems.flowerRarity as any}
         >
           {cardContent}
@@ -238,7 +270,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <ButterflyHoverPreview
           key={prize.id}
           butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-          butterflyName="Aglais magnificus"
+          butterflyName={`${getRarityDisplayName(dailyItems.butterflyRarity as any)} Schmetterling`}
           rarity={dailyItems.butterflyRarity as any}
         >
           {cardContent}
@@ -249,7 +281,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <CaterpillarHoverPreview
           key={prize.id}
           caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-          caterpillarName="Lepidoptera mysticus"
+          caterpillarName={`${getRarityDisplayName(dailyItems.caterpillarRarity as any)} Raupe`}
           rarity={dailyItems.caterpillarRarity as any}
         >
           {cardContent}
@@ -260,7 +292,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FishHoverPreview
           key={prize.id}
           fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-          fishName="Pomacanthus elegans"
+          fishName={`${getRarityDisplayName(dailyItems.fishRarity as any)} Fisch`}
           rarity={dailyItems.fishRarity as any}
         >
           {cardContent}
