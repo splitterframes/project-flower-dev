@@ -3149,6 +3149,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Feature unlocking endpoints
+  app.get('/api/user/:userId/unlocked-features', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const unlockedFeatures = await postgresStorage.getUnlockedFeatures(userId);
+      console.log(`🔓 User ${userId} unlocked features: ${unlockedFeatures.join(', ')}`);
+      res.json({ unlockedFeatures });
+    } catch (error) {
+      console.error('Failed to get unlocked features:', error);
+      res.status(500).json({ error: 'Failed to get unlocked features' });
+    }
+  });
+
+  app.post('/api/user/:userId/unlock-feature', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { featureName } = req.body;
+
+      // Define feature costs
+      const featureCosts: { [key: string]: number } = {
+        'marie-slot': 1000,
+        'dna': 3500,
+        'schlossgarten': 8000
+      };
+
+      const creditsRequired = featureCosts[featureName];
+      if (!creditsRequired) {
+        return res.status(400).json({ error: 'Invalid feature name' });
+      }
+
+      const result = await postgresStorage.unlockFeature(userId, featureName, creditsRequired);
+      console.log(`🔓 User ${userId} unlocked feature: ${featureName} for ${creditsRequired} credits`);
+      
+      res.json({ 
+        message: `Feature ${featureName} unlocked successfully!`,
+        creditsSpent: creditsRequired,
+        newCredits: result.newCredits
+      });
+    } catch (error: any) {
+      console.error('Failed to unlock feature:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

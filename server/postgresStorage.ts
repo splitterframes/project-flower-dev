@@ -36,6 +36,7 @@ import {
   dailyRedemptions,
   castleUnlockedParts,
   castleGridState,
+  userUnlockedFeatures,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -6540,6 +6541,81 @@ export class PostgresStorage {
     } catch (error) {
       console.error('Failed to remove castle part:', error);
       return { success: false, message: 'Fehler beim Entfernen des Bauteils' };
+    }
+  }
+
+  // Feature unlocking functions
+  async getUnlockedFeatures(userId: number) {
+    try {
+      const unlockedFeatures = await this.db
+        .select()
+        .from(userUnlockedFeatures)
+        .where(eq(userUnlockedFeatures.userId, userId));
+      
+      return unlockedFeatures.map(f => f.featureName);
+    } catch (error) {
+      console.error(`💾 Failed to get unlocked features for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async unlockFeature(userId: number, featureName: string, creditsRequired: number) {
+    try {
+      return await this.db.transaction(async (tx) => {
+        // Get current user credits
+        const user = await tx
+          .select({ credits: users.credits })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+
+        if (!user[0]) {
+          throw new Error('User not found');
+        }
+
+        if (user[0].credits < creditsRequired) {
+          throw new Error('Insufficient credits');
+        }
+
+        // Check if feature is already unlocked
+        const existing = await tx
+          .select()
+          .from(userUnlockedFeatures)
+          .where(
+            and(
+              eq(userUnlockedFeatures.userId, userId),
+              eq(userUnlockedFeatures.featureName, featureName)
+            )
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          throw new Error('Feature already unlocked');
+        }
+
+        // Deduct credits
+        await tx
+          .update(users)
+          .set({ 
+            credits: user[0].credits - creditsRequired,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+
+        // Unlock feature
+        await tx
+          .insert(userUnlockedFeatures)
+          .values({
+            userId,
+            featureName,
+            creditsSpent: creditsRequired,
+          });
+
+        return { success: true, newCredits: user[0].credits - creditsRequired };
+      });
+    } catch (error) {
+      console.error(`💾 Failed to unlock feature ${featureName} for user ${userId}:`, error);
+      throw error;
     }
   }
 }

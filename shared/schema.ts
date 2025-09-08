@@ -15,6 +15,16 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const userUnlockedFeatures = pgTable("user_unlocked_features", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  featureName: text("feature_name").notNull(), // 'dna', 'marie-slot', 'schlossgarten'
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
+  creditsSpent: integer("credits_spent").notNull(),
+}, (table) => ({
+  uniqueUserFeature: unique().on(table.userId, table.featureName)
+}));
+
 export const seeds = pgTable("seeds", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
