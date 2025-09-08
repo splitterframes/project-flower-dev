@@ -59,7 +59,7 @@ const BalloonComponent: React.FC<{
           width: '40px',
           height: '50px',
           backgroundColor: balloon.color,
-          borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+          borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
           position: 'relative',
           transition: 'transform 0.15s ease-out',
           boxShadow: `inset -5px -5px 0 rgba(0,0,0,0.1), 
@@ -90,7 +90,7 @@ const BalloonComponent: React.FC<{
             width: '8px',
             height: '12px',
             backgroundColor: 'rgba(255,255,255,0.6)',
-            borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+            borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
             opacity: isPopped ? 0 : 1,
             transition: 'opacity 0.15s ease-out'
           }}
