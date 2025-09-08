@@ -44,8 +44,13 @@ const BalloonComponent: React.FC<{
 }> = ({ balloon, onPop, setConfettiParticles }) => {
   const [isPopped, setIsPopped] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     setIsPopped(true);
+    
+    // Get exact balloon position from click event
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const balloonCenterX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+    const balloonCenterY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
     
     // Create confetti explosion
     const newConfetti: Confetti[] = [];
@@ -54,8 +59,8 @@ const BalloonComponent: React.FC<{
     for (let i = 0; i < 15; i++) {
       newConfetti.push({
         id: `confetti-${balloon.id}-${i}`,
-        x: balloon.x,
-        y: 50, // Center of screen approximately
+        x: balloonCenterX,
+        y: balloonCenterY,
         color: colors[Math.floor(Math.random() * colors.length)],
         delay: Math.random() * 0.3
       });
