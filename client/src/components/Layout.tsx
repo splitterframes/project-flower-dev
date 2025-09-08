@@ -54,6 +54,48 @@ const BalloonComponent: React.FC<{
       }}
       onClick={handleClick}
     >
+      {/* Balloon string - BEHIND balloon */}
+      <div 
+        style={{
+          position: 'absolute',
+          bottom: '-20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '1px',
+          height: balloon.hasCard ? '35px' : '20px',
+          backgroundColor: '#8B4513',
+          opacity: isPopped ? 0 : 1,
+          transition: 'opacity 0.15s ease-out'
+        }}
+      />
+      
+      {/* Small card hanging from string - BEHIND balloon */}
+      {balloon.hasCard && (
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '24px',
+            height: '18px',
+            backgroundColor: '#FFE4E1',
+            border: '1px solid #DDD',
+            borderRadius: '2px',
+            opacity: isPopped ? 0 : 1,
+            transition: 'opacity 0.15s ease-out',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            fontSize: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#666'
+          }}
+        >
+          🎁
+        </div>
+      )}
+
       <div 
         className={`balloon-body ${isPopped ? 'scale-0' : ''} ${
           isPopped ? '' : 
@@ -72,48 +114,6 @@ const BalloonComponent: React.FC<{
           border: '1px solid rgba(255,255,255,0.3)'
         }}
       >
-        {/* Balloon string */}
-        <div 
-          style={{
-            position: 'absolute',
-            bottom: '-20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '1px',
-            height: balloon.hasCard ? '35px' : '20px',
-            backgroundColor: '#8B4513',
-            opacity: isPopped ? 0 : 1,
-            transition: 'opacity 0.15s ease-out',
-            zIndex: -1
-          }}
-        />
-        
-        {/* Small card hanging from string */}
-        {balloon.hasCard && (
-          <div 
-            style={{
-              position: 'absolute',
-              bottom: '-40px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '24px',
-              height: '18px',
-              backgroundColor: '#FFE4E1',
-              border: '1px solid #DDD',
-              borderRadius: '2px',
-              opacity: isPopped ? 0 : 1,
-              transition: 'opacity 0.15s ease-out',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              fontSize: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#666'
-            }}
-          >
-            🎁
-          </div>
-        )}
         {/* Balloon highlight */}
         <div 
           style={{
