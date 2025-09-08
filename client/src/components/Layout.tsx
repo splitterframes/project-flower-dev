@@ -56,7 +56,7 @@ const BalloonComponent: React.FC<{
     const newConfetti: Confetti[] = [];
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
     
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 25; i++) {
       newConfetti.push({
         id: `confetti-${balloon.id}-${i}`,
         x: balloonCenterX,
