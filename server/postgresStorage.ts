@@ -6010,20 +6010,20 @@ export class PostgresStorage {
   }
 
   private async generateDailyItems(date: string): Promise<DailyItems> {
-    // Generate rare+ items (rarity 2-6)
+    // Generate ONLY rare items (rarity 2)
     const getRandomRareId = (max: number) => Math.floor(Math.random() * max);
-    const getRandomRareRarity = () => 2 + Math.floor(Math.random() * 5); // 2-6
+    const getRareRarity = () => 2; // Always rare (2)
 
     const newDailyItems = {
       date,
       flowerId: getRandomRareId(200),
-      flowerRarity: getRandomRareRarity(),
+      flowerRarity: getRareRarity(),
       butterflyId: getRandomRareId(960),
-      butterflyRarity: getRandomRareRarity(),
+      butterflyRarity: getRareRarity(),
       caterpillarId: getRandomRareId(124),
-      caterpillarRarity: getRandomRareRarity(),
+      caterpillarRarity: getRareRarity(),
       fishId: getRandomRareId(278),
-      fishRarity: getRandomRareRarity(),
+      fishRarity: getRareRarity(),
     };
 
     const [inserted] = await this.db

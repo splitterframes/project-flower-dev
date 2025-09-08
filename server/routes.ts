@@ -204,6 +204,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Redeem tickets for prizes
+  app.post("/api/user/:id/redeem-tickets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { prizeType, cost } = req.body;
+      
+      if (!prizeType || typeof cost !== 'number') {
+        return res.status(400).json({ message: "Missing prizeType or cost" });
+      }
+
+      const result = await storage.redeemTickets(userId, prizeType, cost);
+      
+      if (result.success) {
+        res.json({ success: true, message: result.message });
+      } else {
+        res.status(400).json({ success: false, message: result.message });
+      }
+    } catch (error) {
+      console.error('Error redeeming tickets:', error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
   // DNA Sequencing endpoint (consumes items)
   app.post("/api/user/:id/dna/sequence", async (req, res) => {
     try {
