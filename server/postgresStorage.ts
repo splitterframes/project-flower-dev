@@ -2235,10 +2235,10 @@ export class PostgresStorage {
     }
 
     try {
-      // Add caterpillar to user inventory 
-      await this.addCaterpillarToInventory(userId, caterpillar.id, caterpillar.name, inheritedRarity, caterpillar.imageUrl);
-
-      // ALSO place caterpillar permanently on the field (blocks field until collected)
+      // 🐛 🔥 FIX: Only place caterpillar on field - do NOT add to inventory yet!
+      // User gets caterpillar in inventory when they click to collect it
+      
+      // Place caterpillar permanently on the field (blocks field until collected)
       await this.db.insert(fieldCaterpillars).values({
         userId,
         fieldIndex,
