@@ -7,7 +7,6 @@ import { Ticket, Coins, Sun, Sprout, Flower2, Bug, Fish, Sparkles } from 'lucide
 import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
-import { generateLatinName } from '../utils/nameGenerator';
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -232,7 +231,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                             {prize.type === 'flower' ? (
                               <FlowerHoverPreview
                                 flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-                                flowerName={generateLatinName(dailyItems.flowerId)}
+                                flowerName={`Rare Blume ${dailyItems.flowerId}`}
                                 rarity={dailyItems.flowerRarity as any}
                               >
                                 <img
@@ -245,7 +244,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                             ) : prize.type === 'butterfly' ? (
                               <ButterflyHoverPreview
                                 butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-                                butterflyName={generateLatinName(dailyItems.butterflyId)}
+                                butterflyName={`Rarer Schmetterling ${dailyItems.butterflyId}`}
                                 rarity={dailyItems.butterflyRarity as any}
                               >
                                 <img
@@ -258,7 +257,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                             ) : prize.type === 'fish' ? (
                               <FishHoverPreview
                                 fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-                                fishName={generateLatinName(dailyItems.fishId)}
+                                fishName={`Rarer Fisch ${dailyItems.fishId}`}
                                 rarity={dailyItems.fishRarity as any}
                               >
                                 <img
