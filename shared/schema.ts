@@ -599,6 +599,28 @@ export const dailyRedemptions = pgTable("daily_redemptions", {
   userDatePrizeUnique: unique().on(table.userId, table.date, table.prizeType),
 }));
 
+// Castle Garden Tables
+export const castleUnlockedParts = pgTable("castle_unlocked_parts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  partName: text("part_name").notNull(), // z.B. "SteinBauteil"
+  price: integer("price").notNull(), // Preis in Credits
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
+}, (table) => ({
+  userPartUnique: unique().on(table.userId, table.partName),
+}));
+
+export const castleGridState = pgTable("castle_grid_state", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  gridX: integer("grid_x").notNull(), // 0-24 (25 Spalten)
+  gridY: integer("grid_y").notNull(), // 0-14 (15 Reihen)
+  partName: text("part_name").notNull(), // Welches Bauteil liegt hier
+  placedAt: timestamp("placed_at").notNull().defaultNow(),
+}, (table) => ({
+  userPositionUnique: unique().on(table.userId, table.gridX, table.gridY),
+}));
+
 // Aquarium types
 export type AquariumTank = typeof aquariumTanks.$inferSelect;
 export type NewAquariumTank = typeof aquariumTanks.$inferInsert;
@@ -616,3 +638,9 @@ export type NewDailyItems = typeof dailyItems.$inferInsert;
 // Daily Redemptions types
 export type DailyRedemption = typeof dailyRedemptions.$inferSelect;
 export type NewDailyRedemption = typeof dailyRedemptions.$inferInsert;
+
+// Castle Garden types
+export type CastleUnlockedPart = typeof castleUnlockedParts.$inferSelect;
+export type NewCastleUnlockedPart = typeof castleUnlockedParts.$inferInsert;
+export type CastleGridState = typeof castleGridState.$inferSelect;
+export type NewCastleGridState = typeof castleGridState.$inferInsert;
