@@ -439,7 +439,7 @@ export const CastleGardenView: React.FC = () => {
       offsetX: 0,
       offsetY: 0,
       rotation: 0,
-      scale: 0.5, // Startet klein aber sichtbar
+      scale: 0.3, // Startet klein aber sichtbar - moderate Größe
       opacity: 1,
       velocity: {
         x: 0,
@@ -821,7 +821,7 @@ export const CastleGardenView: React.FC = () => {
                       top: `${heart.y * 56 + 28 + heart.offsetY}px`,
                       transform: `scale(${heart.scale})`,
                       opacity: heart.opacity,
-                      fontSize: '40px',
+                      fontSize: '16px', // Viel kleinere, moderate Herzen
                       textShadow: '2px 2px 6px rgba(0,0,0,0.5)',
                       filter: `drop-shadow(0 0 12px rgba(255, 20, 147, ${heart.opacity * 0.8}))`
                     }}
