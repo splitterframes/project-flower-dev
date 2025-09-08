@@ -111,7 +111,6 @@ export const CastleGardenView: React.FC = () => {
     localStorage.setItem('castle-balloons-enabled', balloonsEnabled.toString());
     // Globales Flag für Layout setzen (nur wenn im Schlossgarten)
     (window as any).balloonsDisabledInCastle = !balloonsEnabled;
-    console.log(`🎈 Toggle changed: balloonsEnabled=${balloonsEnabled}, globalFlag=${!balloonsEnabled}`);
   }, [balloonsEnabled]);
 
   // Dynamisches Laden der Bauteile aus Castle-Ordner

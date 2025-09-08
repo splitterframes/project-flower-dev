@@ -309,16 +309,10 @@ export const Layout: React.FC = () => {
     }
 
     const spawnBalloon = () => {
-      // Debug logging
-      console.log(`🔍 BALLOON DEBUG: view=${currentView}, globalFlag=${(window as any).balloonsDisabledInCastle}, location=${window.location.pathname}`);
-      
       // Only disable balloons if we're in castle garden AND toggle is disabled
       if (currentView === 'schlossgarten' && (window as any).balloonsDisabledInCastle) {
-        console.log('🚫 Balloons disabled in castle garden - skipping spawn');
         return; // Exit early if balloons are disabled in castle garden
       }
-      
-      console.log('✅ Balloons should spawn - proceeding');
       
       // Determine how many balloons to spawn
       const randomChance = Math.random();
