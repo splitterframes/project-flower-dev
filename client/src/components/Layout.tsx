@@ -225,7 +225,7 @@ export const Layout: React.FC = () => {
     try {
       if (type === 'credit') {
         await fetch(`/api/user/${user.id}/credits`, {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount })
         });
@@ -233,13 +233,13 @@ export const Layout: React.FC = () => {
         setHeaderRefreshTrigger(prev => prev + 1);
       } else if (type === 'sun') {
         await fetch(`/api/user/${user.id}/suns`, {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount })
         });
       } else if (type === 'dna') {
         await fetch(`/api/user/${user.id}/dna`, {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount })
         });
