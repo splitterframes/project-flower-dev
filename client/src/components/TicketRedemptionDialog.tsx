@@ -190,7 +190,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <div className="text-center space-y-2 h-full flex flex-col justify-between">
           {/* Icon/Image */}
           <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
-            {prize.type === 'flower' && dailyItems ? (
+            {prize.type === 'daily-flower' && dailyItems ? (
               <div className="w-18 h-18 relative">
                 <img
                   src={`/Blumen/${dailyItems.flowerId}.jpg`}
@@ -199,7 +199,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.flowerRarity))) }}
                 />
               </div>
-            ) : prize.type === 'butterfly' && dailyItems ? (
+            ) : prize.type === 'daily-butterfly' && dailyItems ? (
               <div className="w-18 h-18 relative">
                 <img
                   src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
@@ -208,7 +208,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))) }}
                 />
               </div>
-            ) : prize.type === 'caterpillar' && dailyItems ? (
+            ) : prize.type === 'daily-caterpillar' && dailyItems ? (
               <div className="w-18 h-18 relative">
                 <img
                   src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
@@ -217,7 +217,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.caterpillarRarity))) }}
                 />
               </div>
-            ) : prize.type === 'fish' && dailyItems ? (
+            ) : prize.type === 'daily-fish' && dailyItems ? (
               <div className="w-18 h-18 relative">
                 <img
                   src={`/Fische/${dailyItems.fishId}.jpg`}
@@ -226,7 +226,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.fishRarity))) }}
                 />
               </div>
-            ) : prize.type === 'seed' && (prize.id === 'seed' || prize.id === 'rare-seed') ? (
+            ) : (prize.type === 'seed' || prize.type === 'rare-seed') ? (
               <div className="w-18 h-18 relative">
                 <img
                   src="/Blumen/0.jpg"
