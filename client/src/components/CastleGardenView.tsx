@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -170,6 +170,13 @@ export const CastleGardenView: React.FC = () => {
   
   // Nur freigeschaltete Bauteile anzeigen
   const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
+  
+  // Gesamtinvestition berechnen (ohne Standard-Teile)
+  const totalInvestment = useMemo(() => {
+    return availableParts
+      .filter(part => part.cost > 0) // Nur kostenpflichtige Teile
+      .reduce((sum, part) => sum + part.cost, 0);
+  }, [availableParts]);
 
   // Drag Start Handler für Bauteile
   const handleDragStart = (event: React.DragEvent, part: BuildingPart) => {
@@ -638,10 +645,20 @@ export const CastleGardenView: React.FC = () => {
             <h1 className="text-2xl font-bold text-white mb-2">🏰 Schlossgarten</h1>
             <p className="text-slate-300">Gestalte deinen eigenen königlichen Garten!</p>
           </div>
-          <div className="flex items-center gap-2 text-lg">
-            <span className="text-2xl">💖</span>
-            <span className="text-white font-bold">{totalHeartsCollected}</span>
-            <span className="text-slate-400 text-sm">Herzen</span>
+          <div className="flex items-center gap-6">
+            {/* Investitionssumme */}
+            <div className="flex items-center gap-2 text-lg">
+              <span className="text-2xl">🏰</span>
+              <span className="text-yellow-400 font-bold">{totalInvestment.toLocaleString()}</span>
+              <span className="text-slate-400 text-sm">investiert</span>
+            </div>
+            
+            {/* Herzen-Anzeige */}
+            <div className="flex items-center gap-2 text-lg">
+              <span className="text-2xl">💖</span>
+              <span className="text-white font-bold">{totalHeartsCollected}</span>
+              <span className="text-slate-400 text-sm">Herzen</span>
+            </div>
           </div>
         </div>
       </div>
