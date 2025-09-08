@@ -96,6 +96,9 @@ export const CastleGardenView: React.FC = () => {
   // Drag & Drop State mit Feld-zu-Feld Support
   const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
   const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
+  
+  // Herzen-Zähler State
+  const [totalHeartsCollected, setTotalHeartsCollected] = useState(0);
 
   // Verfügbare Bauteile
   const allParts: BuildingPart[] = [
@@ -311,6 +314,7 @@ export const CastleGardenView: React.FC = () => {
       
       // Herzen ins Inventar hinzufügen
       setCredits(credits + heartAmount);
+      setTotalHeartsCollected(prev => prev + heartAmount);
       toast.success(`💖 ${heartAmount} Herzen gesammelt! (+${heartAmount} Credits)`);
       
       console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Wert: ${partValue}, ${heartAmount} Herzen!`);
@@ -550,6 +554,15 @@ export const CastleGardenView: React.FC = () => {
           </CardContent>
         </Card>
         
+        {/* Herzen-Zähler */}
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-center gap-2 text-lg">
+            <span className="text-2xl">💖</span>
+            <span className="text-white font-bold">{totalHeartsCollected}</span>
+            <span className="text-slate-400 text-sm">Herzen gesammelt</span>
+          </div>
+        </div>
+
         {/* Garten-Grid */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
@@ -654,68 +667,6 @@ export const CastleGardenView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Bienen-System Status */}
-        <Card className="bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-amber-700">
-          <CardHeader>
-            <CardTitle className="text-lg text-amber-300">🐝 Intelligentes Bienen-Ökosystem</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <h3 className="font-medium text-amber-300 mb-1">📊 Live Stats:</h3>
-                <ul className="space-y-1 text-amber-100">
-                  <li>• Aktive Bienen: <strong>{bees.length}</strong></li>
-                  <li>• Konfetti-Herzen: <strong>{confettiHearts.length}</strong></li>
-                  <li>• Bauteile gesetzt: <strong>{grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length}</strong></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-medium text-amber-300 mb-1">🎯 Bienen-Logik:</h3>
-                <ul className="space-y-1 text-amber-100">
-                  <li>• Spawnen nur auf Bauteilen</li>
-                  <li>• Fliegen langsam sichtbar</li>
-                  <li>• 30% Chance alle 10s</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-medium text-amber-300 mb-1">💖 Herzen-System:</h3>
-                <ul className="space-y-1 text-amber-100">
-                  <li>• Konfetti-Explosion</li>
-                  <li>• Direkt ins Inventar</li>
-                  <li>• 1-5 Herzen pro Flug</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex gap-2">
-              <Button 
-                size="sm" 
-                onClick={spawnRandomBee}
-                className="bg-amber-600 hover:bg-amber-700"
-                disabled={grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2}
-              >
-                🐝 Test-Biene
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="border-amber-600 text-amber-300 hover:bg-amber-900/20"
-                onClick={() => {
-                  setBees([]);
-                  setConfettiHearts([]);
-                }}
-              >
-                🧹 Reset
-              </Button>
-            </div>
-            
-            {grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2 && (
-              <div className="mt-3 p-2 bg-amber-900/30 rounded text-amber-200 text-xs text-center">
-                💡 Platziere mindestens 2 Bauteile für Bienen-Aktivität
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
       
       {/* Shop Dialog */}
