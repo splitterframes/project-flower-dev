@@ -271,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
       <div className="flex items-center justify-between">
         {/* Logo/Title */}
         <div className="flex items-center">
-          <h1 className="text-lg sm:text-2xl font-bold text-white">Mariposa</h1>
+          <h1 className="text-base sm:text-lg md:text-2xl font-bold text-white">Mariposa</h1>
         </div>
 
         {/* Right side - User info or Login button */}
