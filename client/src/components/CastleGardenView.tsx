@@ -422,7 +422,7 @@ export const CastleGardenView: React.FC = () => {
           await fetch(`/api/user/${user.id}/credits`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ credits: newCredits })
+            body: JSON.stringify({ amount: heartAmount })
           });
           console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${newCredits}`);
         } catch (error) {
