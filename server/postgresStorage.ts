@@ -6561,58 +6561,57 @@ export class PostgresStorage {
 
   async unlockFeature(userId: number, featureName: string, creditsRequired: number) {
     try {
-      return await this.db.transaction(async (tx) => {
-        // Get current user credits
-        const user = await tx
-          .select({ credits: users.credits })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
+      // Get current user credits
+      const user = await this.db
+        .select({ credits: users.credits })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
 
-        if (!user[0]) {
-          throw new Error('User not found');
-        }
+      if (!user[0]) {
+        throw new Error('User not found');
+      }
 
-        if (user[0].credits < creditsRequired) {
-          throw new Error('Insufficient credits');
-        }
+      if (user[0].credits < creditsRequired) {
+        throw new Error('Insufficient credits');
+      }
 
-        // Check if feature is already unlocked
-        const existing = await tx
-          .select()
-          .from(userUnlockedFeatures)
-          .where(
-            and(
-              eq(userUnlockedFeatures.userId, userId),
-              eq(userUnlockedFeatures.featureName, featureName)
-            )
+      // Check if feature is already unlocked
+      const existing = await this.db
+        .select()
+        .from(userUnlockedFeatures)
+        .where(
+          and(
+            eq(userUnlockedFeatures.userId, userId),
+            eq(userUnlockedFeatures.featureName, featureName)
           )
-          .limit(1);
+        )
+        .limit(1);
 
-        if (existing.length > 0) {
-          throw new Error('Feature already unlocked');
-        }
+      if (existing.length > 0) {
+        throw new Error('Feature already unlocked');
+      }
 
-        // Deduct credits
-        await tx
-          .update(users)
-          .set({ 
-            credits: user[0].credits - creditsRequired,
-            updatedAt: new Date()
-          })
-          .where(eq(users.id, userId));
+      // Deduct credits
+      await this.db
+        .update(users)
+        .set({ 
+          credits: user[0].credits - creditsRequired,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
 
-        // Unlock feature
-        await tx
-          .insert(userUnlockedFeatures)
-          .values({
-            userId,
-            featureName,
-            creditsSpent: creditsRequired,
-          });
+      // Unlock feature
+      await this.db
+        .insert(userUnlockedFeatures)
+        .values({
+          userId,
+          featureName,
+          creditsSpent: creditsRequired,
+        });
 
-        return { success: true, newCredits: user[0].credits - creditsRequired };
-      });
+      console.log(`✅ Feature ${featureName} unlocked for user ${userId} for ${creditsRequired} credits`);
+      return { success: true, newCredits: user[0].credits - creditsRequired };
     } catch (error) {
       console.error(`💾 Failed to unlock feature ${featureName} for user ${userId}:`, error);
       throw error;
