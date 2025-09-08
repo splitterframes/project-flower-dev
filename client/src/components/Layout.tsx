@@ -292,21 +292,13 @@ export const Layout: React.FC = () => {
     }
   }, [user, setCredits]);
 
-  // Balloon spawning system with proper spawn/pause phases  
+  // Balloon spawning system with proper spawn/pause phases and immediate reset
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     // Use unique keys to prevent multiple timers
     const spawnTimerKey = 'balloon-spawn-timer';
     const phaseTimerKey = 'balloon-phase-timer';
-    
-    // Clear any existing timers
-    if ((window as any)[spawnTimerKey]) {
-      clearInterval((window as any)[spawnTimerKey]);
-    }
-    if ((window as any)[phaseTimerKey]) {
-      clearTimeout((window as any)[phaseTimerKey]);
-    }
 
     const spawnBalloon = () => {
       // Only disable balloons if we're in castle garden AND toggle is disabled
@@ -376,6 +368,27 @@ export const Layout: React.FC = () => {
       }, 40000); // 40 seconds pause phase
     };
 
+    // Function to immediately reset balloon timers
+    const resetBalloonTimers = () => {
+      console.log('🔄 Balloon timers reset triggered - immediate stop/restart');
+      
+      // Clear existing timers immediately
+      if ((window as any)[spawnTimerKey]) {
+        clearInterval((window as any)[spawnTimerKey]);
+        delete (window as any)[spawnTimerKey];
+      }
+      if ((window as any)[phaseTimerKey]) {
+        clearTimeout((window as any)[phaseTimerKey]);
+        delete (window as any)[phaseTimerKey];
+      }
+      
+      // Restart spawning phase immediately
+      startSpawningPhase();
+    };
+    
+    // Make reset function globally available
+    (window as any).resetBalloonTimers = resetBalloonTimers;
+
     // Start first spawning phase after 3 seconds
     setTimeout(() => {
       startSpawningPhase();
@@ -390,8 +403,10 @@ export const Layout: React.FC = () => {
         clearTimeout((window as any)[phaseTimerKey]);
         delete (window as any)[phaseTimerKey];
       }
+      // Remove global reset function
+      delete (window as any).resetBalloonTimers;
     };
-  }, []); // No dependencies to avoid HMR restarts
+  }, [currentView, balloons, setBalloons]); // Include dependencies
 
   // Function to pop balloon
   const popBalloon = (balloonId: string) => {
