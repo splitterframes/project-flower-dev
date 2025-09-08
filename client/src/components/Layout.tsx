@@ -291,25 +291,23 @@ export const Layout: React.FC = () => {
     }
   }, [user, setCredits]);
 
-  // Simple balloon spawning system - spawns every 20 seconds with random pauses
+  // Balloon spawning system with proper spawn/pause phases  
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Use a unique key to prevent multiple timers
-    const timerKey = 'balloon-system-timer';
+    // Use unique keys to prevent multiple timers
+    const spawnTimerKey = 'balloon-spawn-timer';
+    const phaseTimerKey = 'balloon-phase-timer';
     
-    // Clear any existing timer
-    if ((window as any)[timerKey]) {
-      clearInterval((window as any)[timerKey]);
+    // Clear any existing timers
+    if ((window as any)[spawnTimerKey]) {
+      clearInterval((window as any)[spawnTimerKey]);
+    }
+    if ((window as any)[phaseTimerKey]) {
+      clearTimeout((window as any)[phaseTimerKey]);
     }
 
     const spawnBalloon = () => {
-      // Random chance to spawn (simulates pause phases)
-      if (Math.random() < 0.3) { // 30% chance to skip (simulates pauses)
-        console.log('🎈 Balloon skipped (pause simulation)');
-        return;
-      }
-      
       console.log('🎈 Spawning balloon');
       const newBalloon: Balloon = {
         id: `balloon-${Date.now()}-${Math.random()}`,
@@ -327,19 +325,47 @@ export const Layout: React.FC = () => {
       }, 8000);
     };
 
-    // Spawn every 20 seconds
-    (window as any)[timerKey] = setInterval(spawnBalloon, 20000);
-    
-    // Spawn first balloon after 3 seconds
-    setTimeout(spawnBalloon, 3000);
+    const startSpawningPhase = () => {
+      console.log('🎈 SPAWN PHASE started (90 seconds)');
+      
+      // Spawn balloons every 7 seconds (middle of 5-10 seconds)
+      (window as any)[spawnTimerKey] = setInterval(spawnBalloon, 7000);
+      
+      // Stop spawning after 90 seconds and start pause
+      (window as any)[phaseTimerKey] = setTimeout(() => {
+        if ((window as any)[spawnTimerKey]) {
+          clearInterval((window as any)[spawnTimerKey]);
+          delete (window as any)[spawnTimerKey];
+        }
+        startPausePhase();
+      }, 90000); // 90 seconds spawn phase
+    };
+
+    const startPausePhase = () => {
+      console.log('🎈 PAUSE PHASE started (40 seconds)');
+      
+      // Pause for 40 seconds, then restart spawning
+      (window as any)[phaseTimerKey] = setTimeout(() => {
+        startSpawningPhase();
+      }, 40000); // 40 seconds pause phase
+    };
+
+    // Start first spawning phase after 3 seconds
+    setTimeout(() => {
+      startSpawningPhase();
+    }, 3000);
 
     return () => {
-      if ((window as any)[timerKey]) {
-        clearInterval((window as any)[timerKey]);
-        delete (window as any)[timerKey];
+      if ((window as any)[spawnTimerKey]) {
+        clearInterval((window as any)[spawnTimerKey]);
+        delete (window as any)[spawnTimerKey];
+      }
+      if ((window as any)[phaseTimerKey]) {
+        clearTimeout((window as any)[phaseTimerKey]);
+        delete (window as any)[phaseTimerKey];
       }
     };
-  }, []); // No dependencies to avoid restarts
+  }, []); // No dependencies to avoid HMR restarts
 
   // Function to pop balloon
   const popBalloon = (balloonId: string) => {
