@@ -150,7 +150,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       title: '15 DNA',
       description: 'Sammle sofort 15 DNA',
       icon: <Zap className="h-6 w-6 text-green-400" />,
-      type: 'dna'
+      type: 'credits' as any
     },
     {
       id: 'daily-flower',
@@ -222,11 +222,11 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 rounded-t-lg shadow-inner" />
             <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 rounded-b-lg" />
             
-            {/* Main Layout - Left Grid + Right Container */}
+            {/* Main Layout - Grid + Side Container */}
             <div className="flex gap-6 pt-2">
-              {/* Left: First 7 prizes in 3-column grid */}
-              <div className="grid grid-cols-3 gap-4 flex-1">
-                {prizes.slice(0, -1).map((prize) => {
+              {/* Left: Prize Grid */}
+              <div className="grid grid-cols-4 xl:grid-cols-4 gap-4 flex-1">
+              {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
                 const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
@@ -333,9 +333,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   return (
                     <FlowerHoverPreview
                       key={prize.id}
-                      flowerId={dailyItems.flowerId}
-                      flowerName="Corona magnificus"
                       flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
+                      flowerName="Corona magnificus"
                       rarity="rare"
                     >
                       {cardContent}
@@ -345,9 +344,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   return (
                     <ButterflyHoverPreview
                       key={prize.id}
-                      butterflyId={dailyItems.butterflyId}
-                      butterflyName="Aglais magnificus"
                       butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                      butterflyName="Aglais magnificus"
                       rarity="rare"
                     >
                       {cardContent}
@@ -357,9 +355,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   return (
                     <CaterpillarHoverPreview
                       key={prize.id}
-                      caterpillarId={dailyItems.caterpillarId}
-                      caterpillarName="Lepidoptera mysticus"
                       caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                      caterpillarName="Lepidoptera mysticus"
                       rarity="rare"
                     >
                       {cardContent}
@@ -369,9 +366,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   return (
                     <FishHoverPreview
                       key={prize.id}
-                      fishId={dailyItems.fishId}
-                      fishName="Pomacanthus elegans"
                       fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
+                      fishName="Pomacanthus elegans"
                       rarity="rare"
                     >
                       {cardContent}
@@ -387,78 +383,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
               })}
               </div>
               
-              {/* Right: Last prize (800 Credits) + Additional Info */}
-              <div className="w-80 flex flex-col gap-4">
-                {/* 800 Credits Prize Card */}
-                {(() => {
-                  const prize = prizes[prizes.length - 1]; // Last prize (800 Credits)
-                  const canAfford = userTickets >= prize.cost;
-                  const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
-                  const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
-                  const isDisabled = !canAfford || isAlreadyRedeemed;
-
-                  const cardContent = (
-                    <div 
-                      className={`
-                        bg-gradient-to-br from-amber-50 to-amber-100 
-                        border-2 border-amber-300 
-                        rounded-lg p-4 shadow-lg 
-                        min-h-[180px] flex flex-col justify-between
-                        hover:shadow-xl transition-all duration-200 hover:scale-105
-                        ${isDisabled ? 'opacity-75' : 'hover:from-amber-100 hover:to-amber-200'}
-                      `}
-                    >
-                      <div className="flex flex-col h-full">
-                        {/* Cost Badge */}
-                        <div className="flex justify-between items-start mb-3">
-                          <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                            {prize.cost} 🎫
-                          </span>
-                        </div>
-
-                        {/* Icon */}
-                        <div className="flex justify-center items-center mb-3 h-16">
-                          <div className="flex justify-center items-center">
-                            {prize.icon}
-                          </div>
-                        </div>
-                        
-                        {/* Title */}
-                        <h3 className="font-bold text-sm text-gray-800 text-center mb-2">{prize.title}</h3>
-                        
-                        {/* Description */}
-                        <p className="text-xs text-gray-600 text-center flex-1 mb-3">
-                          {isAlreadyRedeemed ? 'Bereits heute eingelöst' : prize.description}
-                        </p>
-                        
-                        {/* Redeem Button */}
-                        <Button
-                          size="sm"
-                          disabled={isDisabled || isRedeeming}
-                          onClick={() => handleRedeem(prize.id, prize.cost)}
-                          className={`
-                            w-full text-xs
-                            ${isAlreadyRedeemed 
-                              ? 'bg-green-600 text-white cursor-not-allowed' 
-                              : canAfford 
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                            }
-                          `}
-                        >
-                          {isAlreadyRedeemed ? '✓ Eingelöst' : isRedeeming ? 'Einlösen...' : 'Einlösen'}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-
-                  return (
-                    <div key={prize.id}>
-                      {cardContent}
-                    </div>
-                  );
-                })()}
-
+              {/* Right: Info Container next to 800 Credits */}
+              <div className="w-72 flex flex-col gap-4">
                 {/* Success/Error Message */}
                 <div className={`text-center p-3 rounded-lg transition-all duration-200 ${
                   redeemMessage 
