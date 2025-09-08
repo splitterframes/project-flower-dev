@@ -50,14 +50,6 @@ type ConfettiHeart = {
 };
 
 // Herzen-Anzahl-Text-Typ
-type HeartCountText = {
-  id: string;
-  x: number;
-  y: number;
-  amount: number;
-  startTime: number;
-  opacity: number;
-};
 
 export const CastleGardenView: React.FC = () => {
   const { user } = useAuth();
@@ -90,7 +82,6 @@ export const CastleGardenView: React.FC = () => {
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
-  const [heartCountTexts, setHeartCountTexts] = useState<HeartCountText[]>([]);
   const animationFrameRef = useRef<number>();
 
   // Drag & Drop State mit Feld-zu-Feld Support
@@ -429,9 +420,9 @@ export const CastleGardenView: React.FC = () => {
     }, flightDuration);
   };
 
-  // Einzelnes großes Herz + Anzahl-Text spawnen
+  // Neue einfache Herz-Animation
   const spawnSingleHeart = (centerX: number, centerY: number, amount: number) => {
-    // Ein großes Herz
+    // Einfaches Herz mit kurzer Animation
     const newHeart: ConfettiHeart = {
       id: `heart-${Date.now()}`,
       x: centerX,
@@ -439,52 +430,30 @@ export const CastleGardenView: React.FC = () => {
       offsetX: 0,
       offsetY: 0,
       rotation: 0,
-      scale: 0.3, // Startet klein aber sichtbar - moderate Größe
+      scale: 1,
       opacity: 1,
-      velocity: {
-        x: 0,
-        y: -1 // Viel langsamere Aufwärtsbewegung
-      },
+      velocity: { x: 0, y: 0 },
       startTime: Date.now()
     };
     
-    // Anzahl-Text
-    const newText: HeartCountText = {
-      id: `text-${Date.now()}`,
-      x: centerX,
-      y: centerY,
-      amount,
-      startTime: Date.now(),
-      opacity: 1
-    };
-    
     setConfettiHearts(prev => [...prev, newHeart]);
-    setHeartCountTexts(prev => [...prev, newText]);
     
-    // Herz nach 8 Sekunden entfernen (doppelt so lang)
+    // Herz nach 2 Sekunden entfernen
     setTimeout(() => {
       setConfettiHearts(prev => prev.filter(heart => heart.id !== newHeart.id));
-    }, 8000);
-    
-    // Text nach 4 Sekunden entfernen (doppelt so lang)
-    setTimeout(() => {
-      setHeartCountTexts(prev => prev.filter(text => text.id !== newText.id));
-    }, 4000);
+    }, 2000);
   };
 
-  // Animation Loop für Bienen
+  // Einfache Animation nur für Bienen
   useEffect(() => {
-    const animate = () => {
+    const interval = setInterval(() => {
       setBees(prevBees => 
         prevBees.map(bee => {
           const elapsed = Date.now() - bee.startTime;
           const progress = Math.min(elapsed / bee.duration, 1);
           
-          // Sanfte Bewegung mit easing
-          const easeProgress = 1 - Math.pow(1 - progress, 3);
-          
-          const newX = bee.startX + (bee.targetX - bee.startX) * easeProgress;
-          const newY = bee.startY + (bee.targetY - bee.startY) * easeProgress;
+          const newX = bee.startX + (bee.targetX - bee.startX) * progress;
+          const newY = bee.startY + (bee.targetY - bee.startY) * progress;
           
           return {
             ...bee,
@@ -493,56 +462,10 @@ export const CastleGardenView: React.FC = () => {
           };
         })
       );
-      
-      // Einzelnes Herz animieren (viel langsamer)
-      setConfettiHearts(prevHearts =>
-        prevHearts.map(heart => {
-          const elapsed = Date.now() - heart.startTime;
-          const progress = elapsed / 8000; // 8 Sekunden Animation (doppelt so lang)
-          
-          // Viel langsamere Aufwärtsbewegung
-          const newOffsetY = heart.offsetY + heart.velocity.y * 0.3; // 70% langsamer
-          
-          return {
-            ...heart,
-            offsetY: newOffsetY,
-            opacity: Math.max(0, 1 - progress * 0.6), // Viel langsameres Ausblenden
-            scale: heart.scale * (1 + progress * 1) // Wächst nur minimal
-          };
-        })
-      );
-      
-      // Anzahl-Text animieren (langsamer)
-      setHeartCountTexts(prevTexts =>
-        prevTexts.map(text => {
-          const elapsed = Date.now() - text.startTime;
-          const progress = elapsed / 4000; // 4 Sekunden Animation (doppelt so lang)
-          
-          return {
-            ...text,
-            opacity: Math.max(0, 1 - progress * 0.7) // Langsameres Ausblenden
-          };
-        })
-      );
-      
-      // Solange Animationen laufen, weiter animieren
-      if (bees.length > 0 || confettiHearts.length > 0 || heartCountTexts.length > 0) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
-    };
+    }, 50); // 20 FPS
     
-    // Animation starten wenn Objekte da sind
-    if ((bees.length > 0 || confettiHearts.length > 0 || heartCountTexts.length > 0) && !animationFrameRef.current) {
-      animationFrameRef.current = requestAnimationFrame(animate);
-    }
-    
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = undefined;
-      }
-    };
-  }, [bees, confettiHearts, heartCountTexts]);  // Abhängig von allen Animationen
+    return () => clearInterval(interval);
+  }, []);
 
   // Bienen-Spawn Timer (alle 10 Sekunden)
   useEffect(() => {
@@ -815,42 +738,17 @@ export const CastleGardenView: React.FC = () => {
                 {confettiHearts.map(heart => (
                   <div
                     key={heart.id}
-                    className="absolute pointer-events-none"
+                    className="absolute pointer-events-none text-2xl animate-pulse"
                     style={{
-                      left: `${heart.x * 56 + 28 + heart.offsetX}px`,
-                      top: `${heart.y * 56 + 28 + heart.offsetY}px`,
-                      transform: `scale(${heart.scale})`,
-                      opacity: heart.opacity,
-                      fontSize: '16px', // Viel kleinere, moderate Herzen
-                      textShadow: '2px 2px 6px rgba(0,0,0,0.5)',
-                      filter: `drop-shadow(0 0 12px rgba(255, 20, 147, ${heart.opacity * 0.8}))`
+                      left: `${heart.x * 56 + 28}px`,
+                      top: `${heart.y * 56 + 28}px`,
+                      zIndex: 100
                     }}
                   >
                     💖
                   </div>
                 ))}
                 
-                {/* Herzen-Anzahl-Text - absolut über dem gesamten Grid */}
-                {heartCountTexts.map(text => (
-                  <div
-                    key={text.id}
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: `${text.x * 56 + 28}px`,
-                      top: `${text.y * 56 + 10}px`,
-                      opacity: text.opacity,
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                      color: '#fff',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                      textAlign: 'center',
-                      animation: 'pulse 0.5s ease-in-out',
-                      transform: 'translate(-50%, 0)'
-                    }}
-                  >
-                    +{text.amount}
-                  </div>
-                ))}
               </div>
             </div>
           </CardContent>
