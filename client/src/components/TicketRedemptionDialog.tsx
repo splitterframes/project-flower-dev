@@ -8,7 +8,21 @@ import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
-import { getRarityColor, getRarityDisplayName } from '@shared/rarity';
+import { getRarityColor, getRarityDisplayName, getRarityFromAssetId } from '@shared/rarity';
+
+// Helper function to convert integer rarity to RarityTier string
+const convertIntegerRarityToTier = (rarityInt: number): any => {
+  switch (rarityInt) {
+    case 0: return 'common';
+    case 1: return 'uncommon';
+    case 2: return 'rare';
+    case 3: return 'super-rare';
+    case 4: return 'epic';
+    case 5: return 'legendary';
+    case 6: return 'mythical';
+    default: return 'common';
+  }
+};
 
 // Helper function for rarity borders (same as RarityImage component)
 const getBorderColor = (rarity: any): string => {
@@ -74,7 +88,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 15,
       title: '5 Sonnen',
       description: 'Sammle sofort 5 Sonnen',
-      icon: <span className="text-2xl">☀️</span>,
+      icon: <span className="text-4xl">☀️</span>,
       type: 'suns'
     },
     {
@@ -90,7 +104,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 30,
       title: '15 DNA',
       description: 'Sammle sofort 15 DNA',
-      icon: <span className="text-2xl">🧬</span>,
+      icon: <span className="text-4xl">🧬</span>,
       type: 'credits'
     },
     {
@@ -182,7 +196,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Blumen/${dailyItems.flowerId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(dailyItems.flowerRarity) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.flowerRarity)) }}
                 />
               </div>
             ) : prize.type === 'butterfly' && dailyItems ? (
@@ -191,7 +205,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(dailyItems.butterflyRarity) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.butterflyRarity)) }}
                 />
               </div>
             ) : prize.type === 'caterpillar' && dailyItems ? (
@@ -200,7 +214,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(dailyItems.caterpillarRarity) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.caterpillarRarity)) }}
                 />
               </div>
             ) : prize.type === 'fish' && dailyItems ? (
@@ -209,13 +223,13 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Fische/${dailyItems.fishId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(dailyItems.fishRarity) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.fishRarity)) }}
                 />
               </div>
             ) : prize.type === 'seed' && (prize.id === 'seed' || prize.id === 'rare-seed') ? (
               <div className="w-18 h-18 relative">
                 <img
-                  src="/Samen/0.jpg"
+                  src="/Blumen/0.jpg"
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
                   style={{ borderColor: getBorderColor(prize.id === 'rare-seed' ? 'rare' : 'common') }}
@@ -260,7 +274,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
           flowerName="Seltene Blume des Tages"
-          rarity={dailyItems.flowerRarity as any}
+          rarity={convertIntegerRarityToTier(dailyItems.flowerRarity)}
         >
           {cardContent}
         </FlowerHoverPreview>
@@ -271,7 +285,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
           butterflyName="Seltener Schmetterling des Tages"
-          rarity={dailyItems.butterflyRarity as any}
+          rarity={convertIntegerRarityToTier(dailyItems.butterflyRarity)}
         >
           {cardContent}
         </ButterflyHoverPreview>
@@ -282,7 +296,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
           caterpillarName="Seltene Raupe des Tages"
-          rarity={dailyItems.caterpillarRarity as any}
+          rarity={convertIntegerRarityToTier(dailyItems.caterpillarRarity)}
         >
           {cardContent}
         </CaterpillarHoverPreview>
@@ -293,7 +307,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
           fishName="Seltener Fisch des Tages"
-          rarity={dailyItems.fishRarity as any}
+          rarity={convertIntegerRarityToTier(dailyItems.fishRarity)}
         >
           {cardContent}
         </FishHoverPreview>
