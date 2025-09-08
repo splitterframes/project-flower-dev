@@ -56,6 +56,13 @@ interface DailyItems {
   caterpillarRarity: string;
   fishId: number;
   fishRarity: string;
+  redemptions?: {
+    'daily-flower'?: boolean;
+    'daily-butterfly'?: boolean;
+    'daily-caterpillar'?: boolean;
+    'daily-fish'?: boolean;
+    'daily-credits'?: boolean;
+  };
 }
 
 export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem }: TicketRedemptionDialogProps) {
@@ -63,10 +70,11 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
   const [redeemMessage, setRedeemMessage] = useState('');
   const [dailyItems, setDailyItems] = useState<DailyItems | null>(null);
 
-  // Fetch daily items
+  // Fetch daily items with redemption status
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/daily-items')
+      // Assuming user ID 2 for now - in real app this would come from context/props
+      fetch('/api/user/2/daily-items')
         .then(res => res.json())
         .then(data => setDailyItems(data))
         .catch(error => console.error('Failed to fetch daily items:', error));
@@ -171,7 +179,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
 
   const renderPrizeCard = (prize: typeof prizes[0]) => {
     const canAfford = userTickets >= prize.cost;
-    const isDisabled = !canAfford || isRedeeming;
+    const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.type);
+    const isAlreadyRedeemed = isDailyPrize && dailyItems?.redemptions?.[prize.type] === true;
+    const isDisabled = !canAfford || isRedeeming || isAlreadyRedeemed;
 
     const cardContent = (
       <div
@@ -255,13 +265,20 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
             onClick={() => handleRedeem(prize.type, prize.cost)}
             className={`
               w-full text-xs
-              ${canAfford 
-                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              ${isAlreadyRedeemed 
+                ? 'bg-red-400 text-red-100 cursor-not-allowed' 
+                : canAfford 
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                  : 'bg-gray-400 text-gray-200 cursor-not-allowed'
               }
             `}
           >
-            {isRedeeming ? 'Einlösen...' : 'Einlösen'}
+            {isAlreadyRedeemed 
+              ? 'Bereits eingelöst' 
+              : isRedeeming 
+                ? 'Einlösen...' 
+                : 'Einlösen'
+            }
           </Button>
         </div>
       </div>
