@@ -6374,7 +6374,7 @@ export class PostgresStorage {
       caterpillarId,
       caterpillarName,
       caterpillarRarity: rarity,
-      caterpillarImageUrl: `/Caterpillars/${caterpillarId}.jpg`,
+      caterpillarImageUrl: `/Raupen/${caterpillarId}.jpg`,
       quantity: 1
     }).returning();
     
@@ -6391,7 +6391,7 @@ export class PostgresStorage {
       fishId,
       fishName,
       fishRarity: rarity,
-      fishImageUrl: `/Fish/${fishId}.jpg`,
+      fishImageUrl: `/Fische/${fishId}.jpg`,
       quantity: 1
     });
   }
