@@ -1408,6 +1408,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ✅ NEW: Combined endpoint - place flower and spawn caterpillar atomically
+  app.post("/api/garden/place-flower-and-spawn-caterpillar", async (req, res) => {
+    try {
+      const { fieldIndex, flowerId } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🌸🐛 ATOMIC: Placing flower ${flowerId} and spawning caterpillar on field ${fieldIndex} for user ${userId}`);
+      
+      if (fieldIndex === undefined || flowerId === undefined) {
+        return res.status(400).json({ message: 'Missing fieldIndex or flowerId' });
+      }
+
+      // Step 1: Get flower info before placing
+      const flower = await storage.getUserFlower(userId, flowerId);
+      if (!flower) {
+        return res.status(400).json({ message: "Blume nicht gefunden" });
+      }
+
+      if (flower.quantity <= 0) {
+        return res.status(400).json({ message: "Nicht genügend Blumen im Inventar" });
+      }
+
+      // Step 2: Place flower on field (consumes from inventory)
+      console.log(`🌸 ATOMIC: Step 1 - Placing flower on field`);
+      const placeResult = await storage.placeFlowerOnField(userId, fieldIndex, flowerId);
+      
+      if (!placeResult.success) {
+        return res.status(400).json({ message: placeResult.message });
+      }
+
+      // Step 3: Spawn caterpillar with flower's rarity
+      console.log(`🐛 ATOMIC: Step 2 - Spawning caterpillar with rarity ${flower.flowerRarity}`);
+      const caterpillarResult = await storage.spawnCaterpillarOnField(userId, fieldIndex, flower.flowerRarity);
+      
+      if (!caterpillarResult.success) {
+        // If caterpillar spawn fails, we should remove the flower to keep consistency
+        await storage.removeFieldFlower(userId, fieldIndex);
+        return res.status(400).json({ message: caterpillarResult.message });
+      }
+
+      // Step 4: Remove flower from field (it's consumed)
+      console.log(`🌸 ATOMIC: Step 3 - Removing flower from field after spawn`);
+      await storage.removeFieldFlower(userId, fieldIndex);
+      
+      console.log(`🌸🐛 ATOMIC SUCCESS: Flower placed, caterpillar spawned, and flower consumed ✅`);
+      res.json({ 
+        message: 'Blume platziert und Raupe gespawnt!', 
+        caterpillar: caterpillarResult.caterpillar 
+      });
+    } catch (error) {
+      console.error('🌸🐛 ATOMIC ERROR:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Collect butterfly from field
   app.post("/api/garden/collect-butterfly", async (req, res) => {
     try {

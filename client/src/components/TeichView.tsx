@@ -811,8 +811,8 @@ export const TeichView: React.FC = () => {
     try {
       console.log("🌸 PLACEFLOWER: Starting with API call to consume flower from server inventory");
       
-      // ✅ FIXED: First remove flower from server inventory
-      const flowerResponse = await fetch('/api/garden/place-flower-on-field', {
+      // ✅ NEW: Place flower and spawn caterpillar in one API call
+      const response = await fetch('/api/garden/place-flower-and-spawn-caterpillar', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -824,12 +824,12 @@ export const TeichView: React.FC = () => {
         })
       });
 
-      if (!flowerResponse.ok) {
-        const errorData = await flowerResponse.json();
-        throw new Error(errorData.message || 'Failed to place flower');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to place flower and spawn caterpillar');
       }
 
-      console.log("🌸 PLACEFLOWER: Server inventory updated, flower consumed ✅");
+      console.log("🌸 PLACEFLOWER: Flower placed and caterpillar spawned in one step ✅");
 
       // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (temporary visual only)
       // Add temporary visual flower that will spawn a caterpillar
@@ -877,50 +877,11 @@ export const TeichView: React.FC = () => {
             setPlacedFlowers(prev => prev.filter(f => f.id !== tempFlowerId));
           }, 1500); // 1.5 seconds for dissolve animation
 
-          // Spawn caterpillar on the field
-          try {
-            const caterpillarResponse = await fetch('/api/garden/spawn-caterpillar-from-flower', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'x-user-id': user.id.toString()
-              },
-              body: JSON.stringify({
-                fieldIndex: selectedField - 1
-              })
-            });
-
-            if (caterpillarResponse.ok) {
-              console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
-              
-              // ✅ CRITICAL FIX: Remove flower from database field after caterpillar spawns
-              try {
-                const removeFlowerResponse = await fetch('/api/garden/remove-field-flower', {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'x-user-id': user.id.toString()
-                  },
-                  body: JSON.stringify({
-                    fieldIndex: selectedField - 1
-                  })
-                });
-                
-                if (removeFlowerResponse.ok) {
-                  console.log(`🌸 Field flower removed from database after caterpillar spawn ✅`);
-                } else {
-                  console.error('Failed to remove field flower from database');
-                }
-              } catch (error) {
-                console.error('Error removing field flower:', error);
-              }
-              
-              // Refresh data to show spawned caterpillar
-              fetchTeichData();
-            }
-          } catch (error) {
-            console.error('Failed to spawn caterpillar:', error);
-          }
+          // ✅ REMOVED: No separate caterpillar spawning needed - done in single API call above
+          console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
+          
+          // Refresh data to show spawned caterpillar
+          fetchTeichData();
         }, spawnTime);
 
     } catch (error) {
