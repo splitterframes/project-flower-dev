@@ -467,16 +467,31 @@ export const CastleGardenView: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Bienen-Spawn Timer (alle 10 Sekunden)
+  // Dynamischer Bienen-Spawn Timer basierend auf ausgegebenen Credits
   useEffect(() => {
-    const spawnInterval = setInterval(() => {
-      if (Math.random() < 0.3) { // 30% Chance alle 10 Sekunden
+    // Berechne Summe der ausgegebenen Credits für freigeschaltete Bauteile
+    const totalSpentCredits = unlockedParts.reduce((sum, partId) => {
+      const part = allParts.find(p => p.id === partId);
+      return sum + (part?.cost || 0);
+    }, 0);
+    
+    // Dynamische Spawn-Parameter basierend auf ausgegebenen Credits
+    // Base: 10 Sekunden, 30% Chance
+    // Pro 1000 Credits: -1 Sekunde Intervall, +10% Chance
+    const creditBonus = Math.floor(totalSpentCredits / 1000);
+    const spawnInterval = Math.max(3000, 10000 - (creditBonus * 1000)); // Minimum 3 Sekunden
+    const spawnChance = Math.min(0.9, 0.3 + (creditBonus * 0.1)); // Maximum 90%
+    
+    console.log(`🐝 Spawn-Parameter: ${totalSpentCredits} Credits ausgegeben → Intervall: ${spawnInterval/1000}s, Chance: ${(spawnChance*100).toFixed(0)}%`);
+    
+    const interval = setInterval(() => {
+      if (Math.random() < spawnChance) {
         spawnRandomBee();
       }
-    }, 10000);
+    }, spawnInterval);
     
-    return () => clearInterval(spawnInterval);
-  }, [grid, credits]); // Abhängig vom Grid und Credits
+    return () => clearInterval(interval);
+  }, [grid, credits, unlockedParts]); // Abhängig von Grid, Credits und freigeschalteten Bauteilen
 
   // ==================== PERSISTIERUNG LOGIC ====================
   
