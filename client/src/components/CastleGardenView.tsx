@@ -489,83 +489,120 @@ export const CastleGardenView: React.FC = () => {
         {/* Bauteile-Palette */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg text-slate-800">🧱 Bauteile-Palette</CardTitle>
-            <p className="text-sm text-slate-600">Klicke und ziehe Bauteile ins Grid - Mehrfachverwendung möglich!</p>
+            <CardTitle className="text-lg text-slate-800">🧱 Freigeschaltete Bauteile</CardTitle>
+            <p className="text-sm text-slate-600">
+              Ziehe Bauteile ins Grid • Mehrfachverwendung möglich • 
+              <span className="text-amber-600 font-medium">{availableParts.length}/{allParts.length} freigeschaltet</span>
+            </p>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {availableParts.map((part) => (
                 <div
                   key={part.id}
-                  className={`flex-shrink-0 w-24 h-24 border-2 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
+                  className={`flex-shrink-0 w-28 h-28 border-2 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
                     draggedPart?.id === part.id 
-                      ? 'border-amber-400 bg-amber-100 ring-2 ring-amber-300' 
-                      : 'border-slate-300 hover:border-amber-300 hover:shadow-md'
+                      ? 'border-amber-400 bg-amber-100 ring-2 ring-amber-300 scale-105' 
+                      : 'border-slate-300 hover:border-amber-300 hover:shadow-lg hover:scale-105'
                   }`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, part)}
                   onClick={() => setDraggedPart(part)}
                   style={{
                     backgroundImage: `url(${part.image})`,
-                    backgroundSize: 'cover',
+                    backgroundSize: '130%', // Bauteile noch größer in der Palette
                     backgroundPosition: 'center'
                   }}
                 >
-                  <div className="w-full h-full bg-gradient-to-t from-black/60 to-transparent rounded-lg flex flex-col justify-between p-2">
-                    <div className="text-xs text-white font-bold bg-black/50 rounded px-1">
-                      {part.cost > 0 ? `${part.cost}💰` : 'Frei'}
+                  <div className="w-full h-full bg-gradient-to-t from-black/70 to-transparent rounded-lg flex flex-col justify-between p-2">
+                    <div className="text-xs text-white font-bold bg-black/60 rounded px-2 py-1">
+                      {part.cost > 0 ? `${part.cost}💰` : '🆓'}
                     </div>
-                    <div className="text-xs text-white font-bold text-center bg-black/50 rounded px-1">
+                    <div className="text-xs text-white font-bold text-center bg-black/60 rounded px-2 py-1">
                       {part.name}
                     </div>
                   </div>
                 </div>
               ))}
+              
+              {/* Mehr Bauteile freischalten */}
+              {allParts.length > availableParts.length && (
+                <div
+                  className="flex-shrink-0 w-28 h-28 border-2 border-dashed border-amber-400 rounded-lg cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-all flex flex-col items-center justify-center gap-2"
+                  onClick={() => setShowShopDialog(true)}
+                >
+                  <div className="text-2xl">🛒</div>
+                  <div className="text-xs text-amber-600 font-bold text-center">
+                    Mehr<br/>freischalten
+                  </div>
+                </div>
+              )}
             </div>
             
             {draggedPart && (
               <div className="mt-3 p-3 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-lg border border-amber-300">
                 <p className="text-sm text-amber-800 font-medium">
-                  🎯 <strong>{draggedPart.name}</strong> ausgewählt - Ziehe es ins Grid oder klicke auf ein Feld!
+                  🎯 <strong>{draggedPart.name}</strong> ausgewählt
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                  💡 Du kannst dasselbe Bauteil mehrmals verwenden, ohne es neu auszuwählen
+                  🖱️ Ziehe es ins Grid oder klicke ein Feld • 🔄 Mehrfachverwendung aktiv
                 </p>
+              </div>
+            )}
+            
+            {availableParts.length === 0 && (
+              <div className="text-center text-slate-500 py-8">
+                🏗️ Noch keine Bauteile freigeschaltet<br/>
+                <button 
+                  className="text-amber-600 hover:text-amber-700 underline mt-2"
+                  onClick={() => setShowShopDialog(true)}
+                >
+                  Jetzt Bauteile freischalten
+                </button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Bienen-Status */}
+        {/* Bienen-System Status */}
         <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-200">
           <CardHeader>
-            <CardTitle className="text-lg text-amber-800">🐝 Bienen-System (AKTIV!)</CardTitle>
+            <CardTitle className="text-lg text-amber-800">🐝 Intelligentes Bienen-Ökosystem</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold mb-2 text-amber-700">📊 Aktuelle Stats:</h4>
+                <h4 className="font-semibold mb-2 text-amber-700">📊 Live Stats:</h4>
                 <ul className="space-y-1 text-amber-600">
-                  <li>• Aktive Bienen: {bees.length}</li>
-                  <li>• Verfügbare Herzen: {hearts.length}</li>
-                  <li>• Spawn-Chance: 30% alle 10s</li>
+                  <li>• Aktive Bienen: <strong>{bees.length}</strong></li>
+                  <li>• Sammelbare Herzen: <strong>{hearts.length}</strong></li>
+                  <li>• Bauteile gesetzt: <strong>{grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length}</strong></li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2 text-amber-700">💖 Herzen-System:</h4>
+                <h4 className="font-semibold mb-2 text-amber-700">🎯 Bienen-Logik:</h4>
                 <ul className="space-y-1 text-amber-600">
-                  <li>• 1-5 Herzen je Flugstrecke</li>
-                  <li>• Verschwinden nach 5 Sekunden</li>
-                  <li>• Klicken zum Sammeln</li>
+                  <li>• Spawnen nur auf Bauteilen</li>
+                  <li>• Fliegen zu anderen Bauteilen</li>
+                  <li>• 30% Chance alle 10 Sekunden</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2 text-amber-700">💖 Herzen-Explosion:</h4>
+                <ul className="space-y-1 text-amber-600">
+                  <li>• Flugstrecke + Bauteil-Wert</li>
+                  <li>• 1-5 Herzen pro Flug</li>
+                  <li>• +Credits beim Sammeln</li>
                 </ul>
               </div>
             </div>
             
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex gap-2 justify-center">
               <Button 
                 size="sm" 
                 onClick={spawnRandomBee}
                 className="bg-amber-600 hover:bg-amber-700"
+                disabled={grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2}
               >
                 🐝 Test-Biene spawnen
               </Button>
@@ -577,9 +614,15 @@ export const CastleGardenView: React.FC = () => {
                   setHearts([]);
                 }}
               >
-                🧹 Alles leeren
+                🧹 Reset
               </Button>
             </div>
+            
+            {grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2 && (
+              <div className="mt-3 p-2 bg-amber-100 rounded text-amber-700 text-sm text-center">
+                💡 Platziere mindestens 2 Bauteile für Bienen-Aktivität
+              </div>
+            )}
           </CardContent>
         </Card>
 
