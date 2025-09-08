@@ -222,9 +222,11 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 rounded-t-lg shadow-inner" />
             <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 rounded-b-lg" />
             
-            {/* Prize Grid */}
-            <div className="grid grid-cols-4 xl:grid-cols-4 gap-4 pt-2">
-              {prizes.map((prize) => {
+            {/* Main Layout - Left Grid + Right Container */}
+            <div className="flex gap-6 pt-2">
+              {/* Left: First 7 prizes in 3-column grid */}
+              <div className="grid grid-cols-3 gap-4 flex-1">
+                {prizes.slice(0, -1).map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
                 const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
@@ -383,34 +385,109 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   );
                 }
               })}
+              </div>
+              
+              {/* Right: Last prize (800 Credits) + Additional Info */}
+              <div className="w-80 flex flex-col gap-4">
+                {/* 800 Credits Prize Card */}
+                {(() => {
+                  const prize = prizes[prizes.length - 1]; // Last prize (800 Credits)
+                  const canAfford = userTickets >= prize.cost;
+                  const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
+                  const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
+                  const isDisabled = !canAfford || isAlreadyRedeemed;
+
+                  const cardContent = (
+                    <div 
+                      className={`
+                        bg-gradient-to-br from-amber-50 to-amber-100 
+                        border-2 border-amber-300 
+                        rounded-lg p-4 shadow-lg 
+                        min-h-[180px] flex flex-col justify-between
+                        hover:shadow-xl transition-all duration-200 hover:scale-105
+                        ${isDisabled ? 'opacity-75' : 'hover:from-amber-100 hover:to-amber-200'}
+                      `}
+                    >
+                      <div className="flex flex-col h-full">
+                        {/* Cost Badge */}
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+                            {prize.cost} 🎫
+                          </span>
+                        </div>
+
+                        {/* Icon */}
+                        <div className="flex justify-center items-center mb-3 h-16">
+                          <div className="flex justify-center items-center">
+                            {prize.icon}
+                          </div>
+                        </div>
+                        
+                        {/* Title */}
+                        <h3 className="font-bold text-sm text-gray-800 text-center mb-2">{prize.title}</h3>
+                        
+                        {/* Description */}
+                        <p className="text-xs text-gray-600 text-center flex-1 mb-3">
+                          {isAlreadyRedeemed ? 'Bereits heute eingelöst' : prize.description}
+                        </p>
+                        
+                        {/* Redeem Button */}
+                        <Button
+                          size="sm"
+                          disabled={isDisabled || isRedeeming}
+                          onClick={() => handleRedeem(prize.id, prize.cost)}
+                          className={`
+                            w-full text-xs
+                            ${isAlreadyRedeemed 
+                              ? 'bg-green-600 text-white cursor-not-allowed' 
+                              : canAfford 
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            }
+                          `}
+                        >
+                          {isAlreadyRedeemed ? '✓ Eingelöst' : isRedeeming ? 'Einlösen...' : 'Einlösen'}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+
+                  return (
+                    <div key={prize.id}>
+                      {cardContent}
+                    </div>
+                  );
+                })()}
+
+                {/* Success/Error Message */}
+                <div className={`text-center p-3 rounded-lg transition-all duration-200 ${
+                  redeemMessage 
+                    ? (redeemMessage.includes('erfolgreich') || redeemMessage.includes('🎉') 
+                        ? 'bg-green-100 text-green-800 border border-green-300' 
+                        : 'bg-red-100 text-red-800 border border-red-300')
+                    : 'bg-gray-50 text-gray-400 border border-gray-200'
+                }`}>
+                  {redeemMessage || 'Wähle einen Preis zum Einlösen'}
+                </div>
+
+                {/* Info Footer */}
+                <div className="bg-purple-800/20 rounded-lg p-4 border border-purple-500/30">
+                  <div className="text-center text-purple-200 text-sm">
+                    Tägliche Gegenstände werden um Mitternacht aktualisiert
+                  </div>
+                  <Button
+                    onClick={onClose}
+                    variant="outline"
+                    className="w-full mt-3 bg-purple-700 hover:bg-purple-600 text-purple-100 border-purple-500"
+                  >
+                    Ich komme wieder
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Success/Error Message - Always visible to prevent jumping */}
-        <div className={`text-center p-3 rounded-lg mt-4 transition-all duration-200 ${
-          redeemMessage 
-            ? (redeemMessage.includes('erfolgreich') || redeemMessage.includes('🎉') 
-                ? 'bg-green-100 text-green-800 border border-green-300' 
-                : 'bg-red-100 text-red-800 border border-red-300')
-            : 'bg-gray-50 text-gray-400 border border-gray-200'
-        }`}>
-          {redeemMessage || 'Wähle einen Preis zum Einlösen'}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-center text-purple-200 text-sm flex-1">
-            Tägliche Gegenstände werden um Mitternacht aktualisiert
-          </div>
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="bg-purple-700 hover:bg-purple-600 text-purple-100 border-purple-500"
-          >
-            Ich komme wieder
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
