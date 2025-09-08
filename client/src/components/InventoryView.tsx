@@ -425,6 +425,25 @@ export const InventoryView: React.FC = () => {
     }
   }, [user]);
 
+  // Listen for inventory refresh events (from ticket redemption)
+  useEffect(() => {
+    const handleRefreshInventory = () => {
+      if (user) {
+        console.log('🔄 Refreshing inventory after ticket redemption');
+        fetchMySeeds();
+        fetchMyFlowers();
+        fetchMyBouquets();
+        fetchMyButterflies();
+        fetchMyVipButterflies();
+        fetchMyFish();
+        fetchMyCaterpillars();
+      }
+    };
+
+    window.addEventListener('refreshInventory', handleRefreshInventory);
+    return () => window.removeEventListener('refreshInventory', handleRefreshInventory);
+  }, [user]);
+
   // Auto-refresh butterflies inventory every 15 seconds
   useEffect(() => {
     if (!user) return;

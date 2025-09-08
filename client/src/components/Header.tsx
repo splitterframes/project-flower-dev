@@ -430,10 +430,18 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               fetchSuns();
               fetchDna();
               
-              // Small delay for inventory to ensure backend update is complete
+              // Multiple attempts to ensure inventory update
               setTimeout(() => {
                 fetchInventoryCounts();
               }, 100);
+              
+              // Force second update after longer delay
+              setTimeout(() => {
+                fetchInventoryCounts();
+                
+                // Trigger inventory view refresh
+                window.dispatchEvent(new CustomEvent('refreshInventory'));
+              }, 500);
               
               return { success: true, message: data.message || "Preis erfolgreich eingelöst!" };
             } else {
