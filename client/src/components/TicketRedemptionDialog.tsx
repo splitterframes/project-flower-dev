@@ -268,7 +268,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     );
 
     // Wrap with hover preview for daily items
-    if (prize.type === 'flower' && dailyItems?.flowerId) {
+    if (prize.type === 'daily-flower' && dailyItems?.flowerId) {
       return (
         <FlowerHoverPreview
           key={prize.id}
@@ -279,7 +279,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           {cardContent}
         </FlowerHoverPreview>
       );
-    } else if (prize.type === 'butterfly' && dailyItems?.butterflyId) {
+    } else if (prize.type === 'daily-butterfly' && dailyItems?.butterflyId) {
       return (
         <ButterflyHoverPreview
           key={prize.id}
@@ -290,7 +290,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           {cardContent}
         </ButterflyHoverPreview>
       );
-    } else if (prize.type === 'caterpillar' && dailyItems?.caterpillarId) {
+    } else if (prize.type === 'daily-caterpillar' && dailyItems?.caterpillarId) {
       return (
         <CaterpillarHoverPreview
           key={prize.id}
@@ -301,7 +301,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           {cardContent}
         </CaterpillarHoverPreview>
       );
-    } else if (prize.type === 'fish' && dailyItems?.fishId) {
+    } else if (prize.type === 'daily-fish' && dailyItems?.fishId) {
       return (
         <FishHoverPreview
           key={prize.id}
