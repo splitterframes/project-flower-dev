@@ -139,6 +139,21 @@ export const GardenView: React.FC = () => {
     }
   }, [user]);
 
+  // Listen for inventory refresh events from ticket redemption
+  useEffect(() => {
+    const handleRefreshInventory = async () => {
+      if (user) {
+        console.log('🌱 GardenView received inventory refresh event - updating seeds');
+        await fetchUserSeeds();
+      }
+    };
+
+    window.addEventListener('refreshInventory', handleRefreshInventory);
+    return () => {
+      window.removeEventListener('refreshInventory', handleRefreshInventory);
+    };
+  }, [user]);
+
   // Auto-refresh butterflies every 10 seconds
   useEffect(() => {
     if (!user) return;
