@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
 import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema, placeFlowerOnFieldSchema } from "@shared/schema";
 import { z } from "zod";
+import { createDonationCheckoutSession, getDonationStatus, handleStripeWebhook } from "./stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -55,6 +56,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+  // 💳 Stripe Donation Routes
+  app.post("/api/stripe/create-donation-session", createDonationCheckoutSession);
+  app.get("/api/stripe/donation-status/:sessionId", getDonationStatus);
+  app.post("/api/stripe/webhook", handleStripeWebhook);
 
   // Credits routes
   app.get("/api/user/:id/credits", async (req, res) => {
