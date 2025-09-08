@@ -879,15 +879,14 @@ export const TeichView: React.FC = () => {
 
           // Spawn caterpillar on the field
           try {
-            const caterpillarResponse = await fetch('/api/garden/spawn-caterpillar', {
+            const caterpillarResponse = await fetch('/api/garden/spawn-caterpillar-from-flower', {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
                 'x-user-id': user.id.toString()
               },
               body: JSON.stringify({
-                fieldIndex: selectedField - 1,
-                parentRarity: flower.flowerRarity
+                fieldIndex: selectedField - 1
               })
             });
 
