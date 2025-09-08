@@ -1024,19 +1024,8 @@ export const TeichView: React.FC = () => {
     console.log('🐛 Attempting to collect caterpillar on field', fieldIndex);
     // Blockierung wird bereits im onClick gesetzt
     
-    // Field spinning animation trigger
-    const triggerFieldSpin = (fieldIndex: number) => {
-      setSpinningFields(prev => new Set([...Array.from(prev), fieldIndex]));
-      
-      // Remove spinning class after animation completes (2.1 seconds for 3 full rotations)
-      setTimeout(() => {
-        setSpinningFields(prev => {
-          const newSet = new Set(Array.from(prev));
-          newSet.delete(fieldIndex);
-          return newSet;
-        });
-      }, 2100);
-    };
+    // Start spinning animation first (with image visible)
+    setSpinningFields(prev => new Set([...Array.from(prev), fieldIndex]));
     
     try {
       const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
@@ -1049,8 +1038,14 @@ export const TeichView: React.FC = () => {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
         
-        // Trigger field spin animation
-        triggerFieldSpin(fieldIndex);
+        // Wait for spinning animation to complete (2.1s), then clean up
+        setTimeout(() => {
+          setSpinningFields(prev => {
+            const newSet = new Set(Array.from(prev));
+            newSet.delete(fieldIndex);
+            return newSet;
+          });
+        }, 2100);
         
         fetchTeichData();
         
@@ -1062,10 +1057,22 @@ export const TeichView: React.FC = () => {
         const error = await response.json();
         console.error('Collection failed:', error);
         setIsCollectingCaterpillar(false);
+        // Clean up spinning on error
+        setSpinningFields(prev => {
+          const newSet = new Set(Array.from(prev));
+          newSet.delete(fieldIndex);
+          return newSet;
+        });
       }
     } catch (error) {
       console.error('Failed to collect caterpillar:', error);
       setIsCollectingCaterpillar(false);
+      // Clean up spinning on error
+      setSpinningFields(prev => {
+        const newSet = new Set(Array.from(prev));
+        newSet.delete(fieldIndex);
+        return newSet;
+      });
     }
   };
 

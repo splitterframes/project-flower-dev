@@ -406,4 +406,24 @@ canvas {
   .safe-area-top {
     padding-top: max(0.5rem, env(safe-area-inset-top));
   }
+
+  /* Field Spinning Animation for Harvesting */
+  @keyframes field-spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(1080deg); }
+  }
+
+  .animate-field-spin {
+    animation: field-spin-animation 2.1s ease-in-out;
+  }
+
+  /* Langsamere Pulse-Animation für DONATE Button */
+  @keyframes slow-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .animate-slow-pulse {
+    animation: slow-pulse 4s ease-in-out infinite;
+  }
 }

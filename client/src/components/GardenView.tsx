@@ -774,8 +774,8 @@ export const GardenView: React.FC = () => {
     try {
       console.log('Starting harvest for field:', fieldIndex);
       
-      // Add visual feedback immediately
-      setHarvestedFields(prev => new Set([...Array.from(prev), fieldIndex]));
+      // Start spinning animation first (with image visible)
+      setSpinningFields(prev => new Set([...Array.from(prev), fieldIndex]));
       
       const response = await fetch('/api/garden/harvest', {
         method: 'POST',
@@ -791,8 +791,15 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
         
-        // Trigger field spin animation
-        triggerFieldSpin(fieldIndex);
+        // Wait for spinning animation to complete (2.1s), then hide image
+        setTimeout(() => {
+          setHarvestedFields(prev => new Set([...Array.from(prev), fieldIndex]));
+          setSpinningFields(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fieldIndex);
+            return newSet;
+          });
+        }, 2100);
         
         // Refresh data immediately
         await fetchPlantedFields();
