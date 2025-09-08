@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { toast } from "sonner";
+import { Heart, Coins } from "lucide-react";
 
 // Bauteil-Typen für den Schlossgarten
 type BuildingPart = {
@@ -22,15 +24,31 @@ type GridField = {
   buildingPart: BuildingPart | null;
 };
 
-// Bienen-Typ
+// Bienen-Typ mit Animation
 type Bee = {
+  id: string;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  currentX: number;
+  currentY: number;
+  startTime: number;
+  duration: number; // Flugdauer in ms
+};
+
+// Konfetti-Herz-Typ
+type ConfettiHeart = {
   id: string;
   x: number;
   y: number;
-  targetX: number;
-  targetY: number;
+  offsetX: number;
+  offsetY: number;
+  rotation: number;
+  scale: number;
+  opacity: number;
+  velocity: { x: number; y: number };
   startTime: number;
-  flightDistance: number;
 };
 
 export const CastleGardenView: React.FC = () => {
@@ -57,7 +75,8 @@ export const CastleGardenView: React.FC = () => {
 
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
-  const [hearts, setHearts] = useState<Array<{id: string; x: number; y: number; amount: number}>>([]);
+  const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
+  const animationFrameRef = useRef<number>();
   
   // Shop State
   const [showShopDialog, setShowShopDialog] = useState(false);
@@ -124,9 +143,8 @@ export const CastleGardenView: React.FC = () => {
   // Nur freigeschaltete Bauteile anzeigen
   const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
 
-  // Drag & Drop State
+  // Vereinfachtes Drag & Drop State
   const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
-  const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
 
   // Drag Start Handler für Bauteile
   const handleDragStart = (event: React.DragEvent, part: BuildingPart) => {
@@ -143,27 +161,12 @@ export const CastleGardenView: React.FC = () => {
       const fieldIndex = field.y * gridWidth + field.x;
       const newGrid = [...grid];
       
-      // Wenn von einem Feld gedraggt wurde, das ursprüngliche Feld leeren
-      if (draggedFromField) {
-        const fromIndex = draggedFromField.y * gridWidth + draggedFromField.x;
-        newGrid[fromIndex] = {
-          ...draggedFromField,
-          buildingPart: null
-        };
-      }
-      
       // Bauteil am Zielfeld platzieren
       newGrid[fieldIndex] = {
         ...field,
         buildingPart: { ...draggedPart }
       };
       setGrid(newGrid);
-      
-      // Reset drag state wenn von Feld gedraggt
-      if (draggedFromField) {
-        setDraggedFromField(null);
-        setDraggedPart(null);
-      }
     }
   };
 
@@ -173,28 +176,17 @@ export const CastleGardenView: React.FC = () => {
     event.dataTransfer.dropEffect = 'copy';
   };
 
-  // Grid-Feld Mouse Down Handler (für Drag von Feldern)
-  const handleFieldMouseDown = (event: React.MouseEvent, field: GridField) => {
-    if (event.button === 0 && field.buildingPart) { // Linke Maustaste + Bauteil vorhanden
-      setDraggedFromField(field);
-      setDraggedPart(field.buildingPart);
-      event.preventDefault();
-    }
-  };
-
   // Grid-Feld Klick Handler
   const handleFieldClick = (field: GridField) => {
     if (field.buildingPart) {
-      // Belegtes Feld - Bauteil löschen (nur wenn nicht gedraggt wurde)
-      if (!draggedFromField) {
-        const fieldIndex = field.y * gridWidth + field.x;
-        const newGrid = [...grid];
-        newGrid[fieldIndex] = {
-          ...field,
-          buildingPart: null
-        };
-        setGrid(newGrid);
-      }
+      // Belegtes Feld - Bauteil löschen
+      const fieldIndex = field.y * gridWidth + field.x;
+      const newGrid = [...grid];
+      newGrid[fieldIndex] = {
+        ...field,
+        buildingPart: null
+      };
+      setGrid(newGrid);
     } else {
       // Leeres Feld - Shop öffnen
       if (!draggedPart) {
@@ -202,9 +194,6 @@ export const CastleGardenView: React.FC = () => {
         setShowShopDialog(true);
       }
     }
-    
-    // Reset drag state
-    setDraggedFromField(null);
   };
 
   // Bauteil rotieren (Rechtsklick)
@@ -225,7 +214,7 @@ export const CastleGardenView: React.FC = () => {
     }
   };
 
-  // Intelligente Bienen spawnen (nur auf gesetzten Bauteilen)
+  // Intelligente Bienen spawnen mit Animation
   const spawnRandomBee = () => {
     // Finde alle Felder mit Bauteilen (außer Rasen)
     const fieldsWithParts = grid.filter(field => field.buildingPart && field.buildingPart.type !== 'grass');
@@ -244,19 +233,23 @@ export const CastleGardenView: React.FC = () => {
       Math.pow(targetField.x - startField.x, 2) + Math.pow(targetField.y - startField.y, 2)
     );
     
+    const flightDuration = Math.max(2000, distance * 500); // Langsamer Flug
+    
     const newBee: Bee = {
       id: `bee-${Date.now()}`,
-      x: startField.x,
-      y: startField.y,
+      startX: startField.x,
+      startY: startField.y,
       targetX: targetField.x,
       targetY: targetField.y,
+      currentX: startField.x,
+      currentY: startField.y,
       startTime: Date.now(),
-      flightDistance: distance
+      duration: flightDuration
     };
     
     setBees(prev => [...prev, newBee]);
     
-    // Biene nach 3 Sekunden entfernen und Herzen spawnen
+    // Biene nach Flugdauer entfernen und Konfetti-Herzen spawnen
     setTimeout(() => {
       setBees(prev => prev.filter(bee => bee.id !== newBee.id));
       
@@ -266,32 +259,15 @@ export const CastleGardenView: React.FC = () => {
       const distanceBonus = Math.floor(distance / 3);
       const heartAmount = Math.min(5, Math.max(1, partValue + distanceBonus));
       
-      // Explosionsartige Herzen (mehrere kleine Herzen)
-      const explosionHearts = [];
-      for (let i = 0; i < heartAmount; i++) {
-        explosionHearts.push({
-          id: `heart-${Date.now()}-${i}`,
-          x: targetField.x,
-          y: targetField.y,
-          amount: 1,
-          delay: i * 100 // Gestaffeltes Erscheinen
-        });
-      }
+      // Konfetti-Herzen spawnen
+      spawnConfettiHearts(targetField.x, targetField.y, heartAmount);
       
-      // Herzen mit Verzögerung hinzufügen
-      explosionHearts.forEach((heart, index) => {
-        setTimeout(() => {
-          setHearts(prev => [...prev, heart]);
-          
-          // Herz nach 3 Sekunden automatisch entfernen
-          setTimeout(() => {
-            setHearts(prev => prev.filter(h => h.id !== heart.id));
-          }, 3000);
-        }, heart.delay);
-      });
+      // Herzen ins Inventar hinzufügen
+      setCredits(credits + heartAmount);
+      toast.success(`💖 ${heartAmount} Herzen gesammelt! (+${heartAmount} Credits)`);
       
       console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Wert: ${partValue}, ${heartAmount} Herzen!`);
-    }, 3000);
+    }, flightDuration);
   };
 
   // Bienen-Spawn Timer (alle 10-20 Sekunden)
@@ -305,12 +281,39 @@ export const CastleGardenView: React.FC = () => {
     return () => clearInterval(spawnInterval);
   }, []);
 
-  // Herz sammeln
-  const collectHeart = (heartId: string, amount: number) => {
-    setHearts(prev => prev.filter(heart => heart.id !== heartId));
-    // Credits vergeben
-    setCredits(credits + amount);
-    console.log(`💖 ${amount} Herzen gesammelt! +${amount} Credits`);
+  // Konfetti-Herzen spawnen
+  const spawnConfettiHearts = (centerX: number, centerY: number, amount: number) => {
+    const newHearts: ConfettiHeart[] = [];
+    
+    for (let i = 0; i < amount; i++) {
+      const angle = (Math.PI * 2 * i) / amount;
+      const radius = 30 + Math.random() * 20;
+      
+      newHearts.push({
+        id: `confetti-${Date.now()}-${i}`,
+        x: centerX,
+        y: centerY,
+        offsetX: Math.cos(angle) * radius,
+        offsetY: Math.sin(angle) * radius,
+        rotation: Math.random() * 360,
+        scale: 0.8 + Math.random() * 0.4,
+        opacity: 1,
+        velocity: {
+          x: Math.cos(angle) * (2 + Math.random() * 3),
+          y: Math.sin(angle) * (2 + Math.random() * 3) - 1
+        },
+        startTime: Date.now()
+      });
+    }
+    
+    setConfettiHearts(prev => [...prev, ...newHearts]);
+    
+    // Konfetti nach 2 Sekunden entfernen
+    setTimeout(() => {
+      setConfettiHearts(prev => prev.filter(heart => 
+        !newHearts.some(newHeart => newHeart.id === heart.id)
+      ));
+    }, 2000);
   };
 
   // Bauteil freischalten
@@ -393,28 +396,32 @@ export const CastleGardenView: React.FC = () => {
                     }}
                   >
                     {/* Bienen anzeigen */}
-                    {bees.filter(bee => Math.floor(bee.x) === field.x && Math.floor(bee.y) === field.y).map(bee => (
+                    {bees.filter(bee => 
+                      Math.floor(bee.currentX) === field.x && Math.floor(bee.currentY) === field.y
+                    ).map(bee => (
                       <div
                         key={bee.id}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce text-lg"
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none text-lg z-10"
                       >
                         🐝
                       </div>
                     ))}
                     
-                    {/* Herzen anzeigen - Explosionseffekt */}
-                    {hearts.filter(heart => heart.x === field.x && heart.y === field.y).map(heart => (
+                    {/* Konfetti-Herzen anzeigen */}
+                    {confettiHearts.filter(heart => 
+                      Math.floor(heart.x) === field.x && Math.floor(heart.y) === field.y
+                    ).map(heart => (
                       <div
                         key={heart.id}
-                        className="absolute inset-0 flex items-center justify-center cursor-pointer animate-ping"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          collectHeart(heart.id, heart.amount);
+                        className="absolute pointer-events-none text-lg z-20"
+                        style={{
+                          left: `${heart.offsetX}px`,
+                          top: `${heart.offsetY}px`,
+                          transform: `rotate(${heart.rotation}deg) scale(${heart.scale})`,
+                          opacity: heart.opacity
                         }}
                       >
-                        <div className="bg-gradient-to-r from-pink-200 to-red-200 rounded-full px-2 py-1 text-sm font-bold border-2 border-pink-400 shadow-lg">
-                          💖{heart.amount}
-                        </div>
+                        💖
                       </div>
                     ))}
                   </div>
@@ -575,7 +582,7 @@ export const CastleGardenView: React.FC = () => {
                 <h4 className="font-semibold mb-2 text-amber-700">📊 Live Stats:</h4>
                 <ul className="space-y-1 text-amber-600">
                   <li>• Aktive Bienen: <strong>{bees.length}</strong></li>
-                  <li>• Sammelbare Herzen: <strong>{hearts.length}</strong></li>
+                  <li>• Sammelbare Herzen: <strong>{confettiHearts.length}</strong></li>
                   <li>• Bauteile gesetzt: <strong>{grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length}</strong></li>
                 </ul>
               </div>
@@ -611,7 +618,7 @@ export const CastleGardenView: React.FC = () => {
                 variant="outline"
                 onClick={() => {
                   setBees([]);
-                  setHearts([]);
+                  setConfettiHearts([]);
                 }}
               >
                 🧹 Reset
