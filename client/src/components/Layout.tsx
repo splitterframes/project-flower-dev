@@ -474,7 +474,10 @@ export const Layout: React.FC = () => {
             backgroundColor: confetti.color,
             borderRadius: '2px',
             zIndex: 1001,
-            animation: `confettiExplosion-${index % 8} 1s ease-out forwards`,
+            animationName: `confettiExplosion-${index % 8}`,
+            animationDuration: '1s',
+            animationTimingFunction: 'ease-out',
+            animationFillMode: 'forwards',
             animationDelay: `${confetti.delay}s`
           }}
         />

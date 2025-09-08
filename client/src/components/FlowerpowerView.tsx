@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { RarityImage } from "./RarityImage";
@@ -287,7 +287,7 @@ export const FlowerpowerView: React.FC = () => {
                     const color = getRarityColor(rarity);
                     
                     return (
-                      <div key={flowerId} className="relative">
+                      <div key={`challenge-flower-${index}-${flowerId}`} className="relative">
                         <div className={`bg-slate-700 rounded-lg p-3 border-2 border-${color}-500`}>
                           <div className="flex items-center justify-between mb-2">
                             <Badge className={`bg-${color}-500/20 text-${color}-300`}>
@@ -481,6 +481,9 @@ export const FlowerpowerView: React.FC = () => {
                 <Heart className="h-5 w-5 text-pink-400 mr-2" />
                 Blume spenden
               </DialogTitle>
+              <DialogDescription>
+                Spende deine Blumen für die wöchentliche Flowerpower Challenge und verdiene Belohnungen.
+              </DialogDescription>
             </DialogHeader>
             
             {donateFlowerId && (
