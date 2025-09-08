@@ -6315,18 +6315,22 @@ export class PostgresStorage {
 
   // Helper method to add caterpillar to user (for ticket redemption)
   private async addCaterpillarForRedemption(userId: number, caterpillarId: number, rarity: string): Promise<void> {
+    console.log(`🎫 TICKET-REDEMPTION: Adding caterpillar ${caterpillarId} (${rarity}) to user ${userId}`);
     // Generate proper caterpillar name using the rarity tier  
     const caterpillarData = generateRandomCaterpillar(rarity as RarityTier);
     const caterpillarName = caterpillarData ? caterpillarData.name : `Raupe ${caterpillarId}`;
     
-    await this.db.insert(userCaterpillars).values({
+    console.log(`🎫 TICKET-REDEMPTION: About to INSERT caterpillar with quantity=1`);
+    const result = await this.db.insert(userCaterpillars).values({
       userId,
       caterpillarId,
       caterpillarName,
       caterpillarRarity: rarity,
       caterpillarImageUrl: `/Caterpillars/${caterpillarId}.jpg`,
       quantity: 1
-    });
+    }).returning();
+    
+    console.log(`🎫 TICKET-REDEMPTION: ✅ RESULT: Created caterpillar with quantity=${result[0]?.quantity}`);
   }
 
   // Helper method to add fish to user
