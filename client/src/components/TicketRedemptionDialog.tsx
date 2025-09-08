@@ -336,9 +336,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <ButterflyHoverPreview
                       key={prize.id}
                       butterflyId={dailyItems.butterflyId}
-                      butterflyName={generateGermanButterflyName(dailyItems.butterflyId)}
+                      butterflyName="Aglais magnificus"
                       butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-                      rarity={dailyItems.butterflyRarity.toString()}
+                      rarity="rare"
                     >
                       {cardContent}
                     </ButterflyHoverPreview>
@@ -348,9 +348,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <CaterpillarHoverPreview
                       key={prize.id}
                       caterpillarId={dailyItems.caterpillarId}
-                      caterpillarName={generateLatinCaterpillarName(dailyItems.caterpillarId)}
+                      caterpillarName="Lepidoptera mysticus"
                       caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-                      rarity={dailyItems.caterpillarRarity.toString()}
+                      rarity="rare"
                     >
                       {cardContent}
                     </CaterpillarHoverPreview>
@@ -360,9 +360,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <FishHoverPreview
                       key={prize.id}
                       fishId={dailyItems.fishId}
-                      fishName={generateLatinFishName(dailyItems.fishId)}
+                      fishName="Pomacanthus elegans"
                       fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-                      rarity={dailyItems.fishRarity.toString()}
+                      rarity="rare"
                     >
                       {cardContent}
                     </FishHoverPreview>
@@ -379,16 +379,16 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
           </div>
         </div>
 
-        {/* Success/Error Message */}
-        {redeemMessage && (
-          <div className={`text-center p-3 rounded-lg mt-4 ${
-            redeemMessage.includes('erfolgreich') || redeemMessage.includes('🎉') 
-              ? 'bg-green-100 text-green-800 border border-green-300' 
-              : 'bg-red-100 text-red-800 border border-red-300'
-          }`}>
-            {redeemMessage}
-          </div>
-        )}
+        {/* Success/Error Message - Always visible to prevent jumping */}
+        <div className={`text-center p-3 rounded-lg mt-4 transition-all duration-200 ${
+          redeemMessage 
+            ? (redeemMessage.includes('erfolgreich') || redeemMessage.includes('🎉') 
+                ? 'bg-green-100 text-green-800 border border-green-300' 
+                : 'bg-red-100 text-red-800 border border-red-300')
+            : 'bg-gray-50 text-gray-400 border border-gray-200'
+        }`}>
+          {redeemMessage || 'Wähle einen Preis zum Einlösen'}
+        </div>
 
         {/* Footer */}
         <div className="flex justify-between items-center mt-6">
