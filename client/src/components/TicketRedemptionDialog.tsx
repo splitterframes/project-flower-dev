@@ -7,6 +7,7 @@ import { Ticket, Coins, Sun, Sprout, Flower2, Bug, Fish, Sparkles } from 'lucide
 import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
+import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -90,7 +91,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
     setIsRedeeming(true);
     
     try {
-      const response = await fetch(`http://localhost:5000/api/user/${user.id}/redeem-ticket`, {
+      const response = await fetch(`/api/user/${user.id}/redeem-ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prizeId: prizeType })
@@ -183,7 +184,10 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900">
+      <DialogContent 
+        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
+        aria-describedby="ticket-redemption-description"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl text-purple-100">
             <Ticket className="h-8 w-8 text-purple-400" />
@@ -192,6 +196,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
               {userTickets} 🎫
             </Badge>
           </DialogTitle>
+          <div id="ticket-redemption-description" className="sr-only">
+            Dialog zum Einlösen von Losen gegen verschiedene Preise
+          </div>
         </DialogHeader>
 
         {/* Shelf/Regal Design */}
@@ -267,6 +274,19 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                                   style={{ borderColor: rarityColors[dailyItems.fishRarity] }}
                                 />
                               </FishHoverPreview>
+                            ) : prize.type === 'caterpillar' ? (
+                              <CaterpillarHoverPreview
+                                caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                                caterpillarName={`Rare Raupe ${dailyItems.caterpillarId}`}
+                                rarity={dailyItems.caterpillarRarity as any}
+                              >
+                                <img
+                                  src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                                  alt={prize.title}
+                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
+                                  style={{ borderColor: rarityColors[dailyItems.caterpillarRarity] }}
+                                />
+                              </CaterpillarHoverPreview>
                             ) : (
                               <img
                                 src={`/Raupen/${dailyItems.caterpillarId}.jpg`}

@@ -42,9 +42,9 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
       {children}
       
       {isHovering && (
-        <div className="absolute z-[9999] pointer-events-none left-full -top-20 ml-2">
-          <div className="bg-slate-900 border-2 border-slate-600 rounded-lg p-4 shadow-2xl">
-            <div className="w-96 h-96 rounded-lg overflow-hidden mb-3 bg-slate-800 flex items-center justify-center">
+        <div className="absolute z-[99999] pointer-events-none left-full -top-20 ml-2">
+          <div className="bg-slate-900 border-2 border-slate-600 rounded-lg p-3 shadow-2xl">
+            <div className="w-64 h-64 rounded-lg overflow-hidden mb-2 bg-slate-800 flex items-center justify-center">
               {!imageError ? (
                 <img
                   src={currentSrc}
