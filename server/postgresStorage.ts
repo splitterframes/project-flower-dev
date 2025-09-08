@@ -5590,6 +5590,20 @@ export class PostgresStorage {
     return this.formatRankingResults(allUsers, 'suns', currentUserId);
   }
 
+  async getTop100ByDna(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        dna: users.dna
+      })
+      .from(users)
+      .orderBy(desc(users.dna))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'dna', currentUserId);
+  }
+
   async getTop100ByLikes(currentUserId: number): Promise<any[]> {
     try {
       // Calculate total likes from all exhibition butterflies
