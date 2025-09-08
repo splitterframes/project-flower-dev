@@ -145,6 +145,14 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       rarity: 2
     },
     {
+      id: 'dna',
+      cost: 30,
+      title: '15 DNA',
+      description: 'Sammle sofort 15 DNA',
+      icon: <Zap className="h-6 w-6 text-green-400" />,
+      type: 'dna'
+    },
+    {
       id: 'daily-flower',
       cost: 50,
       title: 'Tägliche Rare Blume',
@@ -183,14 +191,6 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       description: 'Heute verfügbar',
       icon: <Coins className="h-6 w-6 text-orange-400" />,
       type: 'credits'
-    },
-    {
-      id: 'dna',
-      cost: 30,
-      title: '15 DNA',
-      description: 'Sammle sofort 15 DNA',
-      icon: <Zap className="h-6 w-6 text-green-400" />,
-      type: 'dna'
     }
   ];
 
