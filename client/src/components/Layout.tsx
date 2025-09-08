@@ -443,6 +443,20 @@ export const Layout: React.FC = () => {
       
       <Footer activeView={currentView} onViewChange={handleViewChange} />
       
+      {/* Legal Footer with Copyright and Donate Button */}
+      <div className="bg-slate-950 border-t border-slate-800 px-6 py-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 space-y-2 sm:space-y-0">
+          <div className="flex items-center space-x-4">
+            <a href="#" className="hover:text-white transition-colors">Impressum</a>
+            <a href="#" className="hover:text-white transition-colors">Datenschutz</a>
+            <span>Copyright © Mariposa 2025</span>
+          </div>
+          <button className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black font-bold px-6 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 animate-pulse hover:animate-none">
+            ✨ DONATE ✨
+          </button>
+        </div>
+      </div>
+      
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
