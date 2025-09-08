@@ -373,17 +373,16 @@ export const CastleGardenView: React.FC = () => {
               <div 
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${gridWidth}, 48px)`, // Größer: 48px statt 40px
-                  gridTemplateRows: `repeat(${gridHeight}, 48px)`,
+                  gridTemplateColumns: `repeat(${gridWidth}, 56px)`, // Noch größer: 56px
+                  gridTemplateRows: `repeat(${gridHeight}, 56px)`,
                   gap: '0px'
                 }}
               >
                 {grid.map((field, index) => (
                   <div
                     key={index}
-                    className="w-12 h-12 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all relative select-none"
+                    className="w-14 h-14 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all relative select-none"
                     onClick={() => handleFieldClick(field)}
-                    onMouseDown={(e) => handleFieldMouseDown(e, field)}
                     onContextMenu={(e) => handleFieldRightClick(e, field)}
                     onDrop={(e) => handleDrop(e, field)}
                     onDragOver={handleDragOver}
