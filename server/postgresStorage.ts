@@ -6140,17 +6140,21 @@ export class PostgresStorage {
 
       // Award prize based on type
       switch (prizeType) {
+        case 'seed':
         case 'common-seed':
           await this.addSeedToUser(userId, 1, 1); // Common seed
           break;
         case 'suns':
-          await this.addSunsToUser(userId, 7);
+          await this.addSunsToUser(userId, 5); // Updated to match frontend description
           break;
         case 'rare-seed':
-          await this.addSeedToUser(userId, 3, 1); // Rare seed (seedId 3)
+          await this.addSeedToUser(userId, 2, 1); // Rare seed (seedId 2 = uncommon)
           break;
         case 'dna':
           await this.updateUserDna(userId, 15);
+          break;
+        case 'credits':
+          await this.addCreditsToUser(userId, 500); // 500 credits prize
           break;
         case 'daily-credits':
           await this.addCreditsToUser(userId, 800);

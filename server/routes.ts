@@ -2983,7 +2983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.message });
       }
 
-      res.json({ message: "Prize redeemed successfully", ...result });
+      res.json({ success: true, message: "Prize redeemed successfully", ...result });
     } catch (error) {
       console.error('Failed to redeem tickets:', error);
       res.status(500).json({ message: "Internal server error" });

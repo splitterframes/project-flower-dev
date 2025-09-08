@@ -196,7 +196,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Blumen/${dailyItems.flowerId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.flowerRarity)) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.flowerRarity))) }}
                 />
               </div>
             ) : prize.type === 'butterfly' && dailyItems ? (
@@ -205,7 +205,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.butterflyRarity)) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))) }}
                 />
               </div>
             ) : prize.type === 'caterpillar' && dailyItems ? (
@@ -214,7 +214,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.caterpillarRarity)) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.caterpillarRarity))) }}
                 />
               </div>
             ) : prize.type === 'fish' && dailyItems ? (
@@ -223,7 +223,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
                   src={`/Fische/${dailyItems.fishId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
-                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(dailyItems.fishRarity)) }}
+                  style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.fishRarity))) }}
                 />
               </div>
             ) : prize.type === 'seed' && (prize.id === 'seed' || prize.id === 'rare-seed') ? (
@@ -274,7 +274,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
           flowerName="Seltene Blume des Tages"
-          rarity={convertIntegerRarityToTier(dailyItems.flowerRarity)}
+          rarity={convertIntegerRarityToTier(Number(dailyItems.flowerRarity))}
         >
           {cardContent}
         </FlowerHoverPreview>
@@ -285,7 +285,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
           butterflyName="Seltener Schmetterling des Tages"
-          rarity={convertIntegerRarityToTier(dailyItems.butterflyRarity)}
+          rarity={convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))}
         >
           {cardContent}
         </ButterflyHoverPreview>
@@ -296,7 +296,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
           caterpillarName="Seltene Raupe des Tages"
-          rarity={convertIntegerRarityToTier(dailyItems.caterpillarRarity)}
+          rarity={convertIntegerRarityToTier(Number(dailyItems.caterpillarRarity))}
         >
           {cardContent}
         </CaterpillarHoverPreview>
@@ -307,7 +307,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           key={prize.id}
           fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
           fishName="Seltener Fisch des Tages"
-          rarity={convertIntegerRarityToTier(dailyItems.fishRarity)}
+          rarity={convertIntegerRarityToTier(Number(dailyItems.fishRarity))}
         >
           {cardContent}
         </FishHoverPreview>
