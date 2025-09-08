@@ -438,7 +438,7 @@ export const CastleGardenView: React.FC = () => {
             ...heart,
             offsetY: newOffsetY,
             opacity: Math.max(0, 1 - progress * 0.6), // Viel langsameres Ausblenden
-            scale: heart.scale * (1 + progress * 7) // Wächst von klein zu groß
+            scale: heart.scale * (1 + progress * 3) // Wächst moderat von klein zu groß
           };
         })
       );
