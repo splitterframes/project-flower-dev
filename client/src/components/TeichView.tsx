@@ -143,6 +143,9 @@ export const TeichView: React.FC = () => {
   const [collectingFish, setCollectingFish] = useState<Set<number>>(new Set());
   const [fadingFish, setFadingFish] = useState<Set<number>>(new Set());
   
+  // Field Spinning Animation State
+  const [spinningFields, setSpinningFields] = useState<Set<number>>(new Set());
+  
   // Fish Reward Dialog State
   const [isFishRewardDialogOpen, setIsFishRewardDialogOpen] = useState(false);
   const [fishRewardData, setFishRewardData] = useState<{
@@ -1021,6 +1024,20 @@ export const TeichView: React.FC = () => {
     console.log('🐛 Attempting to collect caterpillar on field', fieldIndex);
     // Blockierung wird bereits im onClick gesetzt
     
+    // Field spinning animation trigger
+    const triggerFieldSpin = (fieldIndex: number) => {
+      setSpinningFields(prev => new Set([...Array.from(prev), fieldIndex]));
+      
+      // Remove spinning class after animation completes (2.1 seconds for 3 full rotations)
+      setTimeout(() => {
+        setSpinningFields(prev => {
+          const newSet = new Set(Array.from(prev));
+          newSet.delete(fieldIndex);
+          return newSet;
+        });
+      }, 2100);
+    };
+    
     try {
       const response = await fetch(`/api/user/${user.id}/collect-field-caterpillar`, {
         method: 'POST',
@@ -1031,6 +1048,10 @@ export const TeichView: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
+        
+        // Trigger field spin animation
+        triggerFieldSpin(fieldIndex);
+        
         fetchTeichData();
         
         // Prevent butterfly dialog from opening for 1.5 seconds
@@ -1246,6 +1267,8 @@ export const TeichView: React.FC = () => {
                           : isNextToUnlock 
                             ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50 cursor-pointer' 
                             : 'border-slate-600 bg-slate-800 opacity-40'
+                      }
+                      ${spinningFields.has(field.id - 1) ? 'animate-field-spin' : ''}
                       }
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}

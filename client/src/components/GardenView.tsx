@@ -644,6 +644,9 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
+        // Trigger field spin animation
+        triggerFieldSpin(fieldIndex);
+        
         // Refresh data
         await fetchFieldButterflies();
         const data = await response.json();
@@ -772,6 +775,10 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
+        
+        // Trigger field spin animation
+        triggerFieldSpin(fieldIndex);
+        
         // Refresh data immediately
         await fetchPlantedFields();
         // Remove visual feedback after short delay
@@ -825,9 +832,6 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('🦋 Butterfly placed successfully!', data.message);
-        
-        // Trigger field spin animation
-        triggerFieldSpin(selectedFieldIndex - 1);
         
         // Refresh data to show the placed butterfly
         await fetchFieldButterflies();
