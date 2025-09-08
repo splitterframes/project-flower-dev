@@ -6281,7 +6281,7 @@ export class PostgresStorage {
       .where(eq(users.id, userId));
   }
 
-  // Helper method to add flower to user
+  // Helper method to add flower to user with UPSERT logic
   private async addFlowerToUser(userId: number, flowerId: number, rarity: string): Promise<void> {
     // Generate flower name using flowerId as seed for consistency with dialog
     const flowerName = generateLatinFlowerName(flowerId);
@@ -6290,30 +6290,76 @@ export class PostgresStorage {
     const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
     const rarityInteger = rarityNames.indexOf(rarity);
     
-    await this.db.insert(userFlowers).values({
-      userId,
-      flowerId,
-      flowerName,
-      rarity: rarityInteger >= 0 ? rarityInteger : 0, // Integer rarity for DB constraint
-      flowerRarity: rarity,                            // String rarity for display
-      flowerImageUrl: `/Blumen/${flowerId}.jpg`,
-      quantity: 1
-    });
+    try {
+      // Try to insert first (most common case)
+      await this.db.insert(userFlowers).values({
+        userId,
+        flowerId,
+        flowerName,
+        rarity: rarityInteger >= 0 ? rarityInteger : 0, // Integer rarity for DB constraint
+        flowerRarity: rarity,                            // String rarity for display
+        flowerImageUrl: `/Blumen/${flowerId}.jpg`,
+        quantity: 1
+      });
+      console.log(`🌸 Created new flower inventory entry: ${flowerName}`);
+    } catch (error) {
+      // If flower already exists (constraint violation), increment quantity
+      const existingFlower = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, flowerId)
+        ));
+
+      if (existingFlower.length > 0) {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: existingFlower[0].quantity + 1 })
+          .where(eq(userFlowers.id, existingFlower[0].id));
+        console.log(`🌸 Incremented existing flower ${flowerName} quantity to ${existingFlower[0].quantity + 1}`);
+      } else {
+        throw error; // Re-throw if it's not a constraint violation we can handle
+      }
+    }
   }
 
-  // Helper method to add butterfly to user
+  // Helper method to add butterfly to user with UPSERT logic
   private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
     // Generate consistent butterfly name using fixed ID as seed
     const butterflyName = generateGermanButterflyName(butterflyId);
     
-    await this.db.insert(userButterflies).values({
-      userId,
-      butterflyId,
-      butterflyName,
-      butterflyRarity: rarity,
-      butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
-      quantity: 1
-    });
+    try {
+      // Try to insert first (most common case)
+      await this.db.insert(userButterflies).values({
+        userId,
+        butterflyId,
+        butterflyName,
+        butterflyRarity: rarity,
+        butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
+        quantity: 1
+      });
+      console.log(`🦋 Created new butterfly inventory entry: ${butterflyName}`);
+    } catch (error) {
+      // If butterfly already exists (constraint violation), increment quantity
+      const existingButterfly = await this.db
+        .select()
+        .from(userButterflies)
+        .where(and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.butterflyId, butterflyId)
+        ));
+
+      if (existingButterfly.length > 0) {
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: existingButterfly[0].quantity + 1 })
+          .where(eq(userButterflies.id, existingButterfly[0].id));
+        console.log(`🦋 Incremented existing butterfly ${butterflyName} quantity to ${existingButterfly[0].quantity + 1}`);
+      } else {
+        throw error; // Re-throw if it's not a constraint violation we can handle
+      }
+    }
   }
 
   // Helper method to add caterpillar to user (for ticket redemption)
