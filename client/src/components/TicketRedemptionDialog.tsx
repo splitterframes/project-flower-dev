@@ -81,6 +81,22 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     }
   }, [isOpen]);
 
+  // Listen for inventory refresh events to update redemption status
+  useEffect(() => {
+    const handleRefreshInventory = () => {
+      if (isOpen) {
+        console.log('🔄 Refreshing daily items dialog after redemption');
+        fetch('/api/user/2/daily-items')
+          .then(res => res.json())
+          .then(data => setDailyItems(data))
+          .catch(error => console.error('Failed to refresh daily items:', error));
+      }
+    };
+
+    window.addEventListener('refreshInventory', handleRefreshInventory);
+    return () => window.removeEventListener('refreshInventory', handleRefreshInventory);
+  }, [isOpen]);
+
   // Prize definitions (all 9 prizes)
   const prizes = [
     {
