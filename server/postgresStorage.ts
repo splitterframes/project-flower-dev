@@ -6107,7 +6107,7 @@ export class PostgresStorage {
   async redeemTickets(userId: number, prizeType: string, cost: number): Promise<{ success: boolean; message: string }> {
     try {
       // Check if this is a daily prize that can only be redeemed once per day
-      const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prizeType);
+      const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prizeType);
       
       if (isDailyPrize) {
         const alreadyRedeemed = await this.checkDailyRedemption(userId, prizeType);
@@ -6147,9 +6147,12 @@ export class PostgresStorage {
           await this.addSunsToUser(userId, 7);
           break;
         case 'rare-seed':
-          await this.addSeedToUser(userId, 1, 1); // Rare seed (you may want to add rarity handling)
+          await this.addSeedToUser(userId, 3, 1); // Rare seed (seedId 3)
           break;
-        case 'credits':
+        case 'dna':
+          await this.updateUserDna(userId, 15);
+          break;
+        case 'daily-credits':
           await this.addCreditsToUser(userId, 800);
           break;
         case 'daily-flower':

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Coins, Sun, Sprout, Flower2, Bug, Fish, Sparkles } from 'lucide-react';
+import { Ticket, Coins, Sun, Sprout, Flower2, Bug, Fish, Sparkles, Zap } from 'lucide-react';
 import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
@@ -177,12 +177,20 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       type: 'fish'
     },
     {
-      id: 'credits',
+      id: 'daily-credits',
       cost: 500,
       title: '800 Credits',
-      description: 'Erhalte sofort 800 Credits',
+      description: 'Heute verfügbar',
       icon: <Coins className="h-6 w-6 text-orange-400" />,
       type: 'credits'
+    },
+    {
+      id: 'dna',
+      cost: 30,
+      title: '15 DNA',
+      description: 'Sammle sofort 15 DNA',
+      icon: <Zap className="h-6 w-6 text-green-400" />,
+      type: 'dna'
     }
   ];
 
@@ -218,7 +226,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
               {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
-                const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prize.id);
+                const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
                 const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
                 const isDisabled = !canAfford || isAlreadyRedeemed;
                 
