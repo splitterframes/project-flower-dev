@@ -8,7 +8,7 @@ import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
-import { getRarityColor, getRarityDisplayName, getRarityFromAssetId } from '@shared/rarity';
+import { getRarityColor, getRarityDisplayName, getRarityFromAssetId, generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName } from '@shared/rarity';
 
 // Helper function to convert integer rarity to RarityTier string
 const convertIntegerRarityToTier = (rarityInt: number): any => {
@@ -118,32 +118,32 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     {
       id: 'flower',
       cost: 50,
-      title: 'Seltene Blume',
-      description: 'Erhalte eine seltene Blume',
+      title: dailyItems ? `${generateLatinFlowerName(dailyItems.flowerId)}` : 'Seltene Blume',
+      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.flowerRarity)} Blume` : 'Erhalte eine seltene Blume',
       icon: <Flower className="h-6 w-6 text-pink-400" />,
       type: 'daily-flower'
     },
     {
       id: 'butterfly',
       cost: 100,
-      title: 'Seltener Schmetterling',
-      description: 'Erhalte einen seltenen Schmetterling',
+      title: dailyItems ? `${generateGermanButterflyName(dailyItems.butterflyId)}` : 'Seltener Schmetterling',
+      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.butterflyRarity)} Schmetterling` : 'Erhalte einen seltenen Schmetterling',
       icon: <Sparkles className="h-6 w-6 text-purple-400" />,
       type: 'daily-butterfly'
     },
     {
       id: 'caterpillar',
       cost: 150,
-      title: 'Seltene Raupe',
-      description: 'Erhalte eine seltene Raupe',
+      title: dailyItems ? `${generateLatinCaterpillarName(dailyItems.caterpillarId)}` : 'Seltene Raupe',
+      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.caterpillarRarity)} Raupe` : 'Erhalte eine seltene Raupe',
       icon: <Sparkles className="h-6 w-6 text-orange-400" />,
       type: 'daily-caterpillar'
     },
     {
       id: 'fish',
       cost: 200,
-      title: 'Seltener Fisch',
-      description: 'Erhalte einen seltenen Fisch',
+      title: dailyItems ? `${generateLatinFishName(dailyItems.fishId)}` : 'Seltener Fisch',
+      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.fishRarity)} Fisch` : 'Erhalte einen seltenen Fisch',
       icon: <Sparkles className="h-6 w-6 text-cyan-400" />,
       type: 'daily-fish'
     },
@@ -290,7 +290,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FlowerHoverPreview
           key={prize.id}
           flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-          flowerName="Seltene Blume des Tages"
+          flowerName={dailyItems ? generateLatinFlowerName(dailyItems.flowerId) : "Seltene Blume des Tages"}
           rarity={convertIntegerRarityToTier(Number(dailyItems.flowerRarity))}
         >
           {cardContent}
@@ -301,7 +301,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <ButterflyHoverPreview
           key={prize.id}
           butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-          butterflyName="Seltener Schmetterling des Tages"
+          butterflyName={dailyItems ? generateGermanButterflyName(dailyItems.butterflyId) : "Seltener Schmetterling des Tages"}
           rarity={convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))}
         >
           {cardContent}
@@ -312,7 +312,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <CaterpillarHoverPreview
           key={prize.id}
           caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-          caterpillarName="Seltene Raupe des Tages"
+          caterpillarName={dailyItems ? generateLatinCaterpillarName(dailyItems.caterpillarId) : "Seltene Raupe des Tages"}
           rarity={convertIntegerRarityToTier(Number(dailyItems.caterpillarRarity))}
         >
           {cardContent}
@@ -323,7 +323,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FishHoverPreview
           key={prize.id}
           fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-          fishName="Seltener Fisch des Tages"
+          fishName={dailyItems ? generateLatinFishName(dailyItems.fishId) : "Seltener Fisch des Tages"}
           rarity={convertIntegerRarityToTier(Number(dailyItems.fishRarity))}
         >
           {cardContent}

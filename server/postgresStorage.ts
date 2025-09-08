@@ -73,7 +73,7 @@ import {
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { generateRandomFlower, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
+import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
 
@@ -6280,13 +6280,14 @@ export class PostgresStorage {
 
   // Helper method to add flower to user
   private async addFlowerToUser(userId: number, flowerId: number, rarity: string): Promise<void> {
-    // Get flower info to set proper name
-    const flowerInfo = await this.getFlowerInfo(flowerId);
+    // Generate proper flower name using the rarity tier
+    const flowerData = generateRandomFlower(rarity as RarityTier);
+    const flowerName = flowerData ? flowerData.name : `Blume ${flowerId}`;
     
     await this.db.insert(userFlowers).values({
       userId,
       flowerId,
-      flowerName: flowerInfo.name,
+      flowerName,
       flowerRarity: rarity,
       flowerImageUrl: `/Blumen/${flowerId}.jpg`,
       quantity: 1
@@ -6295,10 +6296,14 @@ export class PostgresStorage {
 
   // Helper method to add butterfly to user
   private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
+    // Generate proper butterfly name using the rarity tier
+    const butterflyData = generateRandomButterfly(rarity as RarityTier);
+    const butterflyName = butterflyData ? butterflyData.name : `Schmetterling ${String(butterflyId).padStart(3, '0')}`;
+    
     await this.db.insert(userButterflies).values({
       userId,
       butterflyId,
-      butterflyName: `Butterfly ${String(butterflyId).padStart(3, '0')}`,
+      butterflyName,
       butterflyRarity: rarity,
       butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
       quantity: 1
@@ -6307,10 +6312,14 @@ export class PostgresStorage {
 
   // Helper method to add caterpillar to user
   private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: string): Promise<void> {
+    // Generate proper caterpillar name using the rarity tier  
+    const caterpillarData = generateRandomCaterpillar(rarity as RarityTier);
+    const caterpillarName = caterpillarData ? caterpillarData.name : `Raupe ${caterpillarId}`;
+    
     await this.db.insert(userCaterpillars).values({
       userId,
       caterpillarId,
-      caterpillarName: `Caterpillar ${caterpillarId}`,
+      caterpillarName,
       caterpillarRarity: rarity,
       caterpillarImageUrl: `/Caterpillars/${caterpillarId}.jpg`,
       quantity: 1
@@ -6319,10 +6328,14 @@ export class PostgresStorage {
 
   // Helper method to add fish to user
   private async addFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
+    // Generate proper fish name using the rarity tier
+    const fishData = generateRandomFish(rarity as RarityTier);
+    const fishName = fishData ? fishData.name : `Fisch ${fishId}`;
+    
     await this.db.insert(userFish).values({
       userId,
       fishId,
-      fishName: `Fish ${fishId}`,
+      fishName,
       fishRarity: rarity,
       fishImageUrl: `/Fish/${fishId}.jpg`,
       quantity: 1
