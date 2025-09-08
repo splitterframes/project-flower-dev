@@ -738,7 +738,7 @@ export const CastleGardenView: React.FC = () => {
                 {confettiHearts.map(heart => (
                   <div
                     key={heart.id}
-                    className="absolute pointer-events-none text-2xl animate-pulse"
+                    className="absolute pointer-events-none text-4xl animate-pulse"
                     style={{
                       left: `${heart.x * 56 + 28}px`,
                       top: `${heart.y * 56 + 28}px`,
