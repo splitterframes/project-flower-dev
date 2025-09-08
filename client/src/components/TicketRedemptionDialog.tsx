@@ -219,7 +219,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                   <div
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-                      shadow-lg border-2 transition-all duration-200 hover:scale-105
+                      shadow-lg border-2 transition-all duration-200 hover:scale-105 h-52
                       ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
                     `}
                   >
@@ -235,57 +235,33 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                         {isDaily && dailyItems ? (
                           <>
                             {prize.type === 'flower' ? (
-                              <FlowerHoverPreview
-                                flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-                                flowerName={`Rare Blume ${dailyItems.flowerId}`}
-                                rarity={dailyItems.flowerRarity as any}
-                              >
-                                <img
-                                  src={`/Blumen/${dailyItems.flowerId}.jpg`}
-                                  alt={prize.title}
-                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
-                                  style={{ borderColor: rarityColors[dailyItems.flowerRarity] }}
-                                />
-                              </FlowerHoverPreview>
+                              <img
+                                src={`/Blumen/${dailyItems.flowerId}.jpg`}
+                                alt={prize.title}
+                                className="h-18 w-18 object-cover rounded border-2"
+                                style={{ borderColor: rarityColors[dailyItems.flowerRarity] }}
+                              />
                             ) : prize.type === 'butterfly' ? (
-                              <ButterflyHoverPreview
-                                butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-                                butterflyName={`Rarer Schmetterling ${dailyItems.butterflyId}`}
-                                rarity={dailyItems.butterflyRarity as any}
-                              >
-                                <img
-                                  src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-                                  alt={prize.title}
-                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
-                                  style={{ borderColor: rarityColors[dailyItems.butterflyRarity] }}
-                                />
-                              </ButterflyHoverPreview>
+                              <img
+                                src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                                alt={prize.title}
+                                className="h-18 w-18 object-cover rounded border-2"
+                                style={{ borderColor: rarityColors[dailyItems.butterflyRarity] }}
+                              />
                             ) : prize.type === 'fish' ? (
-                              <FishHoverPreview
-                                fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-                                fishName={`Rarer Fisch ${dailyItems.fishId}`}
-                                rarity={dailyItems.fishRarity as any}
-                              >
-                                <img
-                                  src={`/Fische/${dailyItems.fishId}.jpg`}
-                                  alt={prize.title}
-                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
-                                  style={{ borderColor: rarityColors[dailyItems.fishRarity] }}
-                                />
-                              </FishHoverPreview>
+                              <img
+                                src={`/Fische/${dailyItems.fishId}.jpg`}
+                                alt={prize.title}
+                                className="h-18 w-18 object-cover rounded border-2"
+                                style={{ borderColor: rarityColors[dailyItems.fishRarity] }}
+                              />
                             ) : prize.type === 'caterpillar' ? (
-                              <CaterpillarHoverPreview
-                                caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-                                caterpillarName={`Rare Raupe ${dailyItems.caterpillarId}`}
-                                rarity={dailyItems.caterpillarRarity as any}
-                              >
-                                <img
-                                  src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-                                  alt={prize.title}
-                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
-                                  style={{ borderColor: rarityColors[dailyItems.caterpillarRarity] }}
-                                />
-                              </CaterpillarHoverPreview>
+                              <img
+                                src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                                alt={prize.title}
+                                className="h-18 w-18 object-cover rounded border-2"
+                                style={{ borderColor: rarityColors[dailyItems.caterpillarRarity] }}
+                              />
                             ) : (
                               <img
                                 src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
