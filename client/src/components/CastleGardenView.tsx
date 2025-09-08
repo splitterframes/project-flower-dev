@@ -53,7 +53,7 @@ type ConfettiHeart = {
 
 export const CastleGardenView: React.FC = () => {
   const { user } = useAuth();
-  const { credits, setCredits } = useCredits();
+  const { credits, setCredits, updateCredits } = useCredits();
 
   // Grid-Dimensionen
   const gridWidth = 25;
@@ -412,19 +412,13 @@ export const CastleGardenView: React.FC = () => {
       spawnSingleHeart(targetField.x, targetField.y, heartAmount);
       
       // Herzen ins Inventar hinzufügen und persistent speichern
-      const newCredits = credits + heartAmount;
-      setCredits(newCredits);
       setTotalHeartsCollected(prev => prev + heartAmount);
       
-      // Credits in Datenbank persistieren
+      // Credits sowohl lokal als auch in Datenbank aktualisieren
       if (user?.id) {
         try {
-          await fetch(`/api/user/${user.id}/credits`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: heartAmount })
-          });
-          console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${newCredits}`);
+          await updateCredits(user.id, heartAmount);
+          console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${credits + heartAmount}`);
         } catch (error) {
           console.error('Failed to save hearts to database:', error);
         }
