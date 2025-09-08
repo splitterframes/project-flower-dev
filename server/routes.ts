@@ -167,6 +167,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tickets routes
+  app.get("/api/user/:id/tickets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ tickets: user.tickets || 0 });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/:id/tickets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { amount } = req.body;
+      
+      if (typeof amount !== 'number') {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
+
+      const user = await storage.updateUserTickets(userId, amount);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ tickets: user.tickets });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // DNA Sequencing endpoint (consumes items)
   app.post("/api/user/:id/dna/sequence", async (req, res) => {
     try {

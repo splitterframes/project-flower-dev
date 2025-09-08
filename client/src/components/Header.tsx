@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useDna } from "@/lib/stores/useDna";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, Zap } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, Zap, Ticket } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
@@ -28,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     caterpillars: 0,
     fish: 0
   });
+  const [tickets, setTickets] = useState(0);
   const [passiveIncome, setPassiveIncome] = useState(0);
   const [showUserList, setShowUserList] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
@@ -91,11 +92,26 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     }
   };
 
+  const fetchTickets = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/tickets`);
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tickets:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchCredits();
       fetchSuns();
       fetchDna();
+      fetchTickets();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -107,6 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
       fetchCredits();
       fetchSuns();
       fetchDna();
+      fetchTickets();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }
@@ -120,6 +137,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
       fetchCredits();
       fetchSuns();
       fetchDna();
+      fetchTickets();
       fetchInventoryCounts();
       fetchPassiveIncome();
     }, 10000); // Update every 10 seconds
@@ -314,6 +332,19 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               
               {/* Marie Posa Button - Smaller on mobile */}
               <MariePosaButton userId={user.id} />
+
+              {/* Tickets Button - Purple style */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {/* TODO: Add ticket redeem dialog */}}
+                className="border-purple-500 text-purple-300 hover:bg-purple-800 hover:text-white shadow-lg shadow-purple-400/20 px-2 sm:px-3"
+                title="Lose einlösen"
+              >
+                <Ticket className="h-4 w-4 sm:mr-2 text-purple-400" />
+                <span className="hidden sm:inline font-semibold">{tickets}</span>
+                <span className="sm:hidden text-xs">🎫</span>
+              </Button>
 
               {/* User List Button - Smaller on mobile */}
               <Button

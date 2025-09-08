@@ -41,7 +41,7 @@ interface Loot {
   id: string;
   x: number;
   y: number;
-  type: 'credit' | 'sun' | 'dna';
+  type: 'credit' | 'sun' | 'dna' | 'ticket';
   amount: number;
 }
 
@@ -108,6 +108,27 @@ const BalloonComponent: React.FC<{
       // Remove loot display after 2 seconds
       setTimeout(() => {
         setLootDrops(prev => prev.filter(loot => loot.id !== newLoot.id));
+      }, 2000);
+    }
+    
+    // Ticket system for balloons WITH cards (always gives 1 ticket)
+    if (balloon.hasCard) {
+      const ticketLoot: Loot = {
+        id: `ticket-${balloon.id}`,
+        x: balloonCenterX,
+        y: balloonCenterY,
+        type: 'ticket',
+        amount: 1
+      };
+      
+      setLootDrops(prev => [...prev, ticketLoot]);
+      
+      // Award the ticket
+      awardLoot('ticket', 1);
+      
+      // Remove loot display after 2 seconds
+      setTimeout(() => {
+        setLootDrops(prev => prev.filter(loot => loot.id !== ticketLoot.id));
       }, 2000);
     }
     
@@ -219,7 +240,7 @@ export const Layout: React.FC = () => {
   const { setCredits } = useCredits();
 
   // Award loot function
-  const awardLoot = async (type: 'credit' | 'sun' | 'dna', amount: number) => {
+  const awardLoot = async (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number) => {
     if (!user) return;
     
     try {
@@ -237,6 +258,12 @@ export const Layout: React.FC = () => {
         });
       } else if (type === 'dna') {
         await fetch(`/api/user/${user.id}/dna`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+      } else if (type === 'ticket') {
+        await fetch(`/api/user/${user.id}/tickets`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount })
@@ -402,7 +429,7 @@ export const Layout: React.FC = () => {
             transform: 'translate(-50%, -50%)',
             zIndex: 1002,
             animation: 'lootPop 2s ease-out forwards',
-            backgroundColor: loot.type === 'credit' ? '#FFD700' : loot.type === 'sun' ? '#FFA500' : '#9B59B6',
+            backgroundColor: loot.type === 'credit' ? '#FFD700' : loot.type === 'sun' ? '#FFA500' : loot.type === 'dna' ? '#9B59B6' : '#8B5CF6',
             color: 'white',
             padding: '8px 12px',
             borderRadius: '20px',
@@ -416,6 +443,7 @@ export const Layout: React.FC = () => {
           {loot.type === 'credit' && '💰'}
           {loot.type === 'sun' && '☀️'}
           {loot.type === 'dna' && '🧬'}
+          {loot.type === 'ticket' && '🎫'}
           +{loot.amount}
         </div>
       ))}

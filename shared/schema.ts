@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   suns: integer("suns").notNull().default(100),
   dna: integer("dna").notNull().default(0),
   lastPassiveIncomeAt: timestamp("last_passive_income_at"),
+  tickets: integer("tickets").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

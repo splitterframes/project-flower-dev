@@ -721,6 +721,25 @@ export class PostgresStorage {
     return result[0] as User | undefined;
   }
 
+  async updateUserTickets(id: number, amount: number): Promise<User | undefined> {
+    // First get current tickets
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentTickets = currentUser.tickets || 0; // Default to 0 if null
+    const newTickets = currentTickets + amount; // amount is a delta (change), not absolute
+    console.log(`🎫 Tickets Update: User ${id} hatte ${currentTickets} Tickets, ${amount >= 0 ? '+' : ''}${amount} Tickets = ${newTickets} Tickets`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ tickets: newTickets })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0] as User | undefined;
+  }
+
   // Market methods
   async getMarketListings(): Promise<any[]> {
     // Get all market listings with their copied data - only one JOIN needed for seller username
