@@ -189,7 +189,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
+        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900 overflow-visible"
+        style={{ zIndex: 9999 }}
         aria-describedby="ticket-redemption-description"
       >
         <DialogHeader>
