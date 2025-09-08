@@ -252,7 +252,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
           <Button
             size="sm"
             disabled={isDisabled}
-            onClick={() => handleRedeem(prize.id, prize.cost)}
+            onClick={() => handleRedeem(prize.type, prize.cost)}
             className={`
               w-full text-xs
               ${canAfford 
