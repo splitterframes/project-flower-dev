@@ -73,7 +73,7 @@ import {
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, type RarityTier } from "@shared/rarity";
+import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, generateRandomButterfly, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
 
@@ -6303,9 +6303,8 @@ export class PostgresStorage {
 
   // Helper method to add butterfly to user
   private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
-    // Generate proper butterfly name using the rarity tier
-    const butterflyData = generateRandomButterfly(rarity as RarityTier);
-    const butterflyName = butterflyData ? butterflyData.name : `Schmetterling ${String(butterflyId).padStart(3, '0')}`;
+    // Generate consistent butterfly name using fixed ID as seed
+    const butterflyName = generateGermanButterflyName(butterflyId);
     
     await this.db.insert(userButterflies).values({
       userId,
@@ -6320,9 +6319,8 @@ export class PostgresStorage {
   // Helper method to add caterpillar to user (for ticket redemption)
   private async addCaterpillarForRedemption(userId: number, caterpillarId: number, rarity: string): Promise<void> {
     console.log(`🎫 TICKET-REDEMPTION: Adding caterpillar ${caterpillarId} (${rarity}) to user ${userId}`);
-    // Generate proper caterpillar name using the rarity tier  
-    const caterpillarData = generateRandomCaterpillar(rarity as RarityTier);
-    const caterpillarName = caterpillarData ? caterpillarData.name : `Raupe ${caterpillarId}`;
+    // Generate consistent caterpillar name using fixed ID as seed
+    const caterpillarName = generateLatinCaterpillarName(caterpillarId);
     
     console.log(`🎫 TICKET-REDEMPTION: About to INSERT caterpillar with quantity=1`);
     const result = await this.db.insert(userCaterpillars).values({
@@ -6339,9 +6337,8 @@ export class PostgresStorage {
 
   // Helper method to add fish to user
   private async addFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
-    // Generate proper fish name using the rarity tier
-    const fishData = generateRandomFish(rarity as RarityTier);
-    const fishName = fishData ? fishData.name : `Fisch ${fishId}`;
+    // Generate consistent fish name using fixed ID as seed
+    const fishName = generateLatinFishName(fishId);
     
     await this.db.insert(userFish).values({
       userId,
