@@ -5180,6 +5180,25 @@ export class PostgresStorage {
     return Math.floor(basePrice * 0.5); // Marie Posa pays 50% of market value
   }
 
+  private getFlowerSellPrice(rarity: string): number {
+    // Flower prices for Marie Posa - consistent with Exhibition system
+    // Marie Posa pays 50% of Exhibition market value
+    const exhibitionPrice = (() => {
+      switch (rarity) {
+        case 'common': return 8;
+        case 'uncommon': return 20;
+        case 'rare': return 40;
+        case 'super-rare': return 80;
+        case 'epic': return 160;
+        case 'legendary': return 400;
+        case 'mythical': return 800;
+        default: return 8;
+      }
+    })();
+    
+    return Math.floor(exhibitionPrice * 0.5); // Marie Posa pays 50% of Exhibition value
+  }
+
   private getCaterpillarSellPrice(rarity: string): number {
     // NEW: Caterpillar prices are 30% more than flowers of same rarity (130% of flower price)
     // First get the flower price for this rarity
@@ -5370,6 +5389,7 @@ export class PostgresStorage {
             break;
             
           case 'caterpillar':
+            console.log(`🐛 Marie Posa: Processing caterpillar sale for item ID ${item.originalId}, user ${userId}`);
             // Handle caterpillars like fish - check if quantity > 1, decrease quantity instead of deleting
             const caterpillarData = await this.db
               .select()
@@ -5380,15 +5400,21 @@ export class PostgresStorage {
               ))
               .limit(1);
 
+            console.log(`🐛 Marie Posa: Found caterpillar data:`, caterpillarData);
+
             if (caterpillarData.length > 0) {
+              console.log(`🐛 Marie Posa: Caterpillar quantity: ${caterpillarData[0].quantity}`);
               if (caterpillarData[0].quantity > 1) {
+                console.log(`🐛 Marie Posa: Decreasing quantity from ${caterpillarData[0].quantity} to ${caterpillarData[0].quantity - 1}`);
                 // Decrease quantity by 1
                 await this.db
                   .update(userCaterpillars)
                   .set({ quantity: caterpillarData[0].quantity - 1 })
                   .where(eq(userCaterpillars.id, item.originalId));
                 deleteResult = true;
+                console.log(`🐛 Marie Posa: Successfully decreased caterpillar quantity`);
               } else {
+                console.log(`🐛 Marie Posa: Deleting caterpillar completely (quantity is 1)`);
                 // Delete if quantity is 1
                 const caterpillarResult = await this.db
                   .delete(userCaterpillars)
@@ -5398,7 +5424,10 @@ export class PostgresStorage {
                   ))
                   .returning();
                 deleteResult = caterpillarResult.length > 0;
+                console.log(`🐛 Marie Posa: Delete result:`, caterpillarResult, `deleteResult: ${deleteResult}`);
               }
+            } else {
+              console.log(`🐛 Marie Posa: ERROR - No caterpillar found with ID ${item.originalId} for user ${userId}`);
             }
             break;
             
