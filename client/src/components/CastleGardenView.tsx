@@ -521,7 +521,7 @@ export const CastleGardenView: React.FC = () => {
                   }`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, part)}
-                  onClick={() => setDraggedPart(part)}
+                  onClick={() => setDraggedPart(draggedPart?.id === part.id ? null : part)}
                   style={{
                     backgroundImage: `url(${part.image})`,
                     backgroundSize: '120%',
