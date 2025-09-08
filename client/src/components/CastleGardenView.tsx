@@ -376,7 +376,7 @@ export const CastleGardenView: React.FC = () => {
     setBees(prev => [...prev, newBee]);
     
     // Biene nach Flugdauer entfernen und Konfetti-Herzen spawnen
-    setTimeout(() => {
+    setTimeout(async () => {
       setBees(prev => prev.filter(bee => bee.id !== newBee.id));
       
       // Herzen basierend auf Flugstrecke UND Bauteil-Wert
@@ -411,9 +411,25 @@ export const CastleGardenView: React.FC = () => {
       // Ein großes Herz spawnen + Anzahl-Text
       spawnSingleHeart(targetField.x, targetField.y, heartAmount);
       
-      // Herzen ins Inventar hinzufügen
-      setCredits(credits + heartAmount);
+      // Herzen ins Inventar hinzufügen und persistent speichern
+      const newCredits = credits + heartAmount;
+      setCredits(newCredits);
       setTotalHeartsCollected(prev => prev + heartAmount);
+      
+      // Credits in Datenbank persistieren
+      if (user?.id) {
+        try {
+          await fetch(`/api/user/${user.id}/credits`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credits: newCredits })
+          });
+          console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${newCredits}`);
+        } catch (error) {
+          console.error('Failed to save hearts to database:', error);
+        }
+      }
+      
       toast.success(`💖 ${heartAmount} Herzen gesammelt! (+${heartAmount} Credits)`);
       
       console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen!`);
