@@ -9,6 +9,7 @@ import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
 import MariePosaButton from "./MariePosaButton";
+import { TicketRedemptionDialog } from "./TicketRedemptionDialog";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -36,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     ownerId: number;
     ownerName: string;
   } | null>(null);
+  const [showTicketDialog, setShowTicketDialog] = useState(false);
   
   const handleVisitExhibition = (userId: number, username: string) => {
     setForeignExhibition({ ownerId: userId, ownerName: username });
@@ -337,7 +339,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {/* TODO: Add ticket redeem dialog */}}
+                onClick={() => setShowTicketDialog(true)}
                 className="border-purple-500 text-purple-300 hover:bg-purple-800 hover:text-white shadow-lg shadow-purple-400/20 px-2 sm:px-3"
                 title="Lose einlösen"
               >
@@ -399,7 +401,20 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
         onClose={() => setShowEmergencyDialog(false)}
         onSeedsReceived={handleEmergencySeedsReceived}
       />
-      
+
+      {/* Ticket Redemption Dialog */}
+      <TicketRedemptionDialog
+        isOpen={showTicketDialog}
+        onClose={() => setShowTicketDialog(false)}
+        userTickets={tickets}
+        onTicketsChange={() => {
+          fetchTickets();
+          fetchCredits();
+          fetchSuns();
+          fetchDna();
+          fetchInventoryCounts();
+        }}
+      />
 
       {/* Foreign Exhibition Modal/View */}
       {foreignExhibition && (

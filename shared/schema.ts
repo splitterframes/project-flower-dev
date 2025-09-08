@@ -568,6 +568,26 @@ export const mariePosaTracker = pgTable("marie_posa_tracker", {
   uniqueUserMariePosa: uniqueIndex("unique_user_marie_posa").on(table.userId),
 }));
 
+// Daily Items for Ticket Redemption
+export const dailyItems = pgTable("daily_items", {
+  id: serial("id").primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  
+  // Daily rare items with rarity 2+ for ticket redemption
+  flowerId: integer("flower_id").notNull(),
+  flowerRarity: integer("flower_rarity").notNull(),
+  butterflyId: integer("butterfly_id").notNull(),
+  butterflyRarity: integer("butterfly_rarity").notNull(),
+  caterpillarId: integer("caterpillar_id").notNull(),
+  caterpillarRarity: integer("caterpillar_rarity").notNull(),
+  fishId: integer("fish_id").notNull(),
+  fishRarity: integer("fish_rarity").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  dateUnique: unique().on(table.date),
+}));
+
 // Aquarium types
 export type AquariumTank = typeof aquariumTanks.$inferSelect;
 export type NewAquariumTank = typeof aquariumTanks.$inferInsert;
@@ -577,3 +597,7 @@ export type NewAquariumFish = typeof aquariumFish.$inferInsert;
 // Marie Posa types  
 export type MariePosaTracker = typeof mariePosaTracker.$inferSelect;
 export type NewMariePosaTracker = typeof mariePosaTracker.$inferInsert;
+
+// Daily Items types
+export type DailyItems = typeof dailyItems.$inferSelect;
+export type NewDailyItems = typeof dailyItems.$inferInsert;

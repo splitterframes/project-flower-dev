@@ -2942,6 +2942,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily Items API
+  app.get("/api/daily-items", async (req, res) => {
+    try {
+      const dailyItems = await storage.getDailyItems();
+      res.json(dailyItems);
+    } catch (error) {
+      console.error('Failed to get daily items:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Redeem Tickets API
+  app.post("/api/user/:id/redeem-tickets", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { prizeType, cost } = req.body;
+
+      if (!prizeType || !cost || typeof cost !== 'number') {
+        return res.status(400).json({ message: "Invalid prize type or cost" });
+      }
+
+      const result = await storage.redeemTickets(userId, prizeType, cost);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json({ message: "Prize redeemed successfully", ...result });
+    } catch (error) {
+      console.error('Failed to redeem tickets:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -32,6 +32,7 @@ import {
   aquariumTanks,
   aquariumFish,
   mariePosaTracker,
+  dailyItems,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -65,6 +66,7 @@ import {
   type DonateChallengeFlowerRequest,
   type AquariumTank,
   type AquariumFish,
+  type DailyItems,
   insertUserSchema
 } from "@shared/schema";
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
@@ -5983,6 +5985,224 @@ export class PostgresStorage {
       console.error('🌸 Error removing field flower:', error);
       return { success: false, message: "Datenbankfehler beim Entfernen der Blume" };
     }
+  }
+  // Daily Items System
+  async getDailyItems(): Promise<DailyItems | null> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      let [dailyItemsRecord] = await this.db
+        .select()
+        .from(dailyItems)
+        .where(eq(dailyItems.date, today))
+        .limit(1);
+
+      if (!dailyItemsRecord) {
+        // Generate new daily items for today
+        dailyItemsRecord = await this.generateDailyItems(today);
+      }
+
+      return {
+        ...dailyItemsRecord,
+        flower: {
+          id: dailyItemsRecord.flowerId,
+          name: `Rare Flower ${dailyItemsRecord.flowerId}`,
+          rarity: dailyItemsRecord.flowerRarity
+        },
+        butterfly: {
+          id: dailyItemsRecord.butterflyId,
+          name: `Rare Butterfly ${dailyItemsRecord.butterflyId}`,
+          rarity: dailyItemsRecord.butterflyRarity
+        },
+        caterpillar: {
+          id: dailyItemsRecord.caterpillarId,
+          name: `Rare Caterpillar ${dailyItemsRecord.caterpillarId}`,
+          rarity: dailyItemsRecord.caterpillarRarity
+        },
+        fish: {
+          id: dailyItemsRecord.fishId,
+          name: `Rare Fish ${dailyItemsRecord.fishId}`,
+          rarity: dailyItemsRecord.fishRarity
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get daily items:', error);
+      return null;
+    }
+  }
+
+  private async generateDailyItems(date: string): Promise<DailyItems> {
+    // Generate rare+ items (rarity 2-6)
+    const getRandomRareId = (max: number) => Math.floor(Math.random() * max);
+    const getRandomRareRarity = () => 2 + Math.floor(Math.random() * 5); // 2-6
+
+    const newDailyItems = {
+      date,
+      flowerId: getRandomRareId(200),
+      flowerRarity: getRandomRareRarity(),
+      butterflyId: getRandomRareId(960),
+      butterflyRarity: getRandomRareRarity(),
+      caterpillarId: getRandomRareId(124),
+      caterpillarRarity: getRandomRareRarity(),
+      fishId: getRandomRareId(278),
+      fishRarity: getRandomRareRarity(),
+    };
+
+    const [inserted] = await this.db
+      .insert(dailyItems)
+      .values(newDailyItems)
+      .returning();
+
+    return inserted;
+  }
+
+  // Ticket Redemption System
+  async redeemTickets(userId: number, prizeType: string, cost: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) {
+        return { success: false, message: "User not found" };
+      }
+
+      if (user.tickets < cost) {
+        return { success: false, message: `Nicht genügend Lose. Du hast ${user.tickets}, brauchst aber ${cost}.` };
+      }
+
+      // Deduct tickets
+      await this.db
+        .update(users)
+        .set({ tickets: user.tickets - cost })
+        .where(eq(users.id, userId));
+
+      // Award prize based on type
+      switch (prizeType) {
+        case 'common-seed':
+          await this.addSeedToUser(userId, 1, 1); // Common seed
+          break;
+        case 'suns':
+          await this.addSunsToUser(userId, 7);
+          break;
+        case 'rare-seed':
+          await this.addSeedToUser(userId, 1, 1); // Rare seed (you may want to add rarity handling)
+          break;
+        case 'credits':
+          await this.addCreditsToUser(userId, 800);
+          break;
+        case 'daily-flower':
+          const dailyItemsForFlower = await this.getDailyItems();
+          if (dailyItemsForFlower) {
+            await this.addFlowerToUser(userId, dailyItemsForFlower.flowerId, dailyItemsForFlower.flowerRarity);
+          }
+          break;
+        case 'daily-butterfly':
+          const dailyItemsForButterfly = await this.getDailyItems();
+          if (dailyItemsForButterfly) {
+            await this.addButterflyToUser(userId, dailyItemsForButterfly.butterflyId, dailyItemsForButterfly.butterflyRarity);
+          }
+          break;
+        case 'daily-caterpillar':
+          const dailyItemsForCaterpillar = await this.getDailyItems();
+          if (dailyItemsForCaterpillar) {
+            await this.addCaterpillarToUser(userId, dailyItemsForCaterpillar.caterpillarId, dailyItemsForCaterpillar.caterpillarRarity);
+          }
+          break;
+        case 'daily-fish':
+          const dailyItemsForFish = await this.getDailyItems();
+          if (dailyItemsForFish) {
+            await this.addFishToUser(userId, dailyItemsForFish.fishId, dailyItemsForFish.fishRarity);
+          }
+          break;
+        default:
+          return { success: false, message: "Unbekannter Preistyp" };
+      }
+
+      return { success: true, message: "Preis erfolgreich eingelöst!" };
+    } catch (error) {
+      console.error('Failed to redeem tickets:', error);
+      return { success: false, message: "Fehler beim Einlösen" };
+    }
+  }
+
+  // Helper method to add seeds to user
+  private async addSeedToUser(userId: number, seedId: number, quantity: number): Promise<void> {
+    const existing = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: existing[0].quantity + quantity })
+        .where(eq(userSeeds.id, existing[0].id));
+    } else {
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity
+      });
+    }
+  }
+
+  // Helper method to add suns to user
+  private async addSunsToUser(userId: number, amount: number): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ suns: sql`${users.suns} + ${amount}` })
+      .where(eq(users.id, userId));
+  }
+
+  // Helper method to add credits to user
+  private async addCreditsToUser(userId: number, amount: number): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ credits: sql`${users.credits} + ${amount}` })
+      .where(eq(users.id, userId));
+  }
+
+  // Helper method to add flower to user
+  private async addFlowerToUser(userId: number, flowerId: number, rarity: number): Promise<void> {
+    await this.db.insert(userFlowers).values({
+      userId,
+      flowerId,
+      name: `Flower ${flowerId}`,
+      rarity: rarity.toString(),
+      imageUrl: `/images/Blumen/${flowerId}.jpg`
+    });
+  }
+
+  // Helper method to add butterfly to user
+  private async addButterflyToUser(userId: number, butterflyId: number, rarity: number): Promise<void> {
+    await this.db.insert(userButterflies).values({
+      userId,
+      butterflyId,
+      name: `Butterfly ${String(butterflyId).padStart(3, '0')}`,
+      rarity: rarity.toString(),
+      imageUrl: `/images/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`
+    });
+  }
+
+  // Helper method to add caterpillar to user
+  private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: number): Promise<void> {
+    await this.db.insert(userCaterpillars).values({
+      userId,
+      caterpillarId,
+      name: `Caterpillar ${caterpillarId}`,
+      rarity: rarity.toString(),
+      imageUrl: `/images/Caterpillars/${caterpillarId}.jpg`
+    });
+  }
+
+  // Helper method to add fish to user
+  private async addFishToUser(userId: number, fishId: number, rarity: number): Promise<void> {
+    await this.db.insert(userFish).values({
+      userId,
+      fishId,
+      name: `Fish ${fishId}`,
+      rarity: rarity.toString(),
+      imageUrl: `/images/Fish/${fishId}.jpg`
+    });
   }
 }
 
