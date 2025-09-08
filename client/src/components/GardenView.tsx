@@ -791,7 +791,7 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         console.log('Blume erfolgreich geerntet!');
         
-        // Wait for spinning animation to complete (2.1s), then hide image
+        // Wait for 2 rotations to complete (1.4s), then hide image
         setTimeout(() => {
           setHarvestedFields(prev => new Set([...Array.from(prev), fieldIndex]));
           setSpinningFields(prev => {
@@ -799,7 +799,7 @@ export const GardenView: React.FC = () => {
             newSet.delete(fieldIndex);
             return newSet;
           });
-        }, 2100);
+        }, 1400);
         
         // Refresh data immediately
         await fetchPlantedFields();

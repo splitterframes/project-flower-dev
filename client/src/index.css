@@ -407,14 +407,14 @@ canvas {
     padding-top: max(0.5rem, env(safe-area-inset-top));
   }
 
-  /* Field Spinning Animation for Harvesting */
+  /* Field Spinning Animation for Harvesting - 2x 360° Drehungen */
   @keyframes field-spin-animation {
     0% { transform: rotate(0deg); }
-    100% { transform: rotate(1080deg); }
+    100% { transform: rotate(720deg); }
   }
 
   .animate-field-spin {
-    animation: field-spin-animation 2.1s ease-in-out;
+    animation: field-spin-animation 1.4s ease-in-out;
   }
 
   /* Langsamere Pulse-Animation für DONATE Button */

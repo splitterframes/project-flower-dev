@@ -1038,14 +1038,14 @@ export const TeichView: React.FC = () => {
         const result = await response.json();
         console.log('🐛 Raupe erfolgreich gesammelt!');
         
-        // Wait for spinning animation to complete (2.1s), then clean up
+        // Wait for 2 rotations to complete (1.4s), then clean up
         setTimeout(() => {
           setSpinningFields(prev => {
             const newSet = new Set(Array.from(prev));
             newSet.delete(fieldIndex);
             return newSet;
           });
-        }, 2100);
+        }, 1400);
         
         fetchTeichData();
         
