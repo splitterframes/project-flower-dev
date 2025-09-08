@@ -143,7 +143,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       id: 'daily-flower',
       cost: 50,
       title: 'Tägliche Rare Blume',
-      description: `Blume ${dailyItems?.flowerId || '...'} (${rarityNames[dailyItems?.flowerRarity || 2]})`,
+      description: 'Heute verfügbar',
       icon: <Flower2 className="h-6 w-6" style={{ color: rarityColors[dailyItems?.flowerRarity || 2] }} />,
       type: 'flower'
     },
@@ -151,7 +151,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       id: 'daily-butterfly',
       cost: 100,
       title: 'Täglicher Rarer Schmetterling',
-      description: `Schmetterling ${dailyItems?.butterflyId || '...'} (${rarityNames[dailyItems?.butterflyRarity || 2]})`,
+      description: 'Heute verfügbar',
       icon: <Sparkles className="h-6 w-6" style={{ color: rarityColors[dailyItems?.butterflyRarity || 2] }} />,
       type: 'butterfly'
     },
@@ -159,7 +159,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       id: 'daily-caterpillar',
       cost: 150,
       title: 'Tägliche Rare Raupe',
-      description: `Raupe ${dailyItems?.caterpillarId || '...'} (${rarityNames[dailyItems?.caterpillarRarity || 2]})`,
+      description: 'Heute verfügbar',
       icon: <Bug className="h-6 w-6" style={{ color: rarityColors[dailyItems?.caterpillarRarity || 2] }} />,
       type: 'caterpillar'
     },
@@ -167,7 +167,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       id: 'daily-fish',
       cost: 200,
       title: 'Täglicher Rarer Fisch',
-      description: `Fisch ${dailyItems?.fishId || '...'} (${rarityNames[dailyItems?.fishRarity || 2]})`,
+      description: 'Heute verfügbar',
       icon: <Fish className="h-6 w-6" style={{ color: rarityColors[dailyItems?.fishRarity || 2] }} />,
       type: 'fish'
     },
@@ -223,7 +223,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     </div>
                     
                     {/* Item Display */}
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 h-full flex flex-col justify-between">
                       {/* Icon/Image */}
                       <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
                         {isDaily && dailyItems ? (
@@ -286,23 +286,25 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                       <h3 className="font-bold text-sm text-gray-800">{prize.title}</h3>
                       
                       {/* Description */}
-                      <p className="text-xs text-gray-600 line-clamp-2">{prize.description}</p>
+                      <p className="text-xs text-gray-600 line-clamp-2 flex-1">{prize.description}</p>
                       
-                      {/* Redeem Button */}
-                      <Button
-                        size="sm"
-                        disabled={!canAfford || isRedeeming}
-                        onClick={() => handleRedeem(prize.id, prize.cost)}
-                        className={`
-                          w-full text-xs
-                          ${canAfford 
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                          }
-                        `}
-                      >
-                        {isRedeeming ? 'Einlösen...' : 'Einlösen'}
-                      </Button>
+                      {/* Redeem Button - Always at bottom */}
+                      <div className="mt-auto">
+                        <Button
+                          size="sm"
+                          disabled={!canAfford || isRedeeming}
+                          onClick={() => handleRedeem(prize.id, prize.cost)}
+                          className={`
+                            w-full text-xs
+                            ${canAfford 
+                              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            }
+                          `}
+                        >
+                          {isRedeeming ? 'Einlösen...' : 'Einlösen'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
