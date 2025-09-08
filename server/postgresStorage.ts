@@ -6037,10 +6037,17 @@ export class PostgresStorage {
   // Ticket Redemption System
   async redeemTickets(userId: number, prizeType: string, cost: number): Promise<{ success: boolean; message: string }> {
     try {
-      const user = await this.getUserById(userId);
-      if (!user) {
+      const userResult = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (userResult.length === 0) {
         return { success: false, message: "User not found" };
       }
+      
+      const user = userResult[0];
 
       if (user.tickets < cost) {
         return { success: false, message: `Nicht genügend Lose. Du hast ${user.tickets}, brauchst aber ${cost}.` };
