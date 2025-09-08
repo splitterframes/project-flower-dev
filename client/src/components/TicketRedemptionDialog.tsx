@@ -74,7 +74,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 15,
       title: '5 Sonnen',
       description: 'Sammle sofort 5 Sonnen',
-      icon: <Sun className="h-6 w-6 text-yellow-400" />,
+      icon: <span className="text-2xl">☀️</span>,
       type: 'suns'
     },
     {
@@ -90,7 +90,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 30,
       title: '15 DNA',
       description: 'Sammle sofort 15 DNA',
-      icon: <Zap className="h-6 w-6 text-cyan-400" />,
+      icon: <span className="text-2xl">🧬</span>,
       type: 'credits'
     },
     {
@@ -259,7 +259,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FlowerHoverPreview
           key={prize.id}
           flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-          flowerName={`${getRarityDisplayName(dailyItems.flowerRarity as any)} Blume`}
+          flowerName="Seltene Blume des Tages"
           rarity={dailyItems.flowerRarity as any}
         >
           {cardContent}
@@ -270,7 +270,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <ButterflyHoverPreview
           key={prize.id}
           butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
-          butterflyName={`${getRarityDisplayName(dailyItems.butterflyRarity as any)} Schmetterling`}
+          butterflyName="Seltener Schmetterling des Tages"
           rarity={dailyItems.butterflyRarity as any}
         >
           {cardContent}
@@ -281,7 +281,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <CaterpillarHoverPreview
           key={prize.id}
           caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
-          caterpillarName={`${getRarityDisplayName(dailyItems.caterpillarRarity as any)} Raupe`}
+          caterpillarName="Seltene Raupe des Tages"
           rarity={dailyItems.caterpillarRarity as any}
         >
           {cardContent}
@@ -292,7 +292,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
         <FishHoverPreview
           key={prize.id}
           fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
-          fishName={`${getRarityDisplayName(dailyItems.fishRarity as any)} Fisch`}
+          fishName="Seltener Fisch des Tages"
           rarity={dailyItems.fishRarity as any}
         >
           {cardContent}
