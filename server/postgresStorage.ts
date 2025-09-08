@@ -2300,8 +2300,9 @@ export class PostgresStorage {
         
         console.log(`🐛 Updated caterpillar quantity: ${existingCaterpillar[0].quantity + 1}`);
       } else {
-        // Add new caterpillar
-        await this.db
+        // Add new caterpillar with quantity=1 
+        console.log(`🐛 CREATING new caterpillar ${caterpillarName} with quantity=1`);
+        const result = await this.db
           .insert(userCaterpillars)
           .values({
             userId,
@@ -2310,9 +2311,11 @@ export class PostgresStorage {
             caterpillarRarity: rarity,
             caterpillarImageUrl: imageUrl,
             quantity: 1
-          });
+          })
+          .returning();
         
-        console.log(`🐛 Added new caterpillar ${caterpillarName} to inventory`);
+        console.log(`🐛 NEW CATERPILLAR CREATED:`, result[0]);
+        console.log(`🐛 ✅ Confirmed: Created with quantity=${result[0].quantity}`);
       }
     } catch (error) {
       console.error('🐛 Database error adding caterpillar to inventory:', error);
