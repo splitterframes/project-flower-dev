@@ -14,6 +14,7 @@ import { FlowerpowerView } from "./FlowerpowerView";
 import { ExhibitionView } from "./ExhibitionView";
 import { AquariumView } from "./AquariumView";
 import { MarieSlotView } from "./MarieSlotView";
+import { CastleGardenView } from "./CastleGardenView";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,7 +52,7 @@ const BalloonComponent: React.FC<{
   onPop: (id: string) => void;
   setConfettiParticles: React.Dispatch<React.SetStateAction<Confetti[]>>;
   setLootDrops: React.Dispatch<React.SetStateAction<Loot[]>>;
-  awardLoot: (type: 'credit' | 'sun' | 'dna', amount: number) => void;
+  awardLoot: (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number) => void;
 }> = ({ balloon, onPop, setConfettiParticles, setLootDrops, awardLoot }) => {
   const [isPopped, setIsPopped] = useState(false);
 
@@ -424,6 +425,8 @@ export const Layout: React.FC = () => {
         return <AquariumView />;
       case "marie-slot":
         return <MarieSlotView onBack={() => handleViewChange('garten')} />;
+      case "schlossgarten":
+        return <CastleGardenView />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":
