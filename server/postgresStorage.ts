@@ -6010,6 +6010,31 @@ export class PostgresStorage {
     }
   }
 
+  async getDailyItemsWithRedemptions(userId?: number): Promise<(DailyItems & { redemptions?: Record<string, boolean> }) | null> {
+    try {
+      const dailyItemsData = await this.getDailyItems();
+      if (!dailyItemsData || !userId) {
+        return dailyItemsData;
+      }
+
+      // Get redemption status for each daily prize type
+      const prizeTypes = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'];
+      const redemptions: Record<string, boolean> = {};
+
+      for (const prizeType of prizeTypes) {
+        redemptions[prizeType] = await this.checkDailyRedemption(userId, prizeType);
+      }
+
+      return {
+        ...dailyItemsData,
+        redemptions
+      };
+    } catch (error) {
+      console.error('Failed to get daily items with redemptions:', error);
+      return null;
+    }
+  }
+
   private async generateDailyItems(date: string): Promise<DailyItems> {
     // Generate ONLY rare items (rarity 2)
     const getRandomRareId = (max: number) => Math.floor(Math.random() * max);
@@ -6153,6 +6178,11 @@ export class PostgresStorage {
           break;
         default:
           return { success: false, message: "Unbekannter Preistyp" };
+      }
+
+      // Record daily redemption for daily prizes
+      if (isDailyPrize) {
+        await this.recordDailyRedemption(userId, prizeType);
       }
 
       return { success: true, message: "Preis erfolgreich eingelöst!" };

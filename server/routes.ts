@@ -2955,6 +2955,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily Items with Redemption Status API
+  app.get("/api/user/:id/daily-items", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const dailyItems = await storage.getDailyItemsWithRedemptions(userId);
+      res.json(dailyItems);
+    } catch (error) {
+      console.error('Failed to get daily items with redemptions:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Redeem Tickets API
   app.post("/api/user/:id/redeem-tickets", async (req, res) => {
     try {

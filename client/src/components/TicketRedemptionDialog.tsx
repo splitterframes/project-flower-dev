@@ -28,6 +28,7 @@ interface DailyItems {
   caterpillarRarity: number;
   fishId: number;
   fishRarity: number;
+  redemptions?: Record<string, boolean>;
 }
 
 interface Prize {
@@ -70,7 +71,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
     if (!user) return;
     
     try {
-      const response = await fetch(`/api/daily-items`);
+      const response = await fetch(`/api/user/${user.id}/daily-items`);
       if (response.ok) {
         const data = await response.json();
         setDailyItems(data);
@@ -102,6 +103,8 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
       if (result.success) {
         setRedeemMessage('Preis erfolgreich eingelöst! 🎉');
         onTicketsChange();
+        // Reload daily items to update redemption status
+        await fetchDailyItems();
       } else {
         setRedeemMessage(result.message || 'Fehler beim Einlösen');
       }
@@ -215,18 +218,23 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
               {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prize.id);
+                const isAlreadyRedeemed = isDaily && dailyItems?.redemptions?.[prize.id] === true;
+                const isDisabled = !canAfford || isAlreadyRedeemed;
                 
                 const cardContent = (
                   <div
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-                      shadow-lg border-2 transition-all duration-200 hover:scale-105 h-52
-                      ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
+                      shadow-lg border-2 transition-all duration-200 h-52
+                      ${isAlreadyRedeemed ? 'border-green-400 bg-gradient-to-b from-green-50 to-green-100 opacity-75' : 
+                        canAfford ? 'border-purple-400 hover:border-purple-300 hover:scale-105' : 'border-gray-400'}
                     `}
                   >
-                    {/* Price Tag */}
-                    <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg">
-                      {prize.cost} 🎫
+                    {/* Price Tag / Status */}
+                    <div className={`absolute -top-2 -right-2 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg ${
+                      isAlreadyRedeemed ? 'bg-green-600' : 'bg-purple-600'
+                    }`}>
+                      {isAlreadyRedeemed ? '✓ Heute' : `${prize.cost} 🎫`}
                     </div>
                     
                     {/* Item Display */}
@@ -282,23 +290,27 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                       <h3 className="font-bold text-sm text-gray-800">{prize.title}</h3>
                       
                       {/* Description */}
-                      <p className="text-xs text-gray-600 line-clamp-2 flex-1">{prize.description}</p>
+                      <p className="text-xs text-gray-600 line-clamp-2 flex-1">
+                        {isAlreadyRedeemed ? 'Bereits heute eingelöst' : prize.description}
+                      </p>
                       
                       {/* Redeem Button - Always at bottom */}
                       <div className="mt-auto">
                         <Button
                           size="sm"
-                          disabled={!canAfford || isRedeeming}
+                          disabled={isDisabled || isRedeeming}
                           onClick={() => handleRedeem(prize.id, prize.cost)}
                           className={`
                             w-full text-xs
-                            ${canAfford 
-                              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            ${isAlreadyRedeemed 
+                              ? 'bg-green-600 text-white cursor-not-allowed' 
+                              : canAfford 
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                             }
                           `}
                         >
-                          {isRedeeming ? 'Einlösen...' : 'Einlösen'}
+                          {isAlreadyRedeemed ? '✓ Eingelöst' : isRedeeming ? 'Einlösen...' : 'Einlösen'}
                         </Button>
                       </div>
                     </div>
