@@ -310,7 +310,7 @@ export const Layout: React.FC = () => {
 
     const spawnBalloon = () => {
       // Debug logging
-      console.log(`🔍 BALLOON DEBUG: view=${currentView}, globalFlag=${(window as any).balloonsDisabledInCastle}`);
+      console.log(`🔍 BALLOON DEBUG: view=${currentView}, globalFlag=${(window as any).balloonsDisabledInCastle}, location=${window.location.pathname}`);
       
       // Only disable balloons if we're in castle garden AND toggle is disabled
       if (currentView === 'schlossgarten' && (window as any).balloonsDisabledInCastle) {
