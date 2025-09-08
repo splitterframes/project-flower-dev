@@ -324,9 +324,9 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <FlowerHoverPreview
                       key={prize.id}
                       flowerId={dailyItems.flowerId}
-                      flowerName={generateLatinFlowerName(dailyItems.flowerId)}
+                      flowerName="Corona magnificus"
                       flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
-                      rarity={dailyItems.flowerRarity.toString()}
+                      rarity="rare"
                     >
                       {cardContent}
                     </FlowerHoverPreview>
