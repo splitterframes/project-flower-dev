@@ -7,17 +7,15 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { toast } from "sonner";
 import { Heart, Coins } from "lucide-react";
 
-// Bauteil-Typen für den Schlossgarten
 type BuildingPart = {
   id: string;
   name: string;
-  type: 'grass' | 'path' | 'hedge' | 'tree' | 'statue' | 'fountain';
+  type: string;
   cost: number;
   image: string;
-  rotation: number; // 0, 90, 180, 270 Grad
+  rotation: number;
 };
 
-// Grid-Feld-Typ
 type GridField = {
   x: number;
   y: number;
@@ -53,42 +51,42 @@ type ConfettiHeart = {
 
 export const CastleGardenView: React.FC = () => {
   const { user } = useAuth();
-  
-  // 25x15 Grid (375 Felder total)
+  const { credits, setCredits } = useCredits();
+
+  // Grid-Dimensionen
   const gridWidth = 25;
   const gridHeight = 15;
-  
-  // Initialisiere das Grid mit leeren Rasenfeldern
+
+  // Shop State
+  const [showShopDialog, setShowShopDialog] = useState(false);
+  const [selectedShopField, setSelectedShopField] = useState<GridField | null>(null);
+  const [unlockedParts, setUnlockedParts] = useState<string[]>(['grass', 'stone_path']);
+
+  // Grid State
   const [grid, setGrid] = useState<GridField[]>(() => {
-    const initialGrid: GridField[] = [];
+    const newGrid: GridField[] = [];
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
-        initialGrid.push({
+        newGrid.push({
           x,
           y,
-          buildingPart: null // Anfangs alles leer (Rasen)
+          buildingPart: null
         });
       }
     }
-    return initialGrid;
+    return newGrid;
   });
 
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
   const animationFrameRef = useRef<number>();
-  
-  // Shop State
-  const [showShopDialog, setShowShopDialog] = useState(false);
-  const [selectedShopField, setSelectedShopField] = useState<GridField | null>(null);
-  
-  // Freigeschaltete Bauteile
-  const [unlockedParts, setUnlockedParts] = useState<string[]>(['grass', 'stone_path', 'wooden_path']);
-  
-  // Credits Hook
-  const { credits, setCredits } = useCredits();
 
-  // Alle verfügbaren Bauteile (Shop-System)
+  // Drag & Drop State mit Feld-zu-Feld Support
+  const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
+  const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
+
+  // Verfügbare Bauteile
   const allParts: BuildingPart[] = [
     {
       id: 'grass',
@@ -143,14 +141,22 @@ export const CastleGardenView: React.FC = () => {
   // Nur freigeschaltete Bauteile anzeigen
   const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
 
-  // Vereinfachtes Drag & Drop State
-  const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
-
   // Drag Start Handler für Bauteile
   const handleDragStart = (event: React.DragEvent, part: BuildingPart) => {
     setDraggedPart(part);
+    setDraggedFromField(null); // Reset field drag
     event.dataTransfer.setData('text/plain', part.id);
     event.dataTransfer.effectAllowed = 'copy';
+  };
+
+  // Drag Start Handler für Felder (Drag zwischen Feldern)
+  const handleFieldDragStart = (event: React.DragEvent, field: GridField) => {
+    if (field.buildingPart) {
+      setDraggedPart(field.buildingPart);
+      setDraggedFromField(field);
+      event.dataTransfer.setData('text/plain', field.buildingPart.id);
+      event.dataTransfer.effectAllowed = 'move';
+    }
   };
 
   // Drop Handler für Grid-Felder
@@ -161,39 +167,69 @@ export const CastleGardenView: React.FC = () => {
       const fieldIndex = field.y * gridWidth + field.x;
       const newGrid = [...grid];
       
+      // Wenn von einem Feld gedraggt wurde, das ursprüngliche Feld leeren
+      if (draggedFromField) {
+        const fromIndex = draggedFromField.y * gridWidth + draggedFromField.x;
+        newGrid[fromIndex] = {
+          ...draggedFromField,
+          buildingPart: null
+        };
+      }
+      
       // Bauteil am Zielfeld platzieren
       newGrid[fieldIndex] = {
         ...field,
         buildingPart: { ...draggedPart }
       };
       setGrid(newGrid);
+      
+      // Reset drag state
+      if (draggedFromField) {
+        setDraggedFromField(null);
+        setDraggedPart(null);
+      }
     }
   };
 
   // Drag Over Handler
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
+    event.dataTransfer.dropEffect = draggedFromField ? 'move' : 'copy';
   };
 
   // Grid-Feld Klick Handler
   const handleFieldClick = (field: GridField) => {
     if (field.buildingPart) {
-      // Belegtes Feld - Bauteil löschen
-      const fieldIndex = field.y * gridWidth + field.x;
-      const newGrid = [...grid];
-      newGrid[fieldIndex] = {
-        ...field,
-        buildingPart: null
-      };
-      setGrid(newGrid);
+      // Belegtes Feld - Bauteil löschen (nur wenn nicht gedraggt wurde)
+      if (!draggedFromField) {
+        const fieldIndex = field.y * gridWidth + field.x;
+        const newGrid = [...grid];
+        newGrid[fieldIndex] = {
+          ...field,
+          buildingPart: null
+        };
+        setGrid(newGrid);
+      }
     } else {
-      // Leeres Feld - Shop öffnen
-      if (!draggedPart) {
+      // Leeres Feld - Shop öffnen oder Bauteil platzieren
+      if (draggedPart && !draggedFromField) {
+        // Bauteil aus Palette platzieren
+        const fieldIndex = field.y * gridWidth + field.x;
+        const newGrid = [...grid];
+        newGrid[fieldIndex] = {
+          ...field,
+          buildingPart: { ...draggedPart }
+        };
+        setGrid(newGrid);
+      } else if (!draggedPart) {
+        // Shop öffnen
         setSelectedShopField(field);
         setShowShopDialog(true);
       }
     }
+    
+    // Reset drag state
+    setDraggedFromField(null);
   };
 
   // Bauteil rotieren (Rechtsklick)
@@ -233,7 +269,7 @@ export const CastleGardenView: React.FC = () => {
       Math.pow(targetField.x - startField.x, 2) + Math.pow(targetField.y - startField.y, 2)
     );
     
-    const flightDuration = Math.max(2000, distance * 500); // Langsamer Flug
+    const flightDuration = Math.max(3000, distance * 800); // Langsamerer Flug
     
     const newBee: Bee = {
       id: `bee-${Date.now()}`,
@@ -270,37 +306,27 @@ export const CastleGardenView: React.FC = () => {
     }, flightDuration);
   };
 
-  // Bienen-Spawn Timer (alle 10-20 Sekunden)
-  React.useEffect(() => {
-    const spawnInterval = setInterval(() => {
-      if (Math.random() < 0.3) { // 30% Chance alle 10 Sekunden
-        spawnRandomBee();
-      }
-    }, 10000);
-    
-    return () => clearInterval(spawnInterval);
-  }, []);
-
-  // Konfetti-Herzen spawnen
+  // Verbesserte Konfetti-Herzen Animation
   const spawnConfettiHearts = (centerX: number, centerY: number, amount: number) => {
     const newHearts: ConfettiHeart[] = [];
     
     for (let i = 0; i < amount; i++) {
-      const angle = (Math.PI * 2 * i) / amount;
-      const radius = 30 + Math.random() * 20;
+      const angle = (Math.PI * 2 * i) / amount + (Math.random() - 0.5) * 0.5;
+      const radius = 40 + Math.random() * 30;
+      const speed = 3 + Math.random() * 4;
       
       newHearts.push({
         id: `confetti-${Date.now()}-${i}`,
         x: centerX,
         y: centerY,
-        offsetX: Math.cos(angle) * radius,
-        offsetY: Math.sin(angle) * radius,
+        offsetX: 0,
+        offsetY: 0,
         rotation: Math.random() * 360,
-        scale: 0.8 + Math.random() * 0.4,
+        scale: 1.2 + Math.random() * 0.8,
         opacity: 1,
         velocity: {
-          x: Math.cos(angle) * (2 + Math.random() * 3),
-          y: Math.sin(angle) * (2 + Math.random() * 3) - 1
+          x: Math.cos(angle) * speed,
+          y: Math.sin(angle) * speed - 2 // Upward initial velocity
         },
         startTime: Date.now()
       });
@@ -308,13 +334,91 @@ export const CastleGardenView: React.FC = () => {
     
     setConfettiHearts(prev => [...prev, ...newHearts]);
     
-    // Konfetti nach 2 Sekunden entfernen
+    // Konfetti nach 3 Sekunden entfernen
     setTimeout(() => {
       setConfettiHearts(prev => prev.filter(heart => 
         !newHearts.some(newHeart => newHeart.id === heart.id)
       ));
-    }, 2000);
+    }, 3000);
   };
+
+  // Animation Loop für Bienen
+  useEffect(() => {
+    const animate = () => {
+      setBees(prevBees => 
+        prevBees.map(bee => {
+          const elapsed = Date.now() - bee.startTime;
+          const progress = Math.min(elapsed / bee.duration, 1);
+          
+          // Sanfte Bewegung mit easing
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          
+          const newX = bee.startX + (bee.targetX - bee.startX) * easeProgress;
+          const newY = bee.startY + (bee.targetY - bee.startY) * easeProgress;
+          
+          return {
+            ...bee,
+            currentX: newX,
+            currentY: newY
+          };
+        })
+      );
+      
+      // Konfetti-Herzen animieren
+      setConfettiHearts(prevHearts =>
+        prevHearts.map(heart => {
+          const elapsed = Date.now() - heart.startTime;
+          const progress = elapsed / 3000; // 3 Sekunden Animation
+          
+          // Physik-basierte Bewegung
+          const newOffsetX = heart.offsetX + heart.velocity.x;
+          const newOffsetY = heart.offsetY + heart.velocity.y;
+          const newVelocityY = heart.velocity.y + 0.5; // Gravitation
+          
+          return {
+            ...heart,
+            offsetX: newOffsetX,
+            offsetY: newOffsetY,
+            velocity: {
+              ...heart.velocity,
+              y: newVelocityY
+            },
+            rotation: heart.rotation + 5,
+            opacity: Math.max(0, 1 - progress),
+            scale: heart.scale * (1 - progress * 0.3)
+          };
+        })
+      );
+      
+      // Solange Animationen laufen, weiter animieren
+      if (bees.length > 0 || confettiHearts.length > 0) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+    
+    // Animation starten wenn Objekte da sind
+    if ((bees.length > 0 || confettiHearts.length > 0) && !animationFrameRef.current) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = undefined;
+      }
+    };
+  }, [bees, confettiHearts]);
+
+  // Bienen-Spawn Timer (alle 10 Sekunden)
+  useEffect(() => {
+    const spawnInterval = setInterval(() => {
+      if (Math.random() < 0.3) { // 30% Chance alle 10 Sekunden
+        spawnRandomBee();
+      }
+    }, 10000);
+    
+    return () => clearInterval(spawnInterval);
+  }, [grid, credits]); // Abhängig vom Grid und Credits
 
   // Bauteil freischalten
   const unlockPart = async (partId: string, cost: number) => {
@@ -331,6 +435,7 @@ export const CastleGardenView: React.FC = () => {
           setCredits(credits - cost);
           setUnlockedParts(prev => [...prev, partId]);
           setShowShopDialog(false);
+          toast.success(`🔓 ${allParts.find(p => p.id === partId)?.name} freigeschaltet!`);
           console.log(`🔓 Bauteil ${partId} für ${cost} Credits freigeschaltet!`);
         }
       } catch (error) {
@@ -341,10 +446,10 @@ export const CastleGardenView: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="p-4">
-        <Card>
-          <CardContent className="p-6">
-            <p>Bitte melde dich an, um den Schlossgarten zu besuchen.</p>
+      <div className="flex items-center justify-center h-full">
+        <Card className="bg-slate-800 border-slate-700 text-white">
+          <CardContent className="pt-6">
+            <p className="text-center text-slate-400">Bitte melde dich an, um den Schlossgarten zu betreten</p>
           </CardContent>
         </Card>
       </div>
@@ -352,28 +457,90 @@ export const CastleGardenView: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-green-50 overflow-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-yellow-100 p-4 border-b border-amber-200">
-        <h1 className="text-2xl font-bold text-amber-800 mb-2">🏰 Schlossgarten</h1>
-        <p className="text-amber-700">Gestalte deinen eigenen königlichen Garten!</p>
+    <div className="h-full bg-slate-900 overflow-auto">
+      {/* Header im App-Stil */}
+      <div className="bg-slate-800 border-b border-slate-700 p-4">
+        <h1 className="text-2xl font-bold text-white mb-2">🏰 Schlossgarten</h1>
+        <p className="text-slate-300">Gestalte deinen eigenen königlichen Garten!</p>
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Garten-Grid */}
-        <Card>
+        {/* Bauteile-Palette über dem Grid */}
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-lg text-slate-800">🏰 Dein Schlossgarten (25x15)</CardTitle>
-            <p className="text-sm text-slate-600">
+            <CardTitle className="text-lg text-white">🧱 Freigeschaltete Bauteile</CardTitle>
+            <p className="text-sm text-slate-400">
+              <span className="text-green-400 font-medium">{availableParts.length}/{allParts.length}</span> freigeschaltet • Ziehe ins Grid unten
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {availableParts.map((part) => (
+                <div
+                  key={part.id}
+                  className={`flex-shrink-0 w-20 h-20 border-2 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
+                    draggedPart?.id === part.id 
+                      ? 'border-green-400 bg-green-900/30 scale-105' 
+                      : 'border-slate-600 hover:border-green-500 hover:shadow-lg'
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, part)}
+                  onClick={() => setDraggedPart(part)}
+                  style={{
+                    backgroundImage: `url(${part.image})`,
+                    backgroundSize: '120%',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <div className="w-full h-full bg-gradient-to-t from-black/70 to-transparent rounded-lg flex flex-col justify-between p-1">
+                    <div className="text-xs text-white font-bold bg-black/60 rounded px-1">
+                      {part.cost > 0 ? `${part.cost}💰` : '🆓'}
+                    </div>
+                    <div className="text-xs text-white font-bold text-center bg-black/60 rounded px-1">
+                      {part.name}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Mehr Bauteile freischalten */}
+              {allParts.length > availableParts.length && (
+                <div
+                  className="flex-shrink-0 w-20 h-20 border-2 border-dashed border-green-400 rounded-lg cursor-pointer hover:border-green-300 hover:bg-green-900/20 transition-all flex flex-col items-center justify-center gap-1"
+                  onClick={() => setShowShopDialog(true)}
+                >
+                  <div className="text-lg">🛒</div>
+                  <div className="text-xs text-green-400 font-bold text-center">
+                    Mehr
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {draggedPart && (
+              <div className="mt-3 p-2 bg-green-900/30 rounded border border-green-700">
+                <p className="text-sm text-green-300 font-medium">
+                  🎯 <strong>{draggedPart.name}</strong> ausgewählt - Ziehe ins Grid oder klicke ein Feld
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Garten-Grid */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-lg text-white">🏰 Dein Schlossgarten (25x15)</CardTitle>
+            <p className="text-sm text-slate-400">
               🖱️ Drag & Drop zwischen Feldern • 🛒 Leeres Feld = Shop • 🔄 Rechtsklick = Drehen • 🗑️ Linksklick = Löschen
             </p>
           </CardHeader>
           <CardContent>
-            <div className="relative mx-auto w-fit border-2 border-amber-300 bg-green-100 overflow-hidden">
+            <div className="relative mx-auto w-fit border-2 border-slate-600 bg-slate-700 overflow-hidden rounded-lg">
               <div 
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${gridWidth}, 56px)`, // Noch größer: 56px
+                  gridTemplateColumns: `repeat(${gridWidth}, 56px)`, // Große Felder
                   gridTemplateRows: `repeat(${gridHeight}, 56px)`,
                   gap: '0px'
                 }}
@@ -381,15 +548,17 @@ export const CastleGardenView: React.FC = () => {
                 {grid.map((field, index) => (
                   <div
                     key={index}
-                    className="w-14 h-14 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all relative select-none"
+                    className="w-14 h-14 cursor-pointer hover:ring-2 hover:ring-green-400 transition-all relative select-none"
                     onClick={() => handleFieldClick(field)}
                     onContextMenu={(e) => handleFieldRightClick(e, field)}
                     onDrop={(e) => handleDrop(e, field)}
                     onDragOver={handleDragOver}
+                    onDragStart={(e) => handleFieldDragStart(e, field)}
+                    draggable={!!field.buildingPart}
                     style={{
-                      backgroundColor: field.buildingPart ? 'transparent' : '#86efac',
+                      backgroundColor: field.buildingPart ? 'transparent' : '#475569',
                       backgroundImage: field.buildingPart ? `url(${field.buildingPart.image})` : 'url(/Landschaft/gras.png)',
-                      backgroundSize: field.buildingPart ? '120%' : 'cover', // Bauteile größer darstellen
+                      backgroundSize: field.buildingPart ? '130%' : 'cover', // Bauteile größer
                       backgroundPosition: 'center',
                       transform: field.buildingPart ? `rotate(${field.buildingPart.rotation}deg)` : undefined
                     }}
@@ -400,7 +569,7 @@ export const CastleGardenView: React.FC = () => {
                     ).map(bee => (
                       <div
                         key={bee.id}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none text-lg z-10"
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none text-xl z-10 animate-bounce"
                       >
                         🐝
                       </div>
@@ -412,12 +581,13 @@ export const CastleGardenView: React.FC = () => {
                     ).map(heart => (
                       <div
                         key={heart.id}
-                        className="absolute pointer-events-none text-lg z-20"
+                        className="absolute pointer-events-none z-20"
                         style={{
-                          left: `${heart.offsetX}px`,
-                          top: `${heart.offsetY}px`,
+                          left: `${28 + heart.offsetX}px`,
+                          top: `${28 + heart.offsetY}px`,
                           transform: `rotate(${heart.rotation}deg) scale(${heart.scale})`,
-                          opacity: heart.opacity
+                          opacity: heart.opacity,
+                          fontSize: '24px'
                         }}
                       >
                         💖
@@ -430,191 +600,52 @@ export const CastleGardenView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Shop Dialog */}
-        <Dialog open={showShopDialog} onOpenChange={setShowShopDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>🛒 Bauteil-Shop</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-slate-600">
-                Schalte neue Bauteile mit deinen Credits frei:
-              </p>
-              
-              <div className="text-sm text-amber-700 bg-amber-50 p-2 rounded">
-                💰 Verfügbare Credits: <strong>{credits}</strong>
-              </div>
-              
-              <div className="grid gap-3">
-                {allParts.filter(part => !unlockedParts.includes(part.id)).map((part) => (
-                  <div
-                    key={part.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-12 h-12 border rounded"
-                        style={{
-                          backgroundImage: `url(${part.image})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                        }}
-                      />
-                      <div>
-                        <div className="font-medium">{part.name}</div>
-                        <div className="text-xs text-slate-500">{part.type}</div>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => unlockPart(part.id, part.cost)}
-                      disabled={credits < part.cost}
-                      className="bg-amber-600 hover:bg-amber-700"
-                    >
-                      {part.cost} 💰
-                    </Button>
-                  </div>
-                ))}
-                
-                {allParts.filter(part => !unlockedParts.includes(part.id)).length === 0 && (
-                  <div className="text-center text-slate-500 py-4">
-                    🎉 Alle Bauteile bereits freigeschaltet!
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowShopDialog(false)}>
-                  Schließen
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Bauteile-Palette */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg text-slate-800">🧱 Freigeschaltete Bauteile</CardTitle>
-            <p className="text-sm text-slate-600">
-              Ziehe Bauteile ins Grid • Mehrfachverwendung möglich • 
-              <span className="text-amber-600 font-medium">{availableParts.length}/{allParts.length} freigeschaltet</span>
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {availableParts.map((part) => (
-                <div
-                  key={part.id}
-                  className={`flex-shrink-0 w-28 h-28 border-2 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
-                    draggedPart?.id === part.id 
-                      ? 'border-amber-400 bg-amber-100 ring-2 ring-amber-300 scale-105' 
-                      : 'border-slate-300 hover:border-amber-300 hover:shadow-lg hover:scale-105'
-                  }`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, part)}
-                  onClick={() => setDraggedPart(part)}
-                  style={{
-                    backgroundImage: `url(${part.image})`,
-                    backgroundSize: '130%', // Bauteile noch größer in der Palette
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="w-full h-full bg-gradient-to-t from-black/70 to-transparent rounded-lg flex flex-col justify-between p-2">
-                    <div className="text-xs text-white font-bold bg-black/60 rounded px-2 py-1">
-                      {part.cost > 0 ? `${part.cost}💰` : '🆓'}
-                    </div>
-                    <div className="text-xs text-white font-bold text-center bg-black/60 rounded px-2 py-1">
-                      {part.name}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Mehr Bauteile freischalten */}
-              {allParts.length > availableParts.length && (
-                <div
-                  className="flex-shrink-0 w-28 h-28 border-2 border-dashed border-amber-400 rounded-lg cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-all flex flex-col items-center justify-center gap-2"
-                  onClick={() => setShowShopDialog(true)}
-                >
-                  <div className="text-2xl">🛒</div>
-                  <div className="text-xs text-amber-600 font-bold text-center">
-                    Mehr<br/>freischalten
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {draggedPart && (
-              <div className="mt-3 p-3 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-lg border border-amber-300">
-                <p className="text-sm text-amber-800 font-medium">
-                  🎯 <strong>{draggedPart.name}</strong> ausgewählt
-                </p>
-                <p className="text-xs text-amber-700 mt-1">
-                  🖱️ Ziehe es ins Grid oder klicke ein Feld • 🔄 Mehrfachverwendung aktiv
-                </p>
-              </div>
-            )}
-            
-            {availableParts.length === 0 && (
-              <div className="text-center text-slate-500 py-8">
-                🏗️ Noch keine Bauteile freigeschaltet<br/>
-                <button 
-                  className="text-amber-600 hover:text-amber-700 underline mt-2"
-                  onClick={() => setShowShopDialog(true)}
-                >
-                  Jetzt Bauteile freischalten
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Bienen-System Status */}
-        <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-200">
+        <Card className="bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-amber-700">
           <CardHeader>
-            <CardTitle className="text-lg text-amber-800">🐝 Intelligentes Bienen-Ökosystem</CardTitle>
+            <CardTitle className="text-lg text-amber-300">🐝 Intelligentes Bienen-Ökosystem</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold mb-2 text-amber-700">📊 Live Stats:</h4>
-                <ul className="space-y-1 text-amber-600">
+                <h3 className="font-medium text-amber-300 mb-1">📊 Live Stats:</h3>
+                <ul className="space-y-1 text-amber-100">
                   <li>• Aktive Bienen: <strong>{bees.length}</strong></li>
-                  <li>• Sammelbare Herzen: <strong>{confettiHearts.length}</strong></li>
+                  <li>• Konfetti-Herzen: <strong>{confettiHearts.length}</strong></li>
                   <li>• Bauteile gesetzt: <strong>{grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length}</strong></li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2 text-amber-700">🎯 Bienen-Logik:</h4>
-                <ul className="space-y-1 text-amber-600">
+                <h3 className="font-medium text-amber-300 mb-1">🎯 Bienen-Logik:</h3>
+                <ul className="space-y-1 text-amber-100">
                   <li>• Spawnen nur auf Bauteilen</li>
-                  <li>• Fliegen zu anderen Bauteilen</li>
-                  <li>• 30% Chance alle 10 Sekunden</li>
+                  <li>• Fliegen langsam sichtbar</li>
+                  <li>• 30% Chance alle 10s</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2 text-amber-700">💖 Herzen-Explosion:</h4>
-                <ul className="space-y-1 text-amber-600">
-                  <li>• Flugstrecke + Bauteil-Wert</li>
+                <h3 className="font-medium text-amber-300 mb-1">💖 Herzen-System:</h3>
+                <ul className="space-y-1 text-amber-100">
+                  <li>• Konfetti-Explosion</li>
+                  <li>• Direkt ins Inventar</li>
                   <li>• 1-5 Herzen pro Flug</li>
-                  <li>• +Credits beim Sammeln</li>
                 </ul>
               </div>
             </div>
             
-            <div className="mt-4 flex gap-2 justify-center">
+            <div className="mt-4 flex gap-2">
               <Button 
                 size="sm" 
                 onClick={spawnRandomBee}
                 className="bg-amber-600 hover:bg-amber-700"
                 disabled={grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2}
               >
-                🐝 Test-Biene spawnen
+                🐝 Test-Biene
               </Button>
               <Button 
                 size="sm" 
                 variant="outline"
+                className="border-amber-600 text-amber-300 hover:bg-amber-900/20"
                 onClick={() => {
                   setBees([]);
                   setConfettiHearts([]);
@@ -625,41 +656,56 @@ export const CastleGardenView: React.FC = () => {
             </div>
             
             {grid.filter(f => f.buildingPart && f.buildingPart.type !== 'grass').length < 2 && (
-              <div className="mt-3 p-2 bg-amber-100 rounded text-amber-700 text-sm text-center">
+              <div className="mt-3 p-2 bg-amber-900/30 rounded text-amber-200 text-xs text-center">
                 💡 Platziere mindestens 2 Bauteile für Bienen-Aktivität
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Kommende Features */}
-        <Card className="border-dashed border-slate-300">
-          <CardHeader>
-            <CardTitle className="text-lg text-slate-600">🚧 Bald verfügbar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
-              <div>
-                <h4 className="font-semibold mb-2">💰 Shop-System:</h4>
-                <ul className="space-y-1">
-                  <li>• Credits für Bauteile ausgeben</li>
-                  <li>• Bauteile freischalten</li>
-                  <li>• Preis-Anzeige im Shop</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">🛒 Erweiterte Bauteile:</h4>
-                <ul className="space-y-1">
-                  <li>• Hecken & Formschnitt</li>
-                  <li>• Statuen & Skulpturen</li>
-                  <li>• Springbrunnen</li>
-                  <li>• Blumenbeete</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+      
+      {/* Shop Dialog */}
+      <Dialog open={showShopDialog} onOpenChange={setShowShopDialog}>
+        <DialogContent className="max-w-md bg-slate-800 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">🛒 Bauteil-Shop</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Schalte neue Bauteile mit deinen Credits frei
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {allParts.filter(part => !unlockedParts.includes(part.id)).map(part => (
+              <div key={part.id} className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
+                <div 
+                  className="w-12 h-12 rounded border border-slate-600"
+                  style={{
+                    backgroundImage: `url(${part.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">{part.name}</h3>
+                  <p className="text-xs text-slate-400">Typ: {part.type}</p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => unlockPart(part.id, part.cost)}
+                  disabled={credits < part.cost}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-slate-600"
+                >
+                  {part.cost} 💰
+                </Button>
+              </div>
+            ))}
+            {allParts.filter(part => !unlockedParts.includes(part.id)).length === 0 && (
+              <p className="text-center text-slate-400 py-4">
+                🎉 Alle Bauteile bereits freigeschaltet!
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
