@@ -55,9 +55,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+      <DialogContent 
+        className="bg-slate-900 border-slate-700 text-white max-w-md"
+        aria-describedby="auth-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Welcome to Mariposa</DialogTitle>
+          <div id="auth-description" className="sr-only">
+            Anmelde- und Registrierungsdialog für Mariposa
+          </div>
         </DialogHeader>
         
         <Tabs defaultValue="login" className="w-full">

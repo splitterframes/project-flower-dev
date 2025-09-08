@@ -357,12 +357,18 @@ export default function MariePosaDialog({ isOpen, onClose, user, onPurchaseCompl
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-amber-900/20 to-yellow-900/20 border-2 border-yellow-500/30 text-white max-w-5xl max-h-[90vh] overflow-hidden">
+      <DialogContent 
+        className="bg-gradient-to-br from-amber-900/20 to-yellow-900/20 border-2 border-yellow-500/30 text-white max-w-5xl max-h-[90vh] overflow-hidden"
+        aria-describedby="marie-posa-description"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center text-2xl font-bold text-yellow-200">
             <span className="text-3xl mr-3 animate-pulse">👑</span>
             Marie Posa - Exklusive Händlerin
           </DialogTitle>
+          <div id="marie-posa-description" className="sr-only">
+            Marie Posa Handelsdialog zum Verkauf von Items für Credits
+          </div>
           <p className="text-yellow-300/80 text-sm">
             Ich kaufe deine wertvollen Items zum halben Marktpreis - sofortige Bezahlung garantiert!
           </p>
