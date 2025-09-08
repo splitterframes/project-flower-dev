@@ -100,6 +100,19 @@ export const CastleGardenView: React.FC = () => {
     localStorage.setItem('castle-hearts-session', totalHeartsCollected.toString());
   }, [totalHeartsCollected]);
 
+  // Balloon-Toggle State
+  const [balloonsEnabled, setBalloonsEnabled] = useState(() => {
+    const saved = localStorage.getItem('castle-balloons-enabled');
+    return saved === null ? true : saved === 'true';
+  });
+
+  // Balloon-Toggle bei Änderung in localStorage speichern und globales Flag setzen
+  useEffect(() => {
+    localStorage.setItem('castle-balloons-enabled', balloonsEnabled.toString());
+    // Globales Flag für Layout setzen
+    (window as any).balloonsDisabledInCastle = !balloonsEnabled;
+  }, [balloonsEnabled]);
+
   // Dynamisches Laden der Bauteile aus Castle-Ordner
   const loadBuildingPartsFromCastle = (): BuildingPart[] => {
     // Bekannte Dateien aus Castle-Ordner (Name_Preis.jpg Format)
@@ -665,6 +678,20 @@ export const CastleGardenView: React.FC = () => {
             <p className="text-slate-300">Gestalte deinen eigenen königlichen Garten!</p>
           </div>
           <div className="flex items-center gap-6">
+            {/* Balloon-Toggle */}
+            <button
+              onClick={() => setBalloonsEnabled(!balloonsEnabled)}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors ${
+                balloonsEnabled 
+                  ? 'bg-green-600 hover:bg-green-500 text-white' 
+                  : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+              }`}
+              title="Luftballons beim Bauen ein-/ausschalten"
+            >
+              <span className="text-lg">🎈</span>
+              <span className="hidden sm:inline">{balloonsEnabled ? 'An' : 'Aus'}</span>
+            </button>
+            
             {/* Investitionssumme */}
             <div className="flex items-center gap-2 text-lg">
               <span className="text-2xl">🏰</span>

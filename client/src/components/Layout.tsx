@@ -309,6 +309,11 @@ export const Layout: React.FC = () => {
     }
 
     const spawnBalloon = () => {
+      // Check if balloons are disabled in castle garden
+      if ((window as any).balloonsDisabledInCastle) {
+        return; // Exit early if balloons are disabled
+      }
+      
       // Determine how many balloons to spawn
       const randomChance = Math.random();
       let balloonCount: number;
