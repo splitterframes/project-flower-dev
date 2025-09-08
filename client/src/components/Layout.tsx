@@ -24,6 +24,7 @@ interface Balloon {
   x: number; // X position (0-100%)
   color: string;
   startTime: number;
+  hasCard: boolean; // Some balloons have small cards
 }
 
 // Balloon component
@@ -59,7 +60,7 @@ const BalloonComponent: React.FC<{
           width: '40px',
           height: '50px',
           backgroundColor: balloon.color,
-          borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+          borderRadius: '50% 50% 50% 50% / 35% 35% 65% 65%',
           position: 'relative',
           transition: 'transform 0.15s ease-out',
           boxShadow: `inset -5px -5px 0 rgba(0,0,0,0.1), 
@@ -75,12 +76,39 @@ const BalloonComponent: React.FC<{
             left: '50%',
             transform: 'translateX(-50%)',
             width: '1px',
-            height: '20px',
+            height: balloon.hasCard ? '35px' : '20px',
             backgroundColor: '#8B4513',
             opacity: isPopped ? 0 : 1,
             transition: 'opacity 0.15s ease-out'
           }}
         />
+        
+        {/* Small card hanging from string */}
+        {balloon.hasCard && (
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '-40px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '20px',
+              height: '15px',
+              backgroundColor: '#FFE4E1',
+              border: '1px solid #DDD',
+              borderRadius: '2px',
+              opacity: isPopped ? 0 : 1,
+              transition: 'opacity 0.15s ease-out',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              fontSize: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666'
+            }}
+          >
+            🎁
+          </div>
+        )}
         {/* Balloon highlight */}
         <div 
           style={{
@@ -90,7 +118,7 @@ const BalloonComponent: React.FC<{
             width: '8px',
             height: '12px',
             backgroundColor: 'rgba(255,255,255,0.6)',
-            borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+            borderRadius: '50% 50% 50% 50% / 35% 35% 65% 65%',
             opacity: isPopped ? 0 : 1,
             transition: 'opacity 0.15s ease-out'
           }}
@@ -129,7 +157,8 @@ export const Layout: React.FC = () => {
         id: `balloon-${Date.now()}-${Math.random()}`,
         x: Math.random() * 90 + 5, // 5% to 95% to avoid edges
         color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
-        startTime: Date.now()
+        startTime: Date.now(),
+        hasCard: Math.random() < 0.3 // 30% chance for a card
       };
       
       setBalloons(prev => [...prev, newBalloon]);
