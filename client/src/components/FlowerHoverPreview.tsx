@@ -33,7 +33,7 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
       {children}
       
       {isHovering && (
-        <div className="absolute z-50 pointer-events-none left-full top-0 ml-2">
+        <div className="absolute z-[9999] pointer-events-none left-full -top-20 ml-2">
           <div className="bg-slate-900 border-2 border-slate-600 rounded-lg p-4 shadow-2xl">
             <div className="w-96 h-96 rounded-lg overflow-hidden mb-3">
               <img
