@@ -291,8 +291,11 @@ export const Layout: React.FC = () => {
     }
   }, [user, setCredits]);
 
-  // Balloon spawning system
+  // Balloon spawning system with show/pause cycles
   useEffect(() => {
+    let spawnInterval: NodeJS.Timeout | null = null;
+    let cycleTimeout: NodeJS.Timeout | null = null;
+
     const spawnBalloon = () => {
       const newBalloon: Balloon = {
         id: `balloon-${Date.now()}-${Math.random()}`,
@@ -310,17 +313,40 @@ export const Layout: React.FC = () => {
       }, 8000);
     };
 
-    // Spawn first balloon after 2 seconds
-    const initialTimeout = setTimeout(spawnBalloon, 2000);
+    const startSpawningPhase = () => {
+      console.log('🎈 Balloon spawning phase started (90 seconds)');
+      // Spawn balloons every 10-15 seconds for 90 seconds
+      spawnInterval = setInterval(() => {
+        spawnBalloon();
+      }, Math.random() * 5000 + 10000); // 10-15 seconds
+      
+      // Stop spawning after 90 seconds and start pause
+      cycleTimeout = setTimeout(() => {
+        if (spawnInterval) {
+          clearInterval(spawnInterval);
+          spawnInterval = null;
+        }
+        startPausePhase();
+      }, 90000); // 90 seconds = 1.5 minutes
+    };
 
-    // Then spawn every 10-20 seconds
-    const spawnInterval = setInterval(() => {
-      spawnBalloon();
-    }, Math.random() * 10000 + 10000); // 10-20 seconds
+    const startPausePhase = () => {
+      console.log('🎈 Balloon pause phase started (60 seconds)');
+      // Pause for 60 seconds, then restart spawning
+      cycleTimeout = setTimeout(() => {
+        startSpawningPhase();
+      }, 60000); // 60 seconds = 1 minute
+    };
+
+    // Start first spawning phase after 2 seconds
+    const initialTimeout = setTimeout(() => {
+      startSpawningPhase();
+    }, 2000);
 
     return () => {
+      if (spawnInterval) clearInterval(spawnInterval);
+      if (cycleTimeout) clearTimeout(cycleTimeout);
       clearTimeout(initialTimeout);
-      clearInterval(spawnInterval);
     };
   }, [balloonColors]);
 
