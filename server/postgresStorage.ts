@@ -6295,13 +6295,10 @@ export class PostgresStorage {
 
   // Helper method to add butterfly to user
   private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
-    // Get butterfly info to set proper name
-    const butterflyInfo = await this.getButterflyInfo(butterflyId);
-    
     await this.db.insert(userButterflies).values({
       userId,
       butterflyId,
-      butterflyName: butterflyInfo.name,
+      butterflyName: `Butterfly ${String(butterflyId).padStart(3, '0')}`,
       butterflyRarity: rarity,
       butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
       quantity: 1
@@ -6310,13 +6307,10 @@ export class PostgresStorage {
 
   // Helper method to add caterpillar to user
   private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: string): Promise<void> {
-    // Get caterpillar info to set proper name
-    const caterpillarInfo = await this.getCaterpillarInfo(caterpillarId);
-    
     await this.db.insert(userCaterpillars).values({
       userId,
       caterpillarId,
-      caterpillarName: caterpillarInfo.name,
+      caterpillarName: `Caterpillar ${caterpillarId}`,
       caterpillarRarity: rarity,
       caterpillarImageUrl: `/Caterpillars/${caterpillarId}.jpg`,
       quantity: 1
@@ -6325,13 +6319,10 @@ export class PostgresStorage {
 
   // Helper method to add fish to user
   private async addFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
-    // Get fish info to set proper name
-    const fishInfo = await this.getFishInfo(fishId);
-    
     await this.db.insert(userFish).values({
       userId,
       fishId,
-      fishName: fishInfo.name,
+      fishName: `Fish ${fishId}`,
       fishRarity: rarity,
       fishImageUrl: `/Fish/${fishId}.jpg`,
       quantity: 1
