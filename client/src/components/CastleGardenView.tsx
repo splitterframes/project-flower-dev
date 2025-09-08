@@ -559,9 +559,9 @@ export const CastleGardenView: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="relative mx-auto w-fit border-2 border-slate-600 bg-slate-700 overflow-hidden rounded-lg">
+            <div className="relative mx-auto w-fit border-2 border-slate-600 bg-slate-700 overflow-visible rounded-lg">
               <div 
-                className="grid"
+                className="grid relative"
                 style={{
                   gridTemplateColumns: `repeat(${gridWidth}, 56px)`, // Große Felder
                   gridTemplateRows: `repeat(${gridHeight}, 56px)`,
@@ -586,77 +586,67 @@ export const CastleGardenView: React.FC = () => {
                       transform: field.buildingPart ? `rotate(${field.buildingPart.rotation}deg)` : undefined
                     }}
                   >
-                    {/* Bienen anzeigen - flüssige Pixelanimation */}
-                    {bees.filter(bee => {
-                      const fieldPixelX = field.x * 56;
-                      const fieldPixelY = field.y * 56;
-                      return bee.currentX >= fieldPixelX && bee.currentX < fieldPixelX + 56 &&
-                             bee.currentY >= fieldPixelY && bee.currentY < fieldPixelY + 56;
-                    }).map(bee => {
-                      const fieldPixelX = field.x * 56;
-                      const fieldPixelY = field.y * 56;
-                      const relativeX = bee.currentX - fieldPixelX;
-                      const relativeY = bee.currentY - fieldPixelY;
-                      
-                      return (
-                        <div
-                          key={bee.id}
-                          className="absolute pointer-events-none text-xl z-50"
-                          style={{
-                            left: `${relativeX}px`,
-                            top: `${relativeY}px`,
-                            transform: 'translate(-50%, -50%)',
-                            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-                          }}
-                        >
-                          🐝
-                        </div>
-                      );
-                    })}
-                    
-                    {/* Einzelnes großes Herz */}
-                    {confettiHearts.filter(heart => 
-                      Math.floor(heart.x) === field.x && Math.floor(heart.y) === field.y
-                    ).map(heart => (
-                      <div
-                        key={heart.id}
-                        className="absolute pointer-events-none z-50"
-                        style={{
-                          left: `${28 + heart.offsetX}px`,
-                          top: `${28 + heart.offsetY}px`,
-                          transform: `scale(${heart.scale})`,
-                          opacity: heart.opacity,
-                          fontSize: '40px', // Großes Herz
-                          textShadow: '2px 2px 6px rgba(0,0,0,0.5)',
-                          filter: `drop-shadow(0 0 12px rgba(255, 20, 147, ${heart.opacity * 0.8}))`
-                        }}
-                      >
-                        💖
-                      </div>
-                    ))}
-                    
-                    {/* Herzen-Anzahl-Text */}
-                    {heartCountTexts.filter(text => 
-                      Math.floor(text.x) === field.x && Math.floor(text.y) === field.y
-                    ).map(text => (
-                      <div
-                        key={text.id}
-                        className="absolute pointer-events-none z-50"
-                        style={{
-                          left: '28px',
-                          top: '10px',
-                          opacity: text.opacity,
-                          fontSize: '20px',
-                          fontWeight: 'bold',
-                          color: '#fff',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                          textAlign: 'center',
-                          animation: 'pulse 0.5s ease-in-out'
-                        }}
-                      >
-                        +{text.amount}
-                      </div>
-                    ))}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Animationen über dem gesamten Grid */}
+              <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 100 }}>
+                {/* Bienen - absolut über dem gesamten Grid */}
+                {bees.map(bee => (
+                  <div
+                    key={bee.id}
+                    className="absolute pointer-events-none text-xl"
+                    style={{
+                      left: `${bee.currentX}px`,
+                      top: `${bee.currentY}px`,
+                      transform: 'translate(-50%, -50%)',
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                      fontSize: '24px'
+                    }}
+                  >
+                    🐝
+                  </div>
+                ))}
+                
+                {/* Herzen - absolut über dem gesamten Grid */}
+                {confettiHearts.map(heart => (
+                  <div
+                    key={heart.id}
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: `${heart.x * 56 + 28 + heart.offsetX}px`,
+                      top: `${heart.y * 56 + 28 + heart.offsetY}px`,
+                      transform: `scale(${heart.scale})`,
+                      opacity: heart.opacity,
+                      fontSize: '40px',
+                      textShadow: '2px 2px 6px rgba(0,0,0,0.5)',
+                      filter: `drop-shadow(0 0 12px rgba(255, 20, 147, ${heart.opacity * 0.8}))`
+                    }}
+                  >
+                    💖
+                  </div>
+                ))}
+                
+                {/* Herzen-Anzahl-Text - absolut über dem gesamten Grid */}
+                {heartCountTexts.map(text => (
+                  <div
+                    key={text.id}
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: `${text.x * 56 + 28}px`,
+                      top: `${text.y * 56 + 10}px`,
+                      opacity: text.opacity,
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                      textAlign: 'center',
+                      animation: 'pulse 0.5s ease-in-out',
+                      transform: 'translate(-50%, 0)'
+                    }}
+                  >
+                    +{text.amount}
                   </div>
                 ))}
               </div>
