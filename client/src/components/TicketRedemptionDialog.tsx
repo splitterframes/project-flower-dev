@@ -210,20 +210,18 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 rounded-b-lg" />
             
             {/* Prize Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 relative">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
               {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prize.id);
                 
-                return (
+                const cardContent = (
                   <div
-                    key={prize.id}
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-                      shadow-lg border-2 transition-all duration-200 hover:scale-105 z-[1]
+                      shadow-lg border-2 transition-all duration-200 hover:scale-105
                       ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
                     `}
-                    style={{ isolation: 'isolate' }}
                   >
                     {/* Price Tag */}
                     <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg">
@@ -329,6 +327,63 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     </div>
                   </div>
                 );
+
+                // Wrap entire card with hover preview like in garden
+                if (prize.type === 'flower' && dailyItems?.flowerId) {
+                  return (
+                    <FlowerHoverPreview
+                      key={prize.id}
+                      flowerId={dailyItems.flowerId}
+                      flowerName={`Rare Blume ${dailyItems.flowerId}`}
+                      flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
+                      rarity={dailyItems.flowerRarity.toString()}
+                    >
+                      {cardContent}
+                    </FlowerHoverPreview>
+                  );
+                } else if (prize.type === 'butterfly' && dailyItems?.butterflyId) {
+                  return (
+                    <ButterflyHoverPreview
+                      key={prize.id}
+                      butterflyId={dailyItems.butterflyId}
+                      butterflyName={`Rarer Schmetterling ${dailyItems.butterflyId}`}
+                      butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                      rarity={dailyItems.butterflyRarity.toString()}
+                    >
+                      {cardContent}
+                    </ButterflyHoverPreview>
+                  );
+                } else if (prize.type === 'caterpillar' && dailyItems?.caterpillarId) {
+                  return (
+                    <CaterpillarHoverPreview
+                      key={prize.id}
+                      caterpillarId={dailyItems.caterpillarId}
+                      caterpillarName={`Rare Raupe ${dailyItems.caterpillarId}`}
+                      caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                      rarity={dailyItems.caterpillarRarity.toString()}
+                    >
+                      {cardContent}
+                    </CaterpillarHoverPreview>
+                  );
+                } else if (prize.type === 'fish' && dailyItems?.fishId) {
+                  return (
+                    <FishHoverPreview
+                      key={prize.id}
+                      fishId={dailyItems.fishId}
+                      fishName={`Rarer Fisch ${dailyItems.fishId}`}
+                      fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
+                      rarity={dailyItems.fishRarity.toString()}
+                    >
+                      {cardContent}
+                    </FishHoverPreview>
+                  );
+                } else {
+                  return (
+                    <div key={prize.id}>
+                      {cardContent}
+                    </div>
+                  );
+                }
               })}
             </div>
           </div>
