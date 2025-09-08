@@ -90,10 +90,10 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
     setIsRedeeming(true);
     
     try {
-      const response = await fetch(`/api/user/${user.id}/redeem-tickets`, {
+      const response = await fetch(`/api/user/${user.id}/redeem-ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prizeType, cost })
+        body: JSON.stringify({ prizeId: prizeType })
       });
       
       const result = await response.json();
