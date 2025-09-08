@@ -49,6 +49,16 @@ type ConfettiHeart = {
   startTime: number;
 };
 
+// Herzen-Anzahl-Text-Typ
+type HeartCountText = {
+  id: string;
+  x: number;
+  y: number;
+  amount: number;
+  startTime: number;
+  opacity: number;
+};
+
 export const CastleGardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, setCredits } = useCredits();
@@ -80,6 +90,7 @@ export const CastleGardenView: React.FC = () => {
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
+  const [heartCountTexts, setHeartCountTexts] = useState<HeartCountText[]>([]);
   const animationFrameRef = useRef<number>();
 
   // Drag & Drop State mit Feld-zu-Feld Support
@@ -295,8 +306,8 @@ export const CastleGardenView: React.FC = () => {
       const distanceBonus = Math.floor(distance / 3);
       const heartAmount = Math.min(5, Math.max(1, partValue + distanceBonus));
       
-      // Konfetti-Herzen spawnen
-      spawnConfettiHearts(targetField.x, targetField.y, heartAmount);
+      // Ein großes Herz spawnen + Anzahl-Text
+      spawnSingleHeart(targetField.x, targetField.y, heartAmount);
       
       // Herzen ins Inventar hinzufügen
       setCredits(credits + heartAmount);
@@ -306,40 +317,47 @@ export const CastleGardenView: React.FC = () => {
     }, flightDuration);
   };
 
-  // Verbesserte Konfetti-Herzen Animation
-  const spawnConfettiHearts = (centerX: number, centerY: number, amount: number) => {
-    const newHearts: ConfettiHeart[] = [];
+  // Einzelnes großes Herz + Anzahl-Text spawnen
+  const spawnSingleHeart = (centerX: number, centerY: number, amount: number) => {
+    // Ein großes Herz
+    const newHeart: ConfettiHeart = {
+      id: `heart-${Date.now()}`,
+      x: centerX,
+      y: centerY,
+      offsetX: 0,
+      offsetY: 0,
+      rotation: 0,
+      scale: 2.5, // Größeres Herz
+      opacity: 1,
+      velocity: {
+        x: 0,
+        y: -3 // Nur nach oben
+      },
+      startTime: Date.now()
+    };
     
-    for (let i = 0; i < amount; i++) {
-      const angle = (Math.PI * 2 * i) / amount + (Math.random() - 0.5) * 0.5;
-      const radius = 40 + Math.random() * 30;
-      const speed = 3 + Math.random() * 4;
-      
-      newHearts.push({
-        id: `confetti-${Date.now()}-${i}`,
-        x: centerX,
-        y: centerY,
-        offsetX: 0,
-        offsetY: 0,
-        rotation: Math.random() * 360,
-        scale: 1.2 + Math.random() * 0.8,
-        opacity: 1,
-        velocity: {
-          x: Math.cos(angle) * speed,
-          y: Math.sin(angle) * speed - 2 // Upward initial velocity
-        },
-        startTime: Date.now()
-      });
-    }
+    // Anzahl-Text
+    const newText: HeartCountText = {
+      id: `text-${Date.now()}`,
+      x: centerX,
+      y: centerY,
+      amount,
+      startTime: Date.now(),
+      opacity: 1
+    };
     
-    setConfettiHearts(prev => [...prev, ...newHearts]);
+    setConfettiHearts(prev => [...prev, newHeart]);
+    setHeartCountTexts(prev => [...prev, newText]);
     
-    // Konfetti nach 6 Sekunden entfernen (länger sichtbar)
+    // Herz nach 4 Sekunden entfernen
     setTimeout(() => {
-      setConfettiHearts(prev => prev.filter(heart => 
-        !newHearts.some(newHeart => newHeart.id === heart.id)
-      ));
-    }, 6000);
+      setConfettiHearts(prev => prev.filter(heart => heart.id !== newHeart.id));
+    }, 4000);
+    
+    // Text nach 2 Sekunden entfernen
+    setTimeout(() => {
+      setHeartCountTexts(prev => prev.filter(text => text.id !== newText.id));
+    }, 2000);
   };
 
   // Animation Loop für Bienen
@@ -364,40 +382,45 @@ export const CastleGardenView: React.FC = () => {
         })
       );
       
-      // Konfetti-Herzen animieren
+      // Einzelnes Herz animieren
       setConfettiHearts(prevHearts =>
         prevHearts.map(heart => {
           const elapsed = Date.now() - heart.startTime;
-          const progress = elapsed / 6000; // 6 Sekunden Animation (länger sichtbar)
+          const progress = elapsed / 4000; // 4 Sekunden Animation
           
-          // Langsamere Physik-basierte Bewegung
-          const newOffsetX = heart.offsetX + heart.velocity.x * 0.7; // Langsamere Bewegung
-          const newOffsetY = heart.offsetY + heart.velocity.y * 0.7;
-          const newVelocityY = heart.velocity.y + 0.3; // Schwächere Gravitation
+          // Sanfte Aufwärtsbewegung mit Ausblenden
+          const newOffsetY = heart.offsetY + heart.velocity.y;
           
           return {
             ...heart,
-            offsetX: newOffsetX,
             offsetY: newOffsetY,
-            velocity: {
-              ...heart.velocity,
-              y: newVelocityY
-            },
-            rotation: heart.rotation + 3, // Langsamere Rotation
-            opacity: Math.max(0, 1 - progress * 0.8), // Langsameres Ausblenden
-            scale: heart.scale * (1 - progress * 0.2) // Weniger Schrumpfung
+            opacity: Math.max(0, 1 - progress), // Sanftes Ausblenden
+            scale: heart.scale * (1 - progress * 0.3) // Leichtes Schrumpfen
+          };
+        })
+      );
+      
+      // Anzahl-Text animieren
+      setHeartCountTexts(prevTexts =>
+        prevTexts.map(text => {
+          const elapsed = Date.now() - text.startTime;
+          const progress = elapsed / 2000; // 2 Sekunden Animation
+          
+          return {
+            ...text,
+            opacity: Math.max(0, 1 - progress) // Ausblenden
           };
         })
       );
       
       // Solange Animationen laufen, weiter animieren
-      if (bees.length > 0 || confettiHearts.length > 0) {
+      if (bees.length > 0 || confettiHearts.length > 0 || heartCountTexts.length > 0) {
         animationFrameRef.current = requestAnimationFrame(animate);
       }
     };
     
     // Animation starten wenn Objekte da sind
-    if ((bees.length > 0 || confettiHearts.length > 0) && !animationFrameRef.current) {
+    if ((bees.length > 0 || confettiHearts.length > 0 || heartCountTexts.length > 0) && !animationFrameRef.current) {
       animationFrameRef.current = requestAnimationFrame(animate);
     }
     
@@ -407,7 +430,7 @@ export const CastleGardenView: React.FC = () => {
         animationFrameRef.current = undefined;
       }
     };
-  }, [bees, confettiHearts]);
+  }, [bees, confettiHearts, heartCountTexts]);  // Abhängig von allen Animationen
 
   // Bienen-Spawn Timer (alle 10 Sekunden)
   useEffect(() => {
@@ -591,7 +614,7 @@ export const CastleGardenView: React.FC = () => {
                       );
                     })}
                     
-                    {/* Konfetti-Herzen anzeigen - länger sichtbar */}
+                    {/* Einzelnes großes Herz */}
                     {confettiHearts.filter(heart => 
                       Math.floor(heart.x) === field.x && Math.floor(heart.y) === field.y
                     ).map(heart => (
@@ -601,14 +624,37 @@ export const CastleGardenView: React.FC = () => {
                         style={{
                           left: `${28 + heart.offsetX}px`,
                           top: `${28 + heart.offsetY}px`,
-                          transform: `rotate(${heart.rotation}deg) scale(${heart.scale})`,
+                          transform: `scale(${heart.scale})`,
                           opacity: heart.opacity,
-                          fontSize: '28px', // Etwas größer
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-                          filter: `drop-shadow(0 0 8px rgba(255, 20, 147, ${heart.opacity * 0.6}))`
+                          fontSize: '40px', // Großes Herz
+                          textShadow: '2px 2px 6px rgba(0,0,0,0.5)',
+                          filter: `drop-shadow(0 0 12px rgba(255, 20, 147, ${heart.opacity * 0.8}))`
                         }}
                       >
                         💖
+                      </div>
+                    ))}
+                    
+                    {/* Herzen-Anzahl-Text */}
+                    {heartCountTexts.filter(text => 
+                      Math.floor(text.x) === field.x && Math.floor(text.y) === field.y
+                    ).map(text => (
+                      <div
+                        key={text.id}
+                        className="absolute pointer-events-none z-30"
+                        style={{
+                          left: '28px',
+                          top: '10px',
+                          opacity: text.opacity,
+                          fontSize: '20px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                          textAlign: 'center',
+                          animation: 'pulse 0.5s ease-in-out'
+                        }}
+                      >
+                        +{text.amount}
                       </div>
                     ))}
                   </div>
