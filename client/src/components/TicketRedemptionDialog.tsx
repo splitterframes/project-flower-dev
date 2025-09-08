@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/stores/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Ticket, Coins, Sun, Sprout, Flower2, Bug, Fish, Sparkles } from 'lucide-react';
+import { FlowerHoverPreview } from './FlowerHoverPreview';
+import { ButterflyHoverPreview } from './ButterflyHoverPreview';
+import { FishHoverPreview } from './FishHoverPreview';
+import { generateLatinName } from '../utils/nameGenerator';
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -59,6 +63,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
   const { user } = useAuth();
   const [dailyItems, setDailyItems] = useState<DailyItems | null>(null);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemMessage, setRedeemMessage] = useState('');
 
   const fetchDailyItems = async () => {
     if (!user) return;
@@ -92,14 +97,19 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
         body: JSON.stringify({ prizeType, cost })
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        setRedeemMessage('Preis erfolgreich eingelöst! 🎉');
         onTicketsChange();
-        // Optional: Show success message
+      } else {
+        setRedeemMessage(result.message || 'Fehler beim Einlösen');
       }
     } catch (error) {
       console.error('Failed to redeem prize:', error);
+      setRedeemMessage('Netzwerkfehler beim Einlösen');
     } finally {
       setIsRedeeming(false);
+      setTimeout(() => setRedeemMessage(''), 3000);
     }
   };
 
@@ -218,28 +228,55 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                       {/* Icon/Image */}
                       <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
                         {isDaily && dailyItems ? (
-                          <img
-                            src={`/${
-                              prize.type === 'flower' ? 'Blumen' : 
-                              prize.type === 'butterfly' ? 'Schmetterlinge' : 
-                              prize.type === 'caterpillar' ? 'Raupen' : 'Fische'
-                            }/${
-                              prize.type === 'flower' ? dailyItems.flowerId : 
-                              prize.type === 'butterfly' ? String(dailyItems.butterflyId).padStart(3, '0') : 
-                              prize.type === 'caterpillar' ? dailyItems.caterpillarId : dailyItems.fishId
-                            }.jpg`}
-                            alt={prize.title}
-                            className="h-18 w-18 object-cover rounded border-2"
-                            style={{ borderColor: rarityColors[
-                              prize.type === 'flower' ? dailyItems.flowerRarity : 
-                              prize.type === 'butterfly' ? dailyItems.butterflyRarity : 
-                              prize.type === 'caterpillar' ? dailyItems.caterpillarRarity : dailyItems.fishRarity
-                            ] }}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
+                          <>
+                            {prize.type === 'flower' ? (
+                              <FlowerHoverPreview
+                                flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
+                                flowerName={generateLatinName(dailyItems.flowerId)}
+                                rarity={dailyItems.flowerRarity as any}
+                              >
+                                <img
+                                  src={`/Blumen/${dailyItems.flowerId}.jpg`}
+                                  alt={prize.title}
+                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
+                                  style={{ borderColor: rarityColors[dailyItems.flowerRarity] }}
+                                />
+                              </FlowerHoverPreview>
+                            ) : prize.type === 'butterfly' ? (
+                              <ButterflyHoverPreview
+                                butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                                butterflyName={generateLatinName(dailyItems.butterflyId)}
+                                rarity={dailyItems.butterflyRarity as any}
+                              >
+                                <img
+                                  src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                                  alt={prize.title}
+                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
+                                  style={{ borderColor: rarityColors[dailyItems.butterflyRarity] }}
+                                />
+                              </ButterflyHoverPreview>
+                            ) : prize.type === 'fish' ? (
+                              <FishHoverPreview
+                                fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
+                                fishName={generateLatinName(dailyItems.fishId)}
+                                rarity={dailyItems.fishRarity as any}
+                              >
+                                <img
+                                  src={`/Fische/${dailyItems.fishId}.jpg`}
+                                  alt={prize.title}
+                                  className="h-18 w-18 object-cover rounded border-2 cursor-pointer"
+                                  style={{ borderColor: rarityColors[dailyItems.fishRarity] }}
+                                />
+                              </FishHoverPreview>
+                            ) : (
+                              <img
+                                src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                                alt={prize.title}
+                                className="h-18 w-18 object-cover rounded border-2"
+                                style={{ borderColor: rarityColors[dailyItems.caterpillarRarity] }}
+                              />
+                            )}
+                          </>
                         ) : null}
                         <div className={isDaily ? 'hidden' : 'flex justify-center items-center'}>
                           {prize.icon}
@@ -274,6 +311,17 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             </div>
           </div>
         </div>
+
+        {/* Success/Error Message */}
+        {redeemMessage && (
+          <div className={`text-center p-3 rounded-lg mt-4 ${
+            redeemMessage.includes('erfolgreich') || redeemMessage.includes('🎉') 
+              ? 'bg-green-100 text-green-800 border border-green-300' 
+              : 'bg-red-100 text-red-800 border border-red-300'
+          }`}>
+            {redeemMessage}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-between items-center mt-6">
