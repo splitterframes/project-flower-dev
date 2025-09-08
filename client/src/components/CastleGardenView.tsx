@@ -485,10 +485,19 @@ export const CastleGardenView: React.FC = () => {
 
   return (
     <div className="h-full bg-slate-900 overflow-auto">
-      {/* Header im App-Stil */}
+      {/* Header im App-Stil mit Herzen-Zähler */}
       <div className="bg-slate-800 border-b border-slate-700 p-4">
-        <h1 className="text-2xl font-bold text-white mb-2">🏰 Schlossgarten</h1>
-        <p className="text-slate-300">Gestalte deinen eigenen königlichen Garten!</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">🏰 Schlossgarten</h1>
+            <p className="text-slate-300">Gestalte deinen eigenen königlichen Garten!</p>
+          </div>
+          <div className="flex items-center gap-2 text-lg">
+            <span className="text-2xl">💖</span>
+            <span className="text-white font-bold">{totalHeartsCollected}</span>
+            <span className="text-slate-400 text-sm">Herzen</span>
+          </div>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
@@ -554,15 +563,6 @@ export const CastleGardenView: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Herzen-Zähler */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 mb-4">
-          <div className="flex items-center justify-center gap-2 text-lg">
-            <span className="text-2xl">💖</span>
-            <span className="text-white font-bold">{totalHeartsCollected}</span>
-            <span className="text-slate-400 text-sm">Herzen gesammelt</span>
-          </div>
-        </div>
-
         {/* Garten-Grid */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
