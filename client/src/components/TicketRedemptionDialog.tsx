@@ -97,7 +97,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: 'Seltener Samen',
       description: 'Erhalte 1 seltenen Samen',
       icon: <Sparkles className="h-6 w-6 text-blue-400" />,
-      type: 'rare-seed'
+      type: 'seed'
     },
     {
       id: 'dna',
@@ -105,7 +105,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: '15 DNA',
       description: 'Sammle sofort 15 DNA',
       icon: <span className="text-4xl">🧬</span>,
-      type: 'dna'
+      type: 'credits'
     },
     {
       id: 'flower',
@@ -113,7 +113,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: 'Seltene Blume',
       description: 'Erhalte eine seltene Blume',
       icon: <Flower className="h-6 w-6 text-pink-400" />,
-      type: 'daily-flower'
+      type: 'flower'
     },
     {
       id: 'butterfly',
@@ -121,7 +121,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: 'Seltener Schmetterling',
       description: 'Erhalte einen seltenen Schmetterling',
       icon: <Sparkles className="h-6 w-6 text-purple-400" />,
-      type: 'daily-butterfly'
+      type: 'butterfly'
     },
     {
       id: 'caterpillar',
@@ -129,7 +129,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: 'Seltene Raupe',
       description: 'Erhalte eine seltene Raupe',
       icon: <Sparkles className="h-6 w-6 text-orange-400" />,
-      type: 'daily-caterpillar'
+      type: 'caterpillar'
     },
     {
       id: 'fish',
@@ -137,7 +137,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: 'Seltener Fisch',
       description: 'Erhalte einen seltenen Fisch',
       icon: <Sparkles className="h-6 w-6 text-cyan-400" />,
-      type: 'daily-fish'
+      type: 'fish'
     },
     {
       id: 'credits',
