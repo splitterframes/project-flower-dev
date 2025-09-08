@@ -135,14 +135,14 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-2 touch-target min-h-[36px] text-slate-500 hover:text-slate-400 hover:bg-slate-800 relative w-full"
+                        className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-2 touch-target min-h-[36px] text-slate-500 hover:text-slate-400 hover:bg-slate-800 w-full"
                       >
-                        <Lock className="h-3 w-3 absolute -top-1 -right-1" />
                         <Icon className="h-4 w-4 opacity-50" />
                         <span className="text-xs sm:text-sm opacity-50">{item.label}</span>
                       </Button>
                       {cost && (
-                        <Badge variant="outline" className="text-[10px] mt-1 px-1 py-0 h-auto text-slate-400 border-slate-600">
+                        <Badge variant="outline" className="text-[10px] mt-1 px-1 py-0 h-auto text-slate-400 border-slate-600 flex items-center gap-1">
+                          <Lock className="h-2 w-2" />
                           {cost.toLocaleString()}
                         </Badge>
                       )}
