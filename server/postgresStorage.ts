@@ -6200,19 +6200,28 @@ export class PostgresStorage {
         case 'daily-butterfly':
           const dailyItemsForButterfly = await this.getDailyItems();
           if (dailyItemsForButterfly) {
-            await this.addButterflyToUser(userId, dailyItemsForButterfly.butterflyId, dailyItemsForButterfly.butterflyRarity);
+            // Convert rarity integer to string for the rarity tiers
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForButterfly.butterflyRarity] || 'common';
+            await this.addButterflyToUser(userId, dailyItemsForButterfly.butterflyId, rarityName);
           }
           break;
         case 'daily-caterpillar':
           const dailyItemsForCaterpillar = await this.getDailyItems();
           if (dailyItemsForCaterpillar) {
-            await this.addCaterpillarToUser(userId, dailyItemsForCaterpillar.caterpillarId, dailyItemsForCaterpillar.caterpillarRarity);
+            // Convert rarity integer to string for the rarity tiers
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForCaterpillar.caterpillarRarity] || 'common';
+            await this.addCaterpillarToUser(userId, dailyItemsForCaterpillar.caterpillarId, rarityName);
           }
           break;
         case 'daily-fish':
           const dailyItemsForFish = await this.getDailyItems();
           if (dailyItemsForFish) {
-            await this.addFishToUser(userId, dailyItemsForFish.fishId, dailyItemsForFish.fishRarity);
+            // Convert rarity integer to string for the rarity tiers
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFish.fishRarity] || 'common';
+            await this.addFishToUser(userId, dailyItemsForFish.fishId, rarityName);
           }
           break;
         default:
@@ -6285,35 +6294,47 @@ export class PostgresStorage {
   }
 
   // Helper method to add butterfly to user
-  private async addButterflyToUser(userId: number, butterflyId: number, rarity: number): Promise<void> {
+  private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
+    // Get butterfly info to set proper name
+    const butterflyInfo = await this.getButterflyInfo(butterflyId);
+    
     await this.db.insert(userButterflies).values({
       userId,
       butterflyId,
-      name: `Butterfly ${String(butterflyId).padStart(3, '0')}`,
-      rarity: rarity.toString(),
-      imageUrl: `/images/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`
+      butterflyName: butterflyInfo.name,
+      butterflyRarity: rarity,
+      butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
+      quantity: 1
     });
   }
 
   // Helper method to add caterpillar to user
-  private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: number): Promise<void> {
+  private async addCaterpillarToUser(userId: number, caterpillarId: number, rarity: string): Promise<void> {
+    // Get caterpillar info to set proper name
+    const caterpillarInfo = await this.getCaterpillarInfo(caterpillarId);
+    
     await this.db.insert(userCaterpillars).values({
       userId,
       caterpillarId,
-      name: `Caterpillar ${caterpillarId}`,
-      rarity: rarity.toString(),
-      imageUrl: `/images/Caterpillars/${caterpillarId}.jpg`
+      caterpillarName: caterpillarInfo.name,
+      caterpillarRarity: rarity,
+      caterpillarImageUrl: `/Caterpillars/${caterpillarId}.jpg`,
+      quantity: 1
     });
   }
 
   // Helper method to add fish to user
-  private async addFishToUser(userId: number, fishId: number, rarity: number): Promise<void> {
+  private async addFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
+    // Get fish info to set proper name
+    const fishInfo = await this.getFishInfo(fishId);
+    
     await this.db.insert(userFish).values({
       userId,
       fishId,
-      name: `Fish ${fishId}`,
-      rarity: rarity.toString(),
-      imageUrl: `/images/Fish/${fishId}.jpg`
+      fishName: fishInfo.name,
+      fishRarity: rarity,
+      fishImageUrl: `/Fish/${fishId}.jpg`,
+      quantity: 1
     });
   }
 }
