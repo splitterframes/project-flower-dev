@@ -177,6 +177,25 @@ export const CastleGardenView: React.FC = () => {
       .filter(part => part.cost > 0) // Nur kostenpflichtige Teile
       .reduce((sum, part) => sum + part.cost, 0);
   }, [availableParts]);
+  
+  // Herzen pro Stunde berechnen
+  const heartsPerHour = useMemo(() => {
+    const totalSpentCredits = unlockedParts.reduce((sum, partId) => {
+      const part = allParts.find(p => p.id === partId);
+      return sum + (part?.cost || 0);
+    }, 0);
+    
+    const creditBonus = Math.floor(totalSpentCredits / 1000);
+    const spawnInterval = Math.max(3000, 10000 - (creditBonus * 1000)); // Minimum 3 Sekunden
+    const spawnChance = Math.min(0.9, 0.3 + (creditBonus * 0.1)); // Maximum 90%
+    
+    // Berechnung: Spawns pro Sekunde × 3600 Sekunden × durchschnittliche Herzen pro Biene
+    const spawnsPerSecond = spawnChance / (spawnInterval / 1000);
+    const averageHeartsPerBee = 2.5; // Basierend auf Logs: meist 1-5 Herzen
+    const heartsPerHour = spawnsPerSecond * 3600 * averageHeartsPerBee;
+    
+    return Math.round(heartsPerHour);
+  }, [unlockedParts, allParts]);
 
   // Drag Start Handler für Bauteile
   const handleDragStart = (event: React.DragEvent, part: BuildingPart) => {
@@ -653,6 +672,13 @@ export const CastleGardenView: React.FC = () => {
               <span className="text-slate-400 text-sm">investiert</span>
             </div>
             
+            {/* Herzen pro Stunde */}
+            <div className="flex items-center gap-2 text-lg">
+              <span className="text-2xl">⏱️</span>
+              <span className="text-green-400 font-bold">{heartsPerHour.toLocaleString()}</span>
+              <span className="text-slate-400 text-sm">💖/h</span>
+            </div>
+            
             {/* Herzen-Anzeige */}
             <div className="flex items-center gap-2 text-lg">
               <span className="text-2xl">💖</span>
@@ -673,7 +699,7 @@ export const CastleGardenView: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-slate-700 scrollbar-thumb-green-600 hover:scrollbar-thumb-green-500">
               {availableParts.map((part) => (
                 <div
                   key={part.id}
