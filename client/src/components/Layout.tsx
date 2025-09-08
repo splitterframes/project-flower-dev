@@ -308,21 +308,41 @@ export const Layout: React.FC = () => {
     }
 
     const spawnBalloon = () => {
-      console.log('🎈 Spawning balloon');
-      const newBalloon: Balloon = {
-        id: `balloon-${Date.now()}-${Math.random()}`,
-        x: Math.random() * 90 + 5, // 5% to 95% to avoid edges
-        color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
-        startTime: Date.now(),
-        hasCard: Math.random() < 0.3 // 30% chance for a card
-      };
+      // Determine how many balloons to spawn
+      const randomChance = Math.random();
+      let balloonCount: number;
       
-      setBalloons(prev => [...prev, newBalloon]);
+      if (randomChance < 0.85) {
+        balloonCount = 1; // 85% chance for 1 balloon
+      } else if (randomChance < 0.95) {
+        balloonCount = 2; // 10% chance for 2 balloons
+      } else {
+        balloonCount = 3; // 5% chance for 3 balloons
+      }
+      
+      console.log(`🎈 Spawning ${balloonCount} balloon${balloonCount > 1 ? 's' : ''}`);
+      
+      const newBalloons: Balloon[] = [];
+      
+      for (let i = 0; i < balloonCount; i++) {
+        const newBalloon: Balloon = {
+          id: `balloon-${Date.now()}-${Math.random()}-${i}`,
+          x: Math.random() * 90 + 5, // 5% to 95% to avoid edges
+          color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+          startTime: Date.now() + (i * 100), // Slight delay to avoid same exact time
+          hasCard: Math.random() < 0.3 // 30% chance for a card
+        };
+        newBalloons.push(newBalloon);
+      }
+      
+      setBalloons(prev => [...prev, ...newBalloons]);
 
-      // Remove balloon after 8 seconds (animation duration)
-      setTimeout(() => {
-        setBalloons(prev => prev.filter(b => b.id !== newBalloon.id));
-      }, 8000);
+      // Remove balloons after 8 seconds (animation duration)
+      newBalloons.forEach(balloon => {
+        setTimeout(() => {
+          setBalloons(prev => prev.filter(b => b.id !== balloon.id));
+        }, 8000);
+      });
     };
 
     const startSpawningPhase = () => {
