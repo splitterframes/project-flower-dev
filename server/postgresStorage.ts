@@ -6287,11 +6287,16 @@ export class PostgresStorage {
     const flowerData = generateRandomFlower(rarity as RarityTier);
     const flowerName = flowerData ? flowerData.name : `Blume ${flowerId}`;
     
+    // Convert string rarity to integer for database
+    const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    const rarityInteger = rarityNames.indexOf(rarity);
+    
     await this.db.insert(userFlowers).values({
       userId,
       flowerId,
       flowerName,
-      flowerRarity: rarity,
+      rarity: rarityInteger >= 0 ? rarityInteger : 0, // Integer rarity for DB constraint
+      flowerRarity: rarity,                            // String rarity for display
       flowerImageUrl: `/Blumen/${flowerId}.jpg`,
       quantity: 1
     });
