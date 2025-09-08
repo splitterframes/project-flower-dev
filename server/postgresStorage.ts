@@ -2060,7 +2060,7 @@ export class PostgresStorage {
    * Collect a field caterpillar (remove from field and add to inventory)
    */
   async collectFieldCaterpillar(userId: number, fieldIndex: number): Promise<{ success: boolean; caterpillar?: UserCaterpillar }> {
-    console.log(`🐛 Collecting field caterpillar for user ${userId} on field ${fieldIndex}`);
+    console.log(`🐛 🔥 COLLECT-START: Collecting field caterpillar for user ${userId} on field ${fieldIndex}`);
     
     // ATOMIC: Delete and return the caterpillar in one operation
     const deletedCaterpillar = await this.db
@@ -2095,8 +2095,8 @@ export class PostgresStorage {
     
     try {
       if (existing.length > 0) {
-        // Increase quantity
-        console.log(`🐛 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+        // Increase quantity by exactly 1
+        console.log(`🐛 🔥 CRITICAL: Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
         const updated = await this.db
           .update(userCaterpillars)
           .set({ quantity: existing[0].quantity + 1 })
