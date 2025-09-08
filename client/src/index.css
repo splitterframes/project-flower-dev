@@ -28,12 +28,24 @@
   100% { transform: translateY(0px); }
 }
 
+/* Field 3x Spin Animation - for planting flowers/butterflies */
+@keyframes field-spin-3x {
+  0% { transform: rotate(0deg); }
+  33.33% { transform: rotate(360deg); }
+  66.66% { transform: rotate(720deg); }
+  100% { transform: rotate(1080deg); }
+}
+
 .animate-spin-slow {
   animation: spin-slow 0.1s linear infinite;
 }
 
 .animate-spin-fast {
   animation: spin-fast 0.05s linear infinite;
+}
+
+.animate-field-spin {
+  animation: field-spin-3x 2.1s ease-in-out;
 }
 
 @layer base {

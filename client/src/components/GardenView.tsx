@@ -115,6 +115,9 @@ export const GardenView: React.FC = () => {
   const [bouquetSeedDrops, setBouquetSeedDrops] = useState<Record<number, {quantity: number, rarity: string}>>({});
   const [touchStart, setTouchStart] = useState<{fieldIndex: number, timer: NodeJS.Timeout} | null>(null);
   
+  // Field Spinning Animation State
+  const [spinningFields, setSpinningFields] = useState<Set<number>>(new Set());
+  
   // Seed Reward Dialog State
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [rewardData, setRewardData] = useState<{quantity: number; rarity: string} | null>(null);
@@ -463,6 +466,20 @@ export const GardenView: React.FC = () => {
     setShowBouquetSelection(true);
   };
 
+  // Field spinning animation trigger
+  const triggerFieldSpin = (fieldIndex: number) => {
+    setSpinningFields(prev => new Set([...Array.from(prev), fieldIndex]));
+    
+    // Remove spinning class after animation completes (2.1 seconds for 3 full rotations)
+    setTimeout(() => {
+      setSpinningFields(prev => {
+        const newSet = new Set(Array.from(prev));
+        newSet.delete(fieldIndex);
+        return newSet;
+      });
+    }, 2100);
+  };
+
   const placeBouquet = async (bouquetId: number, fieldIndex: number) => {
     try {
       const response = await fetch('/api/bouquets/place', {
@@ -478,6 +495,9 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
+        // Trigger field spin animation
+        triggerFieldSpin(fieldIndex);
+        
         // Refresh data
         await fetchUserBouquets();
         await fetchPlacedBouquets();
@@ -526,6 +546,9 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
+        // Trigger field spin animation
+        triggerFieldSpin(fieldIndex);
+        
         // Refresh data
         await fetchUserSeeds();
         await fetchPlantedFields();
@@ -803,6 +826,9 @@ export const GardenView: React.FC = () => {
         const data = await response.json();
         console.log('🦋 Butterfly placed successfully!', data.message);
         
+        // Trigger field spin animation
+        triggerFieldSpin(selectedFieldIndex - 1);
+        
         // Refresh data to show the placed butterfly
         await fetchFieldButterflies();
         await fetchUserButterflies();
@@ -936,6 +962,7 @@ export const GardenView: React.FC = () => {
                         ? 'border-orange-500 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 opacity-50' 
                         : 'border-slate-600 bg-slate-800 opacity-40'
                     }
+                    ${spinningFields.has(field.id - 1) ? 'animate-field-spin' : ''}
                   `}
                   style={{
                     backgroundColor: field.isUnlocked 
