@@ -291,12 +291,26 @@ export const Layout: React.FC = () => {
     }
   }, [user, setCredits]);
 
-  // Balloon spawning system with show/pause cycles
+  // Simple balloon spawning system - spawns every 20 seconds with random pauses
   useEffect(() => {
-    let spawnInterval: NodeJS.Timeout | null = null;
-    let cycleTimeout: NodeJS.Timeout | null = null;
+    if (typeof window === 'undefined') return;
+    
+    // Use a unique key to prevent multiple timers
+    const timerKey = 'balloon-system-timer';
+    
+    // Clear any existing timer
+    if ((window as any)[timerKey]) {
+      clearInterval((window as any)[timerKey]);
+    }
 
     const spawnBalloon = () => {
+      // Random chance to spawn (simulates pause phases)
+      if (Math.random() < 0.3) { // 30% chance to skip (simulates pauses)
+        console.log('🎈 Balloon skipped (pause simulation)');
+        return;
+      }
+      
+      console.log('🎈 Spawning balloon');
       const newBalloon: Balloon = {
         id: `balloon-${Date.now()}-${Math.random()}`,
         x: Math.random() * 90 + 5, // 5% to 95% to avoid edges
@@ -313,42 +327,19 @@ export const Layout: React.FC = () => {
       }, 8000);
     };
 
-    const startSpawningPhase = () => {
-      console.log('🎈 Balloon spawning phase started (90 seconds)');
-      // Spawn balloons every 10-15 seconds for 90 seconds
-      spawnInterval = setInterval(() => {
-        spawnBalloon();
-      }, Math.random() * 5000 + 10000); // 10-15 seconds
-      
-      // Stop spawning after 90 seconds and start pause
-      cycleTimeout = setTimeout(() => {
-        if (spawnInterval) {
-          clearInterval(spawnInterval);
-          spawnInterval = null;
-        }
-        startPausePhase();
-      }, 90000); // 90 seconds = 1.5 minutes
-    };
-
-    const startPausePhase = () => {
-      console.log('🎈 Balloon pause phase started (60 seconds)');
-      // Pause for 60 seconds, then restart spawning
-      cycleTimeout = setTimeout(() => {
-        startSpawningPhase();
-      }, 60000); // 60 seconds = 1 minute
-    };
-
-    // Start first spawning phase after 2 seconds
-    const initialTimeout = setTimeout(() => {
-      startSpawningPhase();
-    }, 2000);
+    // Spawn every 20 seconds
+    (window as any)[timerKey] = setInterval(spawnBalloon, 20000);
+    
+    // Spawn first balloon after 3 seconds
+    setTimeout(spawnBalloon, 3000);
 
     return () => {
-      if (spawnInterval) clearInterval(spawnInterval);
-      if (cycleTimeout) clearTimeout(cycleTimeout);
-      clearTimeout(initialTimeout);
+      if ((window as any)[timerKey]) {
+        clearInterval((window as any)[timerKey]);
+        delete (window as any)[timerKey];
+      }
     };
-  }, [balloonColors]);
+  }, []); // No dependencies to avoid restarts
 
   // Function to pop balloon
   const popBalloon = (balloonId: string) => {
