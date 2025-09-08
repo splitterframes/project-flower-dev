@@ -153,7 +153,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       title: '800 Credits',
       description: 'Sammle sofort 800 Credits',
       icon: <Coins className="h-6 w-6 text-amber-400" />,
-      type: 'credits'
+      type: 'daily-credits'
     }
   ];
 
