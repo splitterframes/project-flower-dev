@@ -407,12 +407,38 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
         isOpen={showTicketDialog}
         onClose={() => setShowTicketDialog(false)}
         userTickets={tickets}
-        onTicketsChange={() => {
-          fetchTickets();
-          fetchCredits();
-          fetchSuns();
-          fetchDna();
-          fetchInventoryCounts();
+        onRedeem={async (itemType: string, cost: number) => {
+          try {
+            const response = await fetch(`/api/user/${user?.id}/redeem-tickets`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': user?.id?.toString() || '1'
+              },
+              body: JSON.stringify({
+                prizeType: itemType,
+                cost: cost
+              })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+              // Refresh user data
+              fetchTickets();
+              fetchCredits();
+              fetchSuns();
+              fetchDna();
+              fetchInventoryCounts();
+              
+              return { success: true, message: data.message || "Preis erfolgreich eingelöst!" };
+            } else {
+              return { success: false, message: data.message || "Fehler beim Einlösen" };
+            }
+          } catch (error) {
+            console.error('Redemption error:', error);
+            return { success: false, message: "Fehler beim Einlösen" };
+          }
         }}
       />
 
