@@ -361,7 +361,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-6xl max-h-[95vh] bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
+        className="w-[95vw] max-w-sm md:max-w-6xl max-h-[95vh] bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
         style={{ zIndex: 9999, overflow: 'visible' }}
         aria-describedby="ticket-redemption-description"
       >
@@ -389,12 +389,12 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
             {/* Prize Layout */}
             <div className="pt-2 space-y-4">
               {/* First Row - First 4 Prizes (10-30 Tickets) */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {prizes.slice(0, 4).map(renderPrizeCard)}
               </div>
               
               {/* Second Row - Next 4 Prizes (50-200 Tickets) */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {prizes.slice(4, 8).map(renderPrizeCard)}
               </div>
               

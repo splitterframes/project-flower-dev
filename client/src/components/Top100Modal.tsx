@@ -144,7 +144,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-500/30 text-white max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl">
+      <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-500/30 text-white w-[95vw] max-w-sm md:max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl">
         <DialogHeader className="relative pb-6">
           <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-t-lg -mx-6 -my-2"></div>
           <DialogTitle className="flex items-center text-white relative z-10">
@@ -163,7 +163,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
 
         <div className="space-y-6 overflow-y-auto max-h-[calc(95vh-200px)]">
           {/* Category Selection */}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
             {categories.map((category) => {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;

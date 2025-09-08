@@ -248,7 +248,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white max-w-7xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-blue-500/30 text-white w-[95vw] max-w-sm md:max-w-7xl shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">{fish.fishName} - Fisch Details</DialogTitle>
           <DialogDescription className="sr-only">

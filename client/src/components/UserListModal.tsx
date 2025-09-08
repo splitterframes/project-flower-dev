@@ -126,7 +126,7 @@ export const UserListModal: React.FC<UserListModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-500/30 text-white max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      <DialogContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-500/30 text-white w-[95vw] max-w-sm md:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <DialogHeader className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-t-lg -mx-6 -my-2"></div>
           <DialogTitle className="flex items-center text-white relative z-10">
