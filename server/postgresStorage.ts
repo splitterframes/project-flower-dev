@@ -6283,9 +6283,8 @@ export class PostgresStorage {
 
   // Helper method to add flower to user
   private async addFlowerToUser(userId: number, flowerId: number, rarity: string): Promise<void> {
-    // Generate proper flower name using the rarity tier
-    const flowerData = generateRandomFlower(rarity as RarityTier);
-    const flowerName = flowerData ? flowerData.name : `Blume ${flowerId}`;
+    // Generate flower name using flowerId as seed for consistency with dialog
+    const flowerName = generateLatinFlowerName(flowerId);
     
     // Convert string rarity to integer for database
     const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
