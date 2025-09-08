@@ -229,8 +229,6 @@ export const Layout: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount })
         });
-        // Refresh credits in header
-        setHeaderRefreshTrigger(prev => prev + 1);
       } else if (type === 'sun') {
         await fetch(`/api/user/${user.id}/suns`, {
           method: 'PATCH',
@@ -244,6 +242,9 @@ export const Layout: React.FC = () => {
           body: JSON.stringify({ amount })
         });
       }
+      
+      // Refresh header for all loot types
+      setHeaderRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Failed to award loot:', error);
     }
