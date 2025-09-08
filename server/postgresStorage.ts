@@ -6191,7 +6191,10 @@ export class PostgresStorage {
         case 'daily-flower':
           const dailyItemsForFlower = await this.getDailyItems();
           if (dailyItemsForFlower) {
-            await this.addFlowerToUser(userId, dailyItemsForFlower.flowerId, dailyItemsForFlower.flowerRarity);
+            // Convert rarity integer to string for the rarity tiers
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFlower.flowerRarity] || 'common';
+            await this.addFlowerToUser(userId, dailyItemsForFlower.flowerId, rarityName);
           }
           break;
         case 'daily-butterfly':
@@ -6267,13 +6270,17 @@ export class PostgresStorage {
   }
 
   // Helper method to add flower to user
-  private async addFlowerToUser(userId: number, flowerId: number, rarity: number): Promise<void> {
+  private async addFlowerToUser(userId: number, flowerId: number, rarity: string): Promise<void> {
+    // Get flower info to set proper name
+    const flowerInfo = await this.getFlowerInfo(flowerId);
+    
     await this.db.insert(userFlowers).values({
       userId,
       flowerId,
-      name: `Flower ${flowerId}`,
-      rarity: rarity.toString(),
-      imageUrl: `/images/Blumen/${flowerId}.jpg`
+      flowerName: flowerInfo.name,
+      flowerRarity: rarity,
+      flowerImageUrl: `/Blumen/${flowerId}.jpg`,
+      quantity: 1
     });
   }
 
