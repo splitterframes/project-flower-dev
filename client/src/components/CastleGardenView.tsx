@@ -89,7 +89,16 @@ export const CastleGardenView: React.FC = () => {
   const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
   
   // Herzen-Zähler State
-  const [totalHeartsCollected, setTotalHeartsCollected] = useState(0);
+  // Herzen-Zähler persistent im localStorage speichern
+  const [totalHeartsCollected, setTotalHeartsCollected] = useState(() => {
+    const saved = localStorage.getItem('castle-hearts-session');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  // Herzen-Zähler bei Änderung in localStorage speichern
+  useEffect(() => {
+    localStorage.setItem('castle-hearts-session', totalHeartsCollected.toString());
+  }, [totalHeartsCollected]);
 
   // Dynamisches Laden der Bauteile aus Castle-Ordner
   const loadBuildingPartsFromCastle = (): BuildingPart[] => {
