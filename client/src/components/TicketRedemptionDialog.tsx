@@ -29,7 +29,7 @@ interface Prize {
   rarity?: number;
 }
 
-const rarityColors = {
+const rarityColors: Record<number, string> = {
   0: '#FFD700', // Common - Yellow
   1: '#00FF00', // Uncommon - Green 
   2: '#0080FF', // Rare - Blue
@@ -39,14 +39,14 @@ const rarityColors = {
   6: '#FF0000', // Mythical - Red
 };
 
-const rarityNames = {
+const rarityNames: Record<number, string> = {
   0: 'Gewöhnlich',
   1: 'Ungewöhnlich', 
   2: 'Rar',
   3: 'Super-Rar',
   4: 'Episch',
   5: 'Legendär',
-  6: 'Mythisch',
+  6: 'Mythical',
 };
 
 export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTicketsChange }: TicketRedemptionDialogProps) {
@@ -213,7 +213,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                       <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
                         {isDaily && dailyItems ? (
                           <img
-                            src={`/images/${
+                            src={`/${
                               prize.type === 'flower' ? 'Blumen' : 
                               prize.type === 'butterfly' ? 'Schmetterlinge' : 
                               prize.type === 'caterpillar' ? 'Caterpillars' : 'Fish'
@@ -270,8 +270,17 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
         </div>
 
         {/* Footer */}
-        <div className="text-center text-purple-200 text-sm mt-4">
-          Tägliche Gegenstände werden um Mitternacht aktualisiert
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-center text-purple-200 text-sm flex-1">
+            Tägliche Gegenstände werden um Mitternacht aktualisiert
+          </div>
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="bg-purple-700 hover:bg-purple-600 text-purple-100 border-purple-500"
+          >
+            Ich komme wieder
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
