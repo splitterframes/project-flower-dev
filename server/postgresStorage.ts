@@ -6002,29 +6002,7 @@ export class PostgresStorage {
         dailyItemsRecord = await this.generateDailyItems(today);
       }
 
-      return {
-        ...dailyItemsRecord,
-        flower: {
-          id: dailyItemsRecord.flowerId,
-          name: `Rare Flower ${dailyItemsRecord.flowerId}`,
-          rarity: dailyItemsRecord.flowerRarity
-        },
-        butterfly: {
-          id: dailyItemsRecord.butterflyId,
-          name: `Rare Butterfly ${dailyItemsRecord.butterflyId}`,
-          rarity: dailyItemsRecord.butterflyRarity
-        },
-        caterpillar: {
-          id: dailyItemsRecord.caterpillarId,
-          name: `Rare Caterpillar ${dailyItemsRecord.caterpillarId}`,
-          rarity: dailyItemsRecord.caterpillarRarity
-        },
-        fish: {
-          id: dailyItemsRecord.fishId,
-          name: `Rare Fish ${dailyItemsRecord.fishId}`,
-          rarity: dailyItemsRecord.fishRarity
-        }
-      };
+      return dailyItemsRecord;
     } catch (error) {
       console.error('Failed to get daily items:', error);
       return null;
