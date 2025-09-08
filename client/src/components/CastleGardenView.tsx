@@ -167,8 +167,6 @@ export const CastleGardenView: React.FC = () => {
   // Verfügbare Bauteile
   const allParts: BuildingPart[] = loadBuildingPartsFromCastle();
   
-  // Debug-Log der geladenen Bauteile
-  console.log('🏰 Geladene Castle-Bauteile:', allParts.map(p => `${p.name}: ${p.cost}💰`));
   
   // Nur freigeschaltete Bauteile anzeigen
   const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
@@ -712,38 +710,42 @@ export const CastleGardenView: React.FC = () => {
       
       {/* Shop Dialog */}
       <Dialog open={showShopDialog} onOpenChange={setShowShopDialog}>
-        <DialogContent className="max-w-md bg-slate-800 border-slate-700">
+        <DialogContent className="max-w-2xl bg-slate-800 border-slate-700">
           <DialogHeader>
             <DialogTitle className="text-white">🛒 Bauteil-Shop</DialogTitle>
             <DialogDescription className="text-slate-400">
               Schalte neue Bauteile mit deinen Credits frei
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            {allParts.filter(part => !unlockedParts.includes(part.id)).map(part => (
-              <div key={part.id} className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
-                <div 
-                  className="w-12 h-12 rounded border border-slate-600"
-                  style={{
-                    backgroundImage: `url(${part.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white">{part.name}</h3>
-                  <p className="text-xs text-slate-400">Typ: {part.type}</p>
+          <div className="max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-3 pr-2">
+              {allParts.filter(part => !unlockedParts.includes(part.id)).map(part => (
+                <div key={part.id} className="flex flex-col gap-2 p-3 bg-slate-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-10 h-10 rounded border border-slate-600 flex-shrink-0"
+                      style={{
+                        backgroundImage: `url(${part.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white text-sm truncate">{part.name}</h3>
+                      <p className="text-xs text-slate-400 truncate">Typ: {part.type}</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => unlockPart(part.id, part.cost)}
+                    disabled={credits < part.cost}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-slate-600 text-sm py-1 w-full"
+                  >
+                    {part.cost} 💰
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => unlockPart(part.id, part.cost)}
-                  disabled={credits < part.cost}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-slate-600"
-                >
-                  {part.cost} 💰
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
             {allParts.filter(part => !unlockedParts.includes(part.id)).length === 0 && (
               <p className="text-center text-slate-400 py-4">
                 🎉 Alle Bauteile bereits freigeschaltet!
