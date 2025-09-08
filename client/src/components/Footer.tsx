@@ -17,6 +17,7 @@ import {
   Lock
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FooterProps {
   activeView: string;
@@ -117,9 +118,9 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   ];
 
   return (
-    <footer className="bg-slate-900 border-t border-slate-700 px-2 sm:px-6 py-2 sm:py-3 flex-shrink-0 safe-area-bottom">
+    <footer className="bg-slate-900 border-t border-slate-700 px-2 sm:px-6 py-2 sm:py-4 flex-shrink-0 safe-area-bottom">
       <div className="flex justify-center">
-        <div className="flex space-x-1 sm:space-x-2 w-full max-w-md justify-between sm:justify-center items-start">
+        <div className="flex space-x-1 sm:space-x-2 w-full max-w-md justify-between sm:justify-center">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
@@ -130,24 +131,31 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
             if (locked) {
               return (
                 <AlertDialog key={item.id}>
-                  <AlertDialogTrigger asChild>
-                    <div className="flex flex-col items-center flex-1 sm:flex-none">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-2 touch-target min-h-[36px] text-slate-500 hover:text-slate-400 hover:bg-slate-800 w-full"
-                      >
-                        <Icon className="h-4 w-4 opacity-50" />
-                        <span className="text-xs sm:text-sm opacity-50">{item.label}</span>
-                      </Button>
-                      {cost && (
-                        <Badge variant="outline" className="text-[10px] mt-1 px-1 py-0 h-auto text-slate-400 border-slate-600 flex items-center gap-1">
-                          <Lock className="h-2 w-2" />
-                          {cost.toLocaleString()}
-                        </Badge>
-                      )}
-                    </div>
-                  </AlertDialogTrigger>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertDialogTrigger asChild>
+                          <div className="flex flex-col items-center flex-1 sm:flex-none">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-3 sm:py-2 touch-target min-h-[44px] text-slate-500 hover:text-slate-400 hover:bg-slate-800 relative w-full"
+                            >
+                              <Lock className="h-3 w-3 absolute -top-1 -right-1" />
+                              <Icon className="h-4 w-4 opacity-50" />
+                              <span className="text-xs sm:text-sm opacity-50">{item.label}</span>
+                            </Button>
+                          </div>
+                        </AlertDialogTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="flex items-center gap-1">
+                          <Lock className="h-3 w-3" />
+                          <span>{cost?.toLocaleString()} Credits</span>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>
@@ -181,22 +189,20 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
             }
             
             return (
-              <div key={item.id} className="flex flex-col items-center flex-1 sm:flex-none">
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleItemClick(item)}
-                  className={`flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-2 touch-target min-h-[36px] w-full ${
-                    isActive 
-                      ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                      : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">{item.label}</span>
-                </Button>
-                <div className="h-4 w-full"></div> {/* Spacer für gleichmäßiges Layout */}
-              </div>
+              <Button
+                key={item.id}
+                variant={isActive ? "default" : "ghost"}
+                size="sm"
+                onClick={() => handleItemClick(item)}
+                className={`flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-3 sm:py-2 touch-target min-h-[44px] ${
+                  isActive 
+                    ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                } flex-1 sm:flex-none`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">{item.label}</span>
+              </Button>
             );
           })}
         </div>
