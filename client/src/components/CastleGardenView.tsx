@@ -189,8 +189,8 @@ export const CastleGardenView: React.FC = () => {
     }
   };
 
-  // Drop Handler für Grid-Felder
-  const handleDrop = (event: React.DragEvent, field: GridField) => {
+  // Drop Handler für Grid-Felder mit Persistierung
+  const handleDrop = async (event: React.DragEvent, field: GridField) => {
     event.preventDefault();
     
     if (draggedPart) {
@@ -204,6 +204,22 @@ export const CastleGardenView: React.FC = () => {
           ...draggedFromField,
           buildingPart: null
         };
+        
+        // Ursprüngliches Feld in DB löschen
+        if (user?.id) {
+          try {
+            await fetch(`/api/user/${user.id}/castle-remove-part`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                gridX: draggedFromField.x,
+                gridY: draggedFromField.y
+              })
+            });
+          } catch (error) {
+            console.error('Failed to remove part from database:', error);
+          }
+        }
       }
       
       // Bauteil am Zielfeld platzieren
@@ -212,6 +228,24 @@ export const CastleGardenView: React.FC = () => {
         buildingPart: { ...draggedPart }
       };
       setGrid(newGrid);
+      
+      // Neues Feld in DB speichern
+      if (user?.id) {
+        try {
+          await fetch(`/api/user/${user.id}/castle-place-part`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              gridX: field.x,
+              gridY: field.y,
+              partName: draggedPart.id
+            })
+          });
+          console.log(`🏰 Placed ${draggedPart.name} at (${field.x}, ${field.y})`);
+        } catch (error) {
+          console.error('Failed to place part in database:', error);
+        }
+      }
       
       // Reset drag state
       if (draggedFromField) {
@@ -227,8 +261,8 @@ export const CastleGardenView: React.FC = () => {
     event.dataTransfer.dropEffect = draggedFromField ? 'move' : 'copy';
   };
 
-  // Grid-Feld Klick Handler
-  const handleFieldClick = (field: GridField) => {
+  // Grid-Feld Klick Handler mit Persistierung
+  const handleFieldClick = async (field: GridField) => {
     if (field.buildingPart) {
       // Belegtes Feld - Bauteil löschen (nur wenn nicht gedraggt wurde)
       if (!draggedFromField) {
@@ -239,6 +273,23 @@ export const CastleGardenView: React.FC = () => {
           buildingPart: null
         };
         setGrid(newGrid);
+        
+        // Bauteil aus DB löschen
+        if (user?.id) {
+          try {
+            await fetch(`/api/user/${user.id}/castle-remove-part`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                gridX: field.x,
+                gridY: field.y
+              })
+            });
+            console.log(`🏰 Removed ${field.buildingPart.name} from (${field.x}, ${field.y})`);
+          } catch (error) {
+            console.error('Failed to remove part from database:', error);
+          }
+        }
       }
     } else {
       // Leeres Feld - Shop öffnen oder Bauteil platzieren
@@ -251,6 +302,24 @@ export const CastleGardenView: React.FC = () => {
           buildingPart: { ...draggedPart }
         };
         setGrid(newGrid);
+        
+        // Bauteil in DB speichern
+        if (user?.id) {
+          try {
+            await fetch(`/api/user/${user.id}/castle-place-part`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                gridX: field.x,
+                gridY: field.y,
+                partName: draggedPart.id
+              })
+            });
+            console.log(`🏰 Placed ${draggedPart.name} at (${field.x}, ${field.y})`);
+          } catch (error) {
+            console.error('Failed to place part in database:', error);
+          }
+        }
       } else if (!draggedPart) {
         // Shop öffnen
         setSelectedShopField(field);
@@ -486,26 +555,107 @@ export const CastleGardenView: React.FC = () => {
     return () => clearInterval(spawnInterval);
   }, [grid, credits]); // Abhängig vom Grid und Credits
 
-  // Bauteil freischalten
+  // ==================== PERSISTIERUNG LOGIC ====================
+  
+  // Daten beim Mount laden
+  useEffect(() => {
+    if (user?.id) {
+      loadCastleData();
+    }
+  }, [user?.id]);
+
+  // Daten von der API laden
+  const loadCastleData = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Freigeschaltete Bauteile laden
+      const unlockedResponse = await fetch(`/api/user/${user.id}/castle-unlocked-parts`);
+      if (unlockedResponse.ok) {
+        const { unlockedParts: loadedParts } = await unlockedResponse.json();
+        const partNames = loadedParts.map((part: any) => part.partName);
+        setUnlockedParts(['grass', 'stone_path', ...partNames]); // Basis-Teile + persistierte
+        console.log(`🏰 Loaded ${partNames.length} unlocked castle parts:`, partNames);
+      }
+
+      // Grid-Status laden
+      const gridResponse = await fetch(`/api/user/${user.id}/castle-grid-state`);
+      if (gridResponse.ok) {
+        const { gridState: loadedGrid } = await gridResponse.json();
+        
+        // Grid mit geladenen Daten rekonstruieren
+        const reconstructedGrid: GridField[] = [];
+        for (let y = 0; y < gridHeight; y++) {
+          for (let x = 0; x < gridWidth; x++) {
+            const savedField = loadedGrid.find((field: any) => field.gridX === x && field.gridY === y);
+            const buildingPart = savedField ? allParts.find(part => part.id === savedField.partName) || null : null;
+            
+            reconstructedGrid.push({
+              x,
+              y,
+              buildingPart
+            });
+          }
+        }
+        setGrid(reconstructedGrid);
+        console.log(`🏰 Loaded ${loadedGrid.length} grid placements`);
+      }
+    } catch (error) {
+      console.error('Failed to load castle data:', error);
+      toast.error('Fehler beim Laden des Schlossgartens');
+    }
+  };
+
+  // Grid-Änderungen in Datenbank speichern
+  const saveGridState = async (newGrid: GridField[]) => {
+    if (!user?.id) return;
+
+    try {
+      // Alle bestehenden Einträge löschen und neue speichern
+      const fieldsWithParts = newGrid.filter(field => field.buildingPart);
+      
+      for (const field of fieldsWithParts) {
+        await fetch(`/api/user/${user.id}/castle-place-part`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gridX: field.x,
+            gridY: field.y,
+            partName: field.buildingPart!.id
+          })
+        });
+      }
+      
+      console.log(`🏰 Saved grid state with ${fieldsWithParts.length} placed parts`);
+    } catch (error) {
+      console.error('Failed to save grid state:', error);
+    }
+  };
+
+  // Bauteil freischalten mit Persistierung
   const unlockPart = async (partId: string, cost: number) => {
     if (credits >= cost && !unlockedParts.includes(partId)) {
       try {
-        // Credits abziehen
-        const response = await fetch(`/api/user/${user?.id}/credits`, {
-          method: 'PATCH',
+        // Bauteil in Datenbank freischalten
+        const unlockResponse = await fetch(`/api/user/${user?.id}/castle-unlock-part`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: -cost })
+          body: JSON.stringify({ partName: partId, price: cost })
         });
 
-        if (response.ok) {
+        if (unlockResponse.ok) {
           setCredits(credits - cost);
           setUnlockedParts(prev => [...prev, partId]);
           setShowShopDialog(false);
           toast.success(`🔓 ${allParts.find(p => p.id === partId)?.name} freigeschaltet!`);
-          console.log(`🔓 Bauteil ${partId} für ${cost} Credits freigeschaltet!`);
+          console.log(`🏰 Bauteil ${partId} für ${cost} Credits persistent freigeschaltet!`);
+        } else {
+          const error = await unlockResponse.json();
+          toast.error(error.message || 'Fehler beim Freischalten');
         }
       } catch (error) {
         console.error('Fehler beim Freischalten:', error);
+        toast.error('Fehler beim Freischalten des Bauteils');
       }
     }
   };
