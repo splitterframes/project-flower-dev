@@ -6194,32 +6194,36 @@ export class PostgresStorage {
         case 'daily-flower':
           const dailyItemsForFlower = await this.getDailyItems();
           if (dailyItemsForFlower) {
-            // flowerRarity is already a string in database, use directly
-            const rarityName = dailyItemsForFlower.flowerRarity || 'common';
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFlower.flowerRarity] || 'common';
             await this.addFlowerToUser(userId, dailyItemsForFlower.flowerId, rarityName);
           }
           break;
         case 'daily-butterfly':
           const dailyItemsForButterfly = await this.getDailyItems();
           if (dailyItemsForButterfly) {
-            // butterflyRarity is already a string in database, use directly
-            const rarityName = dailyItemsForButterfly.butterflyRarity || 'common';
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForButterfly.butterflyRarity] || 'common';
             await this.addButterflyToUser(userId, dailyItemsForButterfly.butterflyId, rarityName);
           }
           break;
         case 'daily-caterpillar':
           const dailyItemsForCaterpillar = await this.getDailyItems();
           if (dailyItemsForCaterpillar) {
-            // caterpillarRarity is already a string in database, use directly
-            const rarityName = dailyItemsForCaterpillar.caterpillarRarity || 'common';
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForCaterpillar.caterpillarRarity] || 'common';
             await this.addCaterpillarForRedemption(userId, dailyItemsForCaterpillar.caterpillarId, rarityName);
           }
           break;
         case 'daily-fish':
           const dailyItemsForFish = await this.getDailyItems();
           if (dailyItemsForFish) {
-            // fishRarity is already a string in database, use directly
-            const rarityName = dailyItemsForFish.fishRarity || 'common';
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFish.fishRarity] || 'common';
             await this.addFishToUser(userId, dailyItemsForFish.fishId, rarityName);
           }
           break;
