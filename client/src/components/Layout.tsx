@@ -16,6 +16,8 @@ import { AquariumView } from "./AquariumView";
 import { MarieSlotView } from "./MarieSlotView";
 import { CastleGardenView } from "./CastleGardenView";
 import { DonateDialog } from "./DonateDialog";
+import { ImpressumDialog } from "./ImpressumDialog";
+import { DatenschutzDialog } from "./DatenschutzDialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
@@ -235,6 +237,8 @@ export const Layout: React.FC = () => {
   const [currentView, setCurrentView] = useState("garten");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDonateDialog, setShowDonateDialog] = useState(false);
+  const [showImpressumDialog, setShowImpressumDialog] = useState(false);
+  const [showDatenschutzDialog, setShowDatenschutzDialog] = useState(false);
   const [headerRefreshTrigger, setHeaderRefreshTrigger] = useState(0);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
@@ -457,8 +461,18 @@ export const Layout: React.FC = () => {
       <div className="bg-slate-950 border-t border-slate-800 px-6 py-3">
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 space-y-2 sm:space-y-0">
           <div className="flex items-center space-x-4">
-            <a href="#" className="hover:text-white transition-colors">Impressum</a>
-            <a href="#" className="hover:text-white transition-colors">Datenschutz</a>
+            <button 
+              onClick={() => setShowImpressumDialog(true)}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Impressum
+            </button>
+            <button 
+              onClick={() => setShowDatenschutzDialog(true)}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Datenschutz
+            </button>
             <span>Copyright © Mariposa 2025</span>
           </div>
           <button 
@@ -480,6 +494,18 @@ export const Layout: React.FC = () => {
         open={showDonateDialog}
         onOpenChange={setShowDonateDialog}
         recipientName="Mariposa"
+      />
+
+      {/* Impressum Dialog */}
+      <ImpressumDialog
+        open={showImpressumDialog}
+        onOpenChange={setShowImpressumDialog}
+      />
+
+      {/* Datenschutz Dialog */}
+      <DatenschutzDialog
+        open={showDatenschutzDialog}
+        onOpenChange={setShowDatenschutzDialog}
       />
 
       {/* Floating Balloons */}
