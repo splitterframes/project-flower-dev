@@ -588,6 +588,17 @@ export const dailyItems = pgTable("daily_items", {
   dateUnique: unique().on(table.date),
 }));
 
+// Track daily prize redemptions per user
+export const dailyRedemptions = pgTable("daily_redemptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  prizeType: varchar("prize_type", { length: 50 }).notNull(), // daily-flower, daily-butterfly, etc.
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+}, (table) => ({
+  userDatePrizeUnique: unique().on(table.userId, table.date, table.prizeType),
+}));
+
 // Aquarium types
 export type AquariumTank = typeof aquariumTanks.$inferSelect;
 export type NewAquariumTank = typeof aquariumTanks.$inferInsert;
