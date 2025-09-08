@@ -210,7 +210,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 rounded-b-lg" />
             
             {/* Prize Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 relative">
               {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prize.id);
@@ -220,7 +220,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     key={prize.id}
                     className={`
                       relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-                      shadow-lg border-2 transition-all duration-200 hover:scale-105 z-10
+                      shadow-lg border-2 transition-all duration-200 hover:scale-105 z-[1]
                       ${canAfford ? 'border-purple-400 hover:border-purple-300' : 'border-gray-400'}
                     `}
                     style={{ isolation: 'isolate' }}
