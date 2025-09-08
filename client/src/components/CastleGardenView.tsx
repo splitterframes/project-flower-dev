@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/stores/useAuth";
+import { useCredits } from "@/lib/stores/useCredits";
 
 // Bauteil-Typen für den Schlossgarten
 type BuildingPart = {
@@ -56,9 +58,19 @@ export const CastleGardenView: React.FC = () => {
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [hearts, setHearts] = useState<Array<{id: string; x: number; y: number; amount: number}>>([]);
+  
+  // Shop State
+  const [showShopDialog, setShowShopDialog] = useState(false);
+  const [selectedShopField, setSelectedShopField] = useState<GridField | null>(null);
+  
+  // Freigeschaltete Bauteile
+  const [unlockedParts, setUnlockedParts] = useState<string[]>(['grass', 'stone_path', 'wooden_path']);
+  
+  // Credits Hook
+  const { credits, setCredits } = useCredits();
 
-  // Verfügbare Bauteile (werden später über Credits freigeschaltet)
-  const availableParts: BuildingPart[] = [
+  // Alle verfügbaren Bauteile (Shop-System)
+  const allParts: BuildingPart[] = [
     {
       id: 'grass',
       name: 'Rasen',
@@ -82,11 +94,39 @@ export const CastleGardenView: React.FC = () => {
       cost: 3,
       image: '/textures/wood.jpg',
       rotation: 0
+    },
+    {
+      id: 'hedge',
+      name: 'Hecke',
+      type: 'hedge',
+      cost: 8,
+      image: '/Landschaft/baum.png',
+      rotation: 0
+    },
+    {
+      id: 'tree',
+      name: 'Baum',
+      type: 'tree',
+      cost: 12,
+      image: '/Landschaft/baum.png',
+      rotation: 0
+    },
+    {
+      id: 'statue',
+      name: 'Statue',
+      type: 'statue',
+      cost: 25,
+      image: '/textures/asphalt.png',
+      rotation: 0
     }
   ];
+  
+  // Nur freigeschaltete Bauteile anzeigen
+  const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
 
   // Drag & Drop State
   const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
+  const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
 
   // Drag Start Handler für Bauteile
   const handleDragStart = (event: React.DragEvent, part: BuildingPart) => {
@@ -102,12 +142,28 @@ export const CastleGardenView: React.FC = () => {
     if (draggedPart) {
       const fieldIndex = field.y * gridWidth + field.x;
       const newGrid = [...grid];
+      
+      // Wenn von einem Feld gedraggt wurde, das ursprüngliche Feld leeren
+      if (draggedFromField) {
+        const fromIndex = draggedFromField.y * gridWidth + draggedFromField.x;
+        newGrid[fromIndex] = {
+          ...draggedFromField,
+          buildingPart: null
+        };
+      }
+      
+      // Bauteil am Zielfeld platzieren
       newGrid[fieldIndex] = {
         ...field,
         buildingPart: { ...draggedPart }
       };
       setGrid(newGrid);
-      // Bauteil bleibt ausgewählt für mehrfache Verwendung
+      
+      // Reset drag state wenn von Feld gedraggt
+      if (draggedFromField) {
+        setDraggedFromField(null);
+        setDraggedPart(null);
+      }
     }
   };
 
@@ -117,18 +173,38 @@ export const CastleGardenView: React.FC = () => {
     event.dataTransfer.dropEffect = 'copy';
   };
 
-  // Grid-Feld Klick Handler (für Löschen)
+  // Grid-Feld Mouse Down Handler (für Drag von Feldern)
+  const handleFieldMouseDown = (event: React.MouseEvent, field: GridField) => {
+    if (event.button === 0 && field.buildingPart) { // Linke Maustaste + Bauteil vorhanden
+      setDraggedFromField(field);
+      setDraggedPart(field.buildingPart);
+      event.preventDefault();
+    }
+  };
+
+  // Grid-Feld Klick Handler
   const handleFieldClick = (field: GridField) => {
     if (field.buildingPart) {
-      // Belegtes Feld - Bauteil löschen
-      const fieldIndex = field.y * gridWidth + field.x;
-      const newGrid = [...grid];
-      newGrid[fieldIndex] = {
-        ...field,
-        buildingPart: null
-      };
-      setGrid(newGrid);
+      // Belegtes Feld - Bauteil löschen (nur wenn nicht gedraggt wurde)
+      if (!draggedFromField) {
+        const fieldIndex = field.y * gridWidth + field.x;
+        const newGrid = [...grid];
+        newGrid[fieldIndex] = {
+          ...field,
+          buildingPart: null
+        };
+        setGrid(newGrid);
+      }
+    } else {
+      // Leeres Feld - Shop öffnen
+      if (!draggedPart) {
+        setSelectedShopField(field);
+        setShowShopDialog(true);
+      }
     }
+    
+    // Reset drag state
+    setDraggedFromField(null);
   };
 
   // Bauteil rotieren (Rechtsklick)
@@ -149,21 +225,31 @@ export const CastleGardenView: React.FC = () => {
     }
   };
 
-  // Zufällige Bienen spawnen
+  // Intelligente Bienen spawnen (nur auf gesetzten Bauteilen)
   const spawnRandomBee = () => {
-    const startX = Math.floor(Math.random() * gridWidth);
-    const startY = Math.floor(Math.random() * gridHeight);
-    const targetX = Math.floor(Math.random() * gridWidth);
-    const targetY = Math.floor(Math.random() * gridHeight);
+    // Finde alle Felder mit Bauteilen (außer Rasen)
+    const fieldsWithParts = grid.filter(field => field.buildingPart && field.buildingPart.type !== 'grass');
     
-    const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
+    if (fieldsWithParts.length < 2) {
+      console.log('🐝 Nicht genug Bauteile für Bienen-Flug (mindestens 2 benötigt)');
+      return;
+    }
+    
+    // Zufälliges Start- und Zielfeld aus gesetzten Bauteilen
+    const startField = fieldsWithParts[Math.floor(Math.random() * fieldsWithParts.length)];
+    const possibleTargets = fieldsWithParts.filter(f => f !== startField);
+    const targetField = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+    
+    const distance = Math.sqrt(
+      Math.pow(targetField.x - startField.x, 2) + Math.pow(targetField.y - startField.y, 2)
+    );
     
     const newBee: Bee = {
       id: `bee-${Date.now()}`,
-      x: startX,
-      y: startY,
-      targetX,
-      targetY,
+      x: startField.x,
+      y: startField.y,
+      targetX: targetField.x,
+      targetY: targetField.y,
       startTime: Date.now(),
       flightDistance: distance
     };
@@ -174,22 +260,37 @@ export const CastleGardenView: React.FC = () => {
     setTimeout(() => {
       setBees(prev => prev.filter(bee => bee.id !== newBee.id));
       
-      // Herzen basierend auf Flugstrecke (1-5 Stück)
-      const heartAmount = Math.min(5, Math.max(1, Math.floor(distance / 3) + 1));
+      // Herzen basierend auf Flugstrecke UND Bauteil-Wert
+      const targetPart = targetField.buildingPart!;
+      const partValue = targetPart.cost || 1;
+      const distanceBonus = Math.floor(distance / 3);
+      const heartAmount = Math.min(5, Math.max(1, partValue + distanceBonus));
       
-      const newHeart = {
-        id: `heart-${Date.now()}`,
-        x: targetX,
-        y: targetY,
-        amount: heartAmount
-      };
+      // Explosionsartige Herzen (mehrere kleine Herzen)
+      const explosionHearts = [];
+      for (let i = 0; i < heartAmount; i++) {
+        explosionHearts.push({
+          id: `heart-${Date.now()}-${i}`,
+          x: targetField.x,
+          y: targetField.y,
+          amount: 1,
+          delay: i * 100 // Gestaffeltes Erscheinen
+        });
+      }
       
-      setHearts(prev => [...prev, newHeart]);
+      // Herzen mit Verzögerung hinzufügen
+      explosionHearts.forEach((heart, index) => {
+        setTimeout(() => {
+          setHearts(prev => [...prev, heart]);
+          
+          // Herz nach 3 Sekunden automatisch entfernen
+          setTimeout(() => {
+            setHearts(prev => prev.filter(h => h.id !== heart.id));
+          }, 3000);
+        }, heart.delay);
+      });
       
-      // Herz nach 5 Sekunden automatisch entfernen
-      setTimeout(() => {
-        setHearts(prev => prev.filter(heart => heart.id !== newHeart.id));
-      }, 5000);
+      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Wert: ${partValue}, ${heartAmount} Herzen!`);
     }, 3000);
   };
 
@@ -207,8 +308,32 @@ export const CastleGardenView: React.FC = () => {
   // Herz sammeln
   const collectHeart = (heartId: string, amount: number) => {
     setHearts(prev => prev.filter(heart => heart.id !== heartId));
-    // Hier könnte Credits/DNA/etc. vergeben werden
-    console.log(`💖 ${amount} Herzen gesammelt!`);
+    // Credits vergeben
+    setCredits(credits + amount);
+    console.log(`💖 ${amount} Herzen gesammelt! +${amount} Credits`);
+  };
+
+  // Bauteil freischalten
+  const unlockPart = async (partId: string, cost: number) => {
+    if (credits >= cost && !unlockedParts.includes(partId)) {
+      try {
+        // Credits abziehen
+        const response = await fetch(`/api/user/${user?.id}/credits`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: -cost })
+        });
+
+        if (response.ok) {
+          setCredits(credits - cost);
+          setUnlockedParts(prev => [...prev, partId]);
+          setShowShopDialog(false);
+          console.log(`🔓 Bauteil ${partId} für ${cost} Credits freigeschaltet!`);
+        }
+      } catch (error) {
+        console.error('Fehler beim Freischalten:', error);
+      }
+    }
   };
 
   if (!user) {
@@ -236,30 +361,33 @@ export const CastleGardenView: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg text-slate-800">🏰 Dein Schlossgarten (25x15)</CardTitle>
-            <p className="text-sm text-slate-600">Ziehe Bauteile aus der Palette ins Grid • Linksklick = Löschen • Rechtsklick = Drehen</p>
+            <p className="text-sm text-slate-600">
+              🖱️ Drag & Drop zwischen Feldern • 🛒 Leeres Feld = Shop • 🔄 Rechtsklick = Drehen • 🗑️ Linksklick = Löschen
+            </p>
           </CardHeader>
           <CardContent>
             <div className="relative mx-auto w-fit border-2 border-amber-300 bg-green-100 overflow-hidden">
               <div 
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${gridWidth}, 40px)`,
-                  gridTemplateRows: `repeat(${gridHeight}, 40px)`,
-                  gap: '0px' // Kein Gap zwischen den Feldern
+                  gridTemplateColumns: `repeat(${gridWidth}, 48px)`, // Größer: 48px statt 40px
+                  gridTemplateRows: `repeat(${gridHeight}, 48px)`,
+                  gap: '0px'
                 }}
               >
                 {grid.map((field, index) => (
                   <div
                     key={index}
-                    className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all relative"
+                    className="w-12 h-12 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all relative select-none"
                     onClick={() => handleFieldClick(field)}
+                    onMouseDown={(e) => handleFieldMouseDown(e, field)}
                     onContextMenu={(e) => handleFieldRightClick(e, field)}
                     onDrop={(e) => handleDrop(e, field)}
                     onDragOver={handleDragOver}
                     style={{
                       backgroundColor: field.buildingPart ? 'transparent' : '#86efac',
                       backgroundImage: field.buildingPart ? `url(${field.buildingPart.image})` : 'url(/Landschaft/gras.png)',
-                      backgroundSize: 'cover',
+                      backgroundSize: field.buildingPart ? '120%' : 'cover', // Bauteile größer darstellen
                       backgroundPosition: 'center',
                       transform: field.buildingPart ? `rotate(${field.buildingPart.rotation}deg)` : undefined
                     }}
@@ -268,23 +396,23 @@ export const CastleGardenView: React.FC = () => {
                     {bees.filter(bee => Math.floor(bee.x) === field.x && Math.floor(bee.y) === field.y).map(bee => (
                       <div
                         key={bee.id}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce"
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce text-lg"
                       >
                         🐝
                       </div>
                     ))}
                     
-                    {/* Herzen anzeigen */}
+                    {/* Herzen anzeigen - Explosionseffekt */}
                     {hearts.filter(heart => heart.x === field.x && heart.y === field.y).map(heart => (
                       <div
                         key={heart.id}
-                        className="absolute inset-0 flex items-center justify-center cursor-pointer animate-pulse"
+                        className="absolute inset-0 flex items-center justify-center cursor-pointer animate-ping"
                         onClick={(e) => {
                           e.stopPropagation();
                           collectHeart(heart.id, heart.amount);
                         }}
                       >
-                        <div className="bg-pink-100 rounded-full px-1 text-xs font-bold">
+                        <div className="bg-gradient-to-r from-pink-200 to-red-200 rounded-full px-2 py-1 text-sm font-bold border-2 border-pink-400 shadow-lg">
                           💖{heart.amount}
                         </div>
                       </div>
@@ -295,6 +423,68 @@ export const CastleGardenView: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Shop Dialog */}
+        <Dialog open={showShopDialog} onOpenChange={setShowShopDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>🛒 Bauteil-Shop</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600">
+                Schalte neue Bauteile mit deinen Credits frei:
+              </p>
+              
+              <div className="text-sm text-amber-700 bg-amber-50 p-2 rounded">
+                💰 Verfügbare Credits: <strong>{credits}</strong>
+              </div>
+              
+              <div className="grid gap-3">
+                {allParts.filter(part => !unlockedParts.includes(part.id)).map((part) => (
+                  <div
+                    key={part.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-12 h-12 border rounded"
+                        style={{
+                          backgroundImage: `url(${part.image})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center'
+                        }}
+                      />
+                      <div>
+                        <div className="font-medium">{part.name}</div>
+                        <div className="text-xs text-slate-500">{part.type}</div>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => unlockPart(part.id, part.cost)}
+                      disabled={credits < part.cost}
+                      className="bg-amber-600 hover:bg-amber-700"
+                    >
+                      {part.cost} 💰
+                    </Button>
+                  </div>
+                ))}
+                
+                {allParts.filter(part => !unlockedParts.includes(part.id)).length === 0 && (
+                  <div className="text-center text-slate-500 py-4">
+                    🎉 Alle Bauteile bereits freigeschaltet!
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowShopDialog(false)}>
+                  Schließen
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Bauteile-Palette */}
         <Card>
