@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Flower, Sparkles, Gem, Zap, DollarSign } from 'lucide-react';
+import { Ticket, Sprout, Sun, Zap, Coins, Flower, Sparkles } from 'lucide-react';
+import { FlowerHoverPreview } from './FlowerHoverPreview';
+import { ButterflyHoverPreview } from './ButterflyHoverPreview';
+import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
+import { FishHoverPreview } from './FishHoverPreview';
+import { getRarityColor } from '@shared/rarity';
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -11,9 +16,33 @@ interface TicketRedemptionDialogProps {
   onRedeem: (itemType: string, cost: number) => Promise<{ success: boolean; message: string }>;
 }
 
+interface DailyItems {
+  id: number;
+  date: string;
+  flowerId: number;
+  flowerRarity: string;
+  butterflyId: number;
+  butterflyRarity: string;
+  caterpillarId: number;
+  caterpillarRarity: string;
+  fishId: number;
+  fishRarity: string;
+}
+
 export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem }: TicketRedemptionDialogProps) {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemMessage, setRedeemMessage] = useState('');
+  const [dailyItems, setDailyItems] = useState<DailyItems | null>(null);
+
+  // Fetch daily items
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/daily-items')
+        .then(res => res.json())
+        .then(data => setDailyItems(data))
+        .catch(error => console.error('Failed to fetch daily items:', error));
+    }
+  }, [isOpen]);
 
   // Prize definitions (all 9 prizes)
   const prizes = [
@@ -22,7 +51,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 10,
       title: '1 Samen',
       description: 'Erhalte 1 zufälligen Samen',
-      icon: <Flower className="h-6 w-6 text-green-400" />,
+      icon: <Sprout className="h-6 w-6 text-green-400" />,
       type: 'seed'
     },
     {
@@ -30,7 +59,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 15,
       title: '5 Sonnen',
       description: 'Sammle sofort 5 Sonnen',
-      icon: <Sparkles className="h-6 w-6 text-yellow-400" />,
+      icon: <Sun className="h-6 w-6 text-yellow-400" />,
       type: 'suns'
     },
     {
@@ -38,7 +67,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 25,
       title: 'Seltener Samen',
       description: 'Erhalte 1 seltenen Samen',
-      icon: <Gem className="h-6 w-6 text-blue-400" />,
+      icon: <Sparkles className="h-6 w-6 text-blue-400" />,
       type: 'seed'
     },
     {
@@ -46,38 +75,38 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 30,
       title: '15 DNA',
       description: 'Sammle sofort 15 DNA',
-      icon: <Zap className="h-6 w-6 text-green-400" />,
+      icon: <Zap className="h-6 w-6 text-cyan-400" />,
       type: 'credits'
     },
     {
       id: 'flower',
       cost: 50,
-      title: 'Seltene Blume',
-      description: 'Erhalte eine seltene Blume',
+      title: 'Tägliche seltene Blume',
+      description: 'Erhalte die heutige seltene Blume',
       icon: <Flower className="h-6 w-6 text-pink-400" />,
       type: 'flower'
     },
     {
       id: 'butterfly',
       cost: 100,
-      title: 'Seltener Schmetterling',
-      description: 'Erhalte einen seltenen Schmetterling',
+      title: 'Täglicher seltener Schmetterling',
+      description: 'Erhalte den heutigen seltenen Schmetterling',
       icon: <Sparkles className="h-6 w-6 text-purple-400" />,
       type: 'butterfly'
     },
     {
       id: 'caterpillar',
       cost: 150,
-      title: 'Seltene Raupe',
-      description: 'Erhalte eine seltene Raupe',
+      title: 'Tägliche seltene Raupe',
+      description: 'Erhalte die heutige seltene Raupe',
       icon: <Sparkles className="h-6 w-6 text-orange-400" />,
       type: 'caterpillar'
     },
     {
       id: 'fish',
       cost: 200,
-      title: 'Seltener Fisch',
-      description: 'Erhalte einen seltenen Fisch',
+      title: 'Täglicher seltener Fisch',
+      description: 'Erhalte den heutigen seltenen Fisch',
       icon: <Sparkles className="h-6 w-6 text-cyan-400" />,
       type: 'fish'
     },
@@ -86,7 +115,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       cost: 500,
       title: '800 Credits',
       description: 'Sammle sofort 800 Credits',
-      icon: <DollarSign className="h-6 w-6 text-amber-400" />,
+      icon: <Coins className="h-6 w-6 text-amber-400" />,
       type: 'credits'
     }
   ];
@@ -115,54 +144,135 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     const canAfford = userTickets >= prize.cost;
     const isDisabled = !canAfford || isRedeeming;
 
-    return (
-      <div key={prize.id}>
-        <div
-          className={`
-            relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
-            shadow-lg border-2 transition-all duration-200 h-52
-            ${canAfford ? 'border-purple-400 hover:border-purple-300 hover:scale-105' : 'border-gray-400'}
-          `}
-        >
-          {/* Price Tag */}
-          <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg">
-            {prize.cost} 🎫
-          </div>
-          
-          {/* Item Display */}
-          <div className="text-center space-y-2 h-full flex flex-col justify-between">
-            {/* Icon */}
-            <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
+    const cardContent = (
+      <div
+        className={`
+          relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg p-4 
+          shadow-lg border-2 transition-all duration-200 h-52
+          ${canAfford ? 'border-purple-400 hover:border-purple-300 hover:scale-105' : 'border-gray-400'}
+        `}
+      >
+        {/* Price Tag */}
+        <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full px-2 py-1 text-xs font-bold shadow-lg">
+          {prize.cost} 🎫
+        </div>
+        
+        {/* Item Display */}
+        <div className="text-center space-y-2 h-full flex flex-col justify-between">
+          {/* Icon/Image */}
+          <div className="flex justify-center items-center h-20 w-20 mx-auto bg-white rounded-lg shadow-inner border">
+            {prize.type === 'flower' && dailyItems ? (
+              <img
+                src={`/Blumen/${dailyItems.flowerId}.jpg`}
+                alt={prize.title}
+                className="h-18 w-18 object-cover rounded border-2"
+                style={{ borderColor: getRarityColor(dailyItems.flowerRarity as any) }}
+              />
+            ) : prize.type === 'butterfly' && dailyItems ? (
+              <img
+                src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                alt={prize.title}
+                className="h-18 w-18 object-cover rounded border-2"
+                style={{ borderColor: getRarityColor(dailyItems.butterflyRarity as any) }}
+              />
+            ) : prize.type === 'caterpillar' && dailyItems ? (
+              <img
+                src={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+                alt={prize.title}
+                className="h-18 w-18 object-cover rounded border-2"
+                style={{ borderColor: getRarityColor(dailyItems.caterpillarRarity as any) }}
+              />
+            ) : prize.type === 'fish' && dailyItems ? (
+              <img
+                src={`/Fische/${dailyItems.fishId}.jpg`}
+                alt={prize.title}
+                className="h-18 w-18 object-cover rounded border-2"
+                style={{ borderColor: getRarityColor(dailyItems.fishRarity as any) }}
+              />
+            ) : (
               <div className="flex justify-center items-center">
                 {prize.icon}
               </div>
-            </div>
-            
-            {/* Title & Description */}
-            <div>
-              <h3 className="font-bold text-sm text-gray-800">{prize.title}</h3>
-              <p className="text-xs text-gray-600 mt-1">{prize.description}</p>
-            </div>
-            
-            {/* Redeem Button */}
-            <Button
-              size="sm"
-              disabled={isDisabled}
-              onClick={() => handleRedeem(prize.id, prize.cost)}
-              className={`
-                w-full text-xs
-                ${canAfford 
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                  : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                }
-              `}
-            >
-              {isRedeeming ? 'Einlösen...' : 'Einlösen'}
-            </Button>
+            )}
           </div>
+          
+          {/* Title & Description */}
+          <div>
+            <h3 className="font-bold text-sm text-gray-800">{prize.title}</h3>
+            <p className="text-xs text-gray-600 mt-1">{prize.description}</p>
+          </div>
+          
+          {/* Redeem Button */}
+          <Button
+            size="sm"
+            disabled={isDisabled}
+            onClick={() => handleRedeem(prize.id, prize.cost)}
+            className={`
+              w-full text-xs
+              ${canAfford 
+                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              }
+            `}
+          >
+            {isRedeeming ? 'Einlösen...' : 'Einlösen'}
+          </Button>
         </div>
       </div>
     );
+
+    // Wrap with hover preview for daily items
+    if (prize.type === 'flower' && dailyItems?.flowerId) {
+      return (
+        <FlowerHoverPreview
+          key={prize.id}
+          flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
+          flowerName="Corona magnificus"
+          rarity={dailyItems.flowerRarity as any}
+        >
+          {cardContent}
+        </FlowerHoverPreview>
+      );
+    } else if (prize.type === 'butterfly' && dailyItems?.butterflyId) {
+      return (
+        <ButterflyHoverPreview
+          key={prize.id}
+          butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+          butterflyName="Aglais magnificus"
+          rarity={dailyItems.butterflyRarity as any}
+        >
+          {cardContent}
+        </ButterflyHoverPreview>
+      );
+    } else if (prize.type === 'caterpillar' && dailyItems?.caterpillarId) {
+      return (
+        <CaterpillarHoverPreview
+          key={prize.id}
+          caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
+          caterpillarName="Lepidoptera mysticus"
+          rarity={dailyItems.caterpillarRarity as any}
+        >
+          {cardContent}
+        </CaterpillarHoverPreview>
+      );
+    } else if (prize.type === 'fish' && dailyItems?.fishId) {
+      return (
+        <FishHoverPreview
+          key={prize.id}
+          fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
+          fishName="Pomacanthus elegans"
+          rarity={dailyItems.fishRarity as any}
+        >
+          {cardContent}
+        </FishHoverPreview>
+      );
+    } else {
+      return (
+        <div key={prize.id}>
+          {cardContent}
+        </div>
+      );
+    }
   };
 
   return (
