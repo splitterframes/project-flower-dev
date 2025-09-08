@@ -33,6 +33,7 @@ import {
   aquariumFish,
   mariePosaTracker,
   dailyItems,
+  dailyRedemptions,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -6034,9 +6035,62 @@ export class PostgresStorage {
     return inserted;
   }
 
+  // Daily Redemption System
+  async checkDailyRedemption(userId: number, prizeType: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [existing] = await this.db
+        .select()
+        .from(dailyRedemptions)
+        .where(
+          and(
+            eq(dailyRedemptions.userId, userId),
+            eq(dailyRedemptions.date, today),
+            eq(dailyRedemptions.prizeType, prizeType)
+          )
+        )
+        .limit(1);
+      
+      return !!existing; // Return true if already redeemed today
+    } catch (error) {
+      console.error('Failed to check daily redemption:', error);
+      return false;
+    }
+  }
+
+  async recordDailyRedemption(userId: number, prizeType: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      await this.db
+        .insert(dailyRedemptions)
+        .values({
+          userId,
+          date: today,
+          prizeType
+        });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to record daily redemption:', error);
+      return false;
+    }
+  }
+
   // Ticket Redemption System
   async redeemTickets(userId: number, prizeType: string, cost: number): Promise<{ success: boolean; message: string }> {
     try {
+      // Check if this is a daily prize that can only be redeemed once per day
+      const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'].includes(prizeType);
+      
+      if (isDailyPrize) {
+        const alreadyRedeemed = await this.checkDailyRedemption(userId, prizeType);
+        if (alreadyRedeemed) {
+          return { success: false, message: "Du hast diesen Preis heute bereits eingelöst. Komm morgen wieder!" };
+        }
+      }
+
       const userResult = await this.db
         .select()
         .from(users)

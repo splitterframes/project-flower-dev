@@ -612,3 +612,7 @@ export type NewMariePosaTracker = typeof mariePosaTracker.$inferInsert;
 // Daily Items types
 export type DailyItems = typeof dailyItems.$inferSelect;
 export type NewDailyItems = typeof dailyItems.$inferInsert;
+
+// Daily Redemptions types
+export type DailyRedemption = typeof dailyRedemptions.$inferSelect;
+export type NewDailyRedemption = typeof dailyRedemptions.$inferInsert;

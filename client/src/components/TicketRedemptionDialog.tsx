@@ -8,6 +8,7 @@ import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
 import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
+import { generateLatinFlowerName, generateGermanButterflyName, generateLatinFishName, generateLatinCaterpillarName, getRarityDisplayName } from '@shared/rarity';
 
 interface TicketRedemptionDialogProps {
   isOpen: boolean;
@@ -310,7 +311,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <FlowerHoverPreview
                       key={prize.id}
                       flowerId={dailyItems.flowerId}
-                      flowerName={`Rare Blume ${dailyItems.flowerId}`}
+                      flowerName={generateLatinFlowerName(dailyItems.flowerId)}
                       flowerImageUrl={`/Blumen/${dailyItems.flowerId}.jpg`}
                       rarity={dailyItems.flowerRarity.toString()}
                     >
@@ -322,7 +323,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <ButterflyHoverPreview
                       key={prize.id}
                       butterflyId={dailyItems.butterflyId}
-                      butterflyName={`Rarer Schmetterling ${dailyItems.butterflyId}`}
+                      butterflyName={generateGermanButterflyName(dailyItems.butterflyId)}
                       butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
                       rarity={dailyItems.butterflyRarity.toString()}
                     >
@@ -334,7 +335,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <CaterpillarHoverPreview
                       key={prize.id}
                       caterpillarId={dailyItems.caterpillarId}
-                      caterpillarName={`Rare Raupe ${dailyItems.caterpillarId}`}
+                      caterpillarName={generateLatinCaterpillarName(dailyItems.caterpillarId)}
                       caterpillarImageUrl={`/Raupen/${dailyItems.caterpillarId}.jpg`}
                       rarity={dailyItems.caterpillarRarity.toString()}
                     >
@@ -346,7 +347,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
                     <FishHoverPreview
                       key={prize.id}
                       fishId={dailyItems.fishId}
-                      fishName={`Rarer Fisch ${dailyItems.fishId}`}
+                      fishName={generateLatinFishName(dailyItems.fishId)}
                       fishImageUrl={`/Fische/${dailyItems.fishId}.jpg`}
                       rarity={dailyItems.fishRarity.toString()}
                     >
