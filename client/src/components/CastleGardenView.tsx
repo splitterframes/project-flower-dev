@@ -100,57 +100,75 @@ export const CastleGardenView: React.FC = () => {
   // Herzen-Zähler State
   const [totalHeartsCollected, setTotalHeartsCollected] = useState(0);
 
+  // Dynamisches Laden der Bauteile aus Castle-Ordner
+  const loadBuildingPartsFromCastle = (): BuildingPart[] => {
+    // Bekannte Dateien aus Castle-Ordner (Name_Preis.jpg Format)
+    const castleFiles = [
+      'A_2300.jpg',
+      'A_3500.jpg', 
+      'A_4200.jpg',
+      'A_5000.jpg',
+      'Baum1_1550.jpg',
+      'Bienenhaus_500.jpg',
+      'Blumenfeld2_1000.jpg',
+      'Blumenfeld_900.jpg',
+      'Brücke_2300.jpg',
+      'Haus_2960.jpg',
+      'Irrgaten_750.jpg',
+      'Statue_1850.jpg',
+      'Steingarten_1250.jpg',
+      'Steinweg_200.jpg'
+    ];
+
+    // Basis-Bauteile (immer verfügbar)
+    const baseParts: BuildingPart[] = [
+      {
+        id: 'grass',
+        name: 'Rasen',
+        type: 'grass',
+        cost: 0,
+        image: '/Landschaft/gras.png',
+        rotation: 0
+      },
+      {
+        id: 'stone_path',
+        name: 'Steinweg Basis',
+        type: 'path',
+        cost: 0,
+        image: '/textures/asphalt.png',
+        rotation: 0
+      }
+    ];
+
+    // Castle-Bauteile aus Dateinamen parsen
+    const castleParts: BuildingPart[] = castleFiles.map(filename => {
+      const nameWithoutExt = filename.replace('.jpg', '');
+      const parts = nameWithoutExt.split('_');
+      const name = parts[0];
+      const price = parseInt(parts[1], 10);
+      
+      return {
+        id: filename.replace('.jpg', '').toLowerCase(),
+        name: name,
+        type: 'castle',
+        cost: price,
+        image: `/Castle/${filename}`,
+        rotation: 0
+      };
+    });
+
+    // Nach Preis sortieren (aufsteigend)
+    castleParts.sort((a, b) => a.cost - b.cost);
+
+    // Basis + Castle-Bauteile kombinieren
+    return [...baseParts, ...castleParts];
+  };
+
   // Verfügbare Bauteile
-  const allParts: BuildingPart[] = [
-    {
-      id: 'grass',
-      name: 'Rasen',
-      type: 'grass',
-      cost: 0,
-      image: '/Landschaft/gras.png',
-      rotation: 0
-    },
-    {
-      id: 'stone_path',
-      name: 'Steinweg',
-      type: 'path',
-      cost: 5,
-      image: '/textures/asphalt.png',
-      rotation: 0
-    },
-    {
-      id: 'wooden_path',
-      name: 'Holzweg',
-      type: 'path',
-      cost: 3,
-      image: '/textures/wood.jpg',
-      rotation: 0
-    },
-    {
-      id: 'hedge',
-      name: 'Hecke',
-      type: 'hedge',
-      cost: 8,
-      image: '/Landschaft/baum.png',
-      rotation: 0
-    },
-    {
-      id: 'tree',
-      name: 'Baum',
-      type: 'tree',
-      cost: 12,
-      image: '/Landschaft/baum.png',
-      rotation: 0
-    },
-    {
-      id: 'statue',
-      name: 'Statue',
-      type: 'statue',
-      cost: 25,
-      image: '/textures/asphalt.png',
-      rotation: 0
-    }
-  ];
+  const allParts: BuildingPart[] = loadBuildingPartsFromCastle();
+  
+  // Debug-Log der geladenen Bauteile
+  console.log('🏰 Geladene Castle-Bauteile:', allParts.map(p => `${p.name}: ${p.cost}💰`));
   
   // Nur freigeschaltete Bauteile anzeigen
   const availableParts = allParts.filter(part => unlockedParts.includes(part.id));
