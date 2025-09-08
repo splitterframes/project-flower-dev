@@ -63,7 +63,7 @@ export function DonateDialog({ open, onOpenChange, recipientName = "dem Spieler"
     }
   };
 
-  const presetAmounts = [5, 10, 25, 50];
+  const presetAmounts = [2, 5, 10, 20];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,10 +71,10 @@ export function DonateDialog({ open, onOpenChange, recipientName = "dem Spieler"
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Heart className="text-red-500" size={24} />
-            💖 Spende für {recipientName}
+            💖 Spende für Mariposa
           </DialogTitle>
           <DialogDescription className="text-base">
-            Unterstütze andere Spieler mit einer kleinen Spende! 
+            Unterstütze Mich mit einer kleinen Spende! 
             Alle Zahlungen werden sicher über Stripe verarbeitet.
           </DialogDescription>
         </DialogHeader>

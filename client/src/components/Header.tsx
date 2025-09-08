@@ -368,17 +368,6 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               </div>
               
               
-              {/* Donate Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDonateDialog(true)}
-                className="border-red-600 bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"
-              >
-                <Heart className="h-4 w-4 mr-2" />
-                💖 Spenden
-              </Button>
-
               {/* Logout Button */}
               <Button
                 variant="outline"

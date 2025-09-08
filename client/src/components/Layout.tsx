@@ -15,6 +15,7 @@ import { ExhibitionView } from "./ExhibitionView";
 import { AquariumView } from "./AquariumView";
 import { MarieSlotView } from "./MarieSlotView";
 import { CastleGardenView } from "./CastleGardenView";
+import { DonateDialog } from "./DonateDialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Card, CardContent } from "@/components/ui/card";
@@ -233,6 +234,7 @@ const BalloonComponent: React.FC<{
 export const Layout: React.FC = () => {
   const [currentView, setCurrentView] = useState("garten");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showDonateDialog, setShowDonateDialog] = useState(false);
   const [headerRefreshTrigger, setHeaderRefreshTrigger] = useState(0);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
@@ -459,7 +461,10 @@ export const Layout: React.FC = () => {
             <a href="#" className="hover:text-white transition-colors">Datenschutz</a>
             <span>Copyright © Mariposa 2025</span>
           </div>
-          <button className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black font-bold px-6 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 animate-slow-pulse hover:animate-none">
+          <button 
+            onClick={() => setShowDonateDialog(true)}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black font-bold px-6 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 animate-slow-pulse hover:animate-none"
+          >
             ✨ DONATE ✨
           </button>
         </div>
@@ -468,6 +473,13 @@ export const Layout: React.FC = () => {
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
+      />
+
+      {/* Donate Dialog */}
+      <DonateDialog
+        open={showDonateDialog}
+        onOpenChange={setShowDonateDialog}
+        recipientName="Mariposa"
       />
 
       {/* Floating Balloons */}
