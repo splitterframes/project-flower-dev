@@ -4,12 +4,13 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useDna } from "@/lib/stores/useDna";
-import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, Zap, Ticket } from "lucide-react";
+import { LogOut, User, Coins, Sprout, Flower, Package, Bug, Fish, TrendingUp, Users, AlertTriangle, Sun, Zap, Ticket, Heart } from "lucide-react";
 import { UserListModal } from "./UserListModal";
 import { ForeignExhibitionView } from "./ForeignExhibitionView";
 import { EmergencyDialog } from "./EmergencyDialog";
 import MariePosaButton from "./MariePosaButton";
 import { TicketRedemptionDialog } from "./TicketRedemptionDialog";
+import { DonateDialog } from "./DonateDialog";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     ownerName: string;
   } | null>(null);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [showDonateDialog, setShowDonateDialog] = useState(false);
   
   const handleVisitExhibition = (userId: number, username: string) => {
     setForeignExhibition({ ownerId: userId, ownerName: username });
@@ -366,6 +368,17 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
               </div>
               
               
+              {/* Donate Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDonateDialog(true)}
+                className="border-red-600 bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                💖 Spenden
+              </Button>
+
               {/* Logout Button */}
               <Button
                 variant="outline"
@@ -452,6 +465,13 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
             return { success: false, message: "Fehler beim Einlösen" };
           }
         }}
+      />
+
+      {/* Donate Dialog */}
+      <DonateDialog
+        open={showDonateDialog}
+        onOpenChange={setShowDonateDialog}
+        recipientName={user?.username || "dem Spieler"}
       />
 
       {/* Foreign Exhibition Modal/View */}
