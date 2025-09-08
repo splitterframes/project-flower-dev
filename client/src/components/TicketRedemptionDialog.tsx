@@ -182,14 +182,18 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     try {
       const result = await onRedeem(itemType, cost);
       setRedeemMessage(result.message);
+      setIsRedeeming(false); // Button sofort wieder aktivieren
       
       setTimeout(() => {
         setRedeemMessage('');
       }, 3000);
     } catch (error) {
       setRedeemMessage('Fehler beim Einlösen. Versuche es erneut.');
-    } finally {
-      setIsRedeeming(false);
+      setIsRedeeming(false); // Button auch bei Fehler sofort aktivieren
+      
+      setTimeout(() => {
+        setRedeemMessage('');
+      }, 3000);
     }
   };
 
