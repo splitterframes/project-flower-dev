@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,6 +156,9 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
               TOP 100 RANGLISTE
             </span>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Rangliste der besten Spieler mit verschiedenen Kategorien und Statistiken.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 overflow-y-auto max-h-[calc(95vh-200px)]">
