@@ -6050,7 +6050,7 @@ export class PostgresStorage {
       }
 
       // Get redemption status for each daily prize type
-      const prizeTypes = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish'];
+      const prizeTypes = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'];
       const redemptions: Record<string, boolean> = {};
 
       for (const prizeType of prizeTypes) {
