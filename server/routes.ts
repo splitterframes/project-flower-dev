@@ -2960,6 +2960,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'likes':
           players = await storage.getTop100ByLikes(userId);
           break;
+        case 'dna':
+          players = await storage.getTop100ByDna(userId);
+          break;
         case 'seeds':
           players = await storage.getTop100BySeeds(userId);
           break;

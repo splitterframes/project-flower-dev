@@ -16,7 +16,8 @@ import {
   Sparkles,
   Star,
   Crown,
-  Users
+  Users,
+  Dna
 } from "lucide-react";
 import { useAuth } from "@/lib/stores/useAuth";
 
@@ -25,6 +26,7 @@ type Top100Category =
   | 'passive-income' 
   | 'suns' 
   | 'likes' 
+  | 'dna' 
   | 'seeds' 
   | 'flowers' 
   | 'bouquets' 
@@ -59,6 +61,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
     { id: 'passive-income', name: '📈 Passives Einkommen', icon: TrendingUp, color: 'from-green-400 to-green-600' },
     { id: 'suns', name: '☀️ Sonnen', icon: Sun, color: 'from-orange-400 to-orange-600' },
     { id: 'likes', name: '❤️ Likes', icon: Heart, color: 'from-pink-400 to-pink-600' },
+    { id: 'dna', name: '🧬 DNA', icon: Dna, color: 'from-violet-400 to-purple-600' },
     { id: 'seeds', name: '🌱 Samen', icon: Sparkles, color: 'from-emerald-400 to-emerald-600' },
     { id: 'flowers', name: '🌸 Blumen', icon: Flower, color: 'from-rose-400 to-rose-600' },
     { id: 'bouquets', name: '💐 Bouquets', icon: Gift, color: 'from-purple-400 to-purple-600' },
