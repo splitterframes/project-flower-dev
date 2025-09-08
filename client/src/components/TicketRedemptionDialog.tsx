@@ -197,7 +197,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-4xl max-h-[90vh] bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
+        className="max-w-6xl max-h-[95vh] bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900"
         style={{ zIndex: 9999, overflow: 'visible' }}
         aria-describedby="ticket-redemption-description"
       >
@@ -223,7 +223,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onTickets
             <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 rounded-b-lg" />
             
             {/* Prize Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            <div className="grid grid-cols-4 xl:grid-cols-4 gap-4 pt-2">
               {prizes.map((prize) => {
                 const canAfford = userTickets >= prize.cost;
                 const isDaily = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.id);
