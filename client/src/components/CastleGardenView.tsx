@@ -269,16 +269,16 @@ export const CastleGardenView: React.FC = () => {
       Math.pow(targetField.x - startField.x, 2) + Math.pow(targetField.y - startField.y, 2)
     );
     
-    const flightDuration = Math.max(3000, distance * 800); // Langsamerer Flug
+    const flightDuration = Math.max(4000, distance * 1000); // Noch langsamerer Flug für flüssige Animation
     
     const newBee: Bee = {
       id: `bee-${Date.now()}`,
-      startX: startField.x,
-      startY: startField.y,
-      targetX: targetField.x,
-      targetY: targetField.y,
-      currentX: startField.x,
-      currentY: startField.y,
+      startX: startField.x * 56 + 28, // Pixelkoordinaten mit Feldmitte
+      startY: startField.y * 56 + 28,
+      targetX: targetField.x * 56 + 28,
+      targetY: targetField.y * 56 + 28,
+      currentX: startField.x * 56 + 28,
+      currentY: startField.y * 56 + 28,
       startTime: Date.now(),
       duration: flightDuration
     };
@@ -334,12 +334,12 @@ export const CastleGardenView: React.FC = () => {
     
     setConfettiHearts(prev => [...prev, ...newHearts]);
     
-    // Konfetti nach 3 Sekunden entfernen
+    // Konfetti nach 6 Sekunden entfernen (länger sichtbar)
     setTimeout(() => {
       setConfettiHearts(prev => prev.filter(heart => 
         !newHearts.some(newHeart => newHeart.id === heart.id)
       ));
-    }, 3000);
+    }, 6000);
   };
 
   // Animation Loop für Bienen
@@ -368,12 +368,12 @@ export const CastleGardenView: React.FC = () => {
       setConfettiHearts(prevHearts =>
         prevHearts.map(heart => {
           const elapsed = Date.now() - heart.startTime;
-          const progress = elapsed / 3000; // 3 Sekunden Animation
+          const progress = elapsed / 6000; // 6 Sekunden Animation (länger sichtbar)
           
-          // Physik-basierte Bewegung
-          const newOffsetX = heart.offsetX + heart.velocity.x;
-          const newOffsetY = heart.offsetY + heart.velocity.y;
-          const newVelocityY = heart.velocity.y + 0.5; // Gravitation
+          // Langsamere Physik-basierte Bewegung
+          const newOffsetX = heart.offsetX + heart.velocity.x * 0.7; // Langsamere Bewegung
+          const newOffsetY = heart.offsetY + heart.velocity.y * 0.7;
+          const newVelocityY = heart.velocity.y + 0.3; // Schwächere Gravitation
           
           return {
             ...heart,
@@ -383,9 +383,9 @@ export const CastleGardenView: React.FC = () => {
               ...heart.velocity,
               y: newVelocityY
             },
-            rotation: heart.rotation + 5,
-            opacity: Math.max(0, 1 - progress),
-            scale: heart.scale * (1 - progress * 0.3)
+            rotation: heart.rotation + 3, // Langsamere Rotation
+            opacity: Math.max(0, 1 - progress * 0.8), // Langsameres Ausblenden
+            scale: heart.scale * (1 - progress * 0.2) // Weniger Schrumpfung
           };
         })
       );
@@ -563,19 +563,35 @@ export const CastleGardenView: React.FC = () => {
                       transform: field.buildingPart ? `rotate(${field.buildingPart.rotation}deg)` : undefined
                     }}
                   >
-                    {/* Bienen anzeigen */}
-                    {bees.filter(bee => 
-                      Math.floor(bee.currentX) === field.x && Math.floor(bee.currentY) === field.y
-                    ).map(bee => (
-                      <div
-                        key={bee.id}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none text-xl z-10 animate-bounce"
-                      >
-                        🐝
-                      </div>
-                    ))}
+                    {/* Bienen anzeigen - flüssige Pixelanimation */}
+                    {bees.filter(bee => {
+                      const fieldPixelX = field.x * 56;
+                      const fieldPixelY = field.y * 56;
+                      return bee.currentX >= fieldPixelX && bee.currentX < fieldPixelX + 56 &&
+                             bee.currentY >= fieldPixelY && bee.currentY < fieldPixelY + 56;
+                    }).map(bee => {
+                      const fieldPixelX = field.x * 56;
+                      const fieldPixelY = field.y * 56;
+                      const relativeX = bee.currentX - fieldPixelX;
+                      const relativeY = bee.currentY - fieldPixelY;
+                      
+                      return (
+                        <div
+                          key={bee.id}
+                          className="absolute pointer-events-none text-xl z-10"
+                          style={{
+                            left: `${relativeX}px`,
+                            top: `${relativeY}px`,
+                            transform: 'translate(-50%, -50%)',
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+                          }}
+                        >
+                          🐝
+                        </div>
+                      );
+                    })}
                     
-                    {/* Konfetti-Herzen anzeigen */}
+                    {/* Konfetti-Herzen anzeigen - länger sichtbar */}
                     {confettiHearts.filter(heart => 
                       Math.floor(heart.x) === field.x && Math.floor(heart.y) === field.y
                     ).map(heart => (
@@ -587,7 +603,9 @@ export const CastleGardenView: React.FC = () => {
                           top: `${28 + heart.offsetY}px`,
                           transform: `rotate(${heart.rotation}deg) scale(${heart.scale})`,
                           opacity: heart.opacity,
-                          fontSize: '24px'
+                          fontSize: '28px', // Etwas größer
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                          filter: `drop-shadow(0 0 8px rgba(255, 20, 147, ${heart.opacity * 0.6}))`
                         }}
                       >
                         💖
