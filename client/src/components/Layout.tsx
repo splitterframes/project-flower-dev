@@ -309,9 +309,9 @@ export const Layout: React.FC = () => {
     }
 
     const spawnBalloon = () => {
-      // Check if balloons are disabled in castle garden
-      if ((window as any).balloonsDisabledInCastle) {
-        return; // Exit early if balloons are disabled
+      // Only disable balloons if we're in castle garden AND toggle is disabled
+      if (currentView === 'schlossgarten' && (window as any).balloonsDisabledInCastle) {
+        return; // Exit early if balloons are disabled in castle garden
       }
       
       // Determine how many balloons to spawn
