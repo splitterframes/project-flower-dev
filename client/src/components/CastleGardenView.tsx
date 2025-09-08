@@ -331,7 +331,7 @@ export const CastleGardenView: React.FC = () => {
       opacity: 1,
       velocity: {
         x: 0,
-        y: -3 // Nur nach oben
+        y: -1 // Viel langsamere Aufwärtsbewegung
       },
       startTime: Date.now()
     };
@@ -349,15 +349,15 @@ export const CastleGardenView: React.FC = () => {
     setConfettiHearts(prev => [...prev, newHeart]);
     setHeartCountTexts(prev => [...prev, newText]);
     
-    // Herz nach 4 Sekunden entfernen
+    // Herz nach 8 Sekunden entfernen (doppelt so lang)
     setTimeout(() => {
       setConfettiHearts(prev => prev.filter(heart => heart.id !== newHeart.id));
-    }, 4000);
+    }, 8000);
     
-    // Text nach 2 Sekunden entfernen
+    // Text nach 4 Sekunden entfernen (doppelt so lang)
     setTimeout(() => {
       setHeartCountTexts(prev => prev.filter(text => text.id !== newText.id));
-    }, 2000);
+    }, 4000);
   };
 
   // Animation Loop für Bienen
@@ -382,33 +382,33 @@ export const CastleGardenView: React.FC = () => {
         })
       );
       
-      // Einzelnes Herz animieren
+      // Einzelnes Herz animieren (viel langsamer)
       setConfettiHearts(prevHearts =>
         prevHearts.map(heart => {
           const elapsed = Date.now() - heart.startTime;
-          const progress = elapsed / 4000; // 4 Sekunden Animation
+          const progress = elapsed / 8000; // 8 Sekunden Animation (doppelt so lang)
           
-          // Sanfte Aufwärtsbewegung mit Ausblenden
-          const newOffsetY = heart.offsetY + heart.velocity.y;
+          // Viel langsamere Aufwärtsbewegung
+          const newOffsetY = heart.offsetY + heart.velocity.y * 0.3; // 70% langsamer
           
           return {
             ...heart,
             offsetY: newOffsetY,
-            opacity: Math.max(0, 1 - progress), // Sanftes Ausblenden
-            scale: heart.scale * (1 - progress * 0.3) // Leichtes Schrumpfen
+            opacity: Math.max(0, 1 - progress * 0.6), // Viel langsameres Ausblenden
+            scale: heart.scale * (1 - progress * 0.1) // Minimales Schrumpfen
           };
         })
       );
       
-      // Anzahl-Text animieren
+      // Anzahl-Text animieren (langsamer)
       setHeartCountTexts(prevTexts =>
         prevTexts.map(text => {
           const elapsed = Date.now() - text.startTime;
-          const progress = elapsed / 2000; // 2 Sekunden Animation
+          const progress = elapsed / 4000; // 4 Sekunden Animation (doppelt so lang)
           
           return {
             ...text,
-            opacity: Math.max(0, 1 - progress) // Ausblenden
+            opacity: Math.max(0, 1 - progress * 0.7) // Langsameres Ausblenden
           };
         })
       );
@@ -601,7 +601,7 @@ export const CastleGardenView: React.FC = () => {
                       return (
                         <div
                           key={bee.id}
-                          className="absolute pointer-events-none text-xl z-10"
+                          className="absolute pointer-events-none text-xl z-50"
                           style={{
                             left: `${relativeX}px`,
                             top: `${relativeY}px`,
@@ -620,7 +620,7 @@ export const CastleGardenView: React.FC = () => {
                     ).map(heart => (
                       <div
                         key={heart.id}
-                        className="absolute pointer-events-none z-20"
+                        className="absolute pointer-events-none z-50"
                         style={{
                           left: `${28 + heart.offsetX}px`,
                           top: `${28 + heart.offsetY}px`,
@@ -641,7 +641,7 @@ export const CastleGardenView: React.FC = () => {
                     ).map(text => (
                       <div
                         key={text.id}
-                        className="absolute pointer-events-none z-30"
+                        className="absolute pointer-events-none z-50"
                         style={{
                           left: '28px',
                           top: '10px',
