@@ -336,10 +336,10 @@ export const CastleGardenView: React.FC = () => {
   };
 
   // Grid-Feld Klick Handler mit Persistierung
-  const handleFieldClick = async (field: GridField) => {
+  const handleFieldClick = async (field: GridField, event: React.MouseEvent) => {
     if (field.buildingPart) {
-      // Belegtes Feld - Bauteil löschen (nur wenn nicht gedraggt wurde)
-      if (!draggedFromField) {
+      // Belegtes Feld - Bauteil löschen (nur mit Shift + Linksklick)
+      if (!draggedFromField && event.shiftKey) {
         const fieldIndex = field.y * gridWidth + field.x;
         const newGrid = [...grid];
         newGrid[fieldIndex] = {
@@ -814,7 +814,7 @@ export const CastleGardenView: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-lg text-white">🏰 Dein Schlossgarten (25x15)</CardTitle>
             <p className="text-sm text-slate-400">
-              🖱️ Drag & Drop zwischen Feldern • 🛒 Leeres Feld = Shop • 🔄 Rechtsklick = Drehen • 🗑️ Linksklick = Löschen
+              🖱️ Drag & Drop zwischen Feldern • 🛒 Leeres Feld = Shop • 🔄 Rechtsklick = Drehen • 🗑️ Shift+Klick = Löschen
             </p>
           </CardHeader>
           <CardContent>
@@ -831,7 +831,7 @@ export const CastleGardenView: React.FC = () => {
                   <div
                     key={index}
                     className="w-14 h-14 cursor-pointer hover:ring-2 hover:ring-green-400 transition-all relative select-none"
-                    onClick={() => handleFieldClick(field)}
+                    onClick={(e) => handleFieldClick(field, e)}
                     onContextMenu={(e) => handleFieldRightClick(e, field)}
                     onDrop={(e) => handleDrop(e, field)}
                     onDragOver={handleDragOver}
