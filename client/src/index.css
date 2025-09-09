@@ -28,6 +28,30 @@
   100% { transform: translateY(0px); }
 }
 
+/* Golden glow animation for vase frames */
+@keyframes gold-glow-random {
+  0% { 
+    border-color: rgb(100, 116, 139); /* slate-500 */
+    box-shadow: 0 0 0px rgba(251, 191, 36, 0); /* transparent gold */
+  }
+  25% { 
+    border-color: rgb(217, 119, 6); /* amber-600 */
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3); /* soft gold glow */
+  }
+  50% { 
+    border-color: rgb(245, 158, 11); /* amber-500 */
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.6), 0 0 32px rgba(251, 191, 36, 0.2); /* stronger gold glow */
+  }
+  75% { 
+    border-color: rgb(217, 119, 6); /* amber-600 */
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3); /* soft gold glow */
+  }
+  100% { 
+    border-color: rgb(100, 116, 139); /* slate-500 */
+    box-shadow: 0 0 0px rgba(251, 191, 36, 0); /* transparent gold */
+  }
+}
+
 /* Field 3x Spin Animation - for planting flowers/butterflies */
 @keyframes field-spin-3x {
   0% { transform: rotate(0deg); }
@@ -46,6 +70,10 @@
 
 .animate-field-spin {
   animation: field-spin-3x 2.1s ease-in-out;
+}
+
+.animate-gold-glow-random {
+  animation: gold-glow-random infinite ease-in-out;
 }
 
 @layer base {

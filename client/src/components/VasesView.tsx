@@ -36,12 +36,15 @@ export const VasesView: React.FC = () => {
       }
       
       // Initialize vases (24 total, 6 per shelf, 4 shelves)
+      // Exponentially weighted heart requirements: 1.000 to 100.000
       const vaseList: Vase[] = [];
       for (let i = 1; i <= 24; i++) {
+        // Exponential scaling: starts at 1000, ends at 100000
+        const heartsRequired = Math.round(1000 + Math.pow((i - 1) / 23, 2.2) * 99000);
         vaseList.push({
           id: i,
           name: `Prächtige Vase ${i}`,
-          heartsRequired: 1000 + (i * 500), // Each vase requires more hearts
+          heartsRequired: heartsRequired,
           collected: false, // TODO: Load from API later
           image: `/Vasen/${i}.jpg` // Will fallback to placeholder if not exists
         });
@@ -135,15 +138,23 @@ export const VasesView: React.FC = () => {
                             ${vase.collected ? 'opacity-100' : isLocked ? 'opacity-40' : 'opacity-70 hover:opacity-100'}
                           `}
                           onClick={() => handleVaseClick(vase)}
+                          style={{
+                            animationDelay: `${(vase.id * 0.3)}s`, // Random staggered delays
+                          }}
                         >
                           {/* Vase Container */}
                           <div className={`
-                            aspect-[2/3] rounded-lg border-2 relative overflow-hidden
+                            aspect-[2/3] rounded-lg border-2 relative overflow-hidden transition-all duration-500
                             ${vase.collected ? 'border-green-400 bg-green-900/50 shadow-green-400/20 shadow-lg' : 
                               canCollect ? 'border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg animate-pulse' :
                               'border-slate-500 bg-slate-800/50'
                             }
-                          `}>
+                            animate-gold-glow-random
+                          `}
+                          style={{
+                            animationDelay: `${Math.random() * 5}s`, // Random gold glow timing
+                            animationDuration: `${3 + Math.random() * 2}s`, // Vary duration 3-5s
+                          }}>
                             {/* Vase Image or Placeholder */}
                             <div className="w-full h-full flex items-center justify-center p-2">
                               {vase.collected ? (
