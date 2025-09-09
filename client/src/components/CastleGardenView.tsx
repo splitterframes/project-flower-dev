@@ -911,17 +911,21 @@ export const CastleGardenView: React.FC = () => {
               {/* Animationen über dem gesamten Grid */}
               <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 100 }}>
                 {/* Bienen - absolut über dem gesamten Grid */}
-                {bees.map(bee => (
-                  <div
-                    key={bee.id}
-                    className="absolute pointer-events-none text-xl"
-                    style={{
-                      left: `${bee.currentX}px`,
-                      top: `${bee.currentY}px`,
-                      transform: 'translate(-50%, -50%)',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                      fontSize: '24px'
-                    }}
+                {bees.map(bee => {
+                  // Flugrichtung bestimmen: nach rechts = spiegeln
+                  const isFlyingRight = bee.targetX > bee.startX;
+                  
+                  return (
+                    <div
+                      key={bee.id}
+                      className="absolute pointer-events-none text-xl"
+                      style={{
+                        left: `${bee.currentX}px`,
+                        top: `${bee.currentY}px`,
+                        transform: `translate(-50%, -50%) ${isFlyingRight ? 'scaleX(-1)' : ''}`,
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                        fontSize: '24px'
+                      }}
                   >
                     🐝
                   </div>
