@@ -516,22 +516,26 @@ export const CastleGardenView: React.FC = () => {
         else heartAmount = 3;
       }
       
-      // Persistentes Herz auf dem Feld spawnen
-      spawnFieldHeart(targetField.x, targetField.y, heartAmount);
+      // Persistentes Herz auf dem Feld spawnen (mit Rückgabewert ob erfolgreich)
+      const spawned = spawnFieldHeart(targetField.x, targetField.y, heartAmount);
       
-      // Herzen werden erst beim Klick eingesammelt
-      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen auf Feld gespawnt!`);
+      // Log nur wenn tatsächlich ein Herz gespawnt wurde
+      if (spawned) {
+        console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen auf Feld gespawnt!`);
+      } else {
+        console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, aber KEIN Herz gespawnt (Feld bereits belegt)!`);
+      }
     }, flightDuration);
   };
 
   // Neues persistentes Herz auf Feld spawnen (nur wenn noch kein Herz vorhanden)
-  const spawnFieldHeart = (gridX: number, gridY: number, amount: number) => {
+  const spawnFieldHeart = (gridX: number, gridY: number, amount: number): boolean => {
     // Prüfen ob bereits ein Herz auf diesem Feld existiert
     const existingHeart = fieldHearts.find(heart => heart.gridX === gridX && heart.gridY === gridY);
     
     if (existingHeart) {
       console.log(`💖 Herz nicht gespawnt - Feld (${gridX}, ${gridY}) hat bereits ein Herz mit ${existingHeart.amount} Herzen!`);
-      return; // Kein neues Herz spawnen
+      return false; // Kein neues Herz spawnen
     }
     
     const newHeart: FieldHeart = {
@@ -543,6 +547,7 @@ export const CastleGardenView: React.FC = () => {
     };
     
     setFieldHearts(prev => [...prev, newHeart]);
+    return true; // Herz erfolgreich gespawnt
   };
   
   // Herz einsammeln beim Klick
