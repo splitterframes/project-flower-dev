@@ -886,16 +886,17 @@ export const CastleGardenView: React.FC = () => {
                       .map(heart => (
                         <div
                           key={heart.id}
-                          className="absolute inset-0 flex items-center justify-center cursor-pointer z-50 hover:scale-110 transition-transform"
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
                           onClick={(e) => collectHeart(heart, e)}
                           style={{
-                            borderRadius: '50%'
+                            borderRadius: '50%',
+                            zIndex: 1000
                           }}
                         >
                           <div className="text-4xl animate-pulse drop-shadow-lg">
                             💖
                           </div>
-                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full min-w-[22px] h-5 flex items-center justify-center shadow-lg transform translate-x-1 -translate-y-1" style={{ zIndex: 1001 }}>
                             {heart.amount}
                           </div>
                         </div>
