@@ -893,11 +893,13 @@ export const CastleGardenView: React.FC = () => {
                             zIndex: 1000
                           }}
                         >
-                          <div className="text-4xl animate-pulse drop-shadow-lg">
-                            💖
-                          </div>
-                          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full min-w-[22px] h-5 flex items-center justify-center shadow-lg transform translate-x-1 -translate-y-1" style={{ zIndex: 1001 }}>
-                            {heart.amount}
+                          <div className="relative">
+                            <div className="text-4xl animate-pulse drop-shadow-lg">
+                              💖
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+                              {heart.amount}
+                            </div>
                           </div>
                         </div>
                       ))
