@@ -66,7 +66,7 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
     { id: 'dna', name: '🧬 DNA', icon: Dna, color: 'from-violet-400 to-purple-600' },
     { id: 'seeds', name: '🌱 Samen', icon: Sparkles, color: 'from-emerald-400 to-emerald-600' },
     { id: 'flowers', name: '🌸 Blumen', icon: Flower, color: 'from-rose-400 to-rose-600' },
-    { id: 'hearts', name: '💖 Herzen', icon: Heart, color: 'from-yellow-400 to-amber-600' },
+    { id: 'hearts', name: '💖 Schlosspark-Herzen', icon: Heart, color: 'from-yellow-400 to-amber-600' },
     { id: 'butterflies', name: '🦋 Schmetterlinge', icon: Bug, color: 'from-blue-400 to-blue-600' },
     { id: 'caterpillars', name: '🐛 Raupen', icon: Bug, color: 'from-lime-400 to-lime-600' },
     { id: 'fish', name: '🐟 Fische', icon: Fish, color: 'from-cyan-400 to-cyan-600' },
