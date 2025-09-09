@@ -929,7 +929,8 @@ export const CastleGardenView: React.FC = () => {
                   >
                     🐝
                   </div>
-                ))}
+                  );
+                })}
                 
                 {/* Herzen - absolut über dem gesamten Grid */}
                 {confettiHearts.map(heart => (
