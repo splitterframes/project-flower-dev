@@ -14,7 +14,8 @@ import {
   Coins,
   Dna,
   Castle,
-  Lock
+  Lock,
+  Crown
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
   const { user } = useAuth();
   const [unlockedFeatures, setUnlockedFeatures] = useState<string[]>([]);
   const [userCredits, setUserCredits] = useState(0);
+  const [userHearts, setUserHearts] = useState(0);
 
   // Feature costs
   const featureCosts: { [key: string]: number } = {
@@ -36,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
     'schlossgarten': 8000
   };
 
-  // Get unlocked features and user credits
+  // Get unlocked features, user credits and hearts
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
@@ -55,12 +57,23 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
           const { credits } = await creditsResponse.json();
           setUserCredits(credits);
         }
+
+        // Get user hearts
+        const heartsResponse = await fetch(`/api/user/${user.id}/hearts`);
+        if (heartsResponse.ok) {
+          const { hearts } = await heartsResponse.json();
+          setUserHearts(hearts);
+        }
       } catch (error) {
         console.error('Failed to fetch user data:', error);
       }
     };
 
     fetchData();
+    
+    // Refresh every 5 seconds to keep hearts up to date
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   const unlockFeature = async (featureName: string) => {
@@ -103,6 +116,9 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
     onViewChange(item.id);
   };
 
+  // Check if vasen is unlocked (requires >1000 hearts)
+  const isVasenUnlocked = userHearts > 1000;
+
   const navigationItems = [
     { id: "garten", label: "Garten", icon: Flower },
     { id: "teich", label: "Teich", icon: Waves },
@@ -113,6 +129,7 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
     { id: "flowerpower", label: "Flowerpower", icon: Zap },
     { id: "ausstellung", label: "Ausstellung", icon: Trophy },
     { id: "aquarium", label: "Aquarium", icon: Fish },
+    ...(isVasenUnlocked ? [{ id: "vasen", label: "Vasen", icon: Crown }] : []),
     { id: "marie-slot", label: "Marie-Slot", icon: Coins, lockable: true },
     { id: "schlossgarten", label: "Schlossgarten", icon: Castle, lockable: true },
   ];
@@ -127,6 +144,35 @@ export const Footer: React.FC<FooterProps> = ({ activeView, onViewChange }) => {
             const locked = isFeatureLocked(item.id);
             const canAfford = canAffordFeature(item.id);
             const cost = featureCosts[item.id];
+            
+            // Special case for vasen - different unlock requirement
+            if (item.id === "vasen" && !isVasenUnlocked) {
+              return (
+                <TooltipProvider key={item.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex flex-col items-center flex-1 sm:flex-none">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 px-2 sm:px-4 py-3 sm:py-2 touch-target min-h-[44px] text-slate-500 hover:text-slate-400 hover:bg-slate-800 relative w-full"
+                        >
+                          <Lock className="h-3 w-3 absolute -top-1 -right-1" />
+                          <Icon className="h-4 w-4 opacity-50" />
+                          <span className="text-xs sm:text-sm opacity-50">{item.label}</span>
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        <span>Benötigt über 1.000 💖 Schlosspark-Herzen</span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            }
             
             if (locked) {
               return (
