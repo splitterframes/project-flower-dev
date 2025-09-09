@@ -3126,6 +3126,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== CASTLE GARDEN SYSTEM ==========
   
+  // Get available castle parts files from Castle folder
+  app.get("/api/castle/available-parts", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const castleDir = path.join(process.cwd(), 'client', 'public', 'Castle');
+      
+      // Check if Castle directory exists
+      if (!fs.existsSync(castleDir)) {
+        return res.json({ files: [] });
+      }
+      
+      // Read all files from Castle directory
+      const files = fs.readdirSync(castleDir)
+        .filter(file => file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png'))
+        .filter(file => file.includes('_')) // Only files with Name_Price format
+        .sort();
+        
+      console.log(`🏰 Found ${files.length} castle part files:`, files);
+      res.json({ files });
+    } catch (error) {
+      console.error('Failed to scan castle parts:', error);
+      res.status(500).json({ error: 'Failed to scan castle parts' });
+    }
+  });
+
   // Get unlocked castle parts for a user
   app.get("/api/user/:id/castle-unlocked-parts", async (req, res) => {
     try {

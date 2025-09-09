@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { toast } from "sonner";
-import { Heart, Coins } from "lucide-react";
+import { Heart, Coins, RefreshCw } from "lucide-react";
 
 type BuildingPart = {
   id: string;
@@ -158,25 +158,12 @@ export const CastleGardenView: React.FC = () => {
     (window as any).balloonsDisabledInCastle = !balloonsEnabled;
   }, [balloonsEnabled]);
 
-  // Dynamisches Laden der Bauteile aus Castle-Ordner
-  const loadBuildingPartsFromCastle = (): BuildingPart[] => {
-    // Bekannte Dateien aus Castle-Ordner (Name_Preis.jpg Format)
-    const castleFiles = [
-      'A_2300.jpg',
-      'A_3500.jpg', 
-      'A_4200.jpg',
-      'A_5000.jpg',
-      'Baum1_1550.jpg',
-      'Bienenhaus_500.jpg',
-      'Blumenfeld2_1000.jpg',
-      'Blumenfeld_900.jpg',
-      'Brücke_2300.jpg',
-      'Haus_2960.jpg',
-      'Irrgaten_750.jpg',
-      'Statue_1850.jpg',
-      'Steingarten_1250.jpg',
-      'Steinweg_200.jpg'
-    ];
+  // State für verfügbare Bauteile
+  const [availableCastleFiles, setAvailableCastleFiles] = useState<string[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Dynamisches Laden der Bauteile aus Castle-Ordner via API
+  const loadBuildingPartsFromCastle = async (): Promise<BuildingPart[]> => {
 
     // Basis-Bauteile (immer verfügbar)
     const baseParts: BuildingPart[] = [
@@ -198,15 +185,15 @@ export const CastleGardenView: React.FC = () => {
       }
     ];
 
-    // Castle-Bauteile aus Dateinamen parsen
-    const castleParts: BuildingPart[] = castleFiles.map(filename => {
-      const nameWithoutExt = filename.replace('.jpg', '');
+    // Castle-Bauteile aus API-Daten parsen
+    const castleParts: BuildingPart[] = availableCastleFiles.map(filename => {
+      const nameWithoutExt = filename.replace(/\.(jpg|jpeg|png)$/i, '');
       const parts = nameWithoutExt.split('_');
       const name = parts[0];
-      const price = parseInt(parts[1], 10);
+      const price = parseInt(parts[1], 10) || 0;
       
       return {
-        id: filename.replace('.jpg', '').toLowerCase(),
+        id: nameWithoutExt.toLowerCase(),
         name: name,
         type: 'castle',
         cost: price,
@@ -222,8 +209,36 @@ export const CastleGardenView: React.FC = () => {
     return [...baseParts, ...castleParts];
   };
 
-  // Verfügbare Bauteile
-  const allParts: BuildingPart[] = loadBuildingPartsFromCastle();
+  // Funktion zum Laden der Castle-Dateien von der API
+  const fetchCastleFiles = async () => {
+    try {
+      const response = await fetch('/api/castle/available-parts');
+      if (response.ok) {
+        const { files } = await response.json();
+        setAvailableCastleFiles(files);
+        console.log(`🏰 Loaded ${files.length} castle files from API:`, files);
+      }
+    } catch (error) {
+      console.error('Failed to fetch castle files:', error);
+    }
+  };
+
+  // Castle-Dateien beim Mount und bei Refresh laden
+  useEffect(() => {
+    fetchCastleFiles();
+  }, [refreshKey]);
+
+  // Verfügbare Bauteile (asynchron laden)
+  const [allParts, setAllParts] = useState<BuildingPart[]>([]);
+  
+  // Bauteile neu laden wenn Castle-Dateien verfügbar sind
+  useEffect(() => {
+    const loadParts = async () => {
+      const parts = await loadBuildingPartsFromCastle();
+      setAllParts(parts);
+    };
+    loadParts();
+  }, [availableCastleFiles]);
   
   
   // Nur freigeschaltete Bauteile anzeigen
@@ -764,10 +779,28 @@ export const CastleGardenView: React.FC = () => {
         {/* Bauteile-Palette über dem Grid */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-lg text-white">🧱 Freigeschaltete Bauteile</CardTitle>
-            <p className="text-sm text-slate-400">
-              <span className="text-green-400 font-medium">{availableParts.length}/{allParts.length}</span> freigeschaltet • Ziehe ins Grid unten
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-lg text-white">🧱 Freigeschaltete Bauteile</CardTitle>
+                <p className="text-sm text-slate-400">
+                  <span className="text-green-400 font-medium">{availableParts.length}/{allParts.length}</span> freigeschaltet • Ziehe ins Grid unten
+                </p>
+              </div>
+              
+              {/* Refresh Button für neue Bauteile */}
+              <button
+                onClick={() => {
+                  setRefreshKey(prev => prev + 1);
+                  console.log('🔄 Refreshing castle parts...');
+                  toast.info('Bauteilliste wird aktualisiert...');
+                }}
+                className="flex items-center space-x-2 px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded border border-slate-600 hover:border-slate-500 transition-all duration-200"
+                title="Neue Bauteile aus Castle-Ordner laden"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Neue Teile laden</span>
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-slate-700 scrollbar-thumb-green-600 hover:scrollbar-thumb-green-500">
