@@ -586,11 +586,12 @@ export const CastleGardenView: React.FC = () => {
     }, 0);
     
     // Dynamische Spawn-Parameter basierend auf ausgegebenen Credits
-    // Base: 10 Sekunden, 30% Chance
-    // Pro 5000 Credits: -1 Sekunde Intervall, +10% Chance (neu gewichtet)
-    const creditBonus = Math.floor(totalSpentCredits / 5000);
-    const spawnInterval = Math.max(3000, 10000 - (creditBonus * 1000)); // Minimum 3 Sekunden
-    const spawnChance = Math.min(0.9, 0.3 + (creditBonus * 0.1)); // Maximum 90%
+    // Ziel: Bei 100.000 Credits = ~1.000 Herzen/Stunde
+    // Base: 15 Sekunden, 20% Chance
+    // Pro 10.000 Credits: -1 Sekunde Intervall, +5% Chance
+    const creditBonus = Math.floor(totalSpentCredits / 10000);
+    const spawnInterval = Math.max(5000, 15000 - (creditBonus * 1000)); // Minimum 5 Sekunden
+    const spawnChance = Math.min(0.7, 0.2 + (creditBonus * 0.05)); // Maximum 70%
     
     console.log(`🐝 Spawn-Parameter: ${totalSpentCredits} Credits ausgegeben → Intervall: ${spawnInterval/1000}s, Chance: ${(spawnChance*100).toFixed(0)}%`);
     
