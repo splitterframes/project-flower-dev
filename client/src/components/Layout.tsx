@@ -15,6 +15,7 @@ import { ExhibitionView } from "./ExhibitionView";
 import { AquariumView } from "./AquariumView";
 import { MarieSlotView } from "./MarieSlotView";
 import { CastleGardenView } from "./CastleGardenView";
+import { VasesView } from "./VasesView";
 import { DonateDialog } from "./DonateDialog";
 import { ImpressumDialog } from "./ImpressumDialog";
 import { DatenschutzDialog } from "./DatenschutzDialog";
@@ -438,6 +439,8 @@ export const Layout: React.FC = () => {
         return <MarieSlotView onBack={() => handleViewChange('garten')} />;
       case "schlossgarten":
         return <CastleGardenView />;
+      case "vasen":
+        return <VasesView />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":
