@@ -165,25 +165,7 @@ export const CastleGardenView: React.FC = () => {
   // Dynamisches Laden der Bauteile aus Castle-Ordner via API
   const loadBuildingPartsFromCastle = async (): Promise<BuildingPart[]> => {
 
-    // Basis-Bauteile (immer verfügbar)
-    const baseParts: BuildingPart[] = [
-      {
-        id: 'grass',
-        name: 'Rasen',
-        type: 'grass',
-        cost: 0,
-        image: '/Landschaft/gras.png',
-        rotation: 0
-      },
-      {
-        id: 'stone_path',
-        name: 'Steinweg Basis',
-        type: 'path',
-        cost: 0,
-        image: '/textures/asphalt.png',
-        rotation: 0
-      }
-    ];
+    // Keine Basis-Bauteile mehr - nur dynamische Castle-Dateien
 
     // Castle-Bauteile aus API-Daten parsen
     const castleParts: BuildingPart[] = availableCastleFiles.map(filename => {
@@ -205,8 +187,8 @@ export const CastleGardenView: React.FC = () => {
     // Nach Preis sortieren (aufsteigend)
     castleParts.sort((a, b) => a.cost - b.cost);
 
-    // Basis + Castle-Bauteile kombinieren
-    return [...baseParts, ...castleParts];
+    // Nur Castle-Bauteile zurückgeben
+    return castleParts;
   };
 
   // Funktion zum Laden der Castle-Dateien von der API
