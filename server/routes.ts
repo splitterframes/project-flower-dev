@@ -99,6 +99,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hearts routes
+  app.get("/api/user/:id/hearts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ hearts: user.hearts || 0 });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/:id/hearts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { amount } = req.body;
+      
+      if (typeof amount !== 'number') {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
+
+      const newHearts = await storage.updateUserHearts(userId, amount);
+      res.json({ hearts: newHearts });
+    } catch (error) {
+      console.error('Failed to update hearts:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Suns routes
   app.get("/api/user/:id/suns", async (req, res) => {
     try {

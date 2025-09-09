@@ -54,6 +54,29 @@ type ConfettiHeart = {
 export const CastleGardenView: React.FC = () => {
   const { user } = useAuth();
   const { credits, setCredits, updateCredits } = useCredits();
+  
+  // Update hearts in database
+  const updateHearts = async (userId: number, amount: number) => {
+    try {
+      const response = await fetch(`/api/user/${userId}/hearts`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update hearts");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to update hearts:', error);
+      throw error;
+    }
+  };
 
   // Grid-Dimensionen
   const gridWidth = 25;
@@ -465,7 +488,10 @@ export const CastleGardenView: React.FC = () => {
       // Credits sowohl lokal als auch in Datenbank aktualisieren
       if (user?.id) {
         try {
+          // Credits für lokale Anzeige aktualisieren
           await updateCredits(user.id, heartAmount);
+          // Herzen separat für Ranglisten tracken
+          await updateHearts(user.id, heartAmount);
           console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${credits + heartAmount}`);
         } catch (error) {
           console.error('Failed to save hearts to database:', error);
