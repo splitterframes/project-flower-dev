@@ -49,6 +49,15 @@ type ConfettiHeart = {
   startTime: number;
 };
 
+// Feld-Herz-Typ (persistent bis Klick)
+type FieldHeart = {
+  id: string;
+  gridX: number;
+  gridY: number;
+  amount: number;
+  timestamp: number;
+};
+
 // Herzen-Anzahl-Text-Typ
 
 export const CastleGardenView: React.FC = () => {
@@ -105,6 +114,7 @@ export const CastleGardenView: React.FC = () => {
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
+  const [fieldHearts, setFieldHearts] = useState<FieldHeart[]>([]);
   const animationFrameRef = useRef<number>();
 
   // Drag & Drop State mit Feld-zu-Feld Support
@@ -491,51 +501,47 @@ export const CastleGardenView: React.FC = () => {
         else heartAmount = 3;
       }
       
-      // Ein großes Herz spawnen + Anzahl-Text
-      spawnSingleHeart(targetField.x, targetField.y, heartAmount);
+      // Persistentes Herz auf dem Feld spawnen
+      spawnFieldHeart(targetField.x, targetField.y, heartAmount);
       
-      // Herzen in Datenbank updaten und lokale Anzeige aktualisieren
-      
-      // Nur Herzen für Ranglisten tracken (keine Credits vergeben)
-      if (user?.id) {
-        try {
-          await updateHearts(user.id, heartAmount);
-          // Lokale Anzeige sofort aktualisieren
-          setDatabaseHearts(prev => prev + heartAmount);
-          console.log(`💖 ${heartAmount} Herzen gesammelt! (Keine Credits vergeben)`);
-        } catch (error) {
-          console.error('Failed to save hearts to database:', error);
-        }
-      }
-      
-      toast.success(`💖 ${heartAmount} Herzen gesammelt!`);
-      
-      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen!`);
+      // Herzen werden erst beim Klick eingesammelt
+      console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen auf Feld gespawnt!`);
     }, flightDuration);
   };
 
-  // Neue einfache Herz-Animation
-  const spawnSingleHeart = (centerX: number, centerY: number, amount: number) => {
-    // Einfaches Herz mit kurzer Animation
-    const newHeart: ConfettiHeart = {
-      id: `heart-${Date.now()}`,
-      x: centerX,
-      y: centerY,
-      offsetX: 0,
-      offsetY: 0,
-      rotation: 0,
-      scale: 1,
-      opacity: 1,
-      velocity: { x: 0, y: 0 },
-      startTime: Date.now()
+  // Neues persistentes Herz auf Feld spawnen
+  const spawnFieldHeart = (gridX: number, gridY: number, amount: number) => {
+    const newHeart: FieldHeart = {
+      id: `field-heart-${Date.now()}-${Math.random()}`,
+      gridX,
+      gridY,
+      amount,
+      timestamp: Date.now()
     };
     
-    setConfettiHearts(prev => [...prev, newHeart]);
+    setFieldHearts(prev => [...prev, newHeart]);
+  };
+  
+  // Herz einsammeln beim Klick
+  const collectHeart = async (heart: FieldHeart, event: React.MouseEvent) => {
+    event.stopPropagation(); // Verhindert Feld-Klick
     
-    // Herz nach 2 Sekunden entfernen
-    setTimeout(() => {
-      setConfettiHearts(prev => prev.filter(heart => heart.id !== newHeart.id));
-    }, 2000);
+    // Herz aus Liste entfernen
+    setFieldHearts(prev => prev.filter(h => h.id !== heart.id));
+    
+    // Herzen in Datenbank updaten und lokale Anzeige aktualisieren
+    if (user?.id) {
+      try {
+        await updateHearts(user.id, heart.amount);
+        setDatabaseHearts(prev => prev + heart.amount);
+        toast.success(`💖 ${heart.amount} Herzen eingesammelt!`);
+        console.log(`💖 ${heart.amount} Herzen eingesammelt! (Keine Credits vergeben)`);
+      } catch (error) {
+        console.error('Failed to save hearts to database:', error);
+        // Bei Fehler das Herz wieder hinzufügen
+        setFieldHearts(prev => [...prev, heart]);
+      }
+    }
   };
 
   // Einfache Animation nur für Bienen
@@ -845,6 +851,28 @@ export const CastleGardenView: React.FC = () => {
                       transform: field.buildingPart ? `rotate(${field.buildingPart.rotation}deg)` : undefined
                     }}
                   >
+                    {/* Feld-Herzen - persistent bis Klick */}
+                    {fieldHearts
+                      .filter(heart => heart.gridX === field.x && heart.gridY === field.y)
+                      .map(heart => (
+                        <div
+                          key={heart.id}
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer z-50 hover:scale-110 transition-transform"
+                          onClick={(e) => collectHeart(heart, e)}
+                          style={{
+                            background: 'radial-gradient(circle, rgba(255,20,147,0.9) 0%, rgba(255,20,147,0.3) 70%)',
+                            borderRadius: '50%'
+                          }}
+                        >
+                          <div className="text-4xl animate-pulse drop-shadow-lg">
+                            💖
+                          </div>
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                            {heart.amount}
+                          </div>
+                        </div>
+                      ))
+                    }
                   </div>
                 ))}
               </div>
