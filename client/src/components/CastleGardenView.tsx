@@ -111,7 +111,29 @@ export const CastleGardenView: React.FC = () => {
   const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
   const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
   
-  // Herzen werden nur in der Datenbank für Rankings getrackt (kein lokales UI)
+  // Herzen State aus Datenbank (echte Werte wie in Rankings)
+  const [databaseHearts, setDatabaseHearts] = useState(0);
+  
+  // Herzen aus Datenbank laden
+  const fetchHearts = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/hearts`);
+      if (response.ok) {
+        const data = await response.json();
+        setDatabaseHearts(data.hearts || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch hearts:', error);
+    }
+  };
+  
+  // Herzen beim Component laden und periodisch aktualisieren
+  useEffect(() => {
+    fetchHearts();
+    const interval = setInterval(fetchHearts, 5000); // Alle 5 Sekunden
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   // Balloon-Toggle State
   const [balloonsEnabled, setBalloonsEnabled] = useState(() => {
@@ -472,12 +494,14 @@ export const CastleGardenView: React.FC = () => {
       // Ein großes Herz spawnen + Anzahl-Text
       spawnSingleHeart(targetField.x, targetField.y, heartAmount);
       
-      // Herzen werden nur in der Datenbank getrackt
+      // Herzen in Datenbank updaten und lokale Anzeige aktualisieren
       
       // Nur Herzen für Ranglisten tracken (keine Credits vergeben)
       if (user?.id) {
         try {
           await updateHearts(user.id, heartAmount);
+          // Lokale Anzeige sofort aktualisieren
+          setDatabaseHearts(prev => prev + heartAmount);
           console.log(`💖 ${heartAmount} Herzen gesammelt! (Keine Credits vergeben)`);
         } catch (error) {
           console.error('Failed to save hearts to database:', error);
@@ -718,7 +742,12 @@ export const CastleGardenView: React.FC = () => {
               <span className="text-slate-400 text-sm">💖/h</span>
             </div>
             
-            {/* Herzen nur in Rankings sichtbar */}
+            {/* Herzen-Anzeige mit echten Datenbankwerten */}
+            <div className="flex items-center gap-2 text-lg">
+              <span className="text-2xl">💖</span>
+              <span className="text-white font-bold">{databaseHearts.toLocaleString()}</span>
+              <span className="text-slate-400 text-sm">Herzen</span>
+            </div>
           </div>
         </div>
       </div>
