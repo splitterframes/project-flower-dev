@@ -860,7 +860,6 @@ export const CastleGardenView: React.FC = () => {
                           className="absolute inset-0 flex items-center justify-center cursor-pointer z-50 hover:scale-110 transition-transform"
                           onClick={(e) => collectHeart(heart, e)}
                           style={{
-                            background: 'radial-gradient(circle, rgba(255,20,147,0.9) 0%, rgba(255,20,147,0.3) 70%)',
                             borderRadius: '50%'
                           }}
                         >
