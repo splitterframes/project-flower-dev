@@ -83,23 +83,23 @@ export const VasesView: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-amber-50 to-orange-100 dark:from-slate-900 dark:to-slate-800 p-4 overflow-y-auto">
+    <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 overflow-y-auto">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Crown className="h-8 w-8 text-yellow-500" />
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+          <Crown className="h-8 w-8 text-orange-400 animate-pulse" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent">
             🏺 Vasen-Sammlung
           </h1>
-          <Crown className="h-8 w-8 text-yellow-500" />
+          <Crown className="h-8 w-8 text-orange-400 animate-pulse" />
         </div>
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Heart className="h-5 w-5 text-pink-500" />
-          <span className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+          <Heart className="h-5 w-5 text-pink-400" />
+          <span className="text-lg font-semibold text-slate-200">
             {userHearts.toLocaleString()} Schlosspark-Herzen
           </span>
         </div>
-        <p className="text-slate-600 dark:text-slate-400 max-w-lg mx-auto">
+        <p className="text-slate-400 max-w-lg mx-auto">
           Sammle wunderschöne Vasen mit deinen Schlosspark-Herzen! 
           Jede Vase ist ein kostbares Sammlerstück für deine Trophäensammlung.
         </p>
@@ -107,15 +107,15 @@ export const VasesView: React.FC = () => {
 
       {/* Vases Display - 4 Shelves */}
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-gradient-to-br from-amber-100 to-orange-200 dark:from-slate-800 dark:to-slate-700 p-6 shadow-lg border-2 border-amber-300 dark:border-yellow-600">
+        <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 p-6 shadow-2xl border border-orange-500/30 backdrop-blur-sm">
           <div className="space-y-6">
             {shelves.map((shelf, shelfIndex) => (
               <div key={shelfIndex} className="relative">
                 {/* Shelf Background */}
-                <div className="bg-gradient-to-r from-amber-200 to-amber-300 dark:from-slate-600 dark:to-slate-500 rounded-lg p-4 shadow-inner border-b-4 border-amber-400 dark:border-yellow-700">
+                <div className="bg-gradient-to-r from-slate-700/80 to-slate-600/80 rounded-lg p-4 shadow-inner border-b-4 border-orange-400/50 backdrop-blur-sm">
                   {/* Shelf Number */}
                   <div className="text-center mb-3">
-                    <Badge variant="secondary" className="bg-amber-300 text-amber-800 dark:bg-yellow-600 dark:text-yellow-100 font-bold">
+                    <Badge variant="secondary" className="bg-orange-600/80 text-orange-100 font-bold border border-orange-400/30">
                       🏺 Regal {shelfIndex + 1}
                     </Badge>
                   </div>
@@ -139,31 +139,31 @@ export const VasesView: React.FC = () => {
                           {/* Vase Container */}
                           <div className={`
                             aspect-[2/3] rounded-lg border-2 relative overflow-hidden
-                            ${vase.collected ? 'border-green-400 bg-green-50 dark:bg-green-900' : 
-                              canCollect ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900 shadow-yellow-300 shadow-sm' :
-                              'border-slate-400 bg-slate-100 dark:bg-slate-700'
+                            ${vase.collected ? 'border-green-400 bg-green-900/50 shadow-green-400/20 shadow-lg' : 
+                              canCollect ? 'border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg animate-pulse' :
+                              'border-slate-500 bg-slate-800/50'
                             }
                           `}>
                             {/* Vase Image or Placeholder */}
                             <div className="w-full h-full flex items-center justify-center p-2">
                               {vase.collected ? (
                                 <div className="text-center">
-                                  <Crown className="h-8 w-8 text-yellow-500 mx-auto mb-1" />
-                                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                  <Crown className="h-8 w-8 text-green-400 mx-auto mb-1" />
+                                  <div className="text-xs font-bold text-green-300">
                                     Gesammelt!
                                   </div>
                                 </div>
                               ) : isLocked ? (
                                 <div className="text-center">
                                   <Lock className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                                  <div className="text-xs text-slate-400">
                                     Gesperrt
                                   </div>
                                 </div>
                               ) : (
                                 <div className="text-center">
                                   <div className="text-4xl mb-1">🏺</div>
-                                  <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                  <div className="text-xs font-semibold text-orange-300">
                                     Verfügbar
                                   </div>
                                 </div>
@@ -175,7 +175,7 @@ export const VasesView: React.FC = () => {
                               <div className="absolute -top-2 -right-2">
                                 <Badge className={`
                                   text-xs px-1 py-0 
-                                  ${canCollect ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}
+                                  ${canCollect ? 'bg-green-600 text-green-100 border border-green-400/50' : 'bg-slate-600 text-slate-200 border border-slate-400/50'}
                                 `}>
                                   <Heart className="h-3 w-3 mr-1" />
                                   {vase.heartsRequired.toLocaleString()}
@@ -185,13 +185,13 @@ export const VasesView: React.FC = () => {
 
                             {/* Collect Effect */}
                             {canCollect && (
-                              <div className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-lg" />
+                              <div className="absolute inset-0 bg-orange-400 opacity-0 group-hover:opacity-25 transition-opacity duration-300 rounded-lg" />
                             )}
                           </div>
                           
                           {/* Vase Info */}
                           <div className="mt-1 text-center">
-                            <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            <div className="text-xs font-medium text-slate-400">
                               Vase {vase.id}
                             </div>
                           </div>
@@ -202,7 +202,7 @@ export const VasesView: React.FC = () => {
                 </div>
                 
                 {/* Shelf Support Beams */}
-                <div className="absolute -bottom-2 left-4 right-4 h-2 bg-gradient-to-r from-amber-700 to-amber-600 rounded-full shadow-md" />
+                <div className="absolute -bottom-2 left-4 right-4 h-2 bg-gradient-to-r from-slate-600 to-slate-500 rounded-full shadow-lg border-t border-slate-400/20" />
               </div>
             ))}
           </div>
@@ -210,25 +210,25 @@ export const VasesView: React.FC = () => {
 
         {/* Collection Progress */}
         <div className="mt-6 text-center">
-          <Card className="inline-block bg-white/80 dark:bg-slate-800/80 p-4">
+          <Card className="inline-block bg-slate-800/60 backdrop-blur-sm border border-orange-500/20 p-4 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                <div className="text-lg font-bold text-orange-300">
                   {vases.filter(v => v.collected).length} / {vases.length}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Gesammelt</div>
+                <div className="text-xs text-slate-400">Gesammelt</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
                   {vases.filter(v => canCollectVase(v)).length}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Verfügbar</div>
+                <div className="text-xs text-slate-400">Verfügbar</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-slate-500">
                   {vases.filter(v => userHearts < v.heartsRequired && !v.collected).length}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Gesperrt</div>
+                <div className="text-xs text-slate-400">Gesperrt</div>
               </div>
             </div>
           </Card>
