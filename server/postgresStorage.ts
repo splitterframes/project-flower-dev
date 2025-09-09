@@ -5335,8 +5335,8 @@ export class PostgresStorage {
               ))
               .limit(1);
             if (fishDataForPrice.length > 0) {
-              const fishInfo = await this.getFishInfo(fishDataForPrice[0].fishId);
-              actualSellPrice = this.getFishSellPrice(fishInfo.rarity);
+              const fishRarity = getFishRarity(fishDataForPrice[0].fishId);
+              actualSellPrice = this.getFishSellPrice(fishRarity);
             }
             break;
             
