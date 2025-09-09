@@ -750,6 +750,25 @@ export class PostgresStorage {
     return result[0] as User | undefined;
   }
 
+  async updateUserHearts(id: number, amount: number): Promise<User | undefined> {
+    // First get current hearts
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentHearts = currentUser.hearts || 0; // Default to 0 if null
+    const newHearts = currentHearts + amount; // amount is a delta (change), not absolute
+    console.log(`💖 Hearts Update: User ${id} hatte ${currentHearts} Herzen, ${amount >= 0 ? '+' : ''}${amount} Herzen = ${newHearts} Herzen`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ hearts: newHearts })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0] as User | undefined;
+  }
+
   // Market methods
   async getMarketListings(): Promise<any[]> {
     // Get all market listings with their copied data - only one JOIN needed for seller username
@@ -5692,6 +5711,25 @@ export class PostgresStorage {
       return this.formatRankingResults(userStats, 'bouquets', currentUserId);
     } catch (error) {
       console.error('🏆 Error in getTop100ByBouquets:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByHearts(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          hearts: users.hearts
+        })
+        .from(users)
+        .orderBy(desc(users.hearts))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'hearts', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByHearts:', error);
       return [];
     }
   }

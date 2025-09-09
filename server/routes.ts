@@ -210,6 +210,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hearts routes
+  app.get("/api/user/:id/hearts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ hearts: user.hearts || 0 });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/:id/hearts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { amount } = req.body;
+      
+      if (typeof amount !== 'number') {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
+
+      const user = await storage.updateUserHearts(userId, amount);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ hearts: user.hearts });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Redeem tickets for prizes (removed duplicate - using the one later in file)
 
   // DNA Sequencing endpoint (consumes items)
@@ -2975,8 +3012,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'flowers':
           players = await storage.getTop100ByFlowers(userId);
           break;
-        case 'bouquets':
-          players = await storage.getTop100ByBouquets(userId);
+        case 'hearts':
+          players = await storage.getTop100ByHearts(userId);
           break;
         case 'butterflies':
           players = await storage.getTop100ByButterflies(userId);
