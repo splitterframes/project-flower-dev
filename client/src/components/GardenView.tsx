@@ -1085,6 +1085,7 @@ export const GardenView: React.FC = () => {
                           flowerImageUrl={field.flowerImageUrl}
                           flowerName={field.flowerName || "Unbekannte Blume"}
                           rarity={field.seedRarity as RarityTier}
+                          isSpinning={spinningFields.has(field.id - 1)}
                         >
                           <TooltipProvider>
                             <Tooltip>
@@ -1241,6 +1242,7 @@ export const GardenView: React.FC = () => {
                         butterflyImageUrl={field.butterflyImageUrl || "/Schmetterlinge/001.jpg"}
                         butterflyName={field.butterflyName || "Schmetterling"}
                         rarity={field.butterflyRarity as RarityTier || "common"}
+                        isSpinning={spinningFields.has(field.id - 1)}
                       >
                         <TooltipProvider>
                           <Tooltip>
