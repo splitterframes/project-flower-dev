@@ -163,7 +163,7 @@ export const VasesView: React.FC = () => {
       <div className="container mx-auto py-8">
         {/* Header with animated title */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-6 flex justify-center items-center space-x-2 leading-tight py-2">
+          <div className="text-6xl mb-6 flex justify-center items-center space-x-2 leading-tight py-4">
             <span className="animate-pulse">👑</span>
             <span className="bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent font-bold">
               Vasen-Sammlung
