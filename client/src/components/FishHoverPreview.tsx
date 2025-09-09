@@ -28,8 +28,15 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const dialogWidth = 280; // Approximate width of the dialog (264px + padding)
+    
+    // Check if there's enough space on the right
+    const spaceOnRight = viewportWidth - rect.right;
+    const showOnLeft = spaceOnRight < dialogWidth + 16; // 16px for margin
+    
     setDialogPosition({
-      x: rect.right + 8, // 8px Abstand rechts vom Element
+      x: showOnLeft ? rect.left - dialogWidth - 8 : rect.right + 8,
       y: rect.top
     });
     setIsHovering(true);
