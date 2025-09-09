@@ -111,17 +111,7 @@ export const CastleGardenView: React.FC = () => {
   const [draggedPart, setDraggedPart] = useState<BuildingPart | null>(null);
   const [draggedFromField, setDraggedFromField] = useState<GridField | null>(null);
   
-  // Herzen-Zähler State
-  // Herzen-Zähler persistent im localStorage speichern
-  const [totalHeartsCollected, setTotalHeartsCollected] = useState(() => {
-    const saved = localStorage.getItem('castle-hearts-session');
-    return saved ? parseInt(saved, 10) : 0;
-  });
-
-  // Herzen-Zähler bei Änderung in localStorage speichern
-  useEffect(() => {
-    localStorage.setItem('castle-hearts-session', totalHeartsCollected.toString());
-  }, [totalHeartsCollected]);
+  // Herzen werden nur in der Datenbank für Rankings getrackt (kein lokales UI)
 
   // Balloon-Toggle State
   const [balloonsEnabled, setBalloonsEnabled] = useState(() => {
@@ -482,8 +472,7 @@ export const CastleGardenView: React.FC = () => {
       // Ein großes Herz spawnen + Anzahl-Text
       spawnSingleHeart(targetField.x, targetField.y, heartAmount);
       
-      // Herzen ins Inventar hinzufügen und persistent speichern
-      setTotalHeartsCollected(prev => prev + heartAmount);
+      // Herzen werden nur in der Datenbank getrackt
       
       // Nur Herzen für Ranglisten tracken (keine Credits vergeben)
       if (user?.id) {
@@ -729,12 +718,7 @@ export const CastleGardenView: React.FC = () => {
               <span className="text-slate-400 text-sm">💖/h</span>
             </div>
             
-            {/* Herzen-Anzeige */}
-            <div className="flex items-center gap-2 text-lg">
-              <span className="text-2xl">💖</span>
-              <span className="text-white font-bold">{totalHeartsCollected}</span>
-              <span className="text-slate-400 text-sm">Herzen</span>
-            </div>
+            {/* Herzen nur in Rankings sichtbar */}
           </div>
         </div>
       </div>
