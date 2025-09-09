@@ -485,20 +485,17 @@ export const CastleGardenView: React.FC = () => {
       // Herzen ins Inventar hinzufügen und persistent speichern
       setTotalHeartsCollected(prev => prev + heartAmount);
       
-      // Credits sowohl lokal als auch in Datenbank aktualisieren
+      // Nur Herzen für Ranglisten tracken (keine Credits vergeben)
       if (user?.id) {
         try {
-          // Credits für lokale Anzeige aktualisieren
-          await updateCredits(user.id, heartAmount);
-          // Herzen separat für Ranglisten tracken
           await updateHearts(user.id, heartAmount);
-          console.log(`💖 ${heartAmount} Herzen gespeichert! Neue Credits: ${credits + heartAmount}`);
+          console.log(`💖 ${heartAmount} Herzen gesammelt! (Keine Credits vergeben)`);
         } catch (error) {
           console.error('Failed to save hearts to database:', error);
         }
       }
       
-      toast.success(`💖 ${heartAmount} Herzen gesammelt! (+${heartAmount} Credits)`);
+      toast.success(`💖 ${heartAmount} Herzen gesammelt!`);
       
       console.log(`🐝 Biene geflogen: ${distance.toFixed(1)} Felder, Bauteil-Kosten: ${partCost}💰, Chance: ${(chanceFor4Plus*100).toFixed(1)}%, ${heartAmount} Herzen!`);
     }, flightDuration);
