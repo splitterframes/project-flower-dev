@@ -735,12 +735,6 @@ export const CastleGardenView: React.FC = () => {
               <span className="text-slate-400 text-sm">investiert</span>
             </div>
             
-            {/* Herzen pro Stunde */}
-            <div className="flex items-center gap-2 text-lg">
-              <span className="text-2xl">⏱️</span>
-              <span className="text-green-400 font-bold">{heartsPerHour.toLocaleString()}</span>
-              <span className="text-slate-400 text-sm">💖/h</span>
-            </div>
             
             {/* Herzen-Anzeige mit echten Datenbankwerten */}
             <div className="flex items-center gap-2 text-lg">
