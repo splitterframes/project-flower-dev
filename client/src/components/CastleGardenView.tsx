@@ -623,7 +623,7 @@ export const CastleGardenView: React.FC = () => {
       if (unlockedResponse.ok) {
         const { unlockedParts: loadedParts } = await unlockedResponse.json();
         const partNames = loadedParts.map((part: any) => part.partName);
-        setUnlockedParts(['grass', 'stone_path', ...partNames]); // Basis-Teile + persistierte
+        setUnlockedParts(partNames); // Nur persistierte Castle-Teile
         console.log(`🏰 Loaded ${partNames.length} unlocked castle parts:`, partNames);
       }
 
