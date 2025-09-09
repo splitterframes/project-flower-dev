@@ -18,7 +18,8 @@ import {
   Crown,
   Users,
   Dna,
-  Zap
+  Zap,
+  ThumbsUp
 } from "lucide-react";
 import { useAuth } from "@/lib/stores/useAuth";
 
@@ -61,11 +62,11 @@ export const Top100Modal: React.FC<Top100ModalProps> = ({ isOpen, onClose }) => 
     { id: 'credits', name: '💰 Credits', icon: Coins, color: 'from-yellow-400 to-yellow-600' },
     { id: 'passive-income', name: '📈 Passives Einkommen', icon: TrendingUp, color: 'from-green-400 to-green-600' },
     { id: 'suns', name: '☀️ Sonnen', icon: Sun, color: 'from-orange-400 to-orange-600' },
-    { id: 'likes', name: '❤️ Likes', icon: Heart, color: 'from-pink-400 to-pink-600' },
+    { id: 'likes', name: '👍 Likes', icon: ThumbsUp, color: 'from-pink-400 to-pink-600' },
     { id: 'dna', name: '🧬 DNA', icon: Dna, color: 'from-violet-400 to-purple-600' },
     { id: 'seeds', name: '🌱 Samen', icon: Sparkles, color: 'from-emerald-400 to-emerald-600' },
     { id: 'flowers', name: '🌸 Blumen', icon: Flower, color: 'from-rose-400 to-rose-600' },
-    { id: 'hearts', name: '💖 Herzen', icon: Zap, color: 'from-yellow-400 to-amber-600' },
+    { id: 'hearts', name: '💖 Herzen', icon: Heart, color: 'from-yellow-400 to-amber-600' },
     { id: 'butterflies', name: '🦋 Schmetterlinge', icon: Bug, color: 'from-blue-400 to-blue-600' },
     { id: 'caterpillars', name: '🐛 Raupen', icon: Bug, color: 'from-lime-400 to-lime-600' },
     { id: 'fish', name: '🐟 Fische', icon: Fish, color: 'from-cyan-400 to-cyan-600' },
