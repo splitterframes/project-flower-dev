@@ -11,6 +11,7 @@ interface ButterflyHoverPreviewProps {
   placedAt?: string;
   canSell?: boolean;
   timeRemainingMs?: number;
+  isSpinning?: boolean;
 }
 
 export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
@@ -20,7 +21,8 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
   children,
   placedAt,
   canSell,
-  timeRemainingMs
+  timeRemainingMs,
+  isSpinning = false
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -34,6 +36,8 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
   }, [butterflyImageUrl]);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
+    if (isSpinning) return; // No hover during spin animation
+    
     const rect = e.currentTarget.getBoundingClientRect();
     setDialogPosition({
       x: rect.right + 8, // 8px Abstand rechts vom Element
@@ -60,7 +64,7 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
     >
       {children}
       
-      {isHovering && (
+      {isHovering && !isSpinning && (
         <div 
           className="fixed z-[999999] pointer-events-none" 
           style={{ 

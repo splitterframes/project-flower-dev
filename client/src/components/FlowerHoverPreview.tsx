@@ -7,13 +7,15 @@ interface FlowerHoverPreviewProps {
   flowerName: string;
   rarity: RarityTier;
   children: React.ReactNode;
+  isSpinning?: boolean;
 }
 
 export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
   flowerImageUrl,
   flowerName,
   rarity,
-  children
+  children,
+  isSpinning = false
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -27,6 +29,8 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
   }, [flowerImageUrl]);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
+    if (isSpinning) return; // No hover during spin animation
+    
     const rect = e.currentTarget.getBoundingClientRect();
     setDialogPosition({
       x: rect.right + 8, // 8px Abstand rechts vom Element
@@ -47,7 +51,7 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
     >
       {children}
       
-      {isHovering && (
+      {isHovering && !isSpinning && (
         <div 
           className="fixed z-[999999] pointer-events-none" 
           style={{ 
