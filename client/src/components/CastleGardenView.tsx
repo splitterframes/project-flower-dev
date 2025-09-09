@@ -509,8 +509,16 @@ export const CastleGardenView: React.FC = () => {
     }, flightDuration);
   };
 
-  // Neues persistentes Herz auf Feld spawnen
+  // Neues persistentes Herz auf Feld spawnen (nur wenn noch kein Herz vorhanden)
   const spawnFieldHeart = (gridX: number, gridY: number, amount: number) => {
+    // Prüfen ob bereits ein Herz auf diesem Feld existiert
+    const existingHeart = fieldHearts.find(heart => heart.gridX === gridX && heart.gridY === gridY);
+    
+    if (existingHeart) {
+      console.log(`💖 Herz nicht gespawnt - Feld (${gridX}, ${gridY}) hat bereits ein Herz mit ${existingHeart.amount} Herzen!`);
+      return; // Kein neues Herz spawnen
+    }
+    
     const newHeart: FieldHeart = {
       id: `field-heart-${Date.now()}-${Math.random()}`,
       gridX,
