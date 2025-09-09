@@ -606,12 +606,12 @@ export const CastleGardenView: React.FC = () => {
 
   // ==================== PERSISTIERUNG LOGIC ====================
   
-  // Daten beim Mount laden
+  // Daten beim Mount laden (ERST wenn allParts geladen sind!)
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && allParts.length > 0) {
       loadCastleData();
     }
-  }, [user?.id]);
+  }, [user?.id, allParts]);
 
   // Daten von der API laden
   const loadCastleData = async () => {
