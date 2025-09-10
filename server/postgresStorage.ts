@@ -3037,9 +3037,19 @@ export class PostgresStorage {
       return { success: false, message: 'Butterfly not found' };
     }
 
+    const butterflyData = butterfly[0];
+    const frameId = butterflyData.frameId;
+
     // Calculate credits based on rarity
     const rarityValues = { common: 10, uncommon: 25, rare: 50, 'super-rare': 100, epic: 200, legendary: 500, mythical: 1000 };
-    const creditsEarned = rarityValues[butterfly[0].butterflyRarity as keyof typeof rarityValues] || 10;
+    const creditsEarned = rarityValues[butterflyData.butterflyRarity as keyof typeof rarityValues] || 10;
+
+    // Remove all likes for this frame when butterfly is sold
+    await this.db
+      .delete(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameId, frameId));
+
+    console.log(`💔 Removed all likes for frame ${frameId} due to butterfly sale`);
 
     // Remove butterfly
     await this.db
@@ -3097,8 +3107,18 @@ export class PostgresStorage {
       return { success: false, message: 'VIP Butterfly not found' };
     }
 
+    const vipButterflyData = vipButterfly[0];
+    const frameId = vipButterflyData.frameId;
+
     // VIP butterflies are worth much more! Fixed high value
     const creditsEarned = 2500; // VIP butterflies are super valuable
+
+    // Remove all likes for this frame when VIP butterfly is sold
+    await this.db
+      .delete(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameId, frameId));
+
+    console.log(`💔 Removed all likes for frame ${frameId} due to VIP butterfly sale`);
 
     // Remove VIP butterfly from exhibition
     await this.db
@@ -3108,7 +3128,7 @@ export class PostgresStorage {
     // Add credits
     await this.updateUserCredits(userId, creditsEarned);
 
-    console.log(`✨ Sold VIP butterfly ${vipButterfly[0].vipButterflyName} for ${creditsEarned} credits`);
+    console.log(`✨ Sold VIP butterfly ${vipButterflyData.vipButterflyName} for ${creditsEarned} credits`);
     return { success: true, creditsEarned };
   }
 
