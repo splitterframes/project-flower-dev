@@ -8,6 +8,7 @@ import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
 import { FishDetailModal } from './FishDetailModal';
 import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight, Fish, Crown, Lock } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
 interface ExhibitionButterfly {

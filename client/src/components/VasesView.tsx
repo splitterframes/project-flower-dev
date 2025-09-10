@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/stores/useAuth';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Crown, Heart, Lock } from 'lucide-react';
 
 interface Vase {
@@ -328,8 +328,13 @@ export const VasesView: React.FC = () => {
       {selectedVase && (
         <Dialog open={showVaseModal} onOpenChange={setShowVaseModal}>
           <DialogContent className="max-w-md bg-slate-900 border-orange-500/30">
+            <DialogTitle className="text-xl font-bold text-orange-300 text-center">
+              {selectedVase.name}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              Betrachte diese wunderschöne Vase aus deiner Sammlung
+            </DialogDescription>
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold text-orange-300">{selectedVase.name}</h3>
               
               {/* Large Vase Image - 250x750 pixels */}
               <div className="flex justify-center">
