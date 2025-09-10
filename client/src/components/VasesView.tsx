@@ -333,7 +333,7 @@ export const VasesView: React.FC = () => {
               
               {/* Large Vase Image - 250x750 pixels */}
               <div className="flex justify-center">
-                <div className="w-[250px] h-[750px] relative border-2 border-orange-400/50 rounded-lg overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900">
+                <div className="w-[500px] h-[750px] relative border-2 border-orange-400/50 rounded-lg overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900">
                   <img 
                     src={selectedVase.image}
                     alt={selectedVase.name}

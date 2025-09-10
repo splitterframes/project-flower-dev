@@ -137,7 +137,7 @@ function VaseDetailModal({
         
         {/* Image */}
         <div className="p-4">
-          <div className="w-[250px] h-[750px] mx-auto bg-slate-800 rounded-lg border border-orange-500/20 flex items-center justify-center">
+          <div className="w-[500px] h-[750px] mx-auto bg-slate-800 rounded-lg border border-orange-500/20 flex items-center justify-center">
             <img 
               src={vase.image}
               alt={vase.name}
