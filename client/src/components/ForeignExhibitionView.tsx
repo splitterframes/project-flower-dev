@@ -429,10 +429,10 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 flex flex-col">
+      <div className="max-w-7xl mx-auto space-y-6 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-6 border-2 border-slate-600">
+        <div className="flex items-center justify-between bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-6 border-2 border-slate-600 flex-shrink-0">
           <div className="flex items-center space-x-4">
             <Button
               onClick={onBack}
@@ -516,7 +516,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Exhibition Mode */}
         {viewMode === 'exhibition' && (
           sortedFrameIds.length > 0 ? (
-            <div className="space-y-6 max-w-7xl mx-auto max-h-[85vh] overflow-y-auto pr-2">
+            <div className="space-y-6 max-w-7xl mx-auto flex-1 overflow-y-auto pr-2 pb-8">
               {/* Current Frame */}
               {sortedFrameIds[currentFrameIndex] && (() => {
                 const frameId = sortedFrameIds[currentFrameIndex];
@@ -681,7 +681,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Aquarium Mode */}
         {viewMode === 'aquarium' && (
           sortedTankIds.length > 0 ? (
-            <div className="space-y-6 max-w-7xl mx-auto max-h-[85vh] overflow-y-auto pr-2">
+            <div className="space-y-6 max-w-7xl mx-auto flex-1 overflow-y-auto pr-2 pb-8">
               {/* Current Tank */}
               {sortedTankIds[currentTankIndex] && (() => {
                 const tankId = sortedTankIds[currentTankIndex];
@@ -810,7 +810,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 
         {/* Vases Mode */}
         {viewMode === 'vases' && (
-          <div className="space-y-6 max-w-7xl mx-auto max-h-[90vh] overflow-y-auto pr-2 pb-8">
+          <div className="space-y-6 max-w-7xl mx-auto flex-1 overflow-y-auto pr-2 pb-8">
             {/* Header with animated title */}
             <div className="text-center mb-8">
               <div className="text-6xl mb-6 flex justify-center items-center space-x-2 leading-tight py-4">
