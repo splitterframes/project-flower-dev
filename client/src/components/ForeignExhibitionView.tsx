@@ -295,31 +295,21 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         // Same heart calculation as in VasesView
         const heartsRequired = Math.round(1000 + Math.pow((i - 1) / 23, 2.2) * 99000);
         
-        // Visibility logic:
-        // - Both users have unlocked: visible and clickable
-        // - Only foreign user unlocked: show as "verfügbar" 
-        // - Neither or only current user: hidden/locked
+        // Visibility logic: ONLY show vases that BOTH users have unlocked
         const currentUserUnlocked = currentHearts >= heartsRequired;
         const foreignUserUnlocked = foreignHearts >= heartsRequired;
         
-        let vaseStatus: 'unlocked' | 'available' | 'locked';
+        // Only add vase to list if BOTH users have unlocked it
         if (currentUserUnlocked && foreignUserUnlocked) {
-          vaseStatus = 'unlocked';  // Both can see it
-        } else if (!currentUserUnlocked && foreignUserUnlocked) {
-          vaseStatus = 'available'; // Only foreign user has it, show as available
-        } else {
-          vaseStatus = 'locked';    // Hidden or locked
+          vaseList.push({
+            id: i,
+            name: `Prächtige Vase ${i}`,
+            heartsRequired: heartsRequired,
+            collected: true, // Both users have it, so it's "collected" for display
+            image: `/Vasen/${i}.jpg`
+          });
         }
-        
-        vaseList.push({
-          id: i,
-          name: `Prächtige Vase ${i}`,
-          heartsRequired: heartsRequired,
-          collected: vaseStatus === 'unlocked', // For rendering logic
-          image: `/Vasen/${i}.jpg`,
-          // Add custom field for status
-          status: vaseStatus
-        } as UserVase & { status: string });
+        // If not both users have unlocked it, don't add to list (= not visible)
       }
       
       setUserVases(vaseList);
