@@ -819,7 +819,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             key={vase.id}
                             className={`
                               relative group transition-all duration-300
-                              ${vase.collected ? 'opacity-100' : 'opacity-40'}
+                              opacity-100
                             `}
                             style={{
                               animationDelay: `${(vase.id * 0.3)}s`, // Random staggered delays
@@ -828,9 +828,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             {/* Vase Container */}
                             <div className={`
                               aspect-[2/3] rounded-lg border-2 relative overflow-hidden transition-all duration-500
-                              ${vase.collected ? 'border-green-400 bg-green-900/50 shadow-green-400/20 shadow-lg' : 
-                                'border-slate-500 bg-slate-800/50'
-                              }
+                              border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg
                               animate-gold-glow-random
                             `}
                             style={{
@@ -839,22 +837,13 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                             }}>
                               {/* Vase Image or Placeholder */}
                               <div className="w-full h-full flex items-center justify-center p-2">
-                                {vase.collected ? (
-                                  <VaseImage 
-                                    vase={vase} 
-                                    onClick={() => {
-                                      setSelectedVase(vase);
-                                      setShowVaseModal(true);
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="text-center">
-                                    <Lock className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                                    <div className="text-xs text-slate-400">
-                                      Gesperrt
-                                    </div>
-                                  </div>
-                                )}
+                                <VaseImage 
+                                  vase={vase} 
+                                  onClick={() => {
+                                    setSelectedVase(vase);
+                                    setShowVaseModal(true);
+                                  }}
+                                />
                               </div>
 
                               {/* Vase Info */}
@@ -868,7 +857,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                               <div className="absolute top-2 right-2">
                                 <Badge className={`
                                   text-xs px-1 py-0 
-                                  ${vase.collected ? 'bg-green-600 text-green-100 border border-green-400/50' : 'bg-slate-600 text-slate-200 border border-slate-400/50'}
+                                  bg-orange-600 text-orange-100 border border-orange-400/50
                                 `}>
                                   <Heart className="h-3 w-3 mr-1" />
                                   {vase.heartsRequired.toLocaleString()}
