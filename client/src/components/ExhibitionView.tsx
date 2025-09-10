@@ -38,6 +38,22 @@ export const ExhibitionView: React.FC = () => {
   const [showVipInventoryDialog, setShowVipInventoryDialog] = useState(false);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
+  // Helper function to save current frame to localStorage
+  const saveLastViewedFrame = (frameIndex: number) => {
+    if (user) {
+      localStorage.setItem(`exhibition_last_frame_user_${user.id}`, frameIndex.toString());
+    }
+  };
+
+  // Helper function to get last viewed frame from localStorage
+  const getLastViewedFrame = (): number | null => {
+    if (user) {
+      const saved = localStorage.getItem(`exhibition_last_frame_user_${user.id}`);
+      return saved ? parseInt(saved, 10) : null;
+    }
+    return null;
+  };
+
   const loadSellStatuses = async () => {
     if (!user) return;
     
@@ -140,33 +156,40 @@ export const ExhibitionView: React.FC = () => {
     }
   }, [exhibitionButterflies, exhibitionVipButterflies]);
 
-  // Set to newest frame with butterflies when frames are loaded, or reset frame index when frames change
+  // Initialize to saved frame preference or fallback to newest frame with butterflies
   useEffect(() => {
-    if (frames.length > 0 && (exhibitionButterflies.length > 0 || exhibitionVipButterflies.length > 0)) {
-      // Find the last frame that has butterflies
-      let lastFrameWithButterflies = -1;
+    if (frames.length > 0) {
+      const savedFrameIndex = getLastViewedFrame();
+      let targetIndex = 0;
       
-      for (let i = frames.length - 1; i >= 0; i--) {
-        const frameId = frames[i].id;
-        const hasNormalButterflies = exhibitionButterflies.some(b => b.frameId === frameId);
-        const hasVipButterflies = exhibitionVipButterflies.some(b => b.frameId === frameId);
+      // Check if saved index is valid
+      if (savedFrameIndex !== null && savedFrameIndex >= 0 && savedFrameIndex < frames.length) {
+        targetIndex = savedFrameIndex;
+      } else if (exhibitionButterflies.length > 0 || exhibitionVipButterflies.length > 0) {
+        // Find the last frame that has butterflies (fallback behavior)
+        let lastFrameWithButterflies = -1;
         
-        if (hasNormalButterflies || hasVipButterflies) {
-          lastFrameWithButterflies = i;
-          break;
+        for (let i = frames.length - 1; i >= 0; i--) {
+          const frameId = frames[i].id;
+          const hasNormalButterflies = exhibitionButterflies.some(b => b.frameId === frameId);
+          const hasVipButterflies = exhibitionVipButterflies.some(b => b.frameId === frameId);
+          
+          if (hasNormalButterflies || hasVipButterflies) {
+            lastFrameWithButterflies = i;
+            break;
+          }
         }
+        
+        targetIndex = lastFrameWithButterflies >= 0 ? lastFrameWithButterflies : frames.length - 1;
+      } else {
+        // If no butterflies yet, just go to the last frame
+        targetIndex = frames.length - 1;
       }
       
-      // If we found a frame with butterflies, go to it, otherwise go to the last frame
-      const targetIndex = lastFrameWithButterflies >= 0 ? lastFrameWithButterflies : frames.length - 1;
-      
+      // Only set if current index is invalid or this is the initial load
       if (currentFrameIndex === 0 || currentFrameIndex >= frames.length) {
         setCurrentFrameIndex(targetIndex);
-      }
-    } else if (frames.length > 0) {
-      // If no butterflies yet, just go to the last frame
-      if (currentFrameIndex === 0 || currentFrameIndex >= frames.length) {
-        setCurrentFrameIndex(frames.length - 1);
+        saveLastViewedFrame(targetIndex);
       }
     }
   }, [frames.length, exhibitionButterflies.length, exhibitionVipButterflies.length]);
@@ -601,7 +624,11 @@ export const ExhibitionView: React.FC = () => {
               {frames.length > 1 && (
                 <div className="flex items-center space-x-3 bg-amber-800/60 rounded-lg px-3 py-2 border border-amber-600">
                   <Button
-                    onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                    onClick={() => {
+                      const newIndex = Math.max(0, currentFrameIndex - 1);
+                      setCurrentFrameIndex(newIndex);
+                      saveLastViewedFrame(newIndex);
+                    }}
                     disabled={currentFrameIndex === 0}
                     variant="outline"
                     size="sm"
@@ -615,7 +642,11 @@ export const ExhibitionView: React.FC = () => {
                   </div>
                   
                   <Button
-                    onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}
+                    onClick={() => {
+                      const newIndex = Math.min(frames.length - 1, currentFrameIndex + 1);
+                      setCurrentFrameIndex(newIndex);
+                      saveLastViewedFrame(newIndex);
+                    }}
                     disabled={currentFrameIndex >= frames.length - 1}
                     variant="outline"
                     size="sm"
