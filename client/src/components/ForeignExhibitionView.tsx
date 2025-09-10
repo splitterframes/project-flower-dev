@@ -57,7 +57,15 @@ interface AquariumTank {
   createdAt: string;
 }
 
-type ViewMode = 'exhibition' | 'aquarium';
+interface UserVase {
+  id: number;
+  name: string;
+  heartsRequired: number;
+  collected: boolean;
+  image: string;
+}
+
+type ViewMode = 'exhibition' | 'aquarium' | 'vases';
 
 interface ForeignExhibitionViewProps {
   ownerId: number;
@@ -85,6 +93,9 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [aquariumTanks, setAquariumTanks] = useState<AquariumTank[]>([]);
   const [currentTankIndex, setCurrentTankIndex] = useState(0);
   
+  // Vases data
+  const [userVases, setUserVases] = useState<UserVase[]>([]);
+  
   // Common state
   const [loading, setLoading] = useState(true);
   const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
@@ -100,6 +111,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     loadForeignExhibition();
     loadFrameLikes();
     loadForeignAquarium();
+    loadForeignVases();
   }, [ownerId]);
 
   const loadForeignExhibition = async () => {
@@ -125,6 +137,30 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       console.error('Failed to load frame likes:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadForeignVases = async () => {
+    try {
+      // Generate the vases data (24 total, same as VasesView)
+      const vaseList: UserVase[] = [];
+      
+      for (let i = 1; i <= 24; i++) {
+        // Exponential scaling: starts at 1000, ends at 100000
+        const heartsRequired = Math.round(1000 + Math.pow((i - 1) / 23, 2.2) * 99000);
+        
+        vaseList.push({
+          id: i,
+          name: `Prächtige Vase ${i}`,
+          heartsRequired: heartsRequired,
+          collected: false, // TODO: Load real collection status from API later
+          image: `/Vasen/${i}.jpg`
+        });
+      }
+      
+      setUserVases(vaseList);
+    } catch (error) {
+      console.error('Failed to load foreign vases:', error);
     }
   };
 
@@ -265,12 +301,14 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">
-                {viewMode === 'exhibition' ? '🦋' : '🐠'} {viewMode === 'exhibition' ? 'Ausstellung' : 'Aquarium'} von {ownerName}
+                {viewMode === 'exhibition' ? '🦋' : viewMode === 'aquarium' ? '🐠' : '🏺'} {viewMode === 'exhibition' ? 'Ausstellung' : viewMode === 'aquarium' ? 'Aquarium' : 'Vasen'} von {ownerName}
               </h1>
               <p className="text-slate-300 mt-2">
                 {viewMode === 'exhibition' 
                   ? 'Entdecke die Schmetterlingssammlung und vergib Likes!' 
-                  : 'Betrachte die Fischsammlung im Aquarium!'}
+                  : viewMode === 'aquarium'
+                    ? 'Betrachte die Fischsammlung im Aquarium!'
+                    : 'Betrachte die Vasen-Sammlung!'}
               </p>
               
               {/* View Mode Toggle */}
@@ -297,6 +335,17 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                   <Fish className="h-4 w-4 mr-2" />
                   Aquarium
                 </Button>
+                <Button
+                  onClick={() => setViewMode('vases')}
+                  variant={viewMode === 'vases' ? 'default' : 'outline'}
+                  size="sm"
+                  className={viewMode === 'vases' 
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                    : 'bg-slate-700 border-slate-500 hover:bg-slate-600 text-slate-200'}
+                >
+                  <span className="h-4 w-4 mr-2">🏺</span>
+                  Vasen
+                </Button>
               </div>
             </div>
           </div>
@@ -306,10 +355,15 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                 <Bug className="h-8 w-8 inline mr-2 text-blue-400 animate-pulse" />
                 {butterflies.length} Schmetterlinge ausgestellt
               </>
-            ) : (
+            ) : viewMode === 'aquarium' ? (
               <>
                 <Fish className="h-8 w-8 inline mr-2 text-cyan-400 animate-pulse" />
                 {aquariumFish.length} Fische im Aquarium
+              </>
+            ) : (
+              <>
+                <span className="text-3xl mr-2">🏺</span>
+                {userVases.filter(v => v.collected).length} / {userVases.length} Vasen gesammelt
               </>
             )}
           </div>
@@ -608,6 +662,86 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               </CardContent>
             </Card>
           )
+        )}
+
+        {/* Vases Mode */}
+        {viewMode === 'vases' && (
+          <div className="space-y-6">
+            <Card className="bg-gradient-to-br from-orange-900 to-amber-900 border-2 border-orange-600">
+              <CardHeader>
+                <CardTitle className="text-orange-100 text-center text-2xl">
+                  🏺 {ownerName}s Vasen-Sammlung
+                </CardTitle>
+                <p className="text-orange-200 text-center">
+                  Sammle prächtige Vasen durch das Sammeln von Herzen!
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-6 gap-4 p-6">
+                  {userVases.map((vase) => (
+                    <div
+                      key={vase.id}
+                      className={`
+                        relative aspect-square bg-gradient-to-br border-2 rounded-lg p-3 transition-all duration-300
+                        ${vase.collected 
+                          ? 'from-amber-600 to-orange-600 border-orange-400 shadow-lg shadow-orange-500/30' 
+                          : 'from-slate-700 to-slate-800 border-slate-600 opacity-60'
+                        }
+                      `}
+                    >
+                      {vase.collected ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={vase.image}
+                            alt={vase.name}
+                            className="w-full h-full object-contain rounded-md"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                            }}
+                          />
+                          <div className="text-center text-4xl mb-1 hidden">🏺</div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                          <div className="text-4xl mb-2 opacity-50">🔒</div>
+                          <div className="text-xs text-slate-400">
+                            {vase.heartsRequired.toLocaleString()} ❤️
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Vase Number */}
+                      <div className="absolute top-1 left-1">
+                        <div className="bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                          #{vase.id}
+                        </div>
+                      </div>
+                      
+                      {/* Collection Status */}
+                      {vase.collected && (
+                        <div className="absolute top-1 right-1">
+                          <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded font-bold">
+                            ✓
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Progress Summary */}
+                <div className="mt-6 text-center border-t border-orange-600 pt-4">
+                  <div className="text-orange-200 text-lg font-semibold">
+                    {userVases.filter(v => v.collected).length} von {userVases.length} Vasen gesammelt
+                  </div>
+                  <div className="text-orange-300 text-sm mt-1">
+                    {((userVases.filter(v => v.collected).length / userVases.length) * 100).toFixed(1)}% der Sammlung vollständig
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
