@@ -6,7 +6,7 @@ import { useNotification } from '../hooks/useNotification';
 import { RarityImage } from './RarityImage';
 import { ButterflyDetailModal } from './ButterflyDetailModal';
 import { FishDetailModal } from './FishDetailModal';
-import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight, Fish } from 'lucide-react';
+import { ArrowLeft, Heart, Bug, ChevronLeft, ChevronRight, Fish, Crown, Lock } from 'lucide-react';
 import { type RarityTier, getRarityColor, getRarityDisplayName } from '@shared/rarity';
 
 interface ExhibitionButterfly {
@@ -667,80 +667,144 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         {/* Vases Mode */}
         {viewMode === 'vases' && (
           <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-orange-900 to-amber-900 border-2 border-orange-600">
-              <CardHeader>
-                <CardTitle className="text-orange-100 text-center text-2xl">
-                  🏺 {ownerName}s Vasen-Sammlung
-                </CardTitle>
-                <p className="text-orange-200 text-center">
-                  Sammle prächtige Vasen durch das Sammeln von Herzen!
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-6 gap-4 p-6">
-                  {userVases.map((vase) => (
-                    <div
-                      key={vase.id}
-                      className={`
-                        relative aspect-square bg-gradient-to-br border-2 rounded-lg p-3 transition-all duration-300
-                        ${vase.collected 
-                          ? 'from-amber-600 to-orange-600 border-orange-400 shadow-lg shadow-orange-500/30' 
-                          : 'from-slate-700 to-slate-800 border-slate-600 opacity-60'
-                        }
-                      `}
+            {/* Header with animated title */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-6 flex justify-center items-center space-x-2 leading-tight py-4">
+                <span className="animate-pulse">👑</span>
+                <span className="bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent font-bold">
+                  {ownerName}s Vasen-Sammlung
+                </span>
+                <span className="animate-pulse">👑</span>
+              </div>
+              <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                Betrachte {ownerName}s exquisite Vasen-Sammlung! Jede Vase wurde mit Herzen gesammelt.
+              </p>
+            </div>
+
+            {/* Gallery - 4 Shelves with 6 Vases each */}
+            <div className="space-y-12 mb-12">
+              {[0, 1, 2, 3].map((shelfIndex) => (
+                <div key={shelfIndex} className="relative">
+                  {/* Shelf Background */}
+                  <div className="absolute inset-0 -top-4 -bottom-8 bg-gradient-to-b from-slate-800/40 to-slate-900/60 rounded-xl backdrop-blur-sm border border-orange-500/10 shadow-2xl" />
+                  
+                  {/* Shelf Label */}
+                  <div className="relative text-center mb-6 z-10">
+                    <Badge 
+                      variant="outline" 
+                      className="bg-slate-800/60 text-orange-300 border-orange-500/30 px-4 py-2 text-lg font-semibold shadow-lg"
                     >
-                      {vase.collected ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center">
-                          <img 
-                            src={vase.image}
-                            alt={vase.name}
-                            className="w-full h-full object-contain rounded-md"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                      Regal {shelfIndex + 1}
+                    </Badge>
+                  </div>
+
+                  {/* Vases Grid */}
+                  <div className="relative grid grid-cols-6 gap-4 p-6 z-10">
+                    {userVases
+                      .slice(shelfIndex * 6, (shelfIndex + 1) * 6)
+                      .map((vase) => {
+                        const isLocked = !vase.collected;
+
+                        return (
+                          <div
+                            key={vase.id}
+                            className={`
+                              relative group transition-all duration-300
+                              ${vase.collected ? 'opacity-100' : 'opacity-40'}
+                            `}
+                            style={{
+                              animationDelay: `${(vase.id * 0.3)}s`, // Random staggered delays
                             }}
-                          />
-                          <div className="text-center text-4xl mb-1 hidden">🏺</div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                          <div className="text-4xl mb-2 opacity-50">🔒</div>
-                          <div className="text-xs text-slate-400">
-                            {vase.heartsRequired.toLocaleString()} ❤️
+                          >
+                            {/* Vase Container */}
+                            <div className={`
+                              aspect-[2/3] rounded-lg border-2 relative overflow-hidden transition-all duration-500
+                              ${vase.collected ? 'border-green-400 bg-green-900/50 shadow-green-400/20 shadow-lg' : 
+                                'border-slate-500 bg-slate-800/50'
+                              }
+                              animate-gold-glow-random
+                            `}
+                            style={{
+                              animationDelay: `${Math.random() * 5}s`, // Random gold glow timing
+                              animationDuration: `${3 + Math.random() * 2}s`, // Vary duration 3-5s
+                            }}>
+                              {/* Vase Image or Placeholder */}
+                              <div className="w-full h-full flex items-center justify-center p-2">
+                                {vase.collected ? (
+                                  <div className="text-center">
+                                    <Crown className="h-8 w-8 text-green-400 mx-auto mb-1" />
+                                    <div className="text-xs font-bold text-green-300">
+                                      Gesammelt!
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center">
+                                    <Lock className="h-6 w-6 text-slate-500 mx-auto mb-1" />
+                                    <div className="text-xs text-slate-400">
+                                      Gesperrt
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Vase Info */}
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/90 to-transparent p-2 rounded-b-lg">
+                                <div className="text-xs font-medium text-slate-400">
+                                  Vase {vase.id}
+                                </div>
+                              </div>
+
+                              {/* Hearts Badge */}
+                              <div className="absolute top-2 right-2">
+                                <Badge className={`
+                                  text-xs px-1 py-0 
+                                  ${vase.collected ? 'bg-green-600 text-green-100 border border-green-400/50' : 'bg-slate-600 text-slate-200 border border-slate-400/50'}
+                                `}>
+                                  <Heart className="h-3 w-3 mr-1" />
+                                  {vase.heartsRequired.toLocaleString()}
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Vase Number */}
-                      <div className="absolute top-1 left-1">
-                        <div className="bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
-                          #{vase.id}
-                        </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Shelf Support Beams */}
+                  <div className="absolute -bottom-2 left-4 right-4 h-2 bg-gradient-to-r from-slate-600 to-slate-500 rounded-full shadow-lg border-t border-slate-400/20" />
+                </div>
+              ))}
+            </div>
+
+            {/* Statistics Card */}
+            <div className="text-center">
+              <Card className="inline-block bg-slate-800/60 backdrop-blur-sm border border-orange-500/20 p-4 shadow-lg">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-400">
+                        {userVases.filter(v => v.collected).length}
                       </div>
-                      
-                      {/* Collection Status */}
-                      {vase.collected && (
-                        <div className="absolute top-1 right-1">
-                          <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded font-bold">
-                            ✓
-                          </div>
-                        </div>
-                      )}
+                      <div className="text-xs text-slate-400">Gesammelt</div>
                     </div>
-                  ))}
-                </div>
-                
-                {/* Progress Summary */}
-                <div className="mt-6 text-center border-t border-orange-600 pt-4">
-                  <div className="text-orange-200 text-lg font-semibold">
-                    {userVases.filter(v => v.collected).length} von {userVases.length} Vasen gesammelt
+                    <div className="text-slate-500">/</div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-300">
+                        {userVases.length}
+                      </div>
+                      <div className="text-xs text-slate-400">Gesamt</div>
+                    </div>
+                    <div className="text-slate-500">•</div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">
+                        {((userVases.filter(v => v.collected).length / userVases.length) * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-slate-400">Vollständigkeit</div>
+                    </div>
                   </div>
-                  <div className="text-orange-300 text-sm mt-1">
-                    {((userVases.filter(v => v.collected).length / userVases.length) * 100).toFixed(1)}% der Sammlung vollständig
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>
