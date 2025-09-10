@@ -327,7 +327,7 @@ export const VasesView: React.FC = () => {
       {/* Vase Detail Modal */}
       {selectedVase && (
         <Dialog open={showVaseModal} onOpenChange={setShowVaseModal}>
-          <DialogContent className="max-w-md bg-slate-900 border-orange-500/30">
+          <DialogContent className="max-w-2xl bg-slate-900 border-orange-500/30 max-h-[95vh] overflow-y-auto">
             <DialogTitle className="text-xl font-bold text-orange-300 text-center">
               {selectedVase.name}
             </DialogTitle>

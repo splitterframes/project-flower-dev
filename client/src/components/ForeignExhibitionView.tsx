@@ -116,7 +116,7 @@ function VaseDetailModal({
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-orange-500/30 rounded-xl shadow-2xl max-w-sm mx-4">
+      <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-orange-500/30 rounded-xl shadow-2xl max-w-2xl mx-4 max-h-[95vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
