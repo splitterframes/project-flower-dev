@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/stores/useAuth';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Crown, Heart, Lock } from 'lucide-react';
 
 interface Vase {
@@ -18,7 +19,7 @@ interface VaseWithImage extends Vase {
 }
 
 // Component for handling vase images with fallback logic
-function VaseImage({ vase }: { vase: VaseWithImage }) {
+function VaseImage({ vase, onClick }: { vase: VaseWithImage; onClick?: () => void }) {
   const [imageState, setImageState] = useState<{
     src: string;
     type: 'gif' | 'jpg' | 'placeholder';
@@ -55,7 +56,7 @@ function VaseImage({ vase }: { vase: VaseWithImage }) {
   }
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative cursor-pointer" onClick={onClick}>
       <img 
         src={imageState.src}
         alt={vase.name}
@@ -87,6 +88,8 @@ export const VasesView: React.FC = () => {
   const [userHearts, setUserHearts] = useState(0);
   const [vases, setVases] = useState<VaseWithImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVase, setSelectedVase] = useState<VaseWithImage | null>(null);
+  const [showVaseModal, setShowVaseModal] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -139,7 +142,9 @@ export const VasesView: React.FC = () => {
       console.log(`🏺 Collecting vase ${vase.name} for ${vase.heartsRequired} hearts`);
       // TODO: Implement vase collection API call
     } else if (vase.collected) {
-      console.log(`🏺 Vase ${vase.name} already collected`);
+      // If vase is collected, open modal for large view
+      setSelectedVase(vase);
+      setShowVaseModal(true);
     } else {
       console.log(`🏺 Need ${vase.heartsRequired - userHearts} more hearts for ${vase.name}`);
     }
@@ -243,7 +248,13 @@ export const VasesView: React.FC = () => {
                                 </div>
                               </div>
                             ) : (
-                              <VaseImage vase={vase} />
+                              <VaseImage 
+                                vase={vase} 
+                                onClick={() => {
+                                  setSelectedVase(vase);
+                                  setShowVaseModal(true);
+                                }}
+                              />
                             )}
                           </div>
 
@@ -312,6 +323,48 @@ export const VasesView: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Vase Detail Modal */}
+      {selectedVase && (
+        <Dialog open={showVaseModal} onOpenChange={setShowVaseModal}>
+          <DialogContent className="max-w-md bg-slate-900 border-orange-500/30">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-bold text-orange-300">{selectedVase.name}</h3>
+              
+              {/* Large Vase Image - 250x750 pixels */}
+              <div className="flex justify-center">
+                <div className="w-[250px] h-[750px] relative border-2 border-orange-400/50 rounded-lg overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900">
+                  <img 
+                    src={selectedVase.image}
+                    alt={selectedVase.name}
+                    className="max-w-full max-h-full object-contain rounded-lg"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.style.display = 'none';
+                      const nextElement = target.nextElementSibling as HTMLElement;
+                      if (nextElement) nextElement.style.display = 'block';
+                    }}
+                  />
+                  <div className="text-center text-6xl hidden">🏺</div>
+                </div>
+              </div>
+
+              {/* Vase Details */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-orange-300">
+                  <Heart className="h-5 w-5" />
+                  <span>{selectedVase.heartsRequired.toLocaleString()} Herzen erforderlich</span>
+                </div>
+                
+                <div className="flex items-center justify-center gap-2">
+                  <Crown className="h-5 w-5 text-green-400" />
+                  <span className="text-green-300 font-semibold">Gesammelt</span>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
