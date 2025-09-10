@@ -819,7 +819,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
 
         {/* Vases Mode */}
         {viewMode === 'vases' && (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-7xl mx-auto max-h-[85vh] overflow-y-auto pr-2">
             {/* Header with animated title */}
             <div className="text-center mb-8">
               <div className="text-6xl mb-6 flex justify-center items-center space-x-2 leading-tight py-4">
