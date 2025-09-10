@@ -204,6 +204,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const [userVases, setUserVases] = useState<UserVase[]>([]);
   const [selectedVase, setSelectedVase] = useState<UserVase | null>(null);
   const [showVaseModal, setShowVaseModal] = useState(false);
+  const [currentUserHearts, setCurrentUserHearts] = useState(0);
+  const [foreignUserHearts, setForeignUserHearts] = useState(0);
   
   // Common state
   const [loading, setLoading] = useState(true);
@@ -221,7 +223,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     loadFrameLikes();
     loadForeignAquarium();
     loadForeignVases();
-  }, [ownerId]);
+  }, [ownerId, user?.id]);
 
   const loadForeignExhibition = async () => {
     try {
@@ -249,29 +251,6 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
     }
   };
 
-  const loadForeignVases = async () => {
-    try {
-      // Generate the vases data (24 total, same as VasesView)
-      const vaseList: UserVase[] = [];
-      
-      for (let i = 1; i <= 24; i++) {
-        // Exponential scaling: starts at 1000, ends at 100000
-        const heartsRequired = Math.round(1000 + Math.pow((i - 1) / 23, 2.2) * 99000);
-        
-        vaseList.push({
-          id: i,
-          name: `Prächtige Vase ${i}`,
-          heartsRequired: heartsRequired,
-          collected: false, // TODO: Load real collection status from API later
-          image: `/Vasen/${i}.jpg`
-        });
-      }
-      
-      setUserVases(vaseList);
-    } catch (error) {
-      console.error('Failed to load foreign vases:', error);
-    }
-  };
 
   const loadForeignAquarium = async () => {
     try {
@@ -281,6 +260,71 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
       setAquariumTanks(data.tanks || []);
     } catch (error) {
       console.error('Failed to load foreign aquarium:', error);
+    }
+  };
+
+  const loadForeignVases = async () => {
+    try {
+      if (!user?.id) return;
+      
+      // Load hearts for both users
+      const [currentUserHeartsResponse, foreignUserHeartsResponse] = await Promise.all([
+        fetch(`/api/user/${user.id}/hearts`),
+        fetch(`/api/user/${ownerId}/hearts`)
+      ]);
+      
+      let currentHearts = 0;
+      let foreignHearts = 0;
+      
+      if (currentUserHeartsResponse.ok) {
+        const data = await currentUserHeartsResponse.json();
+        currentHearts = data.hearts;
+        setCurrentUserHearts(currentHearts);
+      }
+      
+      if (foreignUserHeartsResponse.ok) {
+        const data = await foreignUserHeartsResponse.json();
+        foreignHearts = data.hearts;
+        setForeignUserHearts(foreignHearts);
+      }
+      
+      // Generate vases with proper visibility logic
+      const vaseList: UserVase[] = [];
+      
+      for (let i = 1; i <= 24; i++) {
+        // Same heart calculation as in VasesView
+        const heartsRequired = Math.round(1000 + Math.pow((i - 1) / 23, 2.2) * 99000);
+        
+        // Visibility logic:
+        // - Both users have unlocked: visible and clickable
+        // - Only foreign user unlocked: show as "verfügbar" 
+        // - Neither or only current user: hidden/locked
+        const currentUserUnlocked = currentHearts >= heartsRequired;
+        const foreignUserUnlocked = foreignHearts >= heartsRequired;
+        
+        let vaseStatus: 'unlocked' | 'available' | 'locked';
+        if (currentUserUnlocked && foreignUserUnlocked) {
+          vaseStatus = 'unlocked';  // Both can see it
+        } else if (!currentUserUnlocked && foreignUserUnlocked) {
+          vaseStatus = 'available'; // Only foreign user has it, show as available
+        } else {
+          vaseStatus = 'locked';    // Hidden or locked
+        }
+        
+        vaseList.push({
+          id: i,
+          name: `Prächtige Vase ${i}`,
+          heartsRequired: heartsRequired,
+          collected: vaseStatus === 'unlocked', // For rendering logic
+          image: `/Vasen/${i}.jpg`,
+          // Add custom field for status
+          status: vaseStatus
+        } as UserVase & { status: string });
+      }
+      
+      setUserVases(vaseList);
+    } catch (error) {
+      console.error('Failed to load foreign vases:', error);
     }
   };
 
