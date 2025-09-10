@@ -66,6 +66,112 @@ interface UserVase {
   image: string;
 }
 
+// Vase Image Component without JPG Badge
+function VaseImage({ vase, onClick }: { vase: UserVase; onClick?: () => void }) {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  if (imageError) {
+    return (
+      <div className="text-center">
+        <div className="text-4xl mb-1">🏺</div>
+        <div className="text-xs font-semibold text-orange-300">
+          Verfügbar
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full relative cursor-pointer" onClick={onClick}>
+      <img 
+        src={vase.image}
+        alt={vase.name}
+        className="w-full h-full object-contain rounded-md hover:scale-105 transition-transform"
+        onError={handleImageError}
+      />
+    </div>
+  );
+}
+
+// Vase Detail Modal Component
+function VaseDetailModal({ 
+  isOpen, 
+  onClose, 
+  vase 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  vase: UserVase | null; 
+}) {
+  if (!vase) return null;
+
+  return (
+    <div className={`fixed inset-0 z-50 ${isOpen ? 'flex' : 'hidden'} items-center justify-center`}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      
+      {/* Modal */}
+      <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-orange-500/30 rounded-xl shadow-2xl max-w-sm mx-4">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-full p-2 transition-colors"
+        >
+          ✕
+        </button>
+        
+        {/* Header */}
+        <div className="text-center p-4 border-b border-orange-500/20">
+          <h3 className="text-xl font-bold text-orange-300">
+            {vase.name}
+          </h3>
+          <div className="flex items-center justify-center space-x-2 mt-2">
+            <Heart className="h-4 w-4 text-red-400" />
+            <span className="text-slate-300">{vase.heartsRequired.toLocaleString()} Herzen</span>
+          </div>
+        </div>
+        
+        {/* Image */}
+        <div className="p-4">
+          <div className="w-[250px] h-[375px] mx-auto bg-slate-800 rounded-lg border border-orange-500/20 flex items-center justify-center">
+            <img 
+              src={vase.image}
+              alt={vase.name}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+                const nextElement = target.nextElementSibling as HTMLElement;
+                if (nextElement) nextElement.style.display = 'block';
+              }}
+            />
+            <div className="text-center text-6xl hidden">🏺</div>
+          </div>
+        </div>
+        
+        {/* Status */}
+        <div className="text-center p-4 border-t border-orange-500/20">
+          {vase.collected ? (
+            <div className="flex items-center justify-center space-x-2 text-green-400">
+              <Crown className="h-5 w-5" />
+              <span className="font-semibold">Gesammelt!</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center space-x-2 text-slate-400">
+              <Lock className="h-5 w-5" />
+              <span>Noch nicht gesammelt</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type ViewMode = 'exhibition' | 'aquarium' | 'vases';
 
 interface ForeignExhibitionViewProps {
@@ -96,6 +202,8 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   
   // Vases data
   const [userVases, setUserVases] = useState<UserVase[]>([]);
+  const [selectedVase, setSelectedVase] = useState<UserVase | null>(null);
+  const [showVaseModal, setShowVaseModal] = useState(false);
   
   // Common state
   const [loading, setLoading] = useState(true);
@@ -732,12 +840,13 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                               {/* Vase Image or Placeholder */}
                               <div className="w-full h-full flex items-center justify-center p-2">
                                 {vase.collected ? (
-                                  <div className="text-center">
-                                    <Crown className="h-8 w-8 text-green-400 mx-auto mb-1" />
-                                    <div className="text-xs font-bold text-green-300">
-                                      Gesammelt!
-                                    </div>
-                                  </div>
+                                  <VaseImage 
+                                    vase={vase} 
+                                    onClick={() => {
+                                      setSelectedVase(vase);
+                                      setShowVaseModal(true);
+                                    }}
+                                  />
                                 ) : (
                                   <div className="text-center">
                                     <Lock className="h-6 w-6 text-slate-500 mx-auto mb-1" />
@@ -859,6 +968,16 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
           setCurrentFishIndex(prevIndex);
           setSelectedFish(aquariumFish[prevIndex]);
         } : undefined}
+      />
+
+      {/* Vase Detail Modal */}
+      <VaseDetailModal
+        isOpen={showVaseModal}
+        onClose={() => {
+          setShowVaseModal(false);
+          setSelectedVase(null);
+        }}
+        vase={selectedVase}
       />
     </div>
   );
