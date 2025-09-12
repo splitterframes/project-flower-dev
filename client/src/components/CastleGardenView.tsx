@@ -114,7 +114,28 @@ export const CastleGardenView: React.FC = () => {
   // Bienen State
   const [bees, setBees] = useState<Bee[]>([]);
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
-  const [fieldHearts, setFieldHearts] = useState<FieldHeart[]>([]);
+  
+  // Field Hearts mit localStorage-Persistierung
+  const [fieldHearts, setFieldHearts] = useState<FieldHeart[]>(() => {
+    if (!user?.id) return [];
+    
+    try {
+      const saved = localStorage.getItem(`castle-field-hearts-${user.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validiere und filtere veraltete Herzen (älter als 24 Stunden)
+        const now = Date.now();
+        const validHearts = parsed.filter((heart: any) => 
+          heart.timestamp && (now - heart.timestamp) < 24 * 60 * 60 * 1000
+        );
+        return validHearts;
+      }
+    } catch (error) {
+      console.error('Failed to load field hearts from localStorage:', error);
+    }
+    return [];
+  });
+  
   const animationFrameRef = useRef<number>();
 
   // Drag & Drop State mit Feld-zu-Feld Support
@@ -144,6 +165,18 @@ export const CastleGardenView: React.FC = () => {
     const interval = setInterval(fetchHearts, 5000); // Alle 5 Sekunden
     return () => clearInterval(interval);
   }, [user?.id]);
+
+  // Field Hearts in localStorage persistieren bei Änderungen
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    try {
+      localStorage.setItem(`castle-field-hearts-${user.id}`, JSON.stringify(fieldHearts));
+      console.log(`💾 Saved ${fieldHearts.length} field hearts to localStorage for user ${user.id}`);
+    } catch (error) {
+      console.error('Failed to save field hearts to localStorage:', error);
+    }
+  }, [fieldHearts, user?.id]);
 
   // Balloon-Toggle State
   const [balloonsEnabled, setBalloonsEnabled] = useState(() => {
@@ -528,7 +561,11 @@ export const CastleGardenView: React.FC = () => {
       timestamp: Date.now()
     };
     
-    setFieldHearts(prev => [...prev, newHeart]);
+    setFieldHearts(prev => {
+      const updated = [...prev, newHeart];
+      console.log(`💖 Field heart spawned at (${gridX}, ${gridY}) with ${amount} hearts. Total field hearts: ${updated.length}`);
+      return updated;
+    });
     return true; // Herz erfolgreich gespawnt
   };
   
@@ -536,8 +573,14 @@ export const CastleGardenView: React.FC = () => {
   const collectHeart = async (heart: FieldHeart, event: React.MouseEvent) => {
     event.stopPropagation(); // Verhindert Feld-Klick
     
+    console.log(`💖 Collecting heart at (${heart.gridX}, ${heart.gridY}) with ${heart.amount} hearts`);
+    
     // Herz aus Liste entfernen
-    setFieldHearts(prev => prev.filter(h => h.id !== heart.id));
+    setFieldHearts(prev => {
+      const updated = prev.filter(h => h.id !== heart.id);
+      console.log(`💖 Heart collected. Remaining field hearts: ${updated.length}`);
+      return updated;
+    });
     
     // Herzen in Datenbank updaten und lokale Anzeige aktualisieren
     if (user?.id) {
@@ -549,7 +592,11 @@ export const CastleGardenView: React.FC = () => {
       } catch (error) {
         console.error('Failed to save hearts to database:', error);
         // Bei Fehler das Herz wieder hinzufügen
-        setFieldHearts(prev => [...prev, heart]);
+        setFieldHearts(prev => {
+          const restored = [...prev, heart];
+          console.log(`💖 Heart restored due to error. Field hearts: ${restored.length}`);
+          return restored;
+        });
       }
     }
   };
