@@ -116,25 +116,8 @@ export const CastleGardenView: React.FC = () => {
   const [confettiHearts, setConfettiHearts] = useState<ConfettiHeart[]>([]);
   
   // Field Hearts mit localStorage-Persistierung
-  const [fieldHearts, setFieldHearts] = useState<FieldHeart[]>(() => {
-    if (!user?.id) return [];
-    
-    try {
-      const saved = localStorage.getItem(`castle-field-hearts-${user.id}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Validiere und filtere veraltete Herzen (älter als 24 Stunden)
-        const now = Date.now();
-        const validHearts = parsed.filter((heart: any) => 
-          heart.timestamp && (now - heart.timestamp) < 24 * 60 * 60 * 1000
-        );
-        return validHearts;
-      }
-    } catch (error) {
-      console.error('Failed to load field hearts from localStorage:', error);
-    }
-    return [];
-  });
+  const [fieldHearts, setFieldHearts] = useState<FieldHeart[]>([]);
+  const loadedRef = useRef(false);
   
   const animationFrameRef = useRef<number>();
 
@@ -166,9 +149,44 @@ export const CastleGardenView: React.FC = () => {
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  // Field Hearts in localStorage persistieren bei Änderungen
+  // Field Hearts von localStorage laden bei User-Wechsel
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setFieldHearts([]);
+      loadedRef.current = false;
+      return;
+    }
+    
+    try {
+      const saved = localStorage.getItem(`castle-field-hearts-${user.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validiere und filtere veraltete Herzen (älter als 24 Stunden)
+        const now = Date.now();
+        const validHearts = parsed.filter((heart: any) => 
+          heart.timestamp && (now - heart.timestamp) < 24 * 60 * 60 * 1000
+        );
+        setFieldHearts(validHearts);
+        console.log(`💾 Loaded ${validHearts.length} field hearts from localStorage for user ${user.id}`);
+        
+        // Bereinigte Liste zurückschreiben wenn sich etwas geändert hat
+        if (validHearts.length !== parsed.length) {
+          localStorage.setItem(`castle-field-hearts-${user.id}`, JSON.stringify(validHearts));
+        }
+      } else {
+        setFieldHearts([]);
+      }
+    } catch (error) {
+      console.error('Failed to load field hearts from localStorage:', error);
+      setFieldHearts([]);
+    }
+    
+    loadedRef.current = true;
+  }, [user?.id]);
+
+  // Field Hearts in localStorage persistieren bei Änderungen (nur wenn geladen)
+  useEffect(() => {
+    if (!user?.id || !loadedRef.current) return;
     
     try {
       localStorage.setItem(`castle-field-hearts-${user.id}`, JSON.stringify(fieldHearts));
