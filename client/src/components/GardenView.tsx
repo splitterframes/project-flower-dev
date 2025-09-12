@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
@@ -121,6 +131,10 @@ export const GardenView: React.FC = () => {
   // Seed Reward Dialog State
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [rewardData, setRewardData] = useState<{quantity: number; rarity: string} | null>(null);
+  
+  // Field Unlock Confirmation Dialog State
+  const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false);
+  const [fieldToUnlock, setFieldToUnlock] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -444,6 +458,9 @@ export const GardenView: React.FC = () => {
     if (!user) return;
     
     try {
+      // Calculate cost BEFORE the API call to avoid overcharging
+      const costBefore = calculateUnlockCost(fieldId);
+      
       const response = await fetch(`/api/user/${user.id}/unlock-field`, {
         method: 'POST',
         headers: {
@@ -457,10 +474,9 @@ export const GardenView: React.FC = () => {
       if (response.ok) {
         // Refresh unlocked fields and update UI properly without page reload
         await fetchUnlockedFields();
-        // Calculate and subtract the cost from current credits
-        const cost = calculateUnlockCost(fieldId);
-        updateCredits(credits - cost);
-        showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${cost} Credits freigeschaltet.`, 'success');
+        // Subtract the pre-calculated cost to avoid overcharging
+        updateCredits(credits - costBefore);
+        showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${costBefore} Credits freigeschaltet.`, 'success');
       } else {
         const errorData = await response.json();
         showNotification(errorData.error || 'Fehler beim Freischalten des Feldes', 'error');
@@ -1002,7 +1018,8 @@ export const GardenView: React.FC = () => {
                   }}
                   onClick={() => {
                     if (!field.isUnlocked && isNextToUnlock) {
-                      unlockField(field.id);
+                      setFieldToUnlock(field.id);
+                      setIsUnlockDialogOpen(true);
                     } else if (field.hasSunSpawn) {
                       collectSun(field.id - 1);
                     } else if (field.hasButterfly) {
@@ -1392,6 +1409,56 @@ export const GardenView: React.FC = () => {
         quantity={rewardData?.quantity || 0}
         rarity={rewardData?.rarity || 'common'}
       />
+
+      {/* Field Unlock Confirmation Dialog */}
+      <AlertDialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
+        <AlertDialogContent className="bg-slate-800 border-slate-600 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-orange-400">
+              🔓 Feld freischalten
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300">
+              {fieldToUnlock && (
+                <>
+                  Möchtest du wirklich Feld {fieldToUnlock} für{' '}
+                  <span className="font-bold text-yellow-400">
+                    {calculateUnlockCost(fieldToUnlock)} Credits
+                  </span>{' '}
+                  freischalten?
+                  <br /><br />
+                  <span className="text-sm text-slate-400">
+                    Diese Aktion kann nicht rückgängig gemacht werden.
+                  </span>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+              onClick={() => {
+                setIsUnlockDialogOpen(false);
+                setFieldToUnlock(null);
+              }}
+            >
+              Abbrechen
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={fieldToUnlock ? credits < calculateUnlockCost(fieldToUnlock) : false}
+              onClick={() => {
+                if (fieldToUnlock) {
+                  unlockField(fieldToUnlock);
+                  setIsUnlockDialogOpen(false);
+                  setFieldToUnlock(null);
+                }
+              }}
+            >
+              Freischalten
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
