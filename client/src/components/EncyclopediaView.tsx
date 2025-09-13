@@ -153,9 +153,12 @@ export const EncyclopediaView: React.FC = () => {
           fish: 'Fische'
         };
         
-        // For flowers under 100, don't use leading zeros; for others, use padStart
+        // Different filename strategies per type based on actual file structure
         let fileName: string;
         if (type === 'flowers' && id < 100) {
+          fileName = `${id}.jpg`;
+        } else if (type === 'caterpillars') {
+          // Caterpillars don't use leading zeros (30.jpg not 030.jpg)
           fileName = `${id}.jpg`;
         } else {
           fileName = `${id.toString().padStart(3, '0')}.jpg`;
