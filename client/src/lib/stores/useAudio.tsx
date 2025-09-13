@@ -6,6 +6,7 @@ interface AudioState {
   successSound: HTMLAudioElement | null;
   isMuted: boolean;
   spinningSound: HTMLAudioElement | null; // Für kontinuierlichen Spin-Sound
+  spinStopTimer: NodeJS.Timeout | null; // Timer für verzögerten Stop
   
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
@@ -25,6 +26,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   hitSound: null,
   successSound: null,
   spinningSound: null,
+  spinStopTimer: null,
   isMuted: true, // Start muted by default
   
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
@@ -72,7 +74,14 @@ export const useAudio = create<AudioState>((set, get) => ({
   },
   
   playSlotSpin: () => {
-    const { backgroundMusic, isMuted } = get();
+    const { backgroundMusic, isMuted, spinStopTimer } = get();
+    
+    // Lösche vorherigen Timer falls vorhanden
+    if (spinStopTimer) {
+      clearTimeout(spinStopTimer);
+      set({ spinStopTimer: null });
+    }
+    
     if (backgroundMusic && !isMuted) {
       // Erstelle einen kontinuierlichen Spin-Sound aus der Hintergrundmusik
       const spinSound = backgroundMusic.cloneNode() as HTMLAudioElement;
@@ -89,15 +98,9 @@ export const useAudio = create<AudioState>((set, get) => ({
   },
   
   playSlotStop: () => {
-    const { hitSound, spinningSound, isMuted } = get();
+    const { hitSound, spinningSound, isMuted, spinStopTimer } = get();
     
-    // Stoppe den kontinuierlichen Spin-Sound
-    if (spinningSound) {
-      spinningSound.pause();
-      spinningSound.currentTime = 0;
-      set({ spinningSound: null });
-    }
-    
+    // Spiele den Stop-Sound sofort
     if (hitSound && !isMuted) {
       // Doppelter "Stopp" Sound für hörbareren Effekt
       const soundClone1 = hitSound.cloneNode() as HTMLAudioElement;
@@ -116,6 +119,20 @@ export const useAudio = create<AudioState>((set, get) => ({
           console.log("Slot stop sound 2 play prevented:", error);
         });
       }, 100);
+    }
+    
+    // Stoppe den kontinuierlichen Spin-Sound erst nach 2 Sekunden, aber nur einmal
+    if (spinningSound && !spinStopTimer) {
+      const timer = setTimeout(() => {
+        const { spinningSound: currentSpinningSound } = get();
+        if (currentSpinningSound) {
+          currentSpinningSound.pause();
+          currentSpinningSound.currentTime = 0;
+          set({ spinningSound: null, spinStopTimer: null });
+        }
+      }, 2000); // 2 Sekunden Verzögerung
+      
+      set({ spinStopTimer: timer });
     }
   }
 }));
