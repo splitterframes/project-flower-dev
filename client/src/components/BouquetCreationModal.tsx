@@ -202,7 +202,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                         <div className="relative">
                           <RarityImage 
                             src={flower.flowerImageUrl}
-                            alt={flower.flowerName}
+                            alt={flower.flowerName || 'Flower'}
                             rarity={flower.flowerRarity as RarityTier}
                             size="large"
                             className="mx-auto transform transition-transform duration-300 hover:scale-110"
@@ -211,7 +211,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                             ✓
                           </div>
                         </div>
-                        <div className="text-sm font-medium text-white truncate">{flower.flowerName}</div>
+                        <div className="text-sm font-medium text-white truncate">{flower.flowerName || 'Unbenannte Blume'}</div>
                         <Badge className={`${getRarityBadgeStyle(flower.flowerRarity as RarityTier)} text-sm font-bold px-3 py-1`}>
                           {getRarityDisplayName(flower.flowerRarity as RarityTier)}
                         </Badge>
@@ -311,7 +311,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                         <div className="relative">
                           <RarityImage 
                             src={flower.flowerImageUrl}
-                            alt={flower.flowerName}
+                            alt={flower.flowerName || 'Flower'}
                             rarity={flower.flowerRarity as RarityTier}
                             size="medium"
                             className="mx-auto mb-3 transition-transform duration-300 group-hover:scale-110"
@@ -320,7 +320,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                             {flower.quantity}x
                           </Badge>
                         </div>
-                        <div className="text-xs font-medium text-white truncate mb-2">{flower.flowerName}</div>
+                        <div className="text-xs font-medium text-white truncate mb-2">{flower.flowerName || 'Unbenannte Blume'}</div>
                         
                         {/* Enhanced Selection button */}
                         <div className="flex justify-center">

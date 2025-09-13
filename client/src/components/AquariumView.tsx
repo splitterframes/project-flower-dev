@@ -8,7 +8,7 @@ import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Fish, Plus, Clock, Star, Waves, Eye } from "lucide-react";
 import { HelpButton } from './HelpButton';
-import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
 import { FishSelectionModal } from "./FishSelectionModal";
@@ -343,8 +343,8 @@ export const AquariumView: React.FC = () => {
           <TooltipContent>
             <div className="text-center">
               <p className="font-semibold">{fish.fishName}</p>
-              <Badge className={`${getRarityBadgeStyle(fish.fishRarity)} text-xs px-2 py-1`}>
-                {getRarityDisplayName(fish.fishRarity)}
+              <Badge className={`${getRarityBadgeStyle(fish.fishRarity as RarityTier)} text-xs px-2 py-1`}>
+                {getRarityDisplayName(fish.fishRarity as RarityTier)}
               </Badge>
               <p className="text-xs text-blue-300 mt-1">Klicken für Details</p>
             </div>
@@ -603,7 +603,7 @@ export const AquariumView: React.FC = () => {
                       className="mb-1 text-xs"
                       style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
                     >
-                      {getRarityDisplayName(fish.fishRarity)}
+                      {getRarityDisplayName(fish.fishRarity as RarityTier)}
                     </Badge>
                     <p className="text-blue-300 text-xs">
                       Anzahl: {fish.quantity}
