@@ -99,6 +99,7 @@ export const EncyclopediaView: React.FC = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("flowers");
+  const [rarityFilter, setRarityFilter] = useState<RarityTier | null>(null);
   const [userItems, setUserItems] = useState<{
     flowers: any[];
     caterpillars: any[];
@@ -185,7 +186,7 @@ export const EncyclopediaView: React.FC = () => {
     return items;
   }, [userItems]);
 
-  // Filter items by search term and active tab
+  // Filter items by search term, active tab, and rarity
   const filteredItems = useMemo(() => {
     let filtered = allItems.filter(item => item.type === activeTab);
     
@@ -194,6 +195,10 @@ export const EncyclopediaView: React.FC = () => {
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         getRarityDisplayName(item.rarity).toLowerCase().includes(searchTerm.toLowerCase())
       );
+    }
+    
+    if (rarityFilter) {
+      filtered = filtered.filter(item => item.rarity === rarityFilter);
     }
     
     // Group by rarity, then sort by ID within each group
@@ -213,7 +218,7 @@ export const EncyclopediaView: React.FC = () => {
     // Combine back in rarity order
     const rarityOrder: RarityTier[] = ['mythical', 'legendary', 'epic', 'super-rare', 'rare', 'uncommon', 'common'];
     return rarityOrder.flatMap(rarity => groupedByRarity[rarity] || []);
-  }, [allItems, searchTerm, activeTab]);
+  }, [allItems, searchTerm, activeTab, rarityFilter]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -226,6 +231,8 @@ export const EncyclopediaView: React.FC = () => {
       percentage: Math.round((collected.length / typeItems.length) * 100)
     };
   }, [allItems, activeTab]);
+
+  const rarityOrder: RarityTier[] = ['mythical', 'legendary', 'epic', 'super-rare', 'rare', 'uncommon', 'common'];
 
   const tabConfig = [
     { id: 'flowers', label: 'Blumen', icon: Flower, color: 'text-green-400' },
@@ -293,15 +300,45 @@ export const EncyclopediaView: React.FC = () => {
           <TabsContent key={tab.id} value={tab.id} className="mt-6">
             {/* Stats */}
             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-4">
-                  <span className="text-slate-400">Gesammelt:</span>
-                  <Badge className="bg-green-600 text-white">
-                    {stats.collected} / {stats.total} ({stats.percentage}%)
-                  </Badge>
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-slate-400">Gesammelt:</span>
+                    <Badge className="bg-green-600 text-white">
+                      {stats.collected} / {stats.total} ({stats.percentage}%)
+                    </Badge>
+                  </div>
+                  <div className="text-slate-400">
+                    {filteredItems.length} {searchTerm || rarityFilter ? 'gefilterte' : 'gesamt'} {tab.label.toLowerCase()}
+                  </div>
                 </div>
-                <div className="text-slate-400">
-                  {filteredItems.length} {searchTerm ? 'gefilterte' : 'gesamt'} {tab.label.toLowerCase()}
+                
+                {/* Rarity Filter Buttons */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 text-xs">Filter nach Rarität:</span>
+                  <button
+                    onClick={() => setRarityFilter(null)}
+                    className={`px-2 py-1 text-xs rounded transition-all ${
+                      rarityFilter === null 
+                        ? 'bg-slate-600 text-white' 
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
+                    }`}
+                  >
+                    Alle
+                  </button>
+                  {rarityOrder.map(rarity => (
+                    <button
+                      key={rarity}
+                      onClick={() => setRarityFilter(rarity)}
+                      className={`px-2 py-1 text-xs rounded transition-all ${
+                        rarityFilter === rarity 
+                          ? getRarityColor(rarity).replace('text-', 'bg-') + ' text-white'
+                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
+                      }`}
+                    >
+                      {getRarityDisplayName(rarity)}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
