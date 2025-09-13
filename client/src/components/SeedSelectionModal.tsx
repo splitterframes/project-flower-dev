@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RarityImage } from "./RarityImage";
 import { Sprout, Star, X, Clock, Sparkles } from "lucide-react";
-import { getRarityColor, getRarityDisplayName, type RarityTier, getGrowthTime, formatTime } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier, getGrowthTime, formatTime } from "@shared/rarity";
 
 interface SeedOption {
   id: number;
@@ -127,7 +127,7 @@ export const SeedSelectionModal: React.FC<SeedSelectionModalProps> = ({
                               </h4>
                             </div>
                             
-                            <Badge className={`${getRarityColor(seed.seedRarity as RarityTier)} text-sm font-bold px-3 py-1 w-fit`}>
+                            <Badge className={`${getRarityBadgeStyle(seed.seedRarity as RarityTier)} text-sm font-bold px-3 py-1 w-fit`}>
                               <Star className="h-3 w-3 mr-1" />
                               {getRarityDisplayName(seed.seedRarity as RarityTier)}
                             </Badge>
