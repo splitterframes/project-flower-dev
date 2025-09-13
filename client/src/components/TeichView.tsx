@@ -834,6 +834,17 @@ export const TeichView: React.FC = () => {
 
       console.log("🌸 PLACEFLOWER: Flower placed and caterpillar spawned in one step ✅");
 
+      // ✅ FIX: Remove flower from client inventory IMMEDIATELY after successful server response
+      setUserFlowers(prev => prev.map(f => {
+        if (f.id === flowerId) {
+          const newQuantity = f.quantity - 1;
+          return newQuantity > 0 ? { ...f, quantity: newQuantity } : null;
+        }
+        return f;
+      }).filter(Boolean) as typeof prev); // Remove null entries
+      
+      console.log("🌸 PLACEFLOWER: Flower removed from client inventory immediately ✅");
+
       // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (temporary visual only)
       // Add temporary visual flower that will spawn a caterpillar
       const tempFlowerId = Date.now();
