@@ -60,6 +60,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   
   playSuccess: () => {
     const { successSound, isMuted } = get();
+    console.log("🎰 playSuccess called - isMuted:", isMuted);
     if (successSound) {
       // If sound is muted, don't play anything
       if (isMuted) {
@@ -71,11 +72,15 @@ export const useAudio = create<AudioState>((set, get) => ({
       successSound.play().catch(error => {
         console.log("Success sound play prevented:", error);
       });
+      console.log("🎰 Success sound played!");
+    } else {
+      console.log("🎰 No successSound available");
     }
   },
   
   playSlotSpin: () => {
     const { hitSound, isMuted } = get();
+    console.log("🎰 playSlotSpin called - isMuted:", isMuted);
     if (hitSound) {
       // If sound is muted, don't play anything
       if (isMuted) {
@@ -90,11 +95,15 @@ export const useAudio = create<AudioState>((set, get) => ({
       soundClone.play().catch(error => {
         console.log("Slot spin sound play prevented:", error);
       });
+      console.log("🎰 Slot spin sound played!");
+    } else {
+      console.log("🎰 No hitSound available for slot spin");
     }
   },
   
   playSlotStop: () => {
     const { hitSound, isMuted } = get();
+    console.log("🎰 playSlotStop called - isMuted:", isMuted);
     if (hitSound) {
       // If sound is muted, don't play anything
       if (isMuted) {
@@ -109,6 +118,9 @@ export const useAudio = create<AudioState>((set, get) => ({
       soundClone.play().catch(error => {
         console.log("Slot stop sound play prevented:", error);
       });
+      console.log("🎰 Slot stop sound played!");
+    } else {
+      console.log("🎰 No hitSound available for slot stop");
     }
   }
 }));
