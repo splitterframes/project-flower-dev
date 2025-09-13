@@ -16,6 +16,7 @@ import { AquariumView } from "./AquariumView";
 import { MarieSlotView } from "./MarieSlotView";
 import { CastleGardenView } from "./CastleGardenView";
 import { VasesView } from "./VasesView";
+import { EncyclopediaView } from "./EncyclopediaView";
 import { DonateDialog } from "./DonateDialog";
 import { ImpressumDialog } from "./ImpressumDialog";
 import { DatenschutzDialog } from "./DatenschutzDialog";
@@ -441,6 +442,8 @@ export const Layout: React.FC = () => {
         return <CastleGardenView />;
       case "vasen":
         return <VasesView />;
+      case "encyclopedia":
+        return <EncyclopediaView />;
       case "dashboard":
         return <Dashboard onViewChange={handleViewChange} />;
       case "game":
@@ -478,12 +481,20 @@ export const Layout: React.FC = () => {
             </button>
             <span>Copyright © Mariposa 2025</span>
           </div>
-          <button 
-            onClick={() => setShowDonateDialog(true)}
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black font-bold px-6 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 animate-slow-pulse hover:animate-none"
-          >
-            ✨ DONATE ✨
-          </button>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => handleViewChange('encyclopedia')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold px-4 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
+            >
+              📚 Enzyklopädie
+            </button>
+            <button 
+              onClick={() => setShowDonateDialog(true)}
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black font-bold px-6 py-2 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 animate-slow-pulse hover:animate-none"
+            >
+              ✨ DONATE ✨
+            </button>
+          </div>
         </div>
       </div>
       
