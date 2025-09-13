@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Zap, Sun, Coins, Star, Trophy, Crown, Flower } from 'lucide-react';
+import { ArrowLeft, Zap, Sun, Coins, Star, Trophy, Crown, Flower, Volume2, VolumeX } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { useAuth } from '@/lib/stores/useAuth';
 import { useSuns } from '@/lib/stores/useSuns';
@@ -99,7 +99,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { suns, setSuns } = useSuns();
   const { credits, setCredits } = useCredits();
   const { showNotification } = useNotification();
-  const { playSlotSpin, playSlotStop, playSuccess } = useAudio();
+  const { playSlotSpin, playSlotStop, playSuccess, isMuted, toggleMute } = useAudio();
   
   const [reels, setReels] = useState<Reel[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -567,6 +567,17 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </div>
           
           <div className="text-right text-white">
+            {/* Sound Toggle Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleMute}
+              className="mb-4 border-yellow-500 text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300"
+              title={isMuted ? "Sound aktivieren" : "Sound deaktivieren"}
+            >
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+            
             <div className="flex items-center gap-2 mb-1">
               <Sun className="h-6 w-6 text-yellow-400" />
               <span className="font-bold text-2xl">{suns}</span>
