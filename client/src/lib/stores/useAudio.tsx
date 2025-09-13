@@ -72,26 +72,43 @@ export const useAudio = create<AudioState>((set, get) => ({
   playSlotSpin: () => {
     const { hitSound, isMuted } = get();
     if (hitSound && !isMuted) {
-      // Clone the sound for slot spinning (höhere Lautstärke, normale Geschwindigkeit)
-      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-      soundClone.volume = 0.5; // Lauter
-      soundClone.playbackRate = 1.0; // Normale Geschwindigkeit
-      soundClone.play().catch(error => {
-        console.log("Slot spin sound play prevented:", error);
-      });
+      // Spiele den Sound mehrmals hintereinander für längeren Spin-Effekt
+      const playRepeatedSound = () => {
+        for (let i = 0; i < 8; i++) { // 8 mal wiederholen
+          setTimeout(() => {
+            const soundClone = hitSound.cloneNode() as HTMLAudioElement;
+            soundClone.volume = 0.3; // Moderate Lautstärke
+            soundClone.playbackRate = 1.5; // Schneller für Maschinensound
+            soundClone.play().catch(error => {
+              console.log("Slot spin sound play prevented:", error);
+            });
+          }, i * 200); // Alle 200ms einen neuen Sound
+        }
+      };
+      playRepeatedSound();
     }
   },
   
   playSlotStop: () => {
     const { hitSound, isMuted } = get();
     if (hitSound && !isMuted) {
-      // Clone the sound for slot stopping (höhere Lautstärke, langsamere Geschwindigkeit)
-      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-      soundClone.volume = 0.6; // Lauter
-      soundClone.playbackRate = 0.9; // Langsamer, damit man es hört
-      soundClone.play().catch(error => {
+      // Doppelter "Stopp" Sound für hörbareren Effekt
+      const soundClone1 = hitSound.cloneNode() as HTMLAudioElement;
+      soundClone1.volume = 0.6; // Lauter
+      soundClone1.playbackRate = 0.8; // Langsamer, tiefer
+      soundClone1.play().catch(error => {
         console.log("Slot stop sound play prevented:", error);
       });
+      
+      // Zweiter Sound nach kurzer Verzögerung
+      setTimeout(() => {
+        const soundClone2 = hitSound.cloneNode() as HTMLAudioElement;
+        soundClone2.volume = 0.4;
+        soundClone2.playbackRate = 1.2; // Höher für "Klick" Effekt
+        soundClone2.play().catch(error => {
+          console.log("Slot stop sound 2 play prevented:", error);
+        });
+      }, 100);
     }
   }
 }));
