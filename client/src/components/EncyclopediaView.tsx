@@ -12,12 +12,12 @@ import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/r
 import { BookOpen, Flower, Bug, Sparkles, Fish, Lock, Star, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-// Item distribution based on replit.md
+// Item distribution based on actual system assets (from server logs)
 const ITEM_RANGES = {
-  flowers: { start: 1, end: 200 },
-  caterpillars: { start: 1, end: 1000 }, // Using same range as butterflies for simplicity  
-  butterflies: { start: 1, end: 1000 },
-  fish: { start: 1, end: 100 } // Assuming reasonable range for fish
+  flowers: { start: 1, end: 241 },     // 🌸 Found 241 flower images: 0-240
+  caterpillars: { start: 1, end: 124 }, // 🐛 Found 124 caterpillar images: 0-123  
+  butterflies: { start: 1, end: 960 },  // 🦋 Found 961 butterfly images: 0-960
+  fish: { start: 1, end: 278 }          // 🐟 Found 278 fish images: 0-277
 };
 
 // Rarity distribution for flowers (from replit.md)
