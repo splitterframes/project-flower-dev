@@ -28,17 +28,37 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
+    const dialogWidth = 280; // Dialog width + padding
+    const dialogHeight = 320; // Dialog height + padding
+    const margin = 8; // Margin from element
+    
+    // Get viewport dimensions
     const viewportWidth = window.innerWidth;
-    const dialogWidth = 280; // Approximate width of the dialog (264px + padding)
+    const viewportHeight = window.innerHeight;
     
-    // Check if there's enough space on the right
-    const spaceOnRight = viewportWidth - rect.right;
-    const showOnLeft = spaceOnRight < dialogWidth + 16; // 16px for margin
+    // Calculate horizontal position
+    let x = rect.right + margin; // Default: right of element
+    if (x + dialogWidth > viewportWidth) {
+      // Not enough space on right, position on left
+      x = rect.left - dialogWidth - margin;
+      if (x < 0) {
+        // Not enough space on left either, center it
+        x = Math.max(margin, (viewportWidth - dialogWidth) / 2);
+      }
+    }
     
-    setDialogPosition({
-      x: showOnLeft ? rect.left - dialogWidth - 8 : rect.right + 8,
-      y: rect.top
-    });
+    // Calculate vertical position
+    let y = rect.top; // Default: aligned with top of element
+    if (y + dialogHeight > viewportHeight) {
+      // Not enough space below, position above
+      y = rect.bottom - dialogHeight;
+      if (y < 0) {
+        // Not enough space above either, center vertically
+        y = Math.max(margin, (viewportHeight - dialogHeight) / 2);
+      }
+    }
+    
+    setDialogPosition({ x, y });
     setIsHovering(true);
   };
 

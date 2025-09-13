@@ -32,10 +32,37 @@ export const FlowerHoverPreview: React.FC<FlowerHoverPreviewProps> = ({
     if (isSpinning) return; // No hover during spin animation
     
     const rect = e.currentTarget.getBoundingClientRect();
-    setDialogPosition({
-      x: rect.right + 8, // 8px Abstand rechts vom Element
-      y: rect.top
-    });
+    const dialogWidth = 280; // Dialog width + padding
+    const dialogHeight = 320; // Dialog height + padding
+    const margin = 8; // Margin from element
+    
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate horizontal position
+    let x = rect.right + margin; // Default: right of element
+    if (x + dialogWidth > viewportWidth) {
+      // Not enough space on right, position on left
+      x = rect.left - dialogWidth - margin;
+      if (x < 0) {
+        // Not enough space on left either, center it
+        x = Math.max(margin, (viewportWidth - dialogWidth) / 2);
+      }
+    }
+    
+    // Calculate vertical position
+    let y = rect.top; // Default: aligned with top of element
+    if (y + dialogHeight > viewportHeight) {
+      // Not enough space below, position above
+      y = rect.bottom - dialogHeight;
+      if (y < 0) {
+        // Not enough space above either, center vertically
+        y = Math.max(margin, (viewportHeight - dialogHeight) / 2);
+      }
+    }
+    
+    setDialogPosition({ x, y });
     setIsHovering(true);
   };
 
