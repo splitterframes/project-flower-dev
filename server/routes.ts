@@ -1658,6 +1658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/encyclopedia/rarities', async (req, res) => {
     try {
       const creaturesModule = await import('./creatures');
+      const bouquetModule = await import('./bouquet');
       const { getFlowerRarityById } = await import('../shared/rarity');
       
       // Create rarity mappings for all item types
@@ -1674,8 +1675,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Dynamic rarities from server Maps (with null checks)
-      if (creaturesModule.BUTTERFLY_RARITY_MAP) {
-        creaturesModule.BUTTERFLY_RARITY_MAP.forEach((rarity, id) => {
+      if (bouquetModule.BUTTERFLY_RARITY_MAP) {
+        bouquetModule.BUTTERFLY_RARITY_MAP.forEach((rarity, id) => {
           rarities.butterflies[id] = rarity;
         });
       }
