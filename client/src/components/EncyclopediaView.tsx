@@ -3,6 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { RarityImage } from "./RarityImage";
+import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
+import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
+import { FishHoverPreview } from "./FishHoverPreview";
 import { useAuth } from "@/lib/stores/useAuth";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import { BookOpen, Flower, Bug, Sparkles, Fish, Lock, Star, Search } from "lucide-react";
@@ -353,67 +357,121 @@ export const EncyclopediaView: React.FC = () => {
 
             {/* Items Grid */}
             <div className="grid grid-cols-5 gap-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
-              {filteredItems.map(item => (
-                <Card 
-                  key={`${item.type}-${item.id}`}
-                  className={`bg-gradient-to-br from-slate-900 to-slate-950 border transition-all duration-300 ${
-                    item.collected 
-                      ? 'border-slate-600 hover:border-slate-500' 
-                      : 'border-slate-800 opacity-40 hover:opacity-60'
-                  }`}
-                >
-                  <CardContent className="p-3">
-                    {/* Item Image */}
-                    <div className="relative mb-3">
-                      <RarityImage
-                        src={item.imageUrl}
-                        alt={item.name}
+              {filteredItems.map(item => {
+                const cardContent = (
+                  <Card 
+                    key={`${item.type}-${item.id}`}
+                    className={`bg-gradient-to-br from-slate-900 to-slate-950 border transition-all duration-300 ${
+                      item.collected 
+                        ? 'border-slate-600 hover:border-slate-500' 
+                        : 'border-slate-800 opacity-40 hover:opacity-60'
+                    }`}
+                  >
+                    <CardContent className="p-3">
+                      {/* Item Image */}
+                      <div className="relative mb-3">
+                        <RarityImage
+                          src={item.imageUrl}
+                          alt={item.name}
+                          rarity={item.rarity}
+                          size="small"
+                          className={`w-full h-24 mx-auto ${!item.collected ? 'grayscale brightness-50' : ''}`}
+                        />
+                        
+                        {/* Collection Status Badge */}
+                        <div className="absolute top-1 right-1">
+                          {item.collected ? (
+                            <Badge className="bg-green-500 text-white text-xs px-1">
+                              {item.quantity}x
+                            </Badge>
+                          ) : (
+                            <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center">
+                              <Lock className="h-3 w-3 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Item Info */}
+                      <div className="text-center space-y-2">
+                        <h4 className={`font-medium text-xs truncate ${
+                          item.collected ? 'text-white' : 'text-slate-500'
+                        }`}>
+                          {item.name}
+                        </h4>
+                        
+                        <Badge 
+                          variant="secondary"
+                          className={`text-xs px-2 py-1 ${
+                            item.collected 
+                              ? getRarityColor(item.rarity)
+                              : 'bg-slate-800 text-slate-500'
+                          }`}
+                        >
+                          <Star className="h-2 w-2 mr-1" />
+                          {getRarityDisplayName(item.rarity)}
+                        </Badge>
+
+                        <div className={`text-xs ${item.collected ? 'text-slate-400' : 'text-slate-600'}`}>
+                          #{item.id}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+
+                // Wrap collected items with appropriate hover preview
+                if (item.collected) {
+                  if (item.type === 'flowers') {
+                    return (
+                      <FlowerHoverPreview
+                        key={`${item.type}-${item.id}`}
+                        flowerImageUrl={item.imageUrl}
+                        flowerName={item.name}
                         rarity={item.rarity}
-                        size="small"
-                        className={`w-full h-24 mx-auto ${!item.collected ? 'grayscale brightness-50' : ''}`}
-                      />
-                      
-                      {/* Collection Status Badge */}
-                      <div className="absolute top-1 right-1">
-                        {item.collected ? (
-                          <Badge className="bg-green-500 text-white text-xs px-1">
-                            {item.quantity}x
-                          </Badge>
-                        ) : (
-                          <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center">
-                            <Lock className="h-3 w-3 text-slate-400" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Item Info */}
-                    <div className="text-center space-y-2">
-                      <h4 className={`font-medium text-xs truncate ${
-                        item.collected ? 'text-white' : 'text-slate-500'
-                      }`}>
-                        {item.name}
-                      </h4>
-                      
-                      <Badge 
-                        variant="secondary"
-                        className={`text-xs px-2 py-1 ${
-                          item.collected 
-                            ? getRarityColor(item.rarity)
-                            : 'bg-slate-800 text-slate-500'
-                        }`}
                       >
-                        <Star className="h-2 w-2 mr-1" />
-                        {getRarityDisplayName(item.rarity)}
-                      </Badge>
+                        {cardContent}
+                      </FlowerHoverPreview>
+                    );
+                  } else if (item.type === 'butterflies') {
+                    return (
+                      <ButterflyHoverPreview
+                        key={`${item.type}-${item.id}`}
+                        butterflyImageUrl={item.imageUrl}
+                        butterflyName={item.name}
+                        rarity={item.rarity}
+                      >
+                        {cardContent}
+                      </ButterflyHoverPreview>
+                    );
+                  } else if (item.type === 'caterpillars') {
+                    return (
+                      <CaterpillarHoverPreview
+                        key={`${item.type}-${item.id}`}
+                        caterpillarImageUrl={item.imageUrl}
+                        caterpillarName={item.name}
+                        rarity={item.rarity}
+                      >
+                        {cardContent}
+                      </CaterpillarHoverPreview>
+                    );
+                  } else if (item.type === 'fish') {
+                    return (
+                      <FishHoverPreview
+                        key={`${item.type}-${item.id}`}
+                        fishImageUrl={item.imageUrl}
+                        fishName={item.name}
+                        rarity={item.rarity}
+                      >
+                        {cardContent}
+                      </FishHoverPreview>
+                    );
+                  }
+                }
 
-                      <div className={`text-xs ${item.collected ? 'text-slate-400' : 'text-slate-600'}`}>
-                        #{item.id}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                // Return card without hover preview for uncollected items
+                return cardContent;
+              })}
             </div>
 
             {filteredItems.length === 0 && (
