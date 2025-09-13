@@ -3362,6 +3362,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Activity tracking heartbeat endpoint
+  app.post('/api/user/:userId/heartbeat', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
+
+      await storage.updateUserLastActive(userId);
+      res.json({ message: 'Heartbeat recorded successfully' });
+    } catch (error) {
+      console.error('❌ Failed to record heartbeat:', error);
+      res.status(500).json({ error: 'Failed to record heartbeat' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

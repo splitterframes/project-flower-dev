@@ -3317,6 +3317,20 @@ export class PostgresStorage {
     }
   }
 
+  async updateUserLastActive(userId: number, lastActiveAt: Date = new Date()): Promise<void> {
+    try {
+      // Update user's last active timestamp
+      await this.db.update(users)
+        .set({ lastActiveAt })
+        .where(eq(users.id, userId));
+      
+      console.log(`❤️ User ${userId} heartbeat recorded`);
+    } catch (error) {
+      console.error(`❌ Failed to update user ${userId} lastActive:`, error);
+      throw error;
+    }
+  }
+
   // Emergency system methods
   async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
     console.log(`🎁 Giving ${quantity} seeds (ID: ${seedId}) to user ${userId}`);
