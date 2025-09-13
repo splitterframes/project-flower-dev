@@ -1654,6 +1654,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get item rarity mappings for encyclopedia
+  app.get('/api/encyclopedia/rarities', async (req, res) => {
+    try {
+      const { BUTTERFLY_RARITY_MAP, CATERPILLAR_RARITY_MAP, FISH_RARITY_MAP } = await import('./creatures');
+      const { getFlowerRarityById } = await import('../shared/rarity');
+      
+      // Create rarity mappings for all item types
+      const rarities = {
+        flowers: {} as Record<number, string>,
+        butterflies: {} as Record<number, string>, 
+        caterpillars: {} as Record<number, string>,
+        fish: {} as Record<number, string>
+      };
+      
+      // Flowers use fixed ranges
+      for (let i = 1; i <= 241; i++) {
+        rarities.flowers[i] = getFlowerRarityById(i);
+      }
+      
+      // Dynamic rarities from server Maps
+      BUTTERFLY_RARITY_MAP.forEach((rarity, id) => {
+        rarities.butterflies[id] = rarity;
+      });
+      
+      CATERPILLAR_RARITY_MAP.forEach((rarity, id) => {
+        rarities.caterpillars[id] = rarity;
+      });
+      
+      FISH_RARITY_MAP.forEach((rarity, id) => {
+        rarities.fish[id] = rarity;
+      });
+      
+      res.json(rarities);
+    } catch (error) {
+      console.error('📚 Error getting encyclopedia rarities:', error);
+      res.status(500).json({ error: 'Failed to get rarities' });
+    }
+  });
+
   app.get("/api/user/:id/exhibition-butterflies", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);

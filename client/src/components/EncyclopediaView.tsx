@@ -20,55 +20,13 @@ const ITEM_RANGES = {
   fish: { start: 1, end: 278 }          // 🐟 Found 278 fish images: 0-277
 };
 
-// Rarity distribution for flowers (from replit.md)
-const FLOWER_RARITY_RANGES = {
-  common: { start: 1, end: 55 },
-  uncommon: { start: 56, end: 100 },
-  rare: { start: 101, end: 135 },
-  'super-rare': { start: 136, end: 160 },
-  epic: { start: 161, end: 180 },
-  legendary: { start: 181, end: 195 },
-  mythical: { start: 196, end: 200 }
-};
-
-// Rarity distribution for butterflies (from replit.md)
-const BUTTERFLY_RARITY_RANGES = {
-  common: { start: 1, end: 443 },
-  uncommon: { start: 444, end: 743 },
-  rare: { start: 744, end: 843 },
-  'super-rare': { start: 844, end: 918 },
-  epic: { start: 919, end: 963 },
-  legendary: { start: 964, end: 988 },
-  mythical: { start: 989, end: 1000 }
-};
-
-// Simple rarity calculation for other items
-const calculateRarity = (id: number, type: string): RarityTier => {
-  if (type === 'flowers') {
-    for (const [rarity, range] of Object.entries(FLOWER_RARITY_RANGES)) {
-      if (id >= range.start && id <= range.end) {
-        return rarity as RarityTier;
-      }
-    }
-  } else if (type === 'butterflies') {
-    for (const [rarity, range] of Object.entries(BUTTERFLY_RARITY_RANGES)) {
-      if (id >= range.start && id <= range.end) {
-        return rarity as RarityTier;
-      }
-    }
-  } else {
-    // Simple distribution for caterpillars and fish
-    const percentage = (id / ITEM_RANGES[type as keyof typeof ITEM_RANGES].end) * 100;
-    if (percentage <= 45) return 'common';
-    if (percentage <= 75) return 'uncommon';  
-    if (percentage <= 90) return 'rare';
-    if (percentage <= 97) return 'super-rare';
-    if (percentage <= 99.5) return 'epic';
-    if (percentage <= 99.9) return 'legendary';
-    return 'mythical';
-  }
-  return 'common';
-};
+// Interface for rarity mappings from server
+interface RarityMappings {
+  flowers: Record<number, string>;
+  butterflies: Record<number, string>;
+  caterpillars: Record<number, string>;
+  fish: Record<number, string>;
+}
 
 // Generate Latin-sounding names
 const generateLatinName = (id: number, type: string): string => {
@@ -104,6 +62,7 @@ export const EncyclopediaView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("flowers");
   const [rarityFilter, setRarityFilter] = useState<RarityTier | null>(null);
+  const [rarityMappings, setRarityMappings] = useState<RarityMappings | null>(null);
   const [userItems, setUserItems] = useState<{
     flowers: any[];
     caterpillars: any[];
@@ -151,14 +110,33 @@ export const EncyclopediaView: React.FC = () => {
     fetchUserItems();
   }, [user]);
 
+  // Fetch real rarity mappings from server
+  useEffect(() => {
+    const fetchRarities = async () => {
+      try {
+        const response = await fetch('/api/encyclopedia/rarities');
+        if (response.ok) {
+          const rarities = await response.json();
+          setRarityMappings(rarities);
+        }
+      } catch (error) {
+        console.error('Failed to fetch rarities:', error);
+      }
+    };
+    
+    fetchRarities();
+  }, []);
+
   // Generate all possible items for encyclopedia
   const allItems = useMemo(() => {
+    if (!rarityMappings) return []; // Wait for rarities to load
+    
     const items: EncyclopediaItem[] = [];
     
     // Generate items for each type
     Object.entries(ITEM_RANGES).forEach(([type, range]) => {
       for (let id = range.start; id <= range.end; id++) {
-        const rarity = calculateRarity(id, type);
+        const rarity = (rarityMappings[type as keyof RarityMappings][id] || 'common') as RarityTier;
         const userItem = userItems[type as keyof typeof userItems]?.find(item => {
           // Different ID fields for different types
           if (type === 'flowers') return item.flowerId === id;
@@ -196,7 +174,7 @@ export const EncyclopediaView: React.FC = () => {
     });
     
     return items;
-  }, [userItems]);
+  }, [userItems, rarityMappings]);
 
   // Filter items by search term, active tab, and rarity
   const filteredItems = useMemo(() => {
