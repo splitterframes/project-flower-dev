@@ -171,11 +171,19 @@ export const EncyclopediaView: React.FC = () => {
           fish: 'Fische'
         };
         
+        // For flowers under 100, don't use leading zeros; for others, use padStart
+        let fileName: string;
+        if (type === 'flowers' && id < 100) {
+          fileName = `${id}.jpg`;
+        } else {
+          fileName = `${id.toString().padStart(3, '0')}.jpg`;
+        }
+        
         items.push({
           id,
           name: generateLatinName(id, type),
           rarity,
-          imageUrl: `/${folderMap[type as keyof typeof folderMap]}/${id.toString().padStart(3, '0')}.jpg`,
+          imageUrl: `/${folderMap[type as keyof typeof folderMap]}/${fileName}`,
           type: type as any,
           collected: !!userItem,
           quantity: userItem?.quantity || 0
