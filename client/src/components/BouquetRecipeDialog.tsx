@@ -158,15 +158,13 @@ export const BouquetRecipeDialog: React.FC<BouquetRecipeDialogProps> = ({
                   return (
                     <div key={index} className="text-center">
                       <div className="relative">
-                        <FlowerHoverPreview flowerId={flower.id}>
-                          <RarityImage 
-                            src={flower.imageUrl}
-                            alt={flower.name}
-                            rarity={flower.rarity as RarityTier}
-                            size="medium"
-                            className="w-20 h-20 mx-auto mb-2"
-                          />
-                        </FlowerHoverPreview>
+                        <RarityImage 
+                          src={flower.imageUrl}
+                          alt={flower.name}
+                          rarity={flower.rarity as RarityTier}
+                          size="medium"
+                          className="w-20 h-20 mx-auto mb-2"
+                        />
                         
                         {/* Availability indicator */}
                         <div className="absolute -top-2 -right-2">
@@ -246,7 +244,7 @@ export const BouquetRecipeDialog: React.FC<BouquetRecipeDialogProps> = ({
             </div>
             <div className="text-slate-300 text-sm space-y-1">
               <div>• Nachstecken erstellt ein neues Bouquet mit demselben Rezept</div>
-              <div>• Kostet 30 Credits und verbraucht die benötigten Blumen</div>
+              <div>• Kostenlos! Verbraucht nur die benötigten Blumen</div>
               <div>• Originalname wird beibehalten</div>
             </div>
           </div>

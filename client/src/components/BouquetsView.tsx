@@ -140,6 +140,76 @@ export const BouquetsView: React.FC = () => {
     }
   };
 
+  const handleRecreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string) => {
+    try {
+      const response = await fetch('/api/bouquets/recreate', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
+        body: JSON.stringify({
+          flowerId1,
+          flowerId2,
+          flowerId3,
+          name,
+          generateName: false // Never generate new name for recreation
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Show beautiful success toast
+        if (result.bouquet) {
+          const rarityName = getRarityDisplayName(result.bouquet.rarity as RarityTier);
+          
+          toast.success("Bouquet erfolgreich nachgesteckt!", {
+            description: `"${result.bouquet.name}" (${rarityName}) wurde kostenlos nachgesteckt! 💐`,
+            duration: 4000,
+            className: "border-l-4 " + getRarityColor(result.bouquet.rarity as RarityTier).replace('text-', 'border-l-'),
+          });
+        } else {
+          toast.success("Bouquet erfolgreich nachgesteckt!", {
+            description: "Dein nachgestecktes Bouquet steht bereit! 💐",
+            duration: 4000,
+          });
+        }
+        
+        // Refresh all data
+        await fetchMyFlowers();
+        await fetchMyBouquets();
+        await fetchBouquetRecipes();
+        await fetchMyCreatedRecipes();
+        // Note: No need to update credits since recreation is free
+        setSelectedRecipeDialog(null); // Close dialog
+      } else {
+        const error = await response.json();
+        
+        // Show user-friendly error messages
+        if (error.message && error.message.includes('nicht gefunden')) {
+          toast.error("🌸 Blumen nicht gefunden", {
+            description: "Eine der benötigten Blumen ist nicht mehr in deinem Inventar.",
+            duration: 4000,
+            className: "border-l-4 border-l-yellow-500",
+          });
+        } else {
+          toast.error("❌ Fehler beim Nachstecken", {
+            description: error.message || 'Bouquet konnte nicht nachgesteckt werden. Bitte versuche es erneut.',
+            duration: 4000,
+            className: "border-l-4 border-l-red-500",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error recreating bouquet:', error);
+      toast.error("Verbindungsfehler", {
+        description: 'Bouquet konnte nicht nachgesteckt werden',
+        duration: 4000,
+      });
+    }
+  };
+
   const handleCreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string, generateName?: boolean) => {
     try {
       // Show loading toast when generating name with AI
@@ -529,9 +599,9 @@ export const BouquetsView: React.FC = () => {
         bouquetRarity={selectedRecipeDialog?.bouquetRarity}
         recipe={selectedRecipeDialog?.recipe}
         userFlowers={myFlowers}
-        onRecreate={(flowerId1, flowerId2, flowerId3) => {
+        onRecreate={async (flowerId1, flowerId2, flowerId3) => {
           if (selectedRecipeDialog?.bouquetName) {
-            handleCreateBouquet(flowerId1, flowerId2, flowerId3, selectedRecipeDialog.bouquetName, false);
+            await handleRecreateBouquet(flowerId1, flowerId2, flowerId3, selectedRecipeDialog.bouquetName);
           }
         }}
       />

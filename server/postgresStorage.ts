@@ -1614,7 +1614,7 @@ export class PostgresStorage {
   }
 
   // Create bouquet from 3 flowers
-  async createBouquet(userId: number, data: CreateBouquetRequest): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
+  async createBouquet(userId: number, data: CreateBouquetRequest, skipCreditDeduction: boolean = false): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
     try {
       console.log(`🔍 Creating bouquet for user ${userId} with flowers:`, data);
       
@@ -1728,13 +1728,17 @@ export class PostgresStorage {
         await this.db.delete(userFlowers).where(eq(userFlowers.id, flower3.id));
       }
 
-      // Deduct 30 credits for bouquet creation
-      const user = await this.getUser(userId);
-      if (user && user.credits >= 30) {
-        await this.updateUserCredits(userId, -30); // Deduct 30 credits (negative delta)
-        console.log(`💰 Deducted 30 credits for bouquet creation. User ${userId} credits: ${user.credits} -> ${user.credits - 30}`);
+      // Deduct 30 credits for bouquet creation (unless skipped for recreation)
+      if (!skipCreditDeduction) {
+        const user = await this.getUser(userId);
+        if (user && user.credits >= 30) {
+          await this.updateUserCredits(userId, -30); // Deduct 30 credits (negative delta)
+          console.log(`💰 Deducted 30 credits for bouquet creation. User ${userId} credits: ${user.credits} -> ${user.credits - 30}`);
+        } else {
+          console.log(`⚠️ Warning: User ${userId} has insufficient credits (${user?.credits || 0}) for bouquet creation, but bouquet was still created`);
+        }
       } else {
-        console.log(`⚠️ Warning: User ${userId} has insufficient credits (${user?.credits || 0}) for bouquet creation, but bouquet was still created`);
+        console.log(`🆓 Skipped credit deduction for bouquet recreation (free recreation)`);
       }
 
       console.log(`💐 Created bouquet "${bouquetName}" for user ${userId}`);

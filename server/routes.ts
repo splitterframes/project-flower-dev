@@ -1055,6 +1055,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recreate bouquet from recipe (free, no credit cost)
+  app.post("/api/bouquets/recreate", async (req, res) => {
+    try {
+      const bouquetData = createBouquetSchema.parse(req.body);
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      
+      console.log(`🔄 User ${userId} recreating bouquet with recipe (no credit cost)`);
+      
+      const result = await storage.createBouquet(userId, bouquetData, true); // true = skip credit deduction
+      if (result.success) {
+        res.json({ 
+          message: "Bouquet erfolgreich nachgesteckt!", 
+          bouquet: result.bouquet 
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      console.error('Failed to recreate bouquet:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/user/:id/bouquets", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
