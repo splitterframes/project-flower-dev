@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
@@ -11,6 +11,7 @@ import { EmergencyDialog } from "./EmergencyDialog";
 import MariePosaButton from "./MariePosaButton";
 import { TicketRedemptionDialog } from "./TicketRedemptionDialog";
 import { DonateDialog } from "./DonateDialog";
+import { useSmartPolling } from "@/hooks/useSmartPolling";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -133,21 +134,25 @@ export const Header: React.FC<HeaderProps> = ({ onAuthClick, refreshTrigger }) =
     }
   }, [refreshTrigger]);
 
-  // Auto-refresh header data every 10 seconds
-  useEffect(() => {
+  // Smart polling that adapts to user activity
+  const refreshAllData = useCallback(() => {
     if (!user) return;
-    
-    const interval = setInterval(() => {
-      fetchCredits();
-      fetchSuns();
-      fetchDna();
-      fetchTickets();
-      fetchInventoryCounts();
-      fetchPassiveIncome();
-    }, 10000); // Update every 10 seconds
-    
-    return () => clearInterval(interval);
+    fetchCredits();
+    fetchSuns();
+    fetchDna();
+    fetchTickets();
+    fetchInventoryCounts();
+    fetchPassiveIncome();
   }, [user]);
+
+  useSmartPolling({
+    fn: refreshAllData,
+    activeMs: 10000,    // 10 seconds when active
+    idleMs: 60000,      // 60 seconds when idle
+    backgroundMs: null, // paused when in background
+    enabled: !!user,
+    immediate: false,   // Don't run immediately, initial effect already handles this
+  });
 
   const fetchInventoryCounts = async () => {
     if (!user) return;

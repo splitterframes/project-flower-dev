@@ -22,6 +22,7 @@ import { ImpressumDialog } from "./ImpressumDialog";
 import { DatenschutzDialog } from "./DatenschutzDialog";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
+import { useActivityDetection } from "@/hooks/useActivityDetection";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Balloon interface
@@ -247,6 +248,9 @@ export const Layout: React.FC = () => {
   const [lootDrops, setLootDrops] = useState<Loot[]>([]);
   const { user } = useAuth();
   const { setCredits } = useCredits();
+  
+  // Initialize activity detection for performance optimization
+  useActivityDetection();
 
   // Award loot function
   const awardLoot = async (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number) => {

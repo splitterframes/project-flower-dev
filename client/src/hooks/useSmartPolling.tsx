@@ -21,9 +21,11 @@ export const useSmartPolling = ({
   const { mode } = useActivity();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const modeRef = useRef(mode);
+  const fnRef = useRef(fn);
   
-  // Update mode ref when mode changes
+  // Update refs when values change
   modeRef.current = mode;
+  fnRef.current = fn;
 
   const clearCurrentInterval = useCallback(() => {
     if (intervalRef.current) {
@@ -58,12 +60,12 @@ export const useSmartPolling = ({
 
     intervalRef.current = setInterval(() => {
       try {
-        fn();
+        fnRef.current();
       } catch (error) {
         console.error('Smart polling function error:', error);
       }
     }, intervalMs);
-  }, [fn, activeMs, idleMs, backgroundMs, enabled, clearCurrentInterval]);
+  }, [activeMs, idleMs, backgroundMs, enabled, clearCurrentInterval]);
 
   // Setup interval when mode changes
   useEffect(() => {
@@ -71,16 +73,16 @@ export const useSmartPolling = ({
     return clearCurrentInterval;
   }, [mode, setupInterval, clearCurrentInterval]);
 
-  // Call immediately if requested
+  // Call immediately if requested (only on mount or enabled change)
   useEffect(() => {
     if (immediate && enabled) {
       try {
-        fn();
+        fnRef.current();
       } catch (error) {
         console.error('Smart polling immediate call error:', error);
       }
     }
-  }, [fn, immediate, enabled]);
+  }, [immediate, enabled]);
 
   // Cleanup on unmount
   useEffect(() => {

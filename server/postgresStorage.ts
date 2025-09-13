@@ -141,7 +141,15 @@ export class PostgresStorage {
   private async initializeStarterFields() {
     try {
       // Check if unlocked_fields table exists and initialize starter fields
-      const allUsers = await this.db.select().from(users);
+      // Exclude lastActiveAt until migration completes
+      const allUsers = await this.db.select({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      }).from(users);
       
       for (const user of allUsers) {
         const existingUnlockedFields = await this.db
@@ -631,12 +639,28 @@ export class PostgresStorage {
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.id, id));
+    // Exclude lastActiveAt until database migration completes
+    const result = await this.db.select({
+      id: users.id,
+      username: users.username,
+      credits: users.credits,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users).where(eq(users.id, id));
     return result[0] as User | undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(ilike(users.username, username));
+    // Exclude lastActiveAt until database migration completes
+    const result = await this.db.select({
+      id: users.id,
+      username: users.username,
+      credits: users.credits,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users).where(ilike(users.username, username));
     return result[0] as User | undefined;
   }
 
@@ -689,7 +713,14 @@ export class PostgresStorage {
       .update(users)
       .set({ credits: newCredits })
       .where(eq(users.id, id))
-      .returning();
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
     return result[0] as User | undefined;
   }
 
@@ -708,7 +739,15 @@ export class PostgresStorage {
       .update(users)
       .set({ suns: newSuns })
       .where(eq(users.id, id))
-      .returning();
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        suns: users.suns,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
     return result[0] as User | undefined;
   }
 
@@ -727,7 +766,15 @@ export class PostgresStorage {
       .update(users)
       .set({ dna: newDna })
       .where(eq(users.id, id))
-      .returning();
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        dna: users.dna,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
     return result[0] as User | undefined;
   }
 
@@ -746,7 +793,15 @@ export class PostgresStorage {
       .update(users)
       .set({ tickets: newTickets })
       .where(eq(users.id, id))
-      .returning();
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        tickets: users.tickets,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
     return result[0] as User | undefined;
   }
 
@@ -765,7 +820,15 @@ export class PostgresStorage {
       .update(users)
       .set({ hearts: newHearts })
       .where(eq(users.id, id))
-      .returning();
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        hearts: users.hearts,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
     return result[0] as User | undefined;
   }
 
@@ -3318,13 +3381,15 @@ export class PostgresStorage {
   }
 
   async updateUserLastActive(userId: number, lastActiveAt: Date = new Date()): Promise<void> {
+    // Temporarily disabled until database migration completes
+    // TODO: Re-enable after lastActiveAt column is properly added
     try {
-      // Update user's last active timestamp
-      await this.db.update(users)
-        .set({ lastActiveAt })
-        .where(eq(users.id, userId));
+      console.log(`⏰ Would update lastActive for user ${userId} (temporarily disabled)`);
+      // await this.db.update(users)
+      //   .set({ lastActiveAt })
+      //   .where(eq(users.id, userId));
       
-      console.log(`❤️ User ${userId} heartbeat recorded`);
+      // console.log(`❤️ User ${userId} heartbeat recorded`);
     } catch (error) {
       console.error(`❌ Failed to update user ${userId} lastActive:`, error);
       throw error;
@@ -3415,8 +3480,15 @@ export class PostgresStorage {
   }>> {
     console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
     
-    // Get all users
-    const allUsers = await this.db.select().from(users);
+    // Get all users (excluding lastActiveAt until migration completes)
+    const allUsers = await this.db.select({
+      id: users.id,
+      username: users.username,
+      credits: users.credits,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users);
     console.log(`🔍 Found ${allUsers.length} users total`);
     
     const userList = [];
