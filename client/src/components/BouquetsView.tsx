@@ -8,7 +8,7 @@ import { useCredits } from "@/lib/stores/useCredits";
 import { Flower2, Star, Heart, Gift, Plus, Sparkles, Palette } from "lucide-react";
 import { HelpButton } from './HelpButton';
 import { BouquetCreationModal } from "./BouquetCreationModal";
-import { BouquetRecipeDisplay } from "./BouquetRecipeDisplay";
+import { BouquetRecipeDialog } from "./BouquetRecipeDialog";
 import { RarityImage } from "./RarityImage";
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
 import type { UserFlower, UserBouquet, PlacedBouquet, BouquetRecipe } from "@shared/schema";
@@ -22,7 +22,12 @@ export const BouquetsView: React.FC = () => {
   const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
   const [showBouquetCreation, setShowBouquetCreation] = useState(false);
   const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
-  const [expandedBouquet, setExpandedBouquet] = useState<number | null>(null);
+  const [selectedRecipeDialog, setSelectedRecipeDialog] = useState<{
+    bouquetId: number;
+    bouquetName?: string;
+    bouquetRarity?: RarityTier;
+    recipe?: BouquetRecipe;
+  } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -471,41 +476,32 @@ export const BouquetsView: React.FC = () => {
                             })()}
                             
                             <Button
-                              onClick={async () => {
-                                const newExpanded = expandedBouquet === recipe.bouquetId ? null : recipe.bouquetId;
-                                setExpandedBouquet(newExpanded);
+                              onClick={() => {
+                                setSelectedRecipeDialog({
+                                  bouquetId: recipe.bouquetId,
+                                  bouquetName: recipe.bouquetName,
+                                  bouquetRarity: (recipe.bouquetRarity || "common") as RarityTier,
+                                  recipe: {
+                                    id: 0,
+                                    bouquetId: recipe.bouquetId,
+                                    flowerId1: recipe.flowerId1,
+                                    flowerId2: recipe.flowerId2,
+                                    flowerId3: recipe.flowerId3,
+                                    createdAt: new Date()
+                                  }
+                                });
                               }}
                               variant="outline"
                               size="sm"
                               className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
                             >
-                              {expandedBouquet === recipe.bouquetId ? 'Ausblenden' : 'Rezept anzeigen'}
+                              Rezept anzeigen
                             </Button>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Recipe Display */}
-                    {expandedBouquet === recipe.bouquetId && (
-                      <div className="mt-4 pt-4 border-t border-purple-400/20">
-                        <BouquetRecipeDisplay 
-                          bouquetId={recipe.bouquetId} 
-                          recipe={{
-                            id: 0,
-                            bouquetId: recipe.bouquetId,
-                            flowerId1: recipe.flowerId1,
-                            flowerId2: recipe.flowerId2,
-                            flowerId3: recipe.flowerId3,
-                            createdAt: new Date()
-                          }}
-                          userFlowers={myFlowers}
-                          onRecreate={(flowerId1, flowerId2, flowerId3) => 
-                            handleCreateBouquet(flowerId1, flowerId2, flowerId3, recipe.bouquetName, false)
-                          }
-                        />
-                      </div>
-                    )}
 
                   </CardContent>
                 </Card>
@@ -522,6 +518,22 @@ export const BouquetsView: React.FC = () => {
         userFlowers={myFlowers}
         onCreateBouquet={handleCreateBouquet}
         credits={credits}
+      />
+
+      {/* Bouquet Recipe Dialog */}
+      <BouquetRecipeDialog
+        isOpen={!!selectedRecipeDialog}
+        onClose={() => setSelectedRecipeDialog(null)}
+        bouquetId={selectedRecipeDialog?.bouquetId || 0}
+        bouquetName={selectedRecipeDialog?.bouquetName}
+        bouquetRarity={selectedRecipeDialog?.bouquetRarity}
+        recipe={selectedRecipeDialog?.recipe}
+        userFlowers={myFlowers}
+        onRecreate={(flowerId1, flowerId2, flowerId3) => {
+          if (selectedRecipeDialog?.bouquetName) {
+            handleCreateBouquet(flowerId1, flowerId2, flowerId3, selectedRecipeDialog.bouquetName, false);
+          }
+        }}
       />
     </div>
   );
