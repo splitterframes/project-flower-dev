@@ -232,7 +232,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
             ) : prize.type === 'daily-butterfly' && dailyItems ? (
               <div className="w-18 h-18 relative">
                 <img
-                  src={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+                  src={`/Schmetterlinge/${dailyItems.butterflyId}.jpg`}
                   alt={prize.title}
                   className="w-full h-full object-cover rounded border-4"
                   style={{ borderColor: getBorderColor(convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))) }}
@@ -320,7 +320,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       return (
         <ButterflyHoverPreview
           key={prize.id}
-          butterflyImageUrl={`/Schmetterlinge/${String(dailyItems.butterflyId).padStart(3, '0')}.jpg`}
+          butterflyImageUrl={`/Schmetterlinge/${dailyItems.butterflyId}.jpg`}
           butterflyName={dailyItems ? generateGermanButterflyName(dailyItems.butterflyId) : "Seltener Schmetterling des Tages"}
           rarity={convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))}
         >

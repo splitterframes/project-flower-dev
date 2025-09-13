@@ -710,7 +710,7 @@ export const MarketView: React.FC = () => {
                           />
                         ) : listing.itemType === 'flower' ? (
                           <img
-                            src={listing.flowerImageUrl || `/Blumen/${(listing.flowerIdOriginal || listing.flowerId || 1).toString().padStart(3, '0')}.jpg`}
+                            src={listing.flowerImageUrl || `/Blumen/${(listing.flowerIdOriginal || listing.flowerId || 1)}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -720,7 +720,7 @@ export const MarketView: React.FC = () => {
                           />
                         ) : listing.itemType === 'butterfly' ? (
                           <img
-                            src={listing.butterflyImageUrl || `/Schmetterlinge/${(listing.butterflyIdOriginal || listing.butterflyId || 1).toString().padStart(3, '0')}.jpg`}
+                            src={listing.butterflyImageUrl || `/Schmetterlinge/${(listing.butterflyIdOriginal || listing.butterflyId || 1)}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -730,7 +730,7 @@ export const MarketView: React.FC = () => {
                           />
                         ) : listing.itemType === 'fish' ? (
                           <img
-                            src={listing.fishImageUrl || `/Fische/${(listing.fishIdOriginal || listing.fishId || 1).toString().padStart(3, '0')}.jpg`}
+                            src={listing.fishImageUrl || `/Fische/${(listing.fishIdOriginal || listing.fishId || 1)}.jpg`}
                             alt={itemName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -1066,7 +1066,7 @@ export const MarketView: React.FC = () => {
                                   style={{ borderColor: getBorderColor(flower.flowerRarity as RarityTier) }}
                                 >
                                   <img
-                                    src={flower.flowerImageUrl || `/Blumen/${(flower.flowerId || flower.id).toString().padStart(3, '0')}.jpg`}
+                                    src={flower.flowerImageUrl || `/Blumen/${(flower.flowerId || flower.id)}.jpg`}
                                     alt={flower.flowerName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
@@ -1137,7 +1137,7 @@ export const MarketView: React.FC = () => {
                                   style={{ borderColor: getBorderColor(fish.fishRarity as RarityTier) }}
                                 >
                                   <img
-                                    src={fish.fishImageUrl || `/Fische/${(fish.fishId || fish.id).toString().padStart(3, '0')}.jpg`}
+                                    src={fish.fishImageUrl || `/Fische/${(fish.fishId || fish.id)}.jpg`}
                                     alt={fish.fishName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
@@ -1280,7 +1280,7 @@ export const MarketView: React.FC = () => {
                                   style={{ borderColor: getBorderColor(butterfly.butterflyRarity as RarityTier) }}
                                 >
                                   <img
-                                    src={butterfly.butterflyImageUrl || `/Schmetterlinge/${(butterfly.butterflyId || 0).toString().padStart(3, '0')}.jpg`}
+                                    src={butterfly.butterflyImageUrl || `/Schmetterlinge/${(butterfly.butterflyId || 0)}.jpg`}
                                     alt={butterfly.butterflyName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

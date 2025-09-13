@@ -153,15 +153,13 @@ export const EncyclopediaView: React.FC = () => {
           fish: 'Fische'
         };
         
-        // Different filename strategies per type based on actual file structure
+        // All asset types use simple numeric filenames without leading zeros
         let fileName: string;
         if (type === 'flowers' && id < 100) {
           fileName = `${id}.jpg`;
-        } else if (type === 'caterpillars') {
-          // Caterpillars don't use leading zeros (30.jpg not 030.jpg)
-          fileName = `${id}.jpg`;
         } else {
-          fileName = `${id.toString().padStart(3, '0')}.jpg`;
+          // All types (caterpillars, butterflies, fish, flowers 100+) use no padding
+          fileName = `${id}.jpg`;
         }
         
         items.push({
