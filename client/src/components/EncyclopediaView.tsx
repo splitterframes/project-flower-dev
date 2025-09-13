@@ -8,7 +8,7 @@ import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
 import { FishHoverPreview } from "./FishHoverPreview";
 import { useAuth } from "@/lib/stores/useAuth";
-import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, type RarityTier, generateLatinFlowerName, generateGermanButterflyName, generateLatinFishName, generateLatinCaterpillarName } from "@shared/rarity";
 import { BookOpen, Flower, Bug, Sparkles, Fish, Lock, Star, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -28,23 +28,20 @@ interface RarityMappings {
   fish: Record<number, string>;
 }
 
-// Generate Latin-sounding names
+// Generate diverse names using proper generators for each type
 const generateLatinName = (id: number, type: string): string => {
-  const prefixes = ['Rosa', 'Aqua', 'Luna', 'Stella', 'Flora', 'Marina', 'Bella', 'Gloria', 'Vita', 'Terra'];
-  const suffixes = ['ensis', 'aria', 'icus', 'alis', 'inus', 'ella', 'osa', 'anus', 'eus', 'lis'];
-  
-  const typeNames = {
-    flowers: 'flora',
-    caterpillars: 'larva', 
-    butterflies: 'papilio',
-    fish: 'piscis'
-  };
-  
-  const prefix = prefixes[id % prefixes.length];
-  const suffix = suffixes[(id * 3) % suffixes.length];
-  const typeName = typeNames[type as keyof typeof typeNames];
-  
-  return `${prefix}${suffix} ${typeName}`;
+  switch (type) {
+    case 'flowers':
+      return generateLatinFlowerName(id); // 20×20 = 400 combinations
+    case 'butterflies':
+      return generateGermanButterflyName(id); // 45×45 = 2025+ combinations (with 10% special suffix)
+    case 'fish':
+      return generateLatinFishName(id); // 27×25 = 675 combinations
+    case 'caterpillars':
+      return generateLatinCaterpillarName(id); // 25×30 = 750 combinations
+    default:
+      return `Unknown ${type} #${id}`;
+  }
 };
 
 interface EncyclopediaItem {
