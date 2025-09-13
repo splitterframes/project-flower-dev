@@ -28,13 +28,13 @@ interface RarityMappings {
   fish: Record<number, string>;
 }
 
-// Generate diverse names using proper generators for each type
-const generateLatinName = (id: number, type: string): string => {
+// Generate diverse names using proper generators for each type (consistent with server-side)
+const generateCreatureName = (id: number, type: string): string => {
   switch (type) {
     case 'flowers':
       return generateLatinFlowerName(id); // 20×20 = 400 combinations
     case 'butterflies':
-      return generateGermanButterflyName(id); // 45×45 = 2025+ combinations (with 10% special suffix)
+      return generateGermanButterflyName(id); // 45×45 = 2025+ combinations (with 10% special suffix) - CONSISTENT WITH SERVER
     case 'fish':
       return generateLatinFishName(id); // 27×25 = 675 combinations
     case 'caterpillars':
@@ -161,7 +161,7 @@ export const EncyclopediaView: React.FC = () => {
         
         items.push({
           id,
-          name: generateLatinName(id, type),
+          name: generateCreatureName(id, type),
           rarity,
           imageUrl: `/${folderMap[type as keyof typeof folderMap]}/${fileName}`,
           type: type as any,
