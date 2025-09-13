@@ -9,7 +9,7 @@ import {
   Sparkles, Sun, Flower, Gift, DollarSign, ArrowRight,
   CheckCircle, AlertCircle, HelpCircle
 } from 'lucide-react';
-import { getRarityColor } from '@shared/rarity';
+import { getRarityColor, getRarityBadgeStyle } from '@shared/rarity';
 
 interface HelpDialogProps {
   isOpen: boolean;
@@ -690,7 +690,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
                     { tier: 'mythical', name: 'Mythical', bgColor: 'bg-red-500/20 border-red-400/40' }
                   ].map((rarity) => (
                     <div key={rarity.tier} className={`${rarity.bgColor} rounded-lg p-3 border-2 transition-all duration-300 hover:scale-105`}>
-                      <Badge className={`${getRarityColor(rarity.tier as any)} text-white font-bold text-sm px-3 py-1 w-full justify-center`}>
+                      <Badge className={`${getRarityBadgeStyle(rarity.tier as any)} font-bold text-sm px-3 py-1 w-full justify-center`}>
                         {rarity.name}
                       </Badge>
                     </div>
