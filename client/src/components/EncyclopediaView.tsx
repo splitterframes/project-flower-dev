@@ -400,7 +400,7 @@ export const EncyclopediaView: React.FC = () => {
                       </Badge>
 
                       <div className={`text-xs ${item.collected ? 'text-slate-400' : 'text-slate-600'}`}>
-                        #{item.id.toString().padStart(3, '0')}
+                        #{item.id}
                       </div>
                     </div>
                   </CardContent>
