@@ -15,6 +15,8 @@ interface AudioState {
   toggleMute: () => void;
   playHit: () => void;
   playSuccess: () => void;
+  playSlotSpin: () => void;
+  playSlotStop: () => void;
 }
 
 export const useAudio = create<AudioState>((set, get) => ({
@@ -68,6 +70,44 @@ export const useAudio = create<AudioState>((set, get) => ({
       successSound.currentTime = 0;
       successSound.play().catch(error => {
         console.log("Success sound play prevented:", error);
+      });
+    }
+  },
+  
+  playSlotSpin: () => {
+    const { hitSound, isMuted } = get();
+    if (hitSound) {
+      // If sound is muted, don't play anything
+      if (isMuted) {
+        console.log("Slot spin sound skipped (muted)");
+        return;
+      }
+      
+      // Clone the sound for slot spinning (lower volume, faster playback)
+      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
+      soundClone.volume = 0.15;
+      soundClone.playbackRate = 0.8; // Slower for spinning effect
+      soundClone.play().catch(error => {
+        console.log("Slot spin sound play prevented:", error);
+      });
+    }
+  },
+  
+  playSlotStop: () => {
+    const { hitSound, isMuted } = get();
+    if (hitSound) {
+      // If sound is muted, don't play anything
+      if (isMuted) {
+        console.log("Slot stop sound skipped (muted)");
+        return;
+      }
+      
+      // Clone the sound for slot stopping (normal volume, fast playback)
+      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
+      soundClone.volume = 0.4;
+      soundClone.playbackRate = 1.2; // Faster for stopping effect
+      soundClone.play().catch(error => {
+        console.log("Slot stop sound play prevented:", error);
       });
     }
   }

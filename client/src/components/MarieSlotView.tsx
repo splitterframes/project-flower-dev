@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/stores/useAuth';
 import { useSuns } from '@/lib/stores/useSuns';
 import { useCredits } from '@/lib/stores/useCredits';
 import { useNotification } from '../hooks/useNotification';
+import { useAudio } from '@/lib/stores/useAudio';
 
 // Slot machine symbols with real game images
 interface SlotSymbol {
@@ -98,6 +99,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { suns, setSuns } = useSuns();
   const { credits, setCredits } = useCredits();
   const { showNotification } = useNotification();
+  const { playSlotSpin, playSlotStop, playSuccess } = useAudio();
   
   const [reels, setReels] = useState<Reel[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -182,6 +184,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
 
     setIsSpinning(true);
+    // Sound für startende Trommeln
+    playSlotSpin();
     // Gewinnzeile bleibt während dem Drehen stehen
     setBlinkCount(0); // Stoppe aktuelles Blinken
 
@@ -253,6 +257,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
           // Nach 400ms Rückstoss die Trommel stoppen
           setTimeout(() => {
+            // Sound für stoppende Trommel
+            playSlotStop();
+            
             setReels(prevReels => {
               const updatedReels = [...prevReels];
               updatedReels[reelIndex] = {
@@ -278,6 +285,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               
               // Handle win results
               if (data.matchCount >= 2) {
+                // Sound für Gewinn
+                playSuccess();
+                
                 setIsWinning(true);
                 setLastWinMessage(data.message);
                 
@@ -320,6 +330,8 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
 
     setIsSpinning(true);
+    // Sound für startende Trommeln
+    playSlotSpin();
     // Gewinnzeile bleibt während dem Drehen stehen
     setBlinkCount(0); // Stoppe aktuelles Blinken
 
@@ -391,6 +403,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
           // Nach 400ms Rückstoss die Trommel stoppen
           setTimeout(() => {
+            // Sound für stoppende Trommel
+            playSlotStop();
+            
             setReels(prevReels => {
               const updatedReels = [...prevReels];
               updatedReels[reelIndex] = {
@@ -416,6 +431,9 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               
               // Handle win results
               if (data.matchCount >= 2) {
+                // Sound für Gewinn
+                playSuccess();
+                
                 setIsWinning(true);
                 setLastWinMessage(data.message);
                 
