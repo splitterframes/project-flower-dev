@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RarityImage } from "./RarityImage";
 import { Sparkles, Heart, X, Coins, Crown, Star } from "lucide-react";
-import { getRarityColor, getRarityDisplayName, type RarityTier, getRarityTierIndex } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier, getRarityTierIndex } from "@shared/rarity";
 import type { UserFlower } from "@shared/schema";
 
 interface BouquetCreationModalProps {
@@ -156,7 +156,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <Star className={`h-5 w-5 ${getRarityColor(calculateAverageRarity())} animate-pulse`} />
                       <span className="text-sm font-semibold">Durchschnitt:</span>
-                      <Badge className={`${getRarityColor(calculateAverageRarity())} text-sm font-bold px-3 py-1`}>
+                      <Badge className={`${getRarityBadgeStyle(calculateAverageRarity())} text-sm font-bold px-3 py-1`}>
                         {getRarityDisplayName(calculateAverageRarity())}
                       </Badge>
                     </div>
@@ -212,7 +212,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                           </div>
                         </div>
                         <div className="text-sm font-medium text-white truncate">{flower.flowerName}</div>
-                        <Badge className={`${getRarityColor(flower.flowerRarity as RarityTier)} text-sm font-bold px-3 py-1`}>
+                        <Badge className={`${getRarityBadgeStyle(flower.flowerRarity as RarityTier)} text-sm font-bold px-3 py-1`}>
                           {getRarityDisplayName(flower.flowerRarity as RarityTier)}
                         </Badge>
                         <Button
@@ -316,7 +316,7 @@ export const BouquetCreationModal: React.FC<BouquetCreationModalProps> = ({
                             size="medium"
                             className="mx-auto mb-3 transition-transform duration-300 group-hover:scale-110"
                           />
-                          <Badge className={`${getRarityColor(flower.flowerRarity as RarityTier)} text-xs font-bold px-2 py-1 absolute -top-2 -right-2`}>
+                          <Badge className={`${getRarityBadgeStyle(flower.flowerRarity as RarityTier)} text-xs font-bold px-2 py-1 absolute -top-2 -right-2`}>
                             {flower.quantity}x
                           </Badge>
                         </div>
