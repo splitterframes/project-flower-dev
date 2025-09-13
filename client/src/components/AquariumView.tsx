@@ -8,7 +8,7 @@ import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Fish, Plus, Clock, Star, Waves, Eye } from "lucide-react";
 import { HelpButton } from './HelpButton';
-import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
 import { FishSelectionModal } from "./FishSelectionModal";
@@ -343,7 +343,7 @@ export const AquariumView: React.FC = () => {
           <TooltipContent>
             <div className="text-center">
               <p className="font-semibold">{fish.fishName}</p>
-              <Badge style={{ backgroundColor: getRarityColor(fish.fishRarity) }}>
+              <Badge className={`${getRarityBadgeStyle(fish.fishRarity)} text-xs px-2 py-1`}>
                 {getRarityDisplayName(fish.fishRarity)}
               </Badge>
               <p className="text-xs text-blue-300 mt-1">Klicken für Details</p>
