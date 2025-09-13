@@ -180,7 +180,7 @@ BASE_RARITY_DISTRIBUTION.common += (960 - totalAssigned);
 let RARITY_DISTRIBUTION = { ...BASE_RARITY_DISTRIBUTION };
 
 // Create randomized rarity assignments for each butterfly ID
-const BUTTERFLY_RARITY_MAP = new Map<number, RarityTier>();
+export const BUTTERFLY_RARITY_MAP = new Map<number, RarityTier>();
 
 // Store original 960 butterfly rarities to preserve them
 let ORIGINAL_BUTTERFLY_RARITIES: Map<number, RarityTier> | null = null;

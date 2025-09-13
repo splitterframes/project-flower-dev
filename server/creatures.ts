@@ -77,7 +77,7 @@ const FISH_RARITY_DISTRIBUTION_PERCENT = {
 let FISH_RARITY_DISTRIBUTION = {};
 
 // Create randomized rarity assignments for each fish ID
-const FISH_RARITY_MAP = new Map<number, RarityTier>();
+export const FISH_RARITY_MAP = new Map<number, RarityTier>();
 
 // Fisher-Yates shuffle algorithm
 function shuffleArray<T>(array: T[]): T[] {
@@ -126,7 +126,14 @@ async function initializeFishRarities(): Promise<void> {
     FISH_RARITY_MAP.set(fishId, shuffledRarities[index] || 'common');
   });
   
+  // Debug logging für Fish Rarity-Verteilung
+  const fishRarityCounts: Record<string, number> = {};
+  FISH_RARITY_MAP.forEach(rarity => {
+    fishRarityCounts[rarity] = (fishRarityCounts[rarity] || 0) + 1;
+  });
+  
   console.log(`🐟 Initialized fish system with ${TOTAL_FISH} fish`);
+  console.log(`🐟 Fish rarity distribution:`, fishRarityCounts);
 }
 
 // Generate random fish of specific rarity
@@ -346,7 +353,7 @@ const FLOWER_RARITY_DISTRIBUTION_PERCENT = {
 let FLOWER_RARITY_DISTRIBUTION = {};
 
 // Create randomized rarity assignments for each flower ID
-const FLOWER_RARITY_MAP = new Map<number, RarityTier>();
+export const FLOWER_RARITY_MAP = new Map<number, RarityTier>();
 
 // Store original flower rarities (1-200) to preserve existing assignments
 let ORIGINAL_FLOWER_RARITIES: Map<number, RarityTier> | null = null;
@@ -469,7 +476,14 @@ async function initializeFlowerRarities(): Promise<void> {
       console.log(`🌸 Assigned rarities to ${newFlowerIds.length} new flowers (201+)`);
     }
     
-    console.log(`🌸 Initialized flower system with ${TOTAL_FLOWERS} flowers`);
+    // Debug logging für Flower Rarity-Verteilung
+  const flowerRarityCounts: Record<string, number> = {};
+  FLOWER_RARITY_MAP.forEach(rarity => {
+    flowerRarityCounts[rarity] = (flowerRarityCounts[rarity] || 0) + 1;
+  });
+  
+  console.log(`🌸 Initialized flower system with ${TOTAL_FLOWERS} flowers`);
+  console.log(`🌸 Flower rarity distribution:`, flowerRarityCounts);
   } catch (error) {
     console.error('🌸 Error initializing flower rarities:', error);
     
