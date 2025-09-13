@@ -1657,7 +1657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get item rarity mappings for encyclopedia
   app.get('/api/encyclopedia/rarities', async (req, res) => {
     try {
-      const { BUTTERFLY_RARITY_MAP, CATERPILLAR_RARITY_MAP, FISH_RARITY_MAP } = await import('./creatures');
+      const creaturesModule = await import('./creatures');
       const { getFlowerRarityById } = await import('../shared/rarity');
       
       // Create rarity mappings for all item types
@@ -1673,18 +1673,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rarities.flowers[i] = getFlowerRarityById(i);
       }
       
-      // Dynamic rarities from server Maps
-      BUTTERFLY_RARITY_MAP.forEach((rarity, id) => {
-        rarities.butterflies[id] = rarity;
-      });
+      // Dynamic rarities from server Maps (with null checks)
+      if (creaturesModule.BUTTERFLY_RARITY_MAP) {
+        creaturesModule.BUTTERFLY_RARITY_MAP.forEach((rarity, id) => {
+          rarities.butterflies[id] = rarity;
+        });
+      }
       
-      CATERPILLAR_RARITY_MAP.forEach((rarity, id) => {
-        rarities.caterpillars[id] = rarity;
-      });
+      if (creaturesModule.CATERPILLAR_RARITY_MAP) {
+        creaturesModule.CATERPILLAR_RARITY_MAP.forEach((rarity, id) => {
+          rarities.caterpillars[id] = rarity;
+        });
+      }
       
-      FISH_RARITY_MAP.forEach((rarity, id) => {
-        rarities.fish[id] = rarity;
-      });
+      if (creaturesModule.FISH_RARITY_MAP) {
+        creaturesModule.FISH_RARITY_MAP.forEach((rarity, id) => {
+          rarities.fish[id] = rarity;
+        });
+      }
       
       res.json(rarities);
     } catch (error) {
