@@ -246,7 +246,7 @@ function getCaterpillarImageFilename(id: number): string {
 let CATERPILLAR_RARITY_DISTRIBUTION = {};
 
 // Create randomized rarity assignments for each caterpillar ID
-const CATERPILLAR_RARITY_MAP = new Map<number, RarityTier>();
+export const CATERPILLAR_RARITY_MAP = new Map<number, RarityTier>();
 
 // Initialize caterpillar rarity assignments
 async function initializeCaterpillarRarities(): Promise<void> {
@@ -285,7 +285,14 @@ async function initializeCaterpillarRarities(): Promise<void> {
     CATERPILLAR_RARITY_MAP.set(caterpillarId, shuffledRarities[index] || 'common');
   });
   
+  // Debug logging für Rarity-Verteilung
+  const rarityCounts: Record<string, number> = {};
+  CATERPILLAR_RARITY_MAP.forEach(rarity => {
+    rarityCounts[rarity] = (rarityCounts[rarity] || 0) + 1;
+  });
+  
   console.log(`🐛 Initialized caterpillar system with ${TOTAL_CATERPILLARS} caterpillars`);
+  console.log(`🐛 Caterpillar rarity distribution:`, rarityCounts);
 }
 
 // Generate random caterpillar of specific rarity
