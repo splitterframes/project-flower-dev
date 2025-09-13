@@ -5,6 +5,7 @@ interface AudioState {
   hitSound: HTMLAudioElement | null;
   successSound: HTMLAudioElement | null;
   isMuted: boolean;
+  spinningSound: HTMLAudioElement | null; // Für kontinuierlichen Spin-Sound
   
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
@@ -23,6 +24,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   backgroundMusic: null,
   hitSound: null,
   successSound: null,
+  spinningSound: null,
   isMuted: true, // Start muted by default
   
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
@@ -70,27 +72,32 @@ export const useAudio = create<AudioState>((set, get) => ({
   },
   
   playSlotSpin: () => {
-    const { hitSound, isMuted } = get();
-    if (hitSound && !isMuted) {
-      // Spiele den Sound mehrmals hintereinander für längeren Spin-Effekt
-      const playRepeatedSound = () => {
-        for (let i = 0; i < 8; i++) { // 8 mal wiederholen
-          setTimeout(() => {
-            const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-            soundClone.volume = 0.3; // Moderate Lautstärke
-            soundClone.playbackRate = 1.5; // Schneller für Maschinensound
-            soundClone.play().catch(error => {
-              console.log("Slot spin sound play prevented:", error);
-            });
-          }, i * 200); // Alle 200ms einen neuen Sound
-        }
-      };
-      playRepeatedSound();
+    const { backgroundMusic, isMuted } = get();
+    if (backgroundMusic && !isMuted) {
+      // Erstelle einen kontinuierlichen Spin-Sound aus der Hintergrundmusik
+      const spinSound = backgroundMusic.cloneNode() as HTMLAudioElement;
+      spinSound.volume = 0.15; // Leiser für Hintergrund-Effekt
+      spinSound.playbackRate = 2.0; // Doppelte Geschwindigkeit für Maschinen-Effekt
+      spinSound.loop = true; // Kontinuierlich wiederholen
+      spinSound.play().catch(error => {
+        console.log("Slot spin sound play prevented:", error);
+      });
+      
+      // Speichere Referenz zum Stoppen
+      set({ spinningSound: spinSound });
     }
   },
   
   playSlotStop: () => {
-    const { hitSound, isMuted } = get();
+    const { hitSound, spinningSound, isMuted } = get();
+    
+    // Stoppe den kontinuierlichen Spin-Sound
+    if (spinningSound) {
+      spinningSound.pause();
+      spinningSound.currentTime = 0;
+      set({ spinningSound: null });
+    }
+    
     if (hitSound && !isMuted) {
       // Doppelter "Stopp" Sound für hörbareren Effekt
       const soundClone1 = hitSound.cloneNode() as HTMLAudioElement;
