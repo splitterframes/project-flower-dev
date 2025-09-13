@@ -266,24 +266,24 @@ export const EncyclopediaView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
-      {/* Header */}
-      <div className="bg-slate-800/60 p-6 rounded-lg border border-blue-500/30">
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-8 w-8 mr-3 text-blue-400" />
-            <h1 className="text-3xl font-bold text-blue-300">Enzyklopädie</h1>
+    <div className="p-4 space-y-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Compact Header */}
+      <div className="bg-slate-800/60 p-3 rounded-lg border border-blue-500/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <BookOpen className="h-6 w-6 mr-2 text-blue-400" />
+            <h1 className="text-xl font-bold text-blue-300">Enzyklopädie</h1>
+            <span className="text-slate-400 text-sm ml-3">Deine komplette Sammlung</span>
           </div>
-          <p className="text-slate-400 mb-4">Deine komplette Sammlung aller Kreaturen</p>
           
           {/* Search */}
-          <div className="relative max-w-md mx-auto mb-4">
+          <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Nach Namen oder Seltenheit suchen..."
+              placeholder="Suchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-700 border-slate-600 text-white"
+              className="pl-10 h-8 bg-slate-700 border-slate-600 text-white text-sm"
             />
           </div>
         </div>
@@ -309,9 +309,9 @@ export const EncyclopediaView: React.FC = () => {
         </TabsList>
 
         {tabConfig.map(tab => (
-          <TabsContent key={tab.id} value={tab.id} className="mt-6">
+          <TabsContent key={tab.id} value={tab.id} className="mt-4">
             {/* Stats */}
-            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600 mb-6">
+            <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600 mb-4">
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-4">
@@ -356,7 +356,7 @@ export const EncyclopediaView: React.FC = () => {
             </div>
 
             {/* Items Grid */}
-            <div className="grid grid-cols-5 gap-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
+            <div className="grid grid-cols-5 gap-3 max-h-[700px] overflow-y-auto pr-2 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
               {filteredItems.map(item => {
                 const cardContent = (
                   <Card 
