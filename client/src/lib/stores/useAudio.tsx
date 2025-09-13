@@ -61,6 +61,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   playSuccess: () => {
     const { successSound, isMuted } = get();
     if (successSound && !isMuted) {
+      successSound.volume = 0.7; // Lautstärke einstellen
       successSound.currentTime = 0;
       successSound.play().catch(error => {
         console.log("Success sound play prevented:", error);
@@ -71,10 +72,10 @@ export const useAudio = create<AudioState>((set, get) => ({
   playSlotSpin: () => {
     const { hitSound, isMuted } = get();
     if (hitSound && !isMuted) {
-      // Clone the sound for slot spinning (lower volume, slower playback)
+      // Clone the sound for slot spinning (höhere Lautstärke, normale Geschwindigkeit)
       const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-      soundClone.volume = 0.2;
-      soundClone.playbackRate = 0.7; // Slower for spinning effect
+      soundClone.volume = 0.5; // Lauter
+      soundClone.playbackRate = 1.0; // Normale Geschwindigkeit
       soundClone.play().catch(error => {
         console.log("Slot spin sound play prevented:", error);
       });
@@ -84,10 +85,10 @@ export const useAudio = create<AudioState>((set, get) => ({
   playSlotStop: () => {
     const { hitSound, isMuted } = get();
     if (hitSound && !isMuted) {
-      // Clone the sound for slot stopping (normal volume, fast playback)
+      // Clone the sound for slot stopping (höhere Lautstärke, langsamere Geschwindigkeit)
       const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-      soundClone.volume = 0.4;
-      soundClone.playbackRate = 1.2; // Faster for stopping effect
+      soundClone.volume = 0.6; // Lauter
+      soundClone.playbackRate = 0.9; // Langsamer, damit man es hört
       soundClone.play().catch(error => {
         console.log("Slot stop sound play prevented:", error);
       });
