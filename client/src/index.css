@@ -76,6 +76,11 @@
   animation: gold-glow-random infinite ease-in-out;
 }
 
+/* Pause animation on hover to prevent flickering */
+.animate-gold-glow-random:hover {
+  animation-play-state: paused;
+}
+
 @layer base {
   :root {
     --background: 222.2 84% 4.9%;
