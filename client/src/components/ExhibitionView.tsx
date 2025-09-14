@@ -151,8 +151,8 @@ export const ExhibitionView: React.FC = () => {
   useEffect(() => {
     if (exhibitionButterflies.length > 0 || exhibitionVipButterflies.length > 0) {
       loadSellStatuses();
-      // Refresh sell statuses every 30 seconds
-      const interval = setInterval(loadSellStatuses, 30000);
+      // OPTIMIZED: Refresh sell statuses every 60 seconds (reduced from 30s)
+      const interval = setInterval(loadSellStatuses, 60000);
       return () => clearInterval(interval);
     }
   }, [exhibitionButterflies, exhibitionVipButterflies]);

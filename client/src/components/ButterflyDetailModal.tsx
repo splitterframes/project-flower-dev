@@ -155,8 +155,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     // Fetch immediately
     fetchSellStatus();
 
-    // Update every second
-    const interval = setInterval(fetchSellStatus, 1000);
+    // OPTIMIZED: Update every 30 seconds (reduced from 1 second for better performance)
+    const interval = setInterval(fetchSellStatus, 30000);
 
     return () => {
       isCancelled = true; // Cancel any pending operations
