@@ -3182,6 +3182,111 @@ export class PostgresStorage {
     return timeRemaining === 0;
   }
 
+  // OPTIMIZED: Batch sell-status for multiple butterflies in single query
+  async getBatchSellStatus(userId: number, butterflyIds: number[], vipButterflyIds: number[]): Promise<{
+    normal: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>,
+    vip: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>
+  }> {
+    const now = new Date();
+    const baseTimeMs = 72 * 60 * 60 * 1000; // 72 hours
+    const result: {
+      normal: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>,
+      vip: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>
+    } = { normal: [], vip: [] };
+
+    // Get all normal butterflies in one query
+    if (butterflyIds.length > 0) {
+      const normalButterflies = await this.db
+        .select({ 
+          id: exhibitionButterflies.id, 
+          placedAt: exhibitionButterflies.placedAt,
+          frameId: exhibitionButterflies.frameId
+        })
+        .from(exhibitionButterflies)
+        .where(
+          and(
+            eq(exhibitionButterflies.userId, userId),
+            inArray(exhibitionButterflies.id, butterflyIds)
+          )
+        );
+
+      // Get likes counts for frames in one query
+      const frameIds = normalButterflies.map(b => b.frameId).filter(Boolean);
+      const frameLikesData = frameIds.length > 0 ? await this.db
+        .select({
+          frameId: exhibitionFrameLikes.frameId,
+          count: sql`count(*)`
+        })
+        .from(exhibitionFrameLikes)
+        .where(inArray(exhibitionFrameLikes.frameId, frameIds))
+        .groupBy(exhibitionFrameLikes.frameId) : [];
+
+      const likesMap = new Map(frameLikesData.map(item => [item.frameId, Number(item.count)]));
+
+      // Calculate status for each butterfly
+      for (const butterfly of normalButterflies) {
+        const placedAt = new Date(butterfly.placedAt);
+        const msElapsed = now.getTime() - placedAt.getTime();
+        const remainingMs = Math.max(0, baseTimeMs - msElapsed);
+        const likesCount = likesMap.get(butterfly.frameId) || 0;
+        
+        result.normal.push({
+          id: butterfly.id,
+          canSell: remainingMs === 0,
+          timeRemainingMs: remainingMs,
+          likesCount
+        });
+      }
+    }
+
+    // Get all VIP butterflies in one query
+    if (vipButterflyIds.length > 0) {
+      const vipButterflies = await this.db
+        .select({ 
+          id: exhibitionVipButterflies.id, 
+          placedAt: exhibitionVipButterflies.placedAt,
+          frameId: exhibitionVipButterflies.frameId
+        })
+        .from(exhibitionVipButterflies)
+        .where(
+          and(
+            eq(exhibitionVipButterflies.userId, userId),
+            inArray(exhibitionVipButterflies.id, vipButterflyIds)
+          )
+        );
+
+      // Get VIP frame likes
+      const vipFrameIds = vipButterflies.map(b => b.frameId).filter(Boolean);
+      const vipFrameLikesData = vipFrameIds.length > 0 ? await this.db
+        .select({
+          frameId: exhibitionFrameLikes.frameId,
+          count: sql`count(*)`
+        })
+        .from(exhibitionFrameLikes)
+        .where(inArray(exhibitionFrameLikes.frameId, vipFrameIds))
+        .groupBy(exhibitionFrameLikes.frameId) : [];
+
+      const vipLikesMap = new Map(vipFrameLikesData.map(item => [item.frameId, Number(item.count)]));
+
+      // Calculate status for each VIP butterfly
+      for (const vipButterfly of vipButterflies) {
+        const placedAt = new Date(vipButterfly.placedAt);
+        const msElapsed = now.getTime() - placedAt.getTime();
+        const remainingMs = Math.max(0, baseTimeMs - msElapsed);
+        const likesCount = vipLikesMap.get(vipButterfly.frameId) || 0;
+        
+        result.vip.push({
+          id: vipButterfly.id,
+          canSell: remainingMs === 0,
+          timeRemainingMs: remainingMs,
+          likesCount
+        });
+      }
+    }
+
+    return result;
+  }
+
   async getTimeUntilSellable(userId: number, exhibitionButterflyId: number): Promise<number> {
     const butterfly = await this.db
       .select()

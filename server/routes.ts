@@ -2108,6 +2108,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OPTIMIZED: Batch sell-status endpoint for multiple butterflies
+  app.post("/api/exhibition/sell-status-batch", async (req, res) => {
+    try {
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const { butterflyIds = [], vipButterflyIds = [] } = req.body;
+
+      // Validate input
+      if (!Array.isArray(butterflyIds) || !Array.isArray(vipButterflyIds)) {
+        return res.status(400).json({ error: "butterflyIds and vipButterflyIds must be arrays" });
+      }
+
+      // Convert to numbers and filter valid IDs
+      const validButterflyIds = butterflyIds
+        .map((id: any) => parseInt(id))
+        .filter((id: number) => !isNaN(id) && id > 0);
+      
+      const validVipButterflyIds = vipButterflyIds
+        .map((id: any) => parseInt(id))
+        .filter((id: number) => !isNaN(id) && id > 0);
+
+      // Use optimized batch method
+      const batchResult = await storage.getBatchSellStatus(userId, validButterflyIds, validVipButterflyIds);
+
+      // Transform result to match expected frontend format
+      const result: { [key: string]: { canSell: boolean, timeRemainingMs: number, likesCount: number } } = {};
+
+      // Add normal butterflies to result
+      for (const butterfly of batchResult.normal) {
+        result[`normal-${butterfly.id}`] = {
+          canSell: butterfly.canSell,
+          timeRemainingMs: butterfly.timeRemainingMs,
+          likesCount: butterfly.likesCount
+        };
+      }
+
+      // Add VIP butterflies to result
+      for (const vipButterfly of batchResult.vip) {
+        result[`vip-${vipButterfly.id}`] = {
+          canSell: vipButterfly.canSell,
+          timeRemainingMs: vipButterfly.timeRemainingMs,
+          likesCount: vipButterfly.likesCount
+        };
+      }
+
+      res.json(result);
+
+    } catch (error) {
+      console.error('Failed to get batch sell status:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/exhibition/sell-butterfly", async (req, res) => {
     try {
       const { userId, exhibitionButterflyId } = req.body;

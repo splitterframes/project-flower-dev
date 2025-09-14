@@ -58,82 +58,83 @@ export const ExhibitionView: React.FC = () => {
     if (!user) return;
     
     try {
-      const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+      // OPTIMIZED: Single batch API call instead of N individual calls
+      const butterflyIds = exhibitionButterflies.map(b => b.id);
+      const vipButterflyIds = exhibitionVipButterflies.map(b => b.id);
       
-      // Load sell statuses for all exhibition butterflies
-      const loadPromises = exhibitionButterflies.map(async (butterfly) => {
-        try {
-          const response = await fetch(`/api/exhibition/butterfly/${butterfly.id}/sell-status`, {
-            headers: {
-              'x-user-id': user.id.toString()
-            }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            statuses[`normal-${butterfly.id}`] = {
-              canSell: data.canSell,
-              timeRemainingMs: data.timeRemainingMs || 0
-            };
-          } else {
-            // Fallback: Calculate time remaining from placedAt
-            const placedTime = new Date(butterfly.placedAt).getTime();
-            const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-            statuses[`normal-${butterfly.id}`] = {
-              canSell: timeRemainingMs <= 0,
-              timeRemainingMs: timeRemainingMs
-            };
-          }
-        } catch (error) {
-          console.error(`Failed to load sell status for butterfly ${butterfly.id}:`, error);
-          // Fallback: Calculate time remaining from placedAt
+      if (butterflyIds.length === 0 && vipButterflyIds.length === 0) {
+        setSellStatuses({});
+        return;
+      }
+
+      const response = await fetch('/api/exhibition/sell-status-batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({
+          butterflyIds,
+          vipButterflyIds
+        })
+      });
+
+      if (response.ok) {
+        const batchData = await response.json();
+        setSellStatuses(batchData);
+      } else {
+        console.error('Batch sell-status failed, using fallback calculations');
+        
+        // Fallback: Calculate locally for all butterflies
+        const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+        
+        // Normal butterflies fallback
+        exhibitionButterflies.forEach((butterfly) => {
           const placedTime = new Date(butterfly.placedAt).getTime();
           const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
           statuses[`normal-${butterfly.id}`] = {
             canSell: timeRemainingMs <= 0,
             timeRemainingMs: timeRemainingMs
           };
-        }
-      });
-      
-      // Load sell statuses for all VIP butterflies
-      const vipLoadPromises = exhibitionVipButterflies.map(async (vipButterfly) => {
-        try {
-          const response = await fetch(`/api/exhibition/vip-butterfly/${vipButterfly.id}/sell-status`, {
-            headers: {
-              'x-user-id': user.id.toString()
-            }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            statuses[`vip-${vipButterfly.id}`] = {
-              canSell: data.canSell,
-              timeRemainingMs: data.timeRemainingMs || 0
-            };
-          } else {
-            // Fallback: Calculate time remaining from placedAt  
-            const placedTime = new Date(vipButterfly.placedAt).getTime();
-            const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-            statuses[`vip-${vipButterfly.id}`] = {
-              canSell: timeRemainingMs <= 0,
-              timeRemainingMs: timeRemainingMs
-            };
-          }
-        } catch (error) {
-          console.error(`Failed to load sell status for VIP butterfly ${vipButterfly.id}:`, error);
-          // Fallback: Calculate time remaining from placedAt
+        });
+        
+        // VIP butterflies fallback
+        exhibitionVipButterflies.forEach((vipButterfly) => {
           const placedTime = new Date(vipButterfly.placedAt).getTime();
           const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
           statuses[`vip-${vipButterfly.id}`] = {
             canSell: timeRemainingMs <= 0,
             timeRemainingMs: timeRemainingMs
           };
-        }
-      });
-      
-      await Promise.all([...loadPromises, ...vipLoadPromises]);
-      setSellStatuses(statuses);
+        });
+        
+        setSellStatuses(statuses);
+      }
     } catch (error) {
       console.error('Failed to load sell statuses:', error);
+      
+      // Emergency fallback: Calculate locally for all butterflies
+      const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+      
+      exhibitionButterflies.forEach((butterfly) => {
+        const placedTime = new Date(butterfly.placedAt).getTime();
+        const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
+        statuses[`normal-${butterfly.id}`] = {
+          canSell: timeRemainingMs <= 0,
+          timeRemainingMs: timeRemainingMs
+        };
+      });
+      
+      exhibitionVipButterflies.forEach((vipButterfly) => {
+        const placedTime = new Date(vipButterfly.placedAt).getTime();
+        const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
+        statuses[`vip-${vipButterfly.id}`] = {
+          canSell: timeRemainingMs <= 0,
+          timeRemainingMs: timeRemainingMs
+        };
+      });
+      
+      setSellStatuses(statuses);
     }
   };
 
