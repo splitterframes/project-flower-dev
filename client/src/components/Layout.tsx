@@ -246,7 +246,7 @@ export const Layout: React.FC = () => {
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
   const [lootDrops, setLootDrops] = useState<Loot[]>([]);
-  const { user, isLoading, checkAuth } = useAuth();
+  const { user, isLoading, hasCheckedAuth, checkAuth } = useAuth();
   const { setCredits } = useCredits();
   
   // Initialize activity detection for performance optimization
@@ -270,9 +270,9 @@ export const Layout: React.FC = () => {
       const response = await fetch('/api/balloon/collect', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': user.id.toString()
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // 🔒 SECURITY: Use JWT cookies instead of forgeable headers
         body: JSON.stringify({ 
           balloonId,
           lootType: type,
@@ -470,7 +470,20 @@ export const Layout: React.FC = () => {
     }
   };
 
-  // 🔒 SECURITY: Show only authentication interface for non-authenticated users
+  // 🔒 SECURITY: Block UI until server auth check is complete
+  if (!hasCheckedAuth) {
+    return (
+      <div className="layout-container h-screen bg-slate-950 flex flex-col items-center justify-center">
+        <Card className="bg-slate-800 border-slate-700 text-white">
+          <CardContent className="pt-6 pb-6">
+            <p className="text-center text-slate-400">🔒 Authentifizierung wird geprüft...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // 🔒 SECURITY: Show only authentication interface for non-authenticated users  
   if (!user) {
     return (
       <div className="layout-container h-screen bg-slate-950 flex flex-col items-center justify-center">

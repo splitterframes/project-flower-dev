@@ -12,6 +12,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  hasCheckedAuth: boolean; // 🔒 SECURITY: Track if server auth has been verified
   
   // Actions
   login: (username: string, password: string) => Promise<void>;
@@ -29,6 +30,7 @@ export const useAuth = create<AuthState>()(
         isLoading: false,
         error: null,
         isAuthenticated: false,
+        hasCheckedAuth: false, // 🔒 SECURITY: Starts false until server verification
         
         login: async (username: string, password: string) => {
           set({ isLoading: true, error: null });
@@ -49,7 +51,7 @@ export const useAuth = create<AuthState>()(
             }
 
             const data = await response.json();
-            set({ user: data.user, isLoading: false, isAuthenticated: true });
+            set({ user: data.user, isLoading: false, isAuthenticated: true, hasCheckedAuth: true });
             console.log('🔐 Login successful:', data.user.username);
           } catch (error) {
             set({ 
@@ -80,7 +82,7 @@ export const useAuth = create<AuthState>()(
             }
 
             const data = await response.json();
-            set({ user: data.user, isLoading: false, isAuthenticated: true });
+            set({ user: data.user, isLoading: false, isAuthenticated: true, hasCheckedAuth: true });
             console.log('🔐 Registration successful:', data.user.username);
           } catch (error) {
             set({ 
@@ -102,7 +104,7 @@ export const useAuth = create<AuthState>()(
           } catch (error) {
             console.error('🔐 Logout error:', error);
           } finally {
-            set({ user: null, error: null, isAuthenticated: false });
+            set({ user: null, error: null, isAuthenticated: false, hasCheckedAuth: true });
           }
         },
         
@@ -123,15 +125,16 @@ export const useAuth = create<AuthState>()(
                   credits: 0 // Will be fetched separately
                 }, 
                 isAuthenticated: true,
-                isLoading: false 
+                isLoading: false,
+                hasCheckedAuth: true
               });
               console.log('🔐 Authentication verified:', data.user.username);
             } else {
-              set({ user: null, isAuthenticated: false, isLoading: false });
+              set({ user: null, isAuthenticated: false, isLoading: false, hasCheckedAuth: true });
             }
           } catch (error) {
             console.error('🔐 Auth check failed:', error);
-            set({ user: null, isAuthenticated: false, isLoading: false });
+            set({ user: null, isAuthenticated: false, isLoading: false, hasCheckedAuth: true });
           }
         },
         
@@ -141,7 +144,7 @@ export const useAuth = create<AuthState>()(
       }),
       {
         name: 'mariposa-auth', // localStorage key
-        partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }), // Persist user data and auth status
+        partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }), // 🔒 SECURITY: Don't persist hasCheckedAuth - force re-check on reload
       }
     )
   )
