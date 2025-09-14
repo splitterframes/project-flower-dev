@@ -246,11 +246,16 @@ export const Layout: React.FC = () => {
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
   const [lootDrops, setLootDrops] = useState<Loot[]>([]);
-  const { user } = useAuth();
+  const { user, isLoading, checkAuth } = useAuth();
   const { setCredits } = useCredits();
   
   // Initialize activity detection for performance optimization
   useActivityDetection();
+
+  // Check authentication on component mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   // Award loot function with balloon validation
   const awardLoot = async (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number, balloonId: string) => {
@@ -464,6 +469,42 @@ export const Layout: React.FC = () => {
         return <GardenView />;
     }
   };
+
+  // 🔒 SECURITY: Show only authentication interface for non-authenticated users
+  if (!user) {
+    return (
+      <div className="layout-container h-screen bg-slate-950 flex flex-col items-center justify-center">
+        {/* Show loading state while checking authentication */}
+        {isLoading ? (
+          <Card className="bg-slate-800 border-slate-700 text-white">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-center text-slate-400">🔒 Authentifizierung wird geprüft...</p>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Show login prompt when not authenticated */
+          <Card className="bg-slate-800 border-slate-700 text-white max-w-md mx-4">
+            <CardContent className="pt-6 pb-6 text-center">
+              <h2 className="text-xl font-bold text-white mb-4">🦋 Mariposa Garden</h2>
+              <p className="text-slate-400 mb-6">Bitte melde dich an, um das Spiel zu spielen und auf alle Funktionen zuzugreifen.</p>
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                🔐 Anmelden / Registrieren
+              </button>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Always show auth modal when needed */}
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="layout-container h-screen bg-slate-950 flex flex-col">
