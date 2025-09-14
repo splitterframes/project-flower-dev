@@ -310,7 +310,7 @@ export const AquariumView: React.FC = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className="w-full h-full bg-gradient-to-br from-blue-900/20 to-blue-700/30 border-2 rounded-lg flex items-center justify-center cursor-pointer hover:from-blue-800/30 hover:to-blue-600/40 transition-all relative overflow-hidden"
+              className="w-full h-full bg-gradient-to-br from-blue-900/20 to-blue-700/30 border-2 rounded-lg flex items-center justify-center cursor-pointer hover:from-blue-800/30 hover:to-blue-600/40 transition-all relative"
               style={{ borderColor: getRarityColor(fish.fishRarity) }}
               onClick={() => handleFishSelect(fish)}
             >
