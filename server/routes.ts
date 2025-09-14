@@ -1138,6 +1138,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Collection stats endpoint for encyclopedia
+  app.get("/api/user/:id/collection-stats", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const requestedType = req.query.type as string; // Accept both singular and plural forms
+      
+      // Normalize type: singular → plural (for storage compatibility)
+      const typeMapping: Record<string, string> = {
+        'flower': 'flowers',
+        'butterfly': 'butterflies', 
+        'caterpillar': 'caterpillars',
+        'fish': 'fish',
+        'flowers': 'flowers',
+        'butterflies': 'butterflies',
+        'caterpillars': 'caterpillars'
+      };
+      
+      const normalizedType = requestedType ? typeMapping[requestedType] : undefined;
+      
+      // Validate type if provided
+      if (requestedType && !normalizedType) {
+        return res.status(400).json({ 
+          message: "Invalid item type", 
+          validTypes: ['flower', 'butterfly', 'caterpillar', 'fish', 'flowers', 'butterflies', 'caterpillars'] 
+        });
+      }
+      
+      console.log(`📊 Getting collection stats for user ${userId}, type: ${normalizedType || 'all'}`);
+      const stats = await storage.getUserCollectionStats(userId, normalizedType);
+      console.log(`📊 Found ${stats.length} collection stats`);
+      res.json({ collectionStats: stats });
+    } catch (error) {
+      console.error('📊 Error getting collection stats:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Add butterflies to user inventory (for testing/admin purposes)
   app.post("/api/user/:id/add-butterfly", async (req, res) => {
     try {

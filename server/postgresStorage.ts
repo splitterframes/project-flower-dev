@@ -37,6 +37,7 @@ import {
   castleUnlockedParts,
   castleGridState,
   userUnlockedFeatures,
+  collectionStats,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -73,6 +74,8 @@ import {
   type DailyItems,
   type CastleUnlockedPart,
   type NewCastleUnlockedPart,
+  type CollectionStats,
+  type NewCollectionStats,
   type CastleGridState,
   type NewCastleGridState,
   insertUserSchema
@@ -109,6 +112,71 @@ export class PostgresStorage {
     this.initializeCreaturesSystems();
     
     // Start butterfly lifecycle service
+  }
+
+  /**
+   * Update collection statistics when a user obtains an item
+   * This tracks lifetime acquisition counts for the encyclopedia
+   * Uses UPSERT to handle race conditions safely
+   */
+  private async updateCollectionStats(
+    userId: number, 
+    itemType: 'flowers' | 'butterflies' | 'caterpillars' | 'fish', // Using plural forms to match schema
+    itemId: number,
+    quantity: number = 1
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Use UPSERT to handle race conditions safely
+      await this.db
+        .insert(collectionStats)
+        .values({
+          userId,
+          itemType,
+          itemId,
+          totalObtained: quantity,
+          firstObtainedAt: now,
+          lastObtainedAt: now
+        })
+        .onConflictDoUpdate({
+          target: [collectionStats.userId, collectionStats.itemType, collectionStats.itemId],
+          set: {
+            totalObtained: sql`${collectionStats.totalObtained} + ${quantity}`,
+            lastObtainedAt: now,
+            updatedAt: now
+          }
+        });
+    } catch (error) {
+      console.error(`Failed to update collection stats for ${itemType} ${itemId}:`, error);
+    }
+  }
+
+  /**
+   * Get user's lifetime collection statistics for encyclopedia
+   */
+  async getUserCollectionStats(userId: number, itemType?: string): Promise<CollectionStats[]> {
+    try {
+      let query = this.db
+        .select()
+        .from(collectionStats)
+        .where(eq(collectionStats.userId, userId));
+
+      // Filter by item type if provided
+      if (itemType && ['flowers', 'butterflies', 'caterpillars', 'fish'].includes(itemType)) {
+        query = query.where(and(
+          eq(collectionStats.userId, userId),
+          eq(collectionStats.itemType, itemType)
+        ));
+      }
+
+      const stats = await query;
+      console.log(`📊 Found ${stats.length} collection stats for user ${userId}, type: ${itemType || 'all'}`);
+      return stats;
+    } catch (error) {
+      console.error('📊 Error getting collection stats:', error);
+      return [];
+    }
   }
 
   private async initializeSeeds() {
@@ -298,6 +366,10 @@ export class PostgresStorage {
           })
           .returning();
         console.log(`🐟 Created new fish inventory entry: ${fishData.name}`);
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'fish', fishData.id, 1);
+        
         return newFish;
       } catch (error) {
         // If fish already exists (constraint violation), increment quantity
@@ -316,6 +388,10 @@ export class PostgresStorage {
             .where(eq(userFish.id, existingFish[0].id))
             .returning();
           console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
+          
+          // Update collection stats
+          await this.updateCollectionStats(userId, 'fish', fishData.id, 1);
+          
           return updatedFish;
         } else {
           // Fallback: re-throw error if not a constraint violation
@@ -503,6 +579,10 @@ export class PostgresStorage {
           .set({ quantity: existingCaterpillar[0].quantity + 1 })
           .where(eq(userCaterpillars.id, existingCaterpillar[0].id))
           .returning();
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'caterpillars', caterpillarData.id, 1);
+        
         return updatedCaterpillar;
       } else {
         // Add new caterpillar
@@ -517,6 +597,10 @@ export class PostgresStorage {
             quantity: 1
           })
           .returning();
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'caterpillars', caterpillarData.id, 1);
+        
         return newCaterpillar;
       }
     } catch (error) {
@@ -1542,6 +1626,9 @@ export class PostgresStorage {
         .where(eq(userFlowers.id, existingFlower[0].id));
       
       console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + 1} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
     } else {
       // Create new flower entry
       await this.db.insert(userFlowers).values({
@@ -1554,6 +1641,9 @@ export class PostgresStorage {
         quantity: 1
       });
       console.log(`💾 Added new flower ${flowerName} for user ${userId} to PostgreSQL`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
     }
   }
 
@@ -1975,6 +2065,9 @@ export class PostgresStorage {
           .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyData.id)))
           .returning();
         result = updated[0];
+        
+        // Update collection stats for existing butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyData.id, quantity);
       } else {
         // Add new butterfly to inventory  
         console.log(`🦋 Adding new butterfly to inventory`);
@@ -1987,6 +2080,9 @@ export class PostgresStorage {
           quantity
         }).returning();
         result = newButterfly[0];
+        
+        // Update collection stats for new butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyData.id, quantity);
       }
 
       console.log(`🦋 Successfully added butterfly: ${result.butterflyName} (${rarity}) to user ${userId}`);
@@ -2020,6 +2116,9 @@ export class PostgresStorage {
         .update(userVipButterflies)
         .set({ quantity: existing[0].quantity + 1 })
         .where(eq(userVipButterflies.id, existing[0].id));
+      
+      // Update collection stats for VIP butterfly
+      await this.updateCollectionStats(userId, 'butterflies', vipButterflyId, 1);
     } else {
       // Add new VIP butterfly
       await this.db.insert(userVipButterflies).values({
@@ -2029,6 +2128,9 @@ export class PostgresStorage {
         vipButterflyImageUrl,
         quantity: 1
       });
+      
+      // Update collection stats for VIP butterfly
+      await this.updateCollectionStats(userId, 'butterflies', vipButterflyId, 1);
     }
     
     console.log(`✨ Added VIP butterfly ${vipButterflyName} to user ${userId}'s inventory`);
@@ -6425,12 +6527,16 @@ export class PostgresStorage {
         .update(userSeeds)
         .set({ quantity: existing[0].quantity + quantity })
         .where(eq(userSeeds.id, existing[0].id));
+      
+      // Collection stats are not tracked for seeds - only for collectible items like flowers, butterflies, fish, caterpillars
     } else {
       await this.db.insert(userSeeds).values({
         userId,
         seedId,
         quantity
       });
+      
+      // Collection stats are not tracked for seeds - only for collectible items like flowers, butterflies, fish, caterpillars
     }
   }
 
@@ -6471,6 +6577,9 @@ export class PostgresStorage {
         quantity: 1
       });
       console.log(`🌸 Created new flower inventory entry: ${flowerName}`);
+      
+      // Update collection stats for new flower
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
     } catch (error) {
       // If flower already exists (constraint violation), increment quantity
       const existingFlower = await this.db
@@ -6487,6 +6596,9 @@ export class PostgresStorage {
           .set({ quantity: existingFlower[0].quantity + 1 })
           .where(eq(userFlowers.id, existingFlower[0].id));
         console.log(`🌸 Incremented existing flower ${flowerName} quantity to ${existingFlower[0].quantity + 1}`);
+        
+        // Update collection stats for existing flower
+        await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
       } else {
         throw error; // Re-throw if it's not a constraint violation we can handle
       }
