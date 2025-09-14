@@ -78,8 +78,10 @@ export const ButterflyHoverPreview: React.FC<ButterflyHoverPreviewProps> = ({
   };
 
   const formatTimeRemaining = (ms: number): string => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    // Round to nearest minute to prevent flickering between values
+    const roundedMs = Math.ceil(ms / (1000 * 60)) * (1000 * 60);
+    const hours = Math.floor(roundedMs / (1000 * 60 * 60));
+    const minutes = Math.floor((roundedMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
   };
 
