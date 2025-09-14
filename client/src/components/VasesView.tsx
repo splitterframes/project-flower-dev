@@ -225,12 +225,12 @@ export const VasesView: React.FC = () => {
                             canCollect ? 'border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg animate-pulse' :
                             'border-slate-500 bg-slate-800/50'
                           }
-                          animate-gold-glow-random
+                          ${canCollect && !vase.collected ? 'animate-gold-glow-random' : ''}
                         `}
-                        style={{
+                        style={canCollect && !vase.collected ? {
                           animationDelay: `${Math.random() * 5}s`, // Random gold glow timing
                           animationDuration: `${3 + Math.random() * 2}s`, // Vary duration 3-5s
-                        }}>
+                        } : {}}>
                           {/* Vase Image or Placeholder */}
                           <div className="w-full h-full flex items-center justify-center p-2">
                             {vase.collected ? (
