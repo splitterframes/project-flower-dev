@@ -330,12 +330,16 @@ export const AquariumView: React.FC = () => {
                 🐟
               </div>
               
-              {/* Rarity glow effect */}
+              {/* Enhanced Rarity glow effect */}
               <div 
-                className="absolute inset-0 rounded-lg opacity-20"
+                className="absolute inset-0 rounded-lg opacity-30 animate-pulse"
                 style={{ 
                   backgroundColor: getRarityColor(fish.fishRarity),
-                  boxShadow: `inset 0 0 20px ${getRarityColor(fish.fishRarity)}`
+                  boxShadow: `
+                    inset 0 0 25px ${getRarityColor(fish.fishRarity)},
+                    0 0 15px ${getRarityColor(fish.fishRarity)},
+                    0 0 30px ${getRarityColor(fish.fishRarity)}66
+                  `
                 }}
               />
             </div>
