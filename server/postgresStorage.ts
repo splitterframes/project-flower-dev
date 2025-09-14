@@ -153,6 +153,46 @@ export class PostgresStorage {
   }
 
   /**
+   * Idempotent collection stats update for backfill operations
+   * Sets totalObtained to current inventory value instead of incrementing
+   * Safe to run multiple times without inflating counts
+   */
+  private async updateCollectionStatsForBackfill(
+    userId: number, 
+    itemType: 'flowers' | 'butterflies' | 'caterpillars' | 'fish',
+    itemId: number,
+    currentInventoryQuantity: number
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Use UPSERT with GREATEST to ensure we don't decrease existing higher values
+      // This handles edge cases where collection stats might already have higher values
+      await this.db
+        .insert(collectionStats)
+        .values({
+          userId,
+          itemType,
+          itemId,
+          totalObtained: currentInventoryQuantity,
+          firstObtainedAt: now,
+          lastObtainedAt: now
+        })
+        .onConflictDoUpdate({
+          target: [collectionStats.userId, collectionStats.itemType, collectionStats.itemId],
+          set: {
+            // Use GREATEST to ensure we don't decrease existing values in case of legitimate higher counts
+            totalObtained: sql`GREATEST(${collectionStats.totalObtained}, ${currentInventoryQuantity})`,
+            lastObtainedAt: now,
+            updatedAt: now
+          }
+        });
+    } catch (error) {
+      console.error(`Failed to update collection stats for backfill ${itemType} ${itemId}:`, error);
+    }
+  }
+
+  /**
    * Get user's lifetime collection statistics for encyclopedia
    */
   async getUserCollectionStats(userId: number, itemType?: string): Promise<CollectionStats[]> {
@@ -6875,6 +6915,103 @@ export class PostgresStorage {
     } catch (error) {
       console.error(`💾 Failed to unlock feature ${featureName} for user ${userId}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Backfill collection statistics for existing users from their current inventories
+   * This populates the collection_stats table with lifetime acquisition data
+   */
+  async backfillCollectionStats(): Promise<{ success: boolean; stats: any }> {
+    try {
+      console.log('📊 Starting collection stats backfill...');
+      
+      // Get all users
+      const allUsers = await this.db.select({ id: users.id }).from(users);
+      console.log(`📊 Found ${allUsers.length} users to backfill`);
+      
+      let totalInserted = 0;
+      const typeStats = { flowers: 0, butterflies: 0, caterpillars: 0, fish: 0 };
+      
+      for (const user of allUsers) {
+        const userId = user.id;
+        console.log(`📊 Processing user ${userId}...`);
+        
+        // Backfill flowers
+        const userFlowersData = await this.db
+          .select()
+          .from(userFlowers)
+          .where(eq(userFlowers.userId, userId));
+        
+        for (const flower of userFlowersData) {
+          await this.updateCollectionStatsForBackfill(userId, 'flowers', flower.flowerId, flower.quantity);
+          totalInserted++;
+          typeStats.flowers++;
+        }
+        
+        // Backfill butterflies (regular)
+        const userButterfliesData = await this.db
+          .select()
+          .from(userButterflies)
+          .where(eq(userButterflies.userId, userId));
+        
+        for (const butterfly of userButterfliesData) {
+          await this.updateCollectionStatsForBackfill(userId, 'butterflies', butterfly.butterflyId, butterfly.quantity);
+          totalInserted++;
+          typeStats.butterflies++;
+        }
+        
+        // Backfill VIP butterflies
+        const userVipButterfliesData = await this.db
+          .select()
+          .from(userVipButterflies)
+          .where(eq(userVipButterflies.userId, userId));
+        
+        for (const vipButterfly of userVipButterfliesData) {
+          await this.updateCollectionStatsForBackfill(userId, 'butterflies', vipButterfly.vipButterflyId, vipButterfly.quantity);
+          totalInserted++;
+          typeStats.butterflies++;
+        }
+        
+        // Backfill caterpillars
+        const userCaterpillarsData = await this.db
+          .select()
+          .from(userCaterpillars)
+          .where(eq(userCaterpillars.userId, userId));
+        
+        for (const caterpillar of userCaterpillarsData) {
+          await this.updateCollectionStatsForBackfill(userId, 'caterpillars', caterpillar.caterpillarId, caterpillar.quantity);
+          totalInserted++;
+          typeStats.caterpillars++;
+        }
+        
+        // Backfill fish
+        const userFishData = await this.db
+          .select()
+          .from(userFish)
+          .where(eq(userFish.userId, userId));
+        
+        for (const fish of userFishData) {
+          await this.updateCollectionStatsForBackfill(userId, 'fish', fish.fishId, fish.quantity);
+          totalInserted++;
+          typeStats.fish++;
+        }
+        
+        console.log(`📊 User ${userId} backfilled: ${userFlowersData.length} flowers, ${userButterfliesData.length + userVipButterfliesData.length} butterflies, ${userCaterpillarsData.length} caterpillars, ${userFishData.length} fish`);
+      }
+      
+      console.log(`📊 Backfill complete! Inserted ${totalInserted} collection stats entries:`, typeStats);
+      return { 
+        success: true, 
+        stats: { 
+          totalUsers: allUsers.length, 
+          totalEntries: totalInserted, 
+          typeBreakdown: typeStats 
+        } 
+      };
+    } catch (error) {
+      console.error('📊 Backfill failed:', error);
+      return { success: false, stats: { error: error.message } };
     }
   }
 }

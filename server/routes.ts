@@ -1175,6 +1175,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Backfill collection stats for all existing users (Admin only - requires authentication)
+  app.post("/api/admin/backfill-collection-stats", async (req, res) => {
+    try {
+      // Security: Check for admin authentication
+      const adminSecret = process.env.ADMIN_SECRET;
+      const providedToken = req.headers.authorization?.replace('Bearer ', '') || req.headers['x-admin-token'];
+      
+      if (!adminSecret) {
+        console.error('🔒 ADMIN_SECRET environment variable not configured');
+        return res.status(500).json({ 
+          message: "Server configuration error: Admin authentication not configured" 
+        });
+      }
+      
+      if (!providedToken || providedToken !== adminSecret) {
+        console.warn('🔒 Unauthorized admin endpoint access attempt');
+        return res.status(401).json({ 
+          message: "Unauthorized: Valid admin token required" 
+        });
+      }
+      
+      console.log('📊 Admin triggered collection stats backfill (authenticated)...');
+      const result = await storage.backfillCollectionStats();
+      
+      if (result.success) {
+        console.log('📊 Backfill completed successfully:', result.stats);
+        res.json({ 
+          message: "Collection stats backfill completed successfully",
+          ...result.stats
+        });
+      } else {
+        console.error('📊 Backfill failed:', result.stats.error);
+        res.status(500).json({ 
+          message: "Collection stats backfill failed",
+          error: result.stats.error
+        });
+      }
+    } catch (error) {
+      console.error('📊 Error in backfill endpoint:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Add butterflies to user inventory (for testing/admin purposes)
   app.post("/api/user/:id/add-butterfly", async (req, res) => {
     try {
