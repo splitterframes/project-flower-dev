@@ -5589,8 +5589,9 @@ export class PostgresStorage {
               ))
               .limit(1);
             if (flowerData.length > 0) {
-              const flowerInfo = await this.getFlowerInfo(flowerData[0].flowerId);
-              actualSellPrice = this.getFlowerSellPrice(flowerInfo.rarity);
+              const { getFlowerRarityById } = await import('../shared/rarity');
+              const flowerRarity = getFlowerRarityById(flowerData[0].flowerId);
+              actualSellPrice = this.getFlowerSellPrice(flowerRarity);
             }
             break;
             
