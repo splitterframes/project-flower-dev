@@ -768,6 +768,10 @@ export class PostgresStorage {
       id: users.id,
       username: users.username,
       credits: users.credits,
+      suns: users.suns,
+      dna: users.dna,
+      tickets: users.tickets,
+      hearts: users.hearts,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
       lastPassiveIncomeAt: users.lastPassiveIncomeAt
