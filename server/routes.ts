@@ -4,6 +4,7 @@ import { postgresStorage as storage } from "./postgresStorage";
 import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema, placeFlowerOnFieldSchema } from "@shared/schema";
 import { z } from "zod";
 import { createDonationCheckoutSession, getDonationStatus, handleStripeWebhook } from "./stripe";
+import { generateToken, requireAuth, requireAuthenticatedUser, optionalAuth, type AuthenticatedRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -18,17 +19,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(userData);
+      
+      // Generate JWT token
+      const token = generateToken({ id: user.id, username: user.username });
+      
+      // Set secure HTTP-only cookie
+      res.cookie('authToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/'
+      });
+      
+      console.log(`🔐 User registered and authenticated: ${user.username} (ID: ${user.id})`);
+      
       res.json({ 
         user: { 
           id: user.id, 
           username: user.username, 
           credits: user.credits 
-        } 
+        },
+        message: "Registration successful"
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid input data", errors: error.errors });
       }
+      console.error('Registration error:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -42,19 +60,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid username or password" });
       }
 
+      // Generate JWT token
+      const token = generateToken({ id: user.id, username: user.username });
+      
+      // Set secure HTTP-only cookie
+      res.cookie('authToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/'
+      });
+      
+      console.log(`🔐 User logged in: ${user.username} (ID: ${user.id})`);
+
       res.json({ 
         user: { 
           id: user.id, 
           username: user.username, 
           credits: user.credits 
-        } 
+        },
+        message: "Login successful"
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid input data", errors: error.errors });
       }
+      console.error('Login error:', error);
       res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // Logout endpoint
+  app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie('authToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+    
+    console.log(`🔐 User logged out`);
+    res.json({ message: "Logged out successfully" });
+  });
+
+  // Get current user endpoint (validates JWT)
+  app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    res.json({
+      user: {
+        id: req.user.userId,
+        username: req.user.username
+      }
+    });
   });
 
   // 💳 Stripe Donation Routes
@@ -63,9 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/stripe/webhook", handleStripeWebhook);
 
   // Credits routes
-  app.get("/api/user/:id/credits", async (req, res) => {
+  app.get("/api/user/:id/credits", requireAuthenticatedUser, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.validatedUserId!; // Use validated user ID from middleware
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -82,9 +143,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/user/:id/credits", async (req, res) => {
+  app.patch("/api/user/:id/credits", requireAuthenticatedUser, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.validatedUserId!; // Use validated user ID from middleware
       const { amount } = req.body;
       
       if (typeof amount !== 'number') {
@@ -299,10 +360,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Balloon collection endpoint with validation and anti-cheat
   const collectedBalloons = new Set<string>(); // In-memory store for collected balloon IDs
 
-  app.post("/api/balloon/collect", async (req, res) => {
+  app.post("/api/balloon/collect", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const { balloonId, lootType, amount } = req.body;
-      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const userId = req.user!.userId; // Use authenticated user ID instead of header
 
       console.log(`🎈 Balloon Collection: User ${userId} collecting balloon ${balloonId} for ${amount} ${lootType}`);
 
