@@ -87,7 +87,12 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   useEffect(() => {
     if (!butterfly || readOnly) return;
 
+    let currentButterflyId = butterfly.id; // Capture current butterfly ID
+    let isCancelled = false; // Flag to prevent race conditions
+
     const fetchSellStatus = async () => {
+      if (isCancelled || butterfly.id !== currentButterflyId) return; // Prevent outdated calls
+      
       try {
         // Use different endpoint for VIP butterflies
         const isVipButterfly = butterfly.isVip || butterfly.butterflyRarity === 'vip';
@@ -101,6 +106,9 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
             'X-User-Id': butterfly.userId.toString()
           }
         });
+        
+        // Check again after async operation
+        if (isCancelled || butterfly.id !== currentButterflyId) return;
         
         if (response.ok) {
           const data = await response.json();
@@ -124,6 +132,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           }
         }
       } catch (error) {
+        if (isCancelled || butterfly.id !== currentButterflyId) return;
+        
         console.error('Failed to fetch sell status:', error);
         // Fallback to local calculation
         const placedTime = new Date(butterfly.placedAt).getTime();
@@ -148,15 +158,20 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     // Update every second
     const interval = setInterval(fetchSellStatus, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isCancelled = true; // Cancel any pending operations
+      clearInterval(interval);
+    };
   }, [butterfly, readOnly]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     if (milliseconds <= 0) return "Verkaufbar!";
 
-    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+    // Round to nearest minute to prevent flickering between values
+    const roundedMs = Math.ceil(milliseconds / (1000 * 60)) * (1000 * 60);
+    const hours = Math.floor(roundedMs / (1000 * 60 * 60));
+    const minutes = Math.floor((roundedMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((roundedMs % (1000 * 60)) / 1000);
 
     if (hours > 0) {
       return `${hours}h ${minutes}m ${seconds}s`;
