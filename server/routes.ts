@@ -4,9 +4,20 @@ import { postgresStorage as storage } from "./postgresStorage";
 import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema, placeFlowerOnFieldSchema } from "@shared/schema";
 import { z } from "zod";
 import { createDonationCheckoutSession, getDonationStatus, handleStripeWebhook } from "./stripe";
+import rateLimit from "express-rate-limit";
 import { generateToken, requireAuth, requireAuthenticatedUser, optionalAuth, type AuthenticatedRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // 🔒 SECURITY: Rate limiter for batch endpoints to prevent abuse
+  const batchApiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 60, // Max 60 batch requests per minute per IP
+    message: { error: "Too many batch requests, please try again later" },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -2169,15 +2180,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZED: Batch sell-status endpoint for multiple butterflies
-  app.post("/api/exhibition/sell-status-batch", async (req, res) => {
+  // 🔒 SECURED: Batch sell-status endpoint with rate limiting and array size guards
+  app.post("/api/exhibition/sell-status-batch", batchApiLimiter, async (req, res) => {
     try {
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       const { butterflyIds = [], vipButterflyIds = [] } = req.body;
 
-      // Validate input
+      // 🔒 SECURITY: Validate input arrays
       if (!Array.isArray(butterflyIds) || !Array.isArray(vipButterflyIds)) {
         return res.status(400).json({ error: "butterflyIds and vipButterflyIds must be arrays" });
+      }
+
+      // 🔒 SECURITY: Prevent pathological inArray attacks - limit array sizes
+      const MAX_ARRAY_SIZE = 100;
+      if (butterflyIds.length > MAX_ARRAY_SIZE) {
+        return res.status(400).json({ 
+          error: `Too many butterfly IDs - maximum ${MAX_ARRAY_SIZE} allowed per request` 
+        });
+      }
+      
+      if (vipButterflyIds.length > MAX_ARRAY_SIZE) {
+        return res.status(400).json({ 
+          error: `Too many VIP butterfly IDs - maximum ${MAX_ARRAY_SIZE} allowed per request` 
+        });
       }
 
       // Convert to numbers and filter valid IDs
