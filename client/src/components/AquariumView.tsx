@@ -8,7 +8,7 @@ import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Fish, Plus, Clock, Star, Waves, Eye } from "lucide-react";
 import { HelpButton } from './HelpButton';
-import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, getRarityCssColor, toRgba, type RarityTier } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
 import { FishSelectionModal } from "./FishSelectionModal";
@@ -311,7 +311,7 @@ export const AquariumView: React.FC = () => {
           <TooltipTrigger asChild>
             <div
               className="w-full h-full bg-gradient-to-br from-blue-900/20 to-blue-700/30 border-2 rounded-lg flex items-center justify-center cursor-pointer hover:from-blue-800/30 hover:to-blue-600/40 transition-all relative"
-              style={{ borderColor: getRarityColor(fish.fishRarity) }}
+              style={{ borderColor: getRarityCssColor(fish.fishRarity as RarityTier) }}
               onClick={() => handleFishSelect(fish)}
             >
               <img
@@ -332,14 +332,15 @@ export const AquariumView: React.FC = () => {
               
               {/* Enhanced Rarity glow effect */}
               <div 
-                className="absolute inset-0 rounded-lg opacity-30 animate-pulse"
+                className="absolute inset-0 rounded-lg opacity-50 animate-pulse"
                 style={{ 
-                  backgroundColor: getRarityColor(fish.fishRarity),
+                  backgroundColor: toRgba(getRarityCssColor(fish.fishRarity as RarityTier), 0.2),
                   boxShadow: `
-                    inset 0 0 25px ${getRarityColor(fish.fishRarity)},
-                    0 0 15px ${getRarityColor(fish.fishRarity)},
-                    0 0 30px ${getRarityColor(fish.fishRarity)}66
-                  `
+                    inset 0 0 25px ${getRarityCssColor(fish.fishRarity as RarityTier)},
+                    0 0 15px ${getRarityCssColor(fish.fishRarity as RarityTier)},
+                    0 0 30px ${toRgba(getRarityCssColor(fish.fishRarity as RarityTier), 0.4)}
+                  `,
+                  pointerEvents: 'none'
                 }}
               />
             </div>
@@ -544,7 +545,7 @@ export const AquariumView: React.FC = () => {
                   <div
                     key={fish.id}
                     className="bg-gradient-to-br from-blue-900/20 to-blue-700/10 border-2 rounded-lg p-3 text-center hover:from-blue-800/30 hover:to-blue-600/20 transition-all cursor-pointer"
-                    style={{ borderColor: getRarityColor(fish.fishRarity) }}
+                    style={{ borderColor: getRarityCssColor(fish.fishRarity as RarityTier) }}
                     onDoubleClick={() => {
                       const tank = tanks.get(currentTankIndex + 1);
                       if (tank) {

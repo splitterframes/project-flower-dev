@@ -220,6 +220,33 @@ export function getRarityColor(rarity: RarityTier): string {
 }
 
 /**
+ * Get CSS hex color for rarity (for inline styles)
+ */
+export function getRarityCssColor(rarity: RarityTier): string {
+  switch (rarity) {
+    case 'common': return '#facc15';      // yellow-400
+    case 'uncommon': return '#4ade80';    // green-400
+    case 'rare': return '#60a5fa';        // blue-400
+    case 'super-rare': return '#22d3ee';  // cyan-400
+    case 'epic': return '#a78bfa';        // purple-400
+    case 'legendary': return '#fb923c';   // orange-400
+    case 'mythical': return '#f87171';    // red-400
+    case 'vip': return '#f472b6';         // pink-400
+    default: return '#9ca3af';            // gray-400
+  }
+}
+
+/**
+ * Convert hex color to rgba with alpha
+ */
+export function toRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
  * Get rarity badge styling with background and text colors
  */
 export function getRarityBadgeStyle(rarity: RarityTier): string {
