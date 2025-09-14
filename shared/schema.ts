@@ -651,8 +651,28 @@ export type NewDailyItems = typeof dailyItems.$inferInsert;
 export type DailyRedemption = typeof dailyRedemptions.$inferSelect;
 export type NewDailyRedemption = typeof dailyRedemptions.$inferInsert;
 
+// Collection Statistics for Encyclopedia - tracks lifetime item acquisition
+export const collectionStats = pgTable("collection_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  itemType: varchar("item_type", { length: 20 }).notNull(), // 'flowers', 'butterflies', 'caterpillars', 'fish'
+  itemId: integer("item_id").notNull(), // Game item ID (e.g., flower 1-200, butterfly 1-1000)
+  totalObtained: integer("total_obtained").notNull().default(1), // Lifetime count
+  firstObtainedAt: timestamp("first_obtained_at").notNull().defaultNow(),
+  lastObtainedAt: timestamp("last_obtained_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  // Unique constraint: one stats entry per user-itemType-itemId combination
+  uniqueUserItemStats: unique().on(table.userId, table.itemType, table.itemId)
+}));
+
 // Castle Garden types
 export type CastleUnlockedPart = typeof castleUnlockedParts.$inferSelect;
 export type NewCastleUnlockedPart = typeof castleUnlockedParts.$inferInsert;
 export type CastleGridState = typeof castleGridState.$inferSelect;
 export type NewCastleGridState = typeof castleGridState.$inferInsert;
+
+// Collection Stats types
+export type CollectionStats = typeof collectionStats.$inferSelect;
+export type NewCollectionStats = typeof collectionStats.$inferInsert;
