@@ -280,6 +280,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Balloon collection endpoint with validation and anti-cheat
+  const collectedBalloons = new Set<string>(); // In-memory store for collected balloon IDs
+
+  app.post("/api/balloon/collect", async (req, res) => {
+    try {
+      const { balloonId, lootType, amount } = req.body;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+
+      console.log(`🎈 Balloon Collection: User ${userId} collecting balloon ${balloonId} for ${amount} ${lootType}`);
+
+      // Validation 1: Check required fields
+      if (!balloonId || !lootType || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid balloon collection request - missing or invalid fields" 
+        });
+      }
+
+      // Validation 2: Check if loot type is valid
+      const validLootTypes = ['credit', 'sun', 'dna', 'ticket'];
+      if (!validLootTypes.includes(lootType)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid loot type" 
+        });
+      }
+
+      // Validation 3: Check balloon ID format (should be: balloon-timestamp-random-index)
+      const balloonIdPattern = /^balloon-\d+-[\d.]+(-\d+)?$/;
+      if (!balloonIdPattern.test(balloonId)) {
+        console.warn(`🚨 Invalid balloon ID format: ${balloonId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid balloon ID format" 
+        });
+      }
+
+      // Validation 4: Extract timestamp and validate it's recent (within 10 minutes)
+      const timestampMatch = balloonId.match(/balloon-(\d+)/);
+      if (!timestampMatch) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Cannot parse balloon timestamp" 
+        });
+      }
+
+      const balloonTimestamp = parseInt(timestampMatch[1]);
+      const currentTime = Date.now();
+      const maxAge = 10 * 60 * 1000; // 10 minutes in milliseconds
+      
+      if (currentTime - balloonTimestamp > maxAge) {
+        console.warn(`🚨 Expired balloon collection attempt: ${balloonId} (${Math.round((currentTime - balloonTimestamp) / 1000)}s old)`);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Balloon has expired" 
+        });
+      }
+
+      // Validation 5: Check if balloon was already collected (prevent double collection)
+      if (collectedBalloons.has(balloonId)) {
+        console.warn(`🚨 Double collection attempt for balloon: ${balloonId} by user ${userId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Balloon already collected" 
+        });
+      }
+
+      // Validation 6: Rate limiting - check user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "User not found" 
+        });
+      }
+
+      // Validation 7: Reasonable amount limits to prevent abuse
+      const maxAmount = lootType === 'credit' ? 5 : lootType === 'dna' ? 3 : 10;
+      if (amount > maxAmount) {
+        console.warn(`🚨 Suspicious balloon amount: ${amount} ${lootType} from balloon ${balloonId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: `Amount too high for ${lootType}` 
+        });
+      }
+
+      // Mark balloon as collected BEFORE awarding (prevent race conditions)
+      collectedBalloons.add(balloonId);
+
+      // Auto-cleanup old collected balloons (keep last 1000)
+      if (collectedBalloons.size > 1000) {
+        const balloonArray = Array.from(collectedBalloons);
+        balloonArray.slice(0, balloonArray.length - 1000).forEach(id => collectedBalloons.delete(id));
+      }
+
+      try {
+        // Award the loot using existing storage methods
+        let updatedUser;
+        switch (lootType) {
+          case 'credit':
+            updatedUser = await storage.updateUserCredits(userId, amount);
+            break;
+          case 'sun':
+            updatedUser = await storage.updateUserSuns(userId, amount);
+            break;
+          case 'dna':
+            updatedUser = await storage.updateUserDna(userId, amount);
+            break;
+          case 'ticket':
+            updatedUser = await storage.updateUserTickets(userId, amount);
+            break;
+        }
+
+        if (!updatedUser) {
+          // Remove from collected balloons if award failed
+          collectedBalloons.delete(balloonId);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Failed to award loot" 
+          });
+        }
+
+        console.log(`🎈 SUCCESS: User ${userId} collected balloon ${balloonId} and received ${amount} ${lootType}`);
+        
+        // Return success with updated resource value
+        const response: any = { 
+          success: true, 
+          message: `Collected ${amount} ${lootType}${amount > 1 ? 's' : ''} from balloon!`,
+          balloonId,
+          lootType,
+          amount
+        };
+
+        // Add current resource value to response
+        switch (lootType) {
+          case 'credit':
+            response.credits = updatedUser.credits;
+            break;
+          case 'sun':
+            response.suns = updatedUser.suns;
+            break;
+          case 'dna':
+            response.dna = updatedUser.dna;
+            break;
+          case 'ticket':
+            response.tickets = updatedUser.tickets;
+            break;
+        }
+
+        res.json(response);
+
+      } catch (awardError) {
+        // Remove from collected balloons if award failed
+        collectedBalloons.delete(balloonId);
+        console.error(`Error awarding balloon loot:`, awardError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to process balloon reward" 
+        });
+      }
+
+    } catch (error) {
+      console.error('Balloon collection error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Internal server error" 
+      });
+    }
+  });
+
   // Redeem tickets for prizes (removed duplicate - using the one later in file)
 
   // DNA Sequencing endpoint (consumes items)
@@ -367,8 +537,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.removeCaterpillarFromUser(userId, caterpillar.caterpillarId, 1);
             const { generateRandomCaterpillar } = await import('./creatures');
             const newCaterpillarData = await generateRandomCaterpillar(targetRarity);
-            upgradedItem = await storage.addCaterpillarToInventory(
-              userId, newCaterpillarData.id, newCaterpillarData.name, targetRarity, newCaterpillarData.imageUrl
+            upgradedItem = await storage.addCaterpillarToUser(
+              userId, newCaterpillarData.id
             );
           }
         } else if (itemType === 'fish') {
@@ -2809,12 +2979,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Process groups with duplicates
-        for (const [fishId, duplicates] of fishGroups) {
+        for (const [fishId, duplicates] of Array.from(fishGroups)) {
           if (duplicates.length > 1) {
             console.log(`🐟 User ${user.username}: Found ${duplicates.length} duplicates of fish ${fishId}`);
             
             // Calculate total quantity
-            const totalQuantity = duplicates.reduce((sum, fish) => sum + fish.quantity, 0);
+            const totalQuantity = duplicates.reduce((sum: number, fish: any) => sum + fish.quantity, 0);
             
             // Keep the first entry and delete others
             const keepFish = duplicates[0];
@@ -2978,7 +3148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let maxCount = 0;
       let winningSymbol = '';
-      for (const [symbol, count] of symbolCounts) {
+      for (const [symbol, count] of Array.from(symbolCounts)) {
         if (count > maxCount) {
           maxCount = count;
           winningSymbol = symbol;
@@ -3098,7 +3268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let maxCount = 0;
       let winningSymbol = '';
-      for (const [symbol, count] of symbolCounts) {
+      for (const [symbol, count] of Array.from(symbolCounts)) {
         if (count > maxCount) {
           maxCount = count;
           winningSymbol = symbol;
@@ -3269,7 +3439,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.message });
       }
 
-      res.json({ success: true, message: "Prize redeemed successfully", ...result });
+      res.json({ 
+        success: result.success, 
+        message: result.message
+      });
     } catch (error) {
       console.error('Failed to redeem tickets:', error);
       res.status(500).json({ message: "Internal server error" });

@@ -58,7 +58,7 @@ const BalloonComponent: React.FC<{
   onPop: (id: string) => void;
   setConfettiParticles: React.Dispatch<React.SetStateAction<Confetti[]>>;
   setLootDrops: React.Dispatch<React.SetStateAction<Loot[]>>;
-  awardLoot: (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number) => void;
+  awardLoot: (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number, balloonId: string) => void;
 }> = ({ balloon, onPop, setConfettiParticles, setLootDrops, awardLoot }) => {
   const [isPopped, setIsPopped] = useState(false);
 
@@ -110,7 +110,7 @@ const BalloonComponent: React.FC<{
       setLootDrops(prev => [...prev, newLoot]);
       
       // Award the loot
-      awardLoot(lootType, 1);
+      awardLoot(lootType, 1, balloon.id);
       
       // Remove loot display after 2 seconds
       setTimeout(() => {
@@ -131,7 +131,7 @@ const BalloonComponent: React.FC<{
       setLootDrops(prev => [...prev, ticketLoot]);
       
       // Award the ticket
-      awardLoot('ticket', 1);
+      awardLoot('ticket', 1, balloon.id);
       
       // Remove loot display after 2 seconds
       setTimeout(() => {
@@ -252,41 +252,49 @@ export const Layout: React.FC = () => {
   // Initialize activity detection for performance optimization
   useActivityDetection();
 
-  // Award loot function
-  const awardLoot = async (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number) => {
-    if (!user) return;
+  // Award loot function with balloon validation
+  const awardLoot = async (type: 'credit' | 'sun' | 'dna' | 'ticket', amount: number, balloonId: string) => {
+    if (!user || !balloonId) {
+      console.error('Missing user or balloon ID for loot collection');
+      return;
+    }
     
     try {
-      if (type === 'credit') {
-        await fetch(`/api/user/${user.id}/credits`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
-      } else if (type === 'sun') {
-        await fetch(`/api/user/${user.id}/suns`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
-      } else if (type === 'dna') {
-        await fetch(`/api/user/${user.id}/dna`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
-      } else if (type === 'ticket') {
-        await fetch(`/api/user/${user.id}/tickets`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
+      console.log(`🎈 Collecting balloon ${balloonId} for ${amount} ${type}(s)`);
+      
+      const response = await fetch('/api/balloon/collect', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString()
+        },
+        body: JSON.stringify({ 
+          balloonId,
+          lootType: type,
+          amount 
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.error(`Balloon collection failed: ${result.message}`);
+        // Still refresh header in case of partial failure
+        setHeaderRefreshTrigger(prev => prev + 1);
+        return;
       }
       
-      // Refresh header for all loot types
-      setHeaderRefreshTrigger(prev => prev + 1);
+      if (result.success) {
+        console.log(`🎈 SUCCESS: ${result.message}`);
+        // Refresh header to show updated values
+        setHeaderRefreshTrigger(prev => prev + 1);
+      } else {
+        console.error(`Balloon collection failed: ${result.message}`);
+      }
     } catch (error) {
-      console.error('Failed to award loot:', error);
+      console.error('Failed to collect balloon loot:', error);
+      // Refresh header anyway in case of network issues
+      setHeaderRefreshTrigger(prev => prev + 1);
     }
   };
 
