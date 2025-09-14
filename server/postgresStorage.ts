@@ -780,10 +780,11 @@ export class PostgresStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // Exclude lastActiveAt until database migration completes
+    // Include password field for authentication - needed for login validation
     const result = await this.db.select({
       id: users.id,
       username: users.username,
+      password: users.password, // 🔒 FIXED: Include password field for login validation
       credits: users.credits,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
