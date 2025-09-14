@@ -60,51 +60,49 @@ export const EncyclopediaView: React.FC = () => {
   const [activeTab, setActiveTab] = useState("flowers");
   const [rarityFilter, setRarityFilter] = useState<RarityTier | null>(null);
   const [rarityMappings, setRarityMappings] = useState<RarityMappings | null>(null);
-  const [userItems, setUserItems] = useState<{
-    flowers: any[];
-    caterpillars: any[];
-    butterflies: any[];
-    fish: any[];
-  }>({
-    flowers: [],
-    caterpillars: [],
-    butterflies: [],
-    fish: []
-  });
+  // Collection stats for lifetime acquisition tracking
+  const [collectionStats, setCollectionStats] = useState<{
+    [key: string]: { // itemType
+      [key: number]: { // itemId
+        totalObtained: number;
+        firstObtainedAt: string;
+        lastObtainedAt: string;
+      }
+    }
+  }>({});
 
-  // Fetch user's collected items
+  // Fetch user's lifetime collection statistics
   useEffect(() => {
-    const fetchUserItems = async () => {
+    const fetchCollectionStats = async () => {
       if (!user) return;
       
       try {
-        // Fetch all user items
-        const [flowersRes, caterpillarsRes, butterfliesRes, fishRes] = await Promise.all([
-          fetch(`/api/user/${user.id}/flowers`),
-          fetch(`/api/user/${user.id}/caterpillars`),
-          fetch(`/api/user/${user.id}/butterflies`),
-          fetch(`/api/user/${user.id}/fish`)
-        ]);
-
-        const results = await Promise.all([
-          flowersRes.ok ? flowersRes.json() : { flowers: [] },
-          caterpillarsRes.ok ? caterpillarsRes.json() : { caterpillars: [] },
-          butterfliesRes.ok ? butterfliesRes.json() : { butterflies: [] },
-          fishRes.ok ? fishRes.json() : { fish: [] }
-        ]);
-
-        setUserItems({
-          flowers: results[0].flowers || [],
-          caterpillars: results[1].caterpillars || [],
-          butterflies: results[2].butterflies || [],
-          fish: results[3].fish || []
-        });
+        const response = await fetch(`/api/user/${user.id}/collection-stats`);
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Transform collection stats into a lookup structure
+          const statsLookup: typeof collectionStats = {};
+          
+          data.collectionStats.forEach((stat: any) => {
+            if (!statsLookup[stat.itemType]) {
+              statsLookup[stat.itemType] = {};
+            }
+            statsLookup[stat.itemType][stat.itemId] = {
+              totalObtained: stat.totalObtained,
+              firstObtainedAt: stat.firstObtainedAt,
+              lastObtainedAt: stat.lastObtainedAt
+            };
+          });
+          
+          setCollectionStats(statsLookup);
+        }
       } catch (error) {
-        console.error('Failed to fetch user items:', error);
+        console.error('Failed to fetch collection stats:', error);
       }
     };
 
-    fetchUserItems();
+    fetchCollectionStats();
   }, [user]);
 
   // Fetch real rarity mappings from server
@@ -134,14 +132,10 @@ export const EncyclopediaView: React.FC = () => {
     Object.entries(ITEM_RANGES).forEach(([type, range]) => {
       for (let id = range.start; id <= range.end; id++) {
         const rarity = (rarityMappings[type as keyof RarityMappings][id] || 'common') as RarityTier;
-        const userItem = userItems[type as keyof typeof userItems]?.find(item => {
-          // Different ID fields for different types
-          if (type === 'flowers') return item.flowerId === id;
-          if (type === 'caterpillars') return item.caterpillarId === id;
-          if (type === 'butterflies') return item.butterflyId === id;
-          if (type === 'fish') return item.fishId === id;
-          return false;
-        });
+        
+        // Check lifetime acquisition from collection stats
+        const collectionStat = collectionStats[type]?.[id];
+        const totalObtained = collectionStat?.totalObtained || 0;
         
         const folderMap = {
           flowers: 'Blumen',
@@ -165,14 +159,14 @@ export const EncyclopediaView: React.FC = () => {
           rarity,
           imageUrl: `/${folderMap[type as keyof typeof folderMap]}/${fileName}`,
           type: type as any,
-          collected: !!userItem,
-          quantity: userItem?.quantity || 0
+          collected: totalObtained > 0, // Based on lifetime acquisition, not current inventory
+          quantity: totalObtained // Show lifetime total, not current quantity
         });
       }
     });
     
     return items;
-  }, [userItems, rarityMappings]);
+  }, [collectionStats, rarityMappings]);
 
   // Filter items by search term, active tab, and rarity
   const filteredItems = useMemo(() => {
