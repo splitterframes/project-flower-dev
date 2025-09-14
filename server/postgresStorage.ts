@@ -1423,6 +1423,9 @@ export class PostgresStorage {
             caterpillarImageUrl: listing.caterpillarImageUrl || '',
             quantity: 1
           });
+          
+          // Update collection stats for purchased caterpillar
+          await this.updateCollectionStats(buyerId, 'caterpillars', listing.caterpillarIdOriginal || 0, 1);
           break;
           
         case "flower":
@@ -1448,6 +1451,9 @@ export class PostgresStorage {
             butterflyImageUrl: listing.butterflyImageUrl || '',
             quantity: 1
           });
+          
+          // Update collection stats for purchased butterfly
+          await this.updateCollectionStats(buyerId, 'butterflies', listing.butterflyIdOriginal || 0, 1);
           break;
           
         case "fish":
@@ -1703,6 +1709,9 @@ export class PostgresStorage {
         .where(eq(userFlowers.id, existingFlower[0].id));
       
       console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + quantity} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, quantity);
     } else {
       // Add new flower to inventory
       await this.db
@@ -1718,6 +1727,9 @@ export class PostgresStorage {
         });
       
       console.log(`💾 Added new flower ${flowerName} (x${quantity}) to user ${userId} inventory`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, quantity);
     }
   }
 
@@ -1737,6 +1749,9 @@ export class PostgresStorage {
         .where(eq(userFish.id, existingFish[0].id));
       
       console.log(`🐟 Increased ${fishName} quantity to ${existingFish[0].quantity + quantity} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'fish', fishId, quantity);
     } else {
       // Add new fish to inventory
       await this.db
@@ -1751,6 +1766,9 @@ export class PostgresStorage {
         });
       
       console.log(`🐟 Added new fish ${fishName} (x${quantity}) to user ${userId} inventory`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'fish', fishId, quantity);
     }
   }
 
@@ -2360,6 +2378,9 @@ export class PostgresStorage {
       return { success: false };
     }
 
+    // Update collection stats for acquired caterpillar
+    await this.updateCollectionStats(userId, 'caterpillars', fieldCaterpillar.caterpillarId, 1);
+
     console.log(`🐛 Successfully collected caterpillar ${fieldCaterpillar.caterpillarName} for user ${userId}`);
     return { success: true, caterpillar: result };
   }
@@ -2645,6 +2666,9 @@ export class PostgresStorage {
         throw error;
       }
     }
+
+    // Update collection stats for acquired butterfly
+    await this.updateCollectionStats(userId, 'butterflies', fieldButterfly.butterflyId, 1);
 
     console.log(`🦋 Successfully collected butterfly: ${result.butterflyName}`);
     return { success: true, butterfly: result };
@@ -4989,6 +5013,9 @@ export class PostgresStorage {
         }
       }
       
+      // Update collection stats for acquired fish
+      await this.updateCollectionStats(userId, 'fish', fish.fishId, 1);
+      
       // Remove fish from field
       await this.db.delete(fieldFish).where(eq(fieldFish.id, fieldFishId));
       console.log(`🐟 Removed field fish from field ${fish.fieldIndex}`);
@@ -6661,6 +6688,9 @@ export class PostgresStorage {
         quantity: 1
       });
       console.log(`🦋 Created new butterfly inventory entry: ${butterflyName}`);
+      
+      // Update collection stats for new butterfly
+      await this.updateCollectionStats(userId, 'butterflies', butterflyId, 1);
     } catch (error) {
       // If butterfly already exists (constraint violation), increment quantity
       const existingButterfly = await this.db
@@ -6677,6 +6707,9 @@ export class PostgresStorage {
           .set({ quantity: existingButterfly[0].quantity + 1 })
           .where(eq(userButterflies.id, existingButterfly[0].id));
         console.log(`🦋 Incremented existing butterfly ${butterflyName} quantity to ${existingButterfly[0].quantity + 1}`);
+        
+        // Update collection stats for existing butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyId, 1);
       } else {
         throw error; // Re-throw if it's not a constraint violation we can handle
       }
@@ -6700,6 +6733,9 @@ export class PostgresStorage {
     }).returning();
     
     console.log(`🎫 TICKET-REDEMPTION: ✅ RESULT: Created caterpillar with quantity=${result[0]?.quantity}`);
+    
+    // Update collection stats for redeemed caterpillar
+    await this.updateCollectionStats(userId, 'caterpillars', caterpillarId, 1);
   }
 
   // Helper method to add fish to user for daily redemption
@@ -6715,6 +6751,9 @@ export class PostgresStorage {
       fishImageUrl: `/Fische/${fishId}.jpg`,
       quantity: 1
     });
+    
+    // Update collection stats for daily fish
+    await this.updateCollectionStats(userId, 'fish', fishId, 1);
   }
 
   // =============================================
