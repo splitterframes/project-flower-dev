@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useSuns } from "@/lib/stores/useSuns";
 import { useNotification } from "../hooks/useNotification";
-import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier } from "@shared/rarity";
 import { Clock, DollarSign, Zap, ChevronLeft, ChevronRight, Fish, X, Coins } from "lucide-react";
 
 interface FishDetailProps {
@@ -263,10 +263,7 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
               {/* Name and Rarity */}
               <div className="flex items-center gap-4">
                 <h3 className="text-2xl font-bold text-white">{fish.fishName}</h3>
-                <Badge 
-                  className="text-base font-bold px-3 py-1"
-                  style={{ backgroundColor: getRarityColor(fish.fishRarity as any) }}
-                >
+                <Badge className={`${getRarityBadgeStyle(fish.fishRarity as RarityTier)} text-base font-bold px-3 py-1`}>
                   <Fish className="h-4 w-4 mr-2" />
                   {getRarityDisplayName(fish.fishRarity as any)}
                 </Badge>

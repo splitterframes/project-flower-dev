@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, type RarityTier } from "@shared/rarity";
 import { Sparkles, Fish, Trophy } from "lucide-react";
 
 interface FishRewardDialogProps {
@@ -84,26 +84,13 @@ export const FishRewardDialog: React.FC<FishRewardDialogProps> = ({
             {/* Fish Info */}
             <div className="space-y-3">
               <div className="flex items-center justify-center">
-                <Badge 
-                  className="text-lg font-bold px-4 py-2 border-2"
-                  style={{ 
-                    backgroundColor: rarityColor.replace('text-', 'bg-').replace('-400', '-600'),
-                    borderColor: rarityColor.replace('text-', 'border-').replace('-400', '-400'),
-                    color: 'white'
-                  }}
-                >
+                <Badge className={`${getRarityBadgeStyle(rarity as RarityTier)} text-lg font-bold px-4 py-2 border-2`}>
                   🐟 {fishName}
                 </Badge>
               </div>
               
               <div className="flex items-center justify-center">
-                <Badge 
-                  className="text-sm font-bold px-3 py-1"
-                  style={{ 
-                    backgroundColor: rarityColor.replace('text-', 'bg-').replace('-400', '-700'),
-                    color: 'white'
-                  }}
-                >
+                <Badge className={`${getRarityBadgeStyle(rarity as RarityTier)} text-sm font-bold px-3 py-1`}>
                   {rarityName}
                 </Badge>
               </div>
