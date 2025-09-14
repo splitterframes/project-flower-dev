@@ -72,6 +72,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json({ credits: user.credits });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -142,6 +146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json({ suns: user.suns || 100 });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -179,6 +187,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json({ dna: user.dna || 0 });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -216,6 +228,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json({ tickets: user.tickets || 0 });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
