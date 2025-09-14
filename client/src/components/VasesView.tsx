@@ -210,7 +210,7 @@ export const VasesView: React.FC = () => {
                         key={vase.id}
                         className={`
                           relative group cursor-pointer transition-all duration-300
-                          ${canCollect ? 'hover:scale-105 hover:shadow-lg' : ''}
+                          ${canCollect ? 'hover:scale-105' : ''}
                           ${vase.collected ? 'opacity-100' : isLocked ? 'opacity-40' : 'opacity-70 hover:opacity-100'}
                         `}
                         onClick={() => handleVaseClick(vase)}
@@ -220,16 +220,16 @@ export const VasesView: React.FC = () => {
                       >
                         {/* Vase Container */}
                         <div className={`
-                          aspect-[2/3] rounded-lg border-2 relative overflow-hidden transition-all duration-500
+                          aspect-[2/3] rounded-lg border-2 relative overflow-hidden transition-all duration-300
                           ${vase.collected ? 'border-green-400 bg-green-900/50 shadow-green-400/20 shadow-lg' : 
-                            canCollect ? 'border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg animate-pulse' :
+                            canCollect ? 'border-orange-400 bg-orange-900/30 shadow-orange-400/30 shadow-lg' :
                             'border-slate-500 bg-slate-800/50'
                           }
                           ${canCollect && !vase.collected ? 'animate-gold-glow-random' : ''}
                         `}
                         style={canCollect && !vase.collected ? {
-                          animationDelay: `${Math.random() * 5}s`, // Random gold glow timing
-                          animationDuration: `${3 + Math.random() * 2}s`, // Vary duration 3-5s
+                          animationDelay: `${(vase.id * 0.2) % 5}s`, // Consistent timing based on vase ID
+                          animationDuration: `${3 + ((vase.id * 0.3) % 2)}s`, // Consistent duration based on vase ID
                         } : {}}>
                           {/* Vase Image or Placeholder */}
                           <div className="w-full h-full flex items-center justify-center p-2">
