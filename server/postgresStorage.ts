@@ -23,6 +23,7 @@ import {
   passiveIncomeLog,
   exhibitionFrameLikes,
   weeklyChallenges,
+  weeklyChallengeProgress,
   challengeDonations,
   challengeRewards,
   unlockedFields,

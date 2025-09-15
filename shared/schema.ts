@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique, uniqueIndex, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -500,6 +500,24 @@ export const weeklyChallenges = pgTable("weekly_challenges", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Weekly Challenge Progress - tracks user progress in challenges
+export const weeklyChallengeProgress = pgTable("weekly_challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  challengeId: integer("challenge_id").notNull().references(() => weeklyChallenges.id),
+  score: integer("score").notNull().default(0), // Number of qualifying flower donations
+  setsCompleted: integer("sets_completed").notNull().default(0), // Number of complete sets
+  totalDonations: integer("total_donations").notNull().default(0), // Total donations to this challenge
+  firstCompletedAt: timestamp("first_completed_at"), // When first set was completed (null if not completed)
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  // Unique constraint: one progress entry per user-challenge combination  
+  uniqueUserChallenge: uniqueIndex("uq_user_challenge").on(table.userId, table.challengeId),
+  // Index for leaderboard queries
+  idxLeaderboard: index("idx_challenge_score").on(table.challengeId, table.score)
+}));
+
 export const challengeDonations = pgTable("challenge_donations", {
   id: serial("id").primaryKey(),
   challengeId: integer("challenge_id").notNull().references(() => weeklyChallenges.id),
@@ -562,6 +580,7 @@ export type PlaceBouquetRequest = z.infer<typeof placeBouquetSchema>;
 export type UnlockedField = typeof unlockedFields.$inferSelect;
 export type UnlockFieldRequest = z.infer<typeof unlockFieldSchema>;
 export type WeeklyChallenge = typeof weeklyChallenges.$inferSelect;
+export type WeeklyChallengeProgress = typeof weeklyChallengeProgress.$inferSelect;
 export type ChallengeDonation = typeof challengeDonations.$inferSelect;
 export type ChallengeReward = typeof challengeRewards.$inferSelect;
 export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
