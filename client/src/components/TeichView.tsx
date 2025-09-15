@@ -1346,10 +1346,6 @@ export const TeichView: React.FC = () => {
                 // In TeichView, no unlock logic needed since grass fields are auto-unlocked
                 const isNextToUnlock = false;
                 
-                // DEBUG: Log which fields should have hover
-                if (field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3) {
-                  console.log("🐟 DEBUG: Field", field.id, "should have hover (feedingProgress:", field.feedingProgress, ")");
-                }
                 
                 return (
                   <div
@@ -1369,11 +1365,9 @@ export const TeichView: React.FC = () => {
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
                     onMouseEnter={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
-                      console.log("🐟 HOVER ENTER: Field", field.id, "feedingProgress:", field.feedingProgress);
                       fetchPondFieldAverageRarity(field.id);
                     } : undefined}
                     onMouseLeave={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
-                      console.log("🐟 HOVER LEAVE: Field", field.id);
                       clearPondHoverData(field.id);
                     } : undefined}
                     style={{
@@ -1803,11 +1797,15 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Simple rarity tooltip - only show average rarity in color */}
-                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && pondHoverData && pondHoverData.fieldId === field.id && pondHoverData.averageRarity && (
+                    {/* Simple tooltip - only show when rarity exists */}
+                    {field.isPond && 
+                     pondHoverData?.fieldId === field.id && 
+                     pondHoverData.averageRarity !== null && (
                       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
-                        <div className={`px-2 py-1 rounded text-xs font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)} bg-black/80 border border-gray-500`}>
-                          {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
+                        <div className="bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+                          <span style={{ color: getRarityColor(pondHoverData.averageRarity as RarityTier) }}>
+                            {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
+                          </span>
                         </div>
                       </div>
                     )}
