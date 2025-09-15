@@ -197,6 +197,79 @@ export const TeichView: React.FC = () => {
     isGrowingIn: boolean;
   }[]>([]);
 
+  // State for pond field hover information (per-field tracking)
+  const [pondHoverData, setPondHoverData] = useState<{
+    fieldId: number;
+    averageRarity: string | null;
+    caterpillarCount: number;
+    caterpillarRarities: string[];
+  } | null>(null);
+  const [loadingHoverFields, setLoadingHoverFields] = useState<Set<number>>(new Set());
+
+  // Function to fetch average rarity for pond field on hover
+  const fetchPondFieldAverageRarity = async (fieldId: number) => {
+    if (!user || loadingHoverFields.has(fieldId)) return;
+    
+    // Set this field as loading
+    setLoadingHoverFields(prev => new Set([...prev, fieldId]));
+    
+    try {
+      const response = await fetch(`/api/user/${user.id}/pond-field/${fieldId - 1}/average-rarity`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Only update if this is still the current hover target
+        setPondHoverData(current => {
+          if (current?.fieldId === fieldId || !current) {
+            return {
+              fieldId,
+              averageRarity: data.averageRarity,
+              caterpillarCount: data.caterpillarCount,
+              caterpillarRarities: data.caterpillarRarities || []
+            };
+          }
+          return current; // Don't update if user moved to different field
+        });
+      } else {
+        console.error('Failed to fetch pond field average rarity');
+      }
+    } catch (error) {
+      console.error('Error fetching pond field average rarity:', error);
+    } finally {
+      // Remove this field from loading
+      setLoadingHoverFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldId);
+        return newSet;
+      });
+    }
+  };
+
+  // Clear hover data when mouse leaves pond field
+  const clearPondHoverData = (fieldId: number) => {
+    setPondHoverData(current => {
+      // Only clear if this is the field that was being hovered
+      if (current?.fieldId === fieldId) {
+        return null;
+      }
+      return current;
+    });
+  };
+
+  // Get German rarity display name
+  const getRarityDisplayNameGerman = (rarity: string): string => {
+    const rarityNames = {
+      'common': 'Gewöhnlich',
+      'uncommon': 'Ungewöhnlich',
+      'rare': 'Selten',
+      'super-rare': 'Super-selten',
+      'epic': 'Episch',
+      'legendary': 'Legendär',
+      'mythical': 'Mythisch'
+    };
+    return rarityNames[rarity as keyof typeof rarityNames] || rarity;
+  };
+
   // Raritäts-Vererbungslogik 50-30-20
   const inheritCaterpillarRarity = (parentRarity: string): string => {
     const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
@@ -1290,6 +1363,8 @@ export const TeichView: React.FC = () => {
                       }
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
+                    onMouseEnter={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => fetchPondFieldAverageRarity(field.id) : undefined}
+                    onMouseLeave={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => clearPondHoverData(field.id) : undefined}
                     style={{
                       backgroundColor: field.isPond 
                         ? 'rgba(34, 118, 182, 0.2)' // Transparent blue for pond fields
@@ -1707,14 +1782,52 @@ export const TeichView: React.FC = () => {
 
                     {/* Pond Feeding Progress Icons - Show fish symbols for feeding progress */}
                     {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                        {field.feedingProgress === 1 && (
-                          <div className="text-6xl animate-pulse drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(59,130,246,0.5)]">🐟</div>
-                        )}
-                        {field.feedingProgress === 2 && (
-                          <div className="text-6xl animate-bounce drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(34,197,94,0.5)]">🐠</div>
-                        )}
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="absolute inset-0 flex items-center justify-center z-20 cursor-help pointer-events-none"
+                            >
+                              {field.feedingProgress === 1 && (
+                                <div className="text-6xl animate-pulse drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(59,130,246,0.5)]">🐟</div>
+                              )}
+                              {field.feedingProgress === 2 && (
+                                <div className="text-6xl animate-bounce drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(34,197,94,0.5)]">🐠</div>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-black/90 text-white border-gray-600 max-w-xs">
+                            {pondHoverData && pondHoverData.fieldId === field.id ? (
+                              <div className="text-sm">
+                                <div className="font-semibold mb-2">🐟 Teichfeld {field.id}</div>
+                                <div className="mb-1">Fütterungsstufe: {field.feedingProgress}/3</div>
+                                {pondHoverData.averageRarity ? (
+                                  <>
+                                    <div className="mb-1">
+                                      <span className="font-medium">Aktuelle Durchschnittsrarität:</span>
+                                    </div>
+                                    <div className={`font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)}`}>
+                                      {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
+                                    </div>
+                                    <div className="text-xs text-gray-300 mt-1">
+                                      Basierend auf {pondHoverData.caterpillarCount} gefütterten Raupen
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-gray-400">Noch keine Raupen gefüttert</div>
+                                )}
+                              </div>
+                            ) : loadingHoverFields.has(field.id) ? (
+                              <div className="text-sm">Lade Daten...</div>
+                            ) : (
+                              <div className="text-sm">
+                                <div className="font-semibold mb-1">🐟 Teichfeld {field.id}</div>
+                                <div>Fütterungsstufe: {field.feedingProgress}/3</div>
+                              </div>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
 
 

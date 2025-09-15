@@ -1145,6 +1145,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current average rarity for a specific pond field
+  app.get('/api/user/:userId/pond-field/:fieldIndex/average-rarity', requireAuthenticatedUser, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.validatedUserId!; // Use validated user ID from middleware
+      const fieldIndex = parseInt(req.params.fieldIndex);
+      
+      if (isNaN(fieldIndex)) {
+        return res.status(400).json({ message: 'Invalid field index' });
+      }
+
+      // Get all fed caterpillars for this user
+      const fedCaterpillars = await storage.getFieldCaterpillars(userId);
+      
+      // Filter caterpillars for this specific field
+      const fieldCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === fieldIndex);
+      
+      if (fieldCaterpillars.length === 0) {
+        return res.json({ averageRarity: null, caterpillarCount: 0 });
+      }
+      
+      // Get rarities and calculate average
+      const rarities = fieldCaterpillars.map(c => c.caterpillarRarity);
+      const averageRarity = await storage.getCurrentFeedingAverageRarity(userId, fieldIndex);
+      
+      res.json({ 
+        averageRarity, 
+        caterpillarCount: rarities.length,
+        caterpillarRarities: rarities
+      });
+    } catch (error) {
+      console.error('Get pond field average rarity error:', error);
+      res.status(500).json({ message: 'Fehler beim Laden der Durchschnittsrarität.' });
+    }
+  });
+
   app.get("/api/garden/fields/:userId", async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
