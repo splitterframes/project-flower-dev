@@ -118,40 +118,21 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           setFrameLikes(data.likesCount || 0);
           lastServerUpdate = Date.now(); // Update last server sync time
         } else {
-          // Fallback to local calculation
-          const placedTime = new Date(butterfly.placedAt).getTime();
-          const now = new Date().getTime();
-          const timeSincePlacement = now - placedTime;
-          const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
-          const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
-          
-          if (remaining <= 0) {
-            setCanSell(true);
-            setTimeRemaining(0);
-          } else {
-            setCanSell(false);
-            setTimeRemaining(remaining);
-          }
+          // 🚨 FIX: Server error - default to safe conservative state, no "verkaufbar" fallback
+          console.warn('Sell status endpoint returned non-OK status:', response.status);
+          setCanSell(false); // Always safe default
+          setTimeRemaining(72 * 60 * 60 * 1000); // Default to 72h remaining
+          setFrameLikes(0);
           lastServerUpdate = Date.now();
         }
       } catch (error) {
         if (isCancelled || butterfly.id !== currentButterflyId) return;
         
         console.error('Failed to fetch sell status:', error);
-        // Fallback to local calculation
-        const placedTime = new Date(butterfly.placedAt).getTime();
-        const now = new Date().getTime();
-        const timeSincePlacement = now - placedTime;
-        const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
-        const remaining = SEVENTY_TWO_HOURS - timeSincePlacement;
-        
-        if (remaining <= 0) {
-          setCanSell(true);
-          setTimeRemaining(0);
-        } else {
-          setCanSell(false);
-          setTimeRemaining(remaining);
-        }
+        // 🚨 FIX: Network error - default to safe conservative state, no "verkaufbar" fallback
+        setCanSell(false); // Always safe default
+        setTimeRemaining(72 * 60 * 60 * 1000); // Default to 72h remaining  
+        setFrameLikes(0);
         lastServerUpdate = Date.now();
       }
     };
@@ -186,7 +167,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   }, [butterfly, readOnly]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
-    if (milliseconds <= 0) return "Verkaufbar!";
+    // 🚨 FIX: Never show "Verkaufbar!" here - let canSell state control that
+    if (milliseconds <= 0) return "0s";
 
     // No rounding for precise countdown display
     const hours = Math.floor(milliseconds / (1000 * 60 * 60));
