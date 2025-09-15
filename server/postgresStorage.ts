@@ -5666,8 +5666,8 @@ export class PostgresStorage {
       
       const fishData = fish[0];
       
-      // Calculate price (20% of butterfly prices)
-      const price = this.getFishSellPrice(fishData.fishRarity);
+      // Calculate price - full market value for aquarium direct sales
+      const price = this.getAquariumFishPrice(fishData.fishRarity);
       
       // Remove fish and add credits (no transaction for Neon)
       // Remove fish from aquarium first
@@ -5744,6 +5744,24 @@ export class PostgresStorage {
       console.error('🐟 Error applying sun boost:', error);
       return { success: false, message: 'Datenbankfehler beim Boost' };
     }
+  }
+
+  private getAquariumFishPrice(rarity: string): number {
+    // Aquarium direct sale - full market value (100%)
+    const basePrice = (() => {
+      switch (rarity) {
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
+      }
+    })();
+    
+    return basePrice; // Aquarium pays full market value
   }
 
   private getFishSellPrice(rarity: string): number {
