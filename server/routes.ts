@@ -3377,11 +3377,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`🎰 Rewarded 1 rare seed for 3 ${winningSymbol} to user ${userId}`);
           }
         } else if (maxCount === 4) {
-          // 4 matching = legendary butterfly
-          const butterflyResult = await storage.addButterflyToInventory(userId, 'legendary', 1);
-          reward = { type: 'butterfly', rarity: 'legendary', amount: 1 };
-          message = "🦋 4 gleiche Symbole! Du gewinnst einen legendären Schmetterling!";
-          console.log(`🎰 Rewarded 1 legendary butterfly to user ${userId}`);
+          // 4 matching = epic butterfly
+          const butterflyResult = await storage.addButterflyToInventory(userId, 'epic', 1);
+          reward = { type: 'butterfly', rarity: 'epic', amount: 1 };
+          message = "🦋 4 gleiche Symbole! Du gewinnst einen epischen Schmetterling!";
+          console.log(`🎰 Rewarded 1 epic butterfly to user ${userId}`);
         } else if (maxCount === 5) {
           // 5 matching = 1000 credits (jackpot!)
           await storage.updateUserCredits(userId, 1000);
@@ -3497,11 +3497,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`🎰 Credit-Slot Rewarded 1 rare seed for 3 ${winningSymbol} to user ${userId}`);
           }
         } else if (maxCount === 4) {
-          // 4 matching = legendary butterfly
-          const butterflyResult = await storage.addButterflyToInventory(userId, 'legendary', 1);
-          reward = { type: 'butterfly', rarity: 'legendary', amount: 1 };
-          message = "🦋 4 gleiche Symbole! Du gewinnst einen legendären Schmetterling!";
-          console.log(`🎰 Credit-Slot Rewarded 1 legendary butterfly to user ${userId}`);
+          // 4 matching = epic butterfly
+          const butterflyResult = await storage.addButterflyToInventory(userId, 'epic', 1);
+          reward = { type: 'butterfly', rarity: 'epic', amount: 1 };
+          message = "🦋 4 gleiche Symbole! Du gewinnst einen epischen Schmetterling!";
+          console.log(`🎰 Credit-Slot Rewarded 1 epic butterfly to user ${userId}`);
         } else if (maxCount === 5) {
           // 5 matching = 1000 credits (jackpot!)
           await storage.updateUserCredits(userId, 1000);
