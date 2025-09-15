@@ -45,8 +45,9 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   onNext,
   onPrevious
 }) => {
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<number>(72 * 60 * 60 * 1000); // Default: 72h
   const [canSell, setCanSell] = useState<boolean>(false);
+  const [isServerDataLoaded, setIsServerDataLoaded] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const [frameLikes, setFrameLikes] = useState<number>(0);
   
@@ -83,6 +84,11 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     }
   }, [isOpen, onNext, onPrevious, currentIndex, totalCount]);
 
+  // Reset server data loaded state when butterfly changes
+  useEffect(() => {
+    setIsServerDataLoaded(false);
+  }, [butterfly?.id]);
+
   // Calculate countdown every second (using server data with local countdown)
   useEffect(() => {
     if (!butterfly || readOnly) return;
@@ -90,6 +96,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     let currentButterflyId = butterfly.id; // Capture current butterfly ID
     let isCancelled = false; // Flag to prevent race conditions
     let lastServerUpdate = Date.now(); // Track when we last got server data
+    let isInitialDataLoaded = false; // Track if we got initial data
 
     const fetchSellStatus = async () => {
       if (isCancelled || butterfly.id !== currentButterflyId) return; // Prevent outdated calls
@@ -116,6 +123,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           setCanSell(data.canSell);
           setTimeRemaining(data.timeRemainingMs);
           setFrameLikes(data.likesCount || 0);
+          setIsServerDataLoaded(true);
+          isInitialDataLoaded = true; // Mark as loaded
           lastServerUpdate = Date.now(); // Update last server sync time
         } else {
           // 🚨 FIX: Server error - default to safe conservative state, no "verkaufbar" fallback
@@ -123,6 +132,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           setCanSell(false); // Always safe default
           setTimeRemaining(72 * 60 * 60 * 1000); // Default to 72h remaining
           setFrameLikes(0);
+          setIsServerDataLoaded(true);
+          isInitialDataLoaded = true;
           lastServerUpdate = Date.now();
         }
       } catch (error) {
@@ -133,13 +144,15 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
         setCanSell(false); // Always safe default
         setTimeRemaining(72 * 60 * 60 * 1000); // Default to 72h remaining  
         setFrameLikes(0);
+        setIsServerDataLoaded(true);
+        isInitialDataLoaded = true;
         lastServerUpdate = Date.now();
       }
     };
 
     // Update local countdown every second
     const updateLocalCountdown = () => {
-      if (isCancelled || butterfly.id !== currentButterflyId) return;
+      if (isCancelled || butterfly.id !== currentButterflyId || !isInitialDataLoaded) return;
       
       setTimeRemaining(prevTime => {
         const newTime = Math.max(0, prevTime - 1000); // Subtract 1 second
@@ -482,7 +495,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
                   </div>
 
                   <div className={`text-3xl font-bold mb-2 ${canSell ? 'text-green-400' : 'text-orange-400'}`}>
-                    {formatTimeRemaining(timeRemaining)}
+                    {!isServerDataLoaded ? "Lade..." : formatTimeRemaining(timeRemaining)}
                   </div>
 
                   {frameLikes > 0 && !canSell && (
