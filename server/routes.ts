@@ -1616,7 +1616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userUnlockedFields = await storage.getUnlockedFields(userId);
       const starterFields = [0, 1, 10, 11]; // Convert field IDs 1,2,11,12 to indices 0,1,10,11
       const unlockedCount = userUnlockedFields.filter(f => !starterFields.includes(f.fieldIndex)).length;
-      const cost = Math.round(1000 * Math.pow(1.2, unlockedCount));
+      const cost = Math.round(1000 * Math.pow(1.35, unlockedCount));
       
       const result = await storage.unlockField(userId, data, cost);
       

@@ -2706,7 +2706,7 @@ export class PostgresStorage {
     let cost = 0;
     if (frameNumber > 1) {
       // First frame is free, subsequent frames cost credits with exponential scaling
-      cost = Math.round(500 * Math.pow(1.2, frameNumber - 2));
+      cost = Math.round(500 * Math.pow(1.6, frameNumber - 2));
     }
 
     if (user.credits < cost) {
@@ -5405,7 +5405,7 @@ export class PostgresStorage {
         cost = 0; // First aquarium is free
       } else {
         // Tank 2 = 2500, Tank 3 = 2500*1.5 = 3750, Tank 4 = 3750*1.5 = 5625, etc.
-        cost = Math.round(2500 * Math.pow(1.5, tankNumber - 2));
+        cost = Math.round(2500 * Math.pow(2.5, tankNumber - 2));
       }
       
       // Check user credits

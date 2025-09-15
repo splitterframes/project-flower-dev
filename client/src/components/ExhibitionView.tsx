@@ -320,7 +320,7 @@ export const ExhibitionView: React.FC = () => {
   const getFrameCost = (): number => {
     const frameCount = frames.length;
     if (frameCount === 0) return 0; // First frame is free
-    return Math.round(500 * Math.pow(1.2, frameCount - 1));
+    return Math.round(500 * Math.pow(1.6, frameCount - 1));
   };
 
   // Calculate current Cr/h based on degradation over 72 hours with like bonus
