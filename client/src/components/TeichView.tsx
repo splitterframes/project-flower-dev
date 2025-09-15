@@ -71,7 +71,6 @@ const PondFieldHover: React.FC<{
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   const fetchHoverData = useCallback(async () => {
     if (isLoading) return;
@@ -86,16 +85,8 @@ const PondFieldHover: React.FC<{
 
     setIsLoading(true);
     
-    // Abort previous request
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-    abortRef.current = new AbortController();
-
     try {
-      const response = await fetch(`/api/user/${userId}/pond-field/${fieldId - 1}/average-rarity`, {
-        signal: abortRef.current.signal
-      });
+      const response = await fetch(`/api/user/${userId}/pond-field/${fieldId}/average-rarity`);
       
       if (response.ok) {
         const result = await response.json();
@@ -132,9 +123,6 @@ const PondFieldHover: React.FC<{
   const handlePointerLeave = useCallback(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
-    }
-    if (abortRef.current && !abortRef.current.signal.aborted) {
-      abortRef.current.abort();
     }
     setIsOpen(false);
   }, []);
