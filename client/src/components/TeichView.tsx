@@ -1782,7 +1782,6 @@ export const TeichView: React.FC = () => {
 
                     {/* Pond Feeding Progress Icons - Show fish symbols for feeding progress */}
                     {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
-                      <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
@@ -1827,7 +1826,6 @@ export const TeichView: React.FC = () => {
                             )}
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider>
                     )}
 
 
