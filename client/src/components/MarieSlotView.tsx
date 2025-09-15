@@ -727,7 +727,7 @@ export const MarieSlotView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     </div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Crown className="h-5 w-5 text-purple-400" />
-                      <span className="text-purple-200 font-semibold text-sm">Legendary 🦋</span>
+                      <span className="text-purple-200 font-semibold text-sm">Epischer 🦋</span>
                     </div>
                     <div className="text-xs text-purple-300">~1.5%</div>
                   </div>
