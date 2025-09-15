@@ -50,7 +50,12 @@ class ChallengeManager {
       } else {
         // Check if current challenge has expired
         if (now > currentChallenge.endTime) {
-          console.log('🌸 Current challenge has expired - marking as inactive...');
+          console.log('🌸 Current challenge has expired - processing rewards and marking as inactive...');
+          
+          // Process rewards BEFORE deactivating
+          console.log('🏆 Processing challenge rewards for all participants...');
+          await postgresStorage.processChallengeRewards(currentChallenge.id);
+          console.log('🏆 Challenge rewards processing completed!');
           
           // Deactivate the old challenge
           await this.deactivateChallenge(currentChallenge.id);
