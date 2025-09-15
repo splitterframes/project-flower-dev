@@ -20,6 +20,7 @@ import { EncyclopediaView } from "./EncyclopediaView";
 import { DonateDialog } from "./DonateDialog";
 import { ImpressumDialog } from "./ImpressumDialog";
 import { DatenschutzDialog } from "./DatenschutzDialog";
+import { LoginNotifications } from "./LoginNotifications";
 import { useAuth } from "@/lib/stores/useAuth";
 import { useCredits } from "@/lib/stores/useCredits";
 import { useActivityDetection } from "@/hooks/useActivityDetection";
@@ -246,7 +247,7 @@ export const Layout: React.FC = () => {
   const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [confettiParticles, setConfettiParticles] = useState<Confetti[]>([]);
   const [lootDrops, setLootDrops] = useState<Loot[]>([]);
-  const { user, isLoading, hasCheckedAuth, checkAuth } = useAuth();
+  const { user, isLoading, hasCheckedAuth, checkAuth, showNotifications, setShowNotifications } = useAuth();
   const { setCredits } = useCredits();
   
   // Initialize activity detection for performance optimization
@@ -587,6 +588,15 @@ export const Layout: React.FC = () => {
         open={showDatenschutzDialog}
         onOpenChange={setShowDatenschutzDialog}
       />
+
+      {/* Login Notifications */}
+      {user && (
+        <LoginNotifications
+          userId={user.id}
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
+        />
+      )}
 
       {/* Floating Balloons */}
       {balloons.map(balloon => (
