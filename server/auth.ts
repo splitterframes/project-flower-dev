@@ -94,9 +94,11 @@ export function requireUserAccess(req: AuthenticatedRequest, res: Response, next
     // Extract user ID from URL parameters or headers
     let requestedUserId: number;
     
-    // Check URL parameter first (e.g., /api/user/:id/credits)
+    // Check URL parameter first (e.g., /api/user/:id/credits or /api/user/:userId/pond-field)
     if (req.params.id) {
       requestedUserId = parseInt(req.params.id);
+    } else if (req.params.userId) {
+      requestedUserId = parseInt(req.params.userId);
     } 
     // Fallback to x-user-id header for compatibility
     else if (req.headers['x-user-id']) {
