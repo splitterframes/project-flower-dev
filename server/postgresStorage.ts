@@ -39,6 +39,7 @@ import {
   castleGridState,
   userUnlockedFeatures,
   collectionStats,
+  userNotifications,
   type User, 
   type Seed, 
   type UserSeed, 
@@ -79,6 +80,7 @@ import {
   type NewCollectionStats,
   type CastleGridState,
   type NewCastleGridState,
+  type UserNotification,
   insertUserSchema
 } from "@shared/schema";
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
@@ -4178,6 +4180,68 @@ export class PostgresStorage {
     return leaderboard.sort((a, b) => b.totalDonations - a.totalDonations);
   }
 
+  /**
+   * Create a notification for challenge reward winners
+   */
+  async createChallengeRewardNotification(
+    userId: number, 
+    challengeId: number, 
+    challengeRank: number,
+    rewardType: string,
+    rewardItemId?: number,
+    rewardItemName?: string,
+    rewardItemRarity?: string,
+    rewardAmount?: number
+  ): Promise<void> {
+    const rank = challengeRank;
+    const getOrdinal = (num: number) => {
+      const suffix = ["ter", "ter", "ter"]; // German ordinals
+      if (num === 1) return "1.";
+      if (num === 2) return "2.";
+      if (num === 3) return "3.";
+      return num + ".";
+    };
+
+    let title = "";
+    let message = "";
+    
+    if (rank <= 3) {
+      title = `🏆 Challenge ${getOrdinal(rank)} Platz!`;
+      if (rewardType === 'vip_butterfly') {
+        title = `🌟 Challenge Gewonnen!`;
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und einen VIP-Schmetterling gewonnen: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'butterfly') {
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und einen Schmetterling gewonnen: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'credits') {
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und ${rewardAmount} Credits gewonnen!`;
+      }
+    } else {
+      title = `🎁 Challenge Belohnung!`;
+      if (rewardType === 'butterfly') {
+        message = `Du hast an der Weekly Challenge teilgenommen und Platz ${rank} erreicht! Als Belohnung erhältst du: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'credits') {
+        message = `Du hast an der Weekly Challenge teilgenommen und Platz ${rank} erreicht! Als Belohnung erhältst du: ${rewardAmount} Credits`;
+      }
+    }
+
+    await this.db.insert(userNotifications).values({
+      userId,
+      type: 'challenge_reward',
+      title,
+      message,
+      isRead: false,
+      rewardType,
+      rewardItemId,
+      rewardItemName,
+      rewardItemRarity,
+      rewardAmount,
+      challengeId,
+      challengeRank: rank,
+    });
+
+    console.log(`📨 Created challenge reward notification for user ${userId}, rank ${rank}: ${title}`);
+  }
+
   async processChallengeRewards(challengeId: number): Promise<void> {
     const leaderboard = await this.getChallengeLeaderboard(challengeId);
     
@@ -4213,6 +4277,18 @@ export class PostgresStorage {
           passiveIncome: 60
         });
         
+        // Create notification for VIP butterfly winner
+        await this.createChallengeRewardNotification(
+          user.userId,
+          challengeId,
+          rank,
+          'vip_butterfly',
+          randomVipId,
+          vipButterflyName,
+          'VIP',
+          undefined
+        );
+        
         continue; // Skip normal butterfly processing for rank 1
       } else if (rank === 2) {
         butterfly = this.getRandomButterflyByRarity("epic");
@@ -4246,6 +4322,18 @@ export class PostgresStorage {
         isAnimated,
         passiveIncome
       });
+
+      // Create notification for butterfly winner
+      await this.createChallengeRewardNotification(
+        user.userId,
+        challengeId,
+        rank,
+        'butterfly',
+        butterfly.id,
+        butterfly.name,
+        butterfly.rarity,
+        undefined
+      );
     }
 
     console.log(`🏆 Processed rewards for challenge ${challengeId}, ${leaderboard.length} participants`);
