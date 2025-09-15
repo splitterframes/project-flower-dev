@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,6 +21,141 @@ import { ButterflyHoverPreview } from "./ButterflyHoverPreview";
 import { FishHoverPreview } from "./FishHoverPreview";
 import { CaterpillarHoverPreview } from "./CaterpillarHoverPreview";
 import { getGrowthTime, formatTime, getRarityDisplayName, getRarityColor, calculateCaterpillarRarity, generateLatinCaterpillarName, type RarityTier } from "@shared/rarity";
+
+// Cache for pond field hover data to avoid repeated API calls
+const pondHoverCache = new Map<number, { 
+  data: { averageRarity: string | null; caterpillarCount: number; caterpillarRarities: string[] }; 
+  timestamp: number 
+}>();
+const CACHE_TTL = 15000; // 15 seconds
+
+// German rarity translation function
+const getRarityDisplayNameGerman = (rarity: string): string => {
+  const rarityNames = {
+    'common': 'Gewöhnlich',
+    'uncommon': 'Ungewöhnlich', 
+    'rare': 'Selten',
+    'super-rare': 'Super-selten',
+    'epic': 'Episch',
+    'legendary': 'Legendär',
+    'mythical': 'Mythisch'
+  };
+  return rarityNames[rarity as keyof typeof rarityNames] || rarity;
+};
+
+// PondFieldHover component with optimized performance and proper centering
+const PondFieldHover: React.FC<{ 
+  fieldId: number; 
+  feedingProgress?: number;
+  userId: number;
+}> = React.memo(({ fieldId, feedingProgress, userId }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [data, setData] = useState<{ 
+    averageRarity: string | null; 
+    caterpillarCount: number; 
+    caterpillarRarities: string[] 
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const fetchHoverData = useCallback(async () => {
+    if (isLoading) return;
+    
+    // Check cache first
+    const cached = pondHoverCache.get(fieldId);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setData(cached.data);
+      setIsOpen(true);
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Abort previous request
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    abortRef.current = new AbortController();
+
+    try {
+      const response = await fetch(`/api/user/${userId}/pond-field/${fieldId - 1}/average-rarity`, {
+        signal: abortRef.current.signal
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const hoverData = {
+          averageRarity: result.averageRarity,
+          caterpillarCount: result.caterpillarCount || 0,
+          caterpillarRarities: result.caterpillarRarities || []
+        };
+        
+        // Cache the result
+        pondHoverCache.set(fieldId, { data: hoverData, timestamp: Date.now() });
+        setData(hoverData);
+        setIsOpen(true);
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.warn('Pond hover fetch failed:', error);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fieldId, userId, isLoading]);
+
+  const handlePointerEnter = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      fetchHoverData();
+    }, 200); // 200ms debounce
+  }, [fetchHoverData]);
+
+  const handlePointerLeave = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    setIsOpen(false);
+  }, []);
+
+  // Only show hover for pond fields with feeding progress 1-2
+  if (!feedingProgress || feedingProgress <= 0 || feedingProgress >= 3) {
+    return null;
+  }
+
+  return (
+    <>
+      {/* Invisible hover target covering the entire field */}
+      <div 
+        className="absolute inset-0 z-10 pointer-events-auto"
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+      />
+      
+      {/* Centered tooltip overlay */}
+      {isOpen && data && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+          <div 
+            className="px-3 py-2 rounded-lg text-sm font-medium text-white shadow-lg border"
+            style={{ 
+              backgroundColor: data.averageRarity ? getRarityColor(data.averageRarity.toLowerCase() as RarityTier) || '#374151' : '#374151',
+              borderColor: data.averageRarity ? getRarityColor(data.averageRarity.toLowerCase() as RarityTier) || '#6B7280' : '#6B7280'
+            }}
+          >
+            {data.averageRarity ? getRarityDisplayNameGerman(data.averageRarity) : 'Noch keine Raupen gefüttert'}
+          </div>
+        </div>
+      )}
+    </>
+  );
+});
 import { 
   Flower,
   Lock,
@@ -197,78 +332,7 @@ export const TeichView: React.FC = () => {
     isGrowingIn: boolean;
   }[]>([]);
 
-  // State for pond field hover information (per-field tracking)
-  const [pondHoverData, setPondHoverData] = useState<{
-    fieldId: number;
-    averageRarity: string | null;
-    caterpillarCount: number;
-    caterpillarRarities: string[];
-  } | null>(null);
-  const [loadingHoverFields, setLoadingHoverFields] = useState<Set<number>>(new Set());
 
-  // Function to fetch average rarity for pond field on hover
-  const fetchPondFieldAverageRarity = async (fieldId: number) => {
-    if (!user || loadingHoverFields.has(fieldId)) return;
-    
-    // Set this field as loading
-    setLoadingHoverFields(prev => new Set([...prev, fieldId]));
-    
-    try {
-      const response = await fetch(`/api/user/${user.id}/pond-field/${fieldId - 1}/average-rarity`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Only update if this is still the current hover target
-        setPondHoverData(current => {
-          if (current?.fieldId === fieldId || !current) {
-            return {
-              fieldId,
-              averageRarity: data.averageRarity,
-              caterpillarCount: data.caterpillarCount,
-              caterpillarRarities: data.caterpillarRarities || []
-            };
-          }
-          return current; // Don't update if user moved to different field
-        });
-      } else {
-        console.error('Failed to fetch pond field average rarity');
-      }
-    } catch (error) {
-      console.error('Error fetching pond field average rarity:', error);
-    } finally {
-      // Remove this field from loading
-      setLoadingHoverFields(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(fieldId);
-        return newSet;
-      });
-    }
-  };
-
-  // Clear hover data when mouse leaves pond field
-  const clearPondHoverData = (fieldId: number) => {
-    setPondHoverData(current => {
-      // Only clear if this is the field that was being hovered
-      if (current?.fieldId === fieldId) {
-        return null;
-      }
-      return current;
-    });
-  };
-
-  // Get German rarity display name
-  const getRarityDisplayNameGerman = (rarity: string): string => {
-    const rarityNames = {
-      'common': 'Gewöhnlich',
-      'uncommon': 'Ungewöhnlich',
-      'rare': 'Selten',
-      'super-rare': 'Super-selten',
-      'epic': 'Episch',
-      'legendary': 'Legendär',
-      'mythical': 'Mythisch'
-    };
-    return rarityNames[rarity as keyof typeof rarityNames] || rarity;
-  };
 
   // Raritäts-Vererbungslogik 50-30-20
   const inheritCaterpillarRarity = (parentRarity: string): string => {
@@ -1364,12 +1428,6 @@ export const TeichView: React.FC = () => {
                       }
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
-                    onMouseEnter={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
-                      fetchPondFieldAverageRarity(field.id);
-                    } : undefined}
-                    onMouseLeave={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
-                      clearPondHoverData(field.id);
-                    } : undefined}
                     style={{
                       backgroundColor: field.isPond 
                         ? 'rgba(34, 118, 182, 0.2)' // Transparent blue for pond fields
@@ -1797,17 +1855,13 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Simple tooltip - only show when rarity exists (or debug mode) */}
-                    {field.isPond && 
-                     pondHoverData?.fieldId === field.id && 
-                     (pondHoverData.averageRarity !== null || field.feedingProgress) && (
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
-                        <div className="bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                          <span style={{ color: pondHoverData.averageRarity ? getRarityColor(pondHoverData.averageRarity as RarityTier) : '#ffffff' }}>
-                            {pondHoverData.averageRarity ? getRarityDisplayNameGerman(pondHoverData.averageRarity) : 'Noch keine Raupen gefüttert'}
-                          </span>
-                        </div>
-                      </div>
+                    {/* Optimized pond field hover with performance and centering fixes */}
+                    {field.isPond && user && (
+                      <PondFieldHover 
+                        fieldId={field.id}
+                        feedingProgress={field.feedingProgress}
+                        userId={user.id}
+                      />
                     )}
 
 
