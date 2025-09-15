@@ -2118,9 +2118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       const exhibitionButterflyId = parseInt(req.params.id);
 
-      // Get all exhibition butterflies for this user
-      const userExhibitionButterflies = await storage.getExhibitionButterflies(userId);
-      const exhibitionButterfly = userExhibitionButterflies.find(b => b.id === exhibitionButterflyId);
+      // 🚀 PERFORMANCE: Get single butterfly instead of loading all
+      const exhibitionButterfly = await storage.getExhibitionButterflyById(userId, exhibitionButterflyId);
       
       if (!exhibitionButterfly) {
         return res.status(404).json({ error: "Schmetterling nicht gefunden" });
@@ -2129,10 +2128,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canSell = await storage.canSellButterfly(userId, exhibitionButterflyId);
       const timeRemaining = await storage.getTimeUntilSellable(userId, exhibitionButterflyId);
       
-      // Get likes count using getUserFrameLikes and find our specific frame
-      const allFrameLikes = await storage.getUserFrameLikes(exhibitionButterfly.userId);
-      const frameWithLikes = allFrameLikes.find(f => f.frameId === exhibitionButterfly.frameId);
-      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+      // Get likes count for specific frame only
+      const likesCount = await storage.getFrameLikesCount(exhibitionButterfly.frameId);
 
       res.json({
         canSell,
@@ -2152,9 +2149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.headers['x-user-id'] as string) || 1;
       const exhibitionVipButterflyId = parseInt(req.params.id);
 
-      // Get all exhibition VIP butterflies for this user
-      const userVipExhibitionButterflies = await storage.getExhibitionVipButterflies(userId);
-      const vipExhibitionButterfly = userVipExhibitionButterflies.find(b => b.id === exhibitionVipButterflyId);
+      // 🚀 PERFORMANCE: Get single VIP butterfly instead of loading all
+      const vipExhibitionButterfly = await storage.getExhibitionVipButterflyById(userId, exhibitionVipButterflyId);
       
       if (!vipExhibitionButterfly) {
         return res.status(404).json({ error: "VIP-Schmetterling nicht gefunden" });
@@ -2163,10 +2159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canSell = await storage.canSellVipButterfly(userId, exhibitionVipButterflyId);
       const timeRemaining = await storage.getTimeUntilVipSellable(userId, exhibitionVipButterflyId);
       
-      // Get likes count using getUserFrameLikes and find our specific frame
-      const allFrameLikes = await storage.getUserFrameLikes(vipExhibitionButterfly.userId);
-      const frameWithLikes = allFrameLikes.find(f => f.frameId === vipExhibitionButterfly.frameId);
-      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+      // Get likes count for specific frame only
+      const likesCount = await storage.getFrameLikesCount(vipExhibitionButterfly.frameId);
 
       res.json({
         canSell,

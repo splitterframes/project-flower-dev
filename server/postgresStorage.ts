@@ -2212,6 +2212,20 @@ export class PostgresStorage {
     return result;
   }
 
+  // 🚀 PERFORMANCE: Get single VIP butterfly by ID (much faster than loading all)
+  async getExhibitionVipButterflyById(userId: number, vipButterflyId: number): Promise<ExhibitionVipButterfly | null> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(
+        eq(exhibitionVipButterflies.userId, userId),
+        eq(exhibitionVipButterflies.id, vipButterflyId)
+      ))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : null;
+  }
+
   async placeVipButterflyInExhibition(userId: number, frameId: number, slotIndex: number, vipButterflyId: number): Promise<{ success: boolean; message?: string }> {
     // Check if user has this VIP butterfly
     const userVipButterfly = await this.db
@@ -2744,6 +2758,20 @@ export class PostgresStorage {
       .where(eq(exhibitionButterflies.userId, userId));
     
     return result;
+  }
+
+  // 🚀 PERFORMANCE: Get single butterfly by ID (much faster than loading all)
+  async getExhibitionButterflyById(userId: number, butterflyId: number): Promise<ExhibitionButterfly | null> {
+    const result = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(
+        eq(exhibitionButterflies.userId, userId),
+        eq(exhibitionButterflies.id, butterflyId)
+      ))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : null;
   }
 
   async placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
