@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   dna: integer("dna").notNull().default(0),
   hearts: integer("hearts").notNull().default(0),
   lastPassiveIncomeAt: timestamp("last_passive_income_at"),
-  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  // ✅ REMOVED: lastActiveAt - column doesn't exist in database
   tickets: integer("tickets").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
