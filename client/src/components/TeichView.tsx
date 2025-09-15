@@ -1797,14 +1797,14 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Simple tooltip - only show when rarity exists */}
+                    {/* Simple tooltip - only show when rarity exists (or debug mode) */}
                     {field.isPond && 
                      pondHoverData?.fieldId === field.id && 
-                     pondHoverData.averageRarity !== null && (
+                     (pondHoverData.averageRarity !== null || field.feedingProgress) && (
                       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
                         <div className="bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                          <span style={{ color: getRarityColor(pondHoverData.averageRarity as RarityTier) }}>
-                            {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
+                          <span style={{ color: pondHoverData.averageRarity ? getRarityColor(pondHoverData.averageRarity as RarityTier) : '#ffffff' }}>
+                            {pondHoverData.averageRarity ? getRarityDisplayNameGerman(pondHoverData.averageRarity) : 'Noch keine Raupen gefüttert'}
                           </span>
                         </div>
                       </div>
