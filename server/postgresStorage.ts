@@ -6022,17 +6022,17 @@ export class PostgresStorage {
 
   async getTop100ByLikes(currentUserId: number): Promise<any[]> {
     try {
-      // Calculate total likes from all exhibition butterflies
+      // Calculate total likes from exhibition_frame_likes table
       const userStats = await this.db
         .select({
           id: users.id,
           username: users.username,
-          likes: sql<number>`COALESCE(SUM(${exhibitionButterflies.likes}), 0)`
+          likes: sql<number>`COALESCE(COUNT(${exhibitionFrameLikes.id}), 0)`
         })
         .from(users)
-        .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
+        .leftJoin(exhibitionFrameLikes, eq(users.id, exhibitionFrameLikes.frameOwnerId))
         .groupBy(users.id, users.username)
-        .orderBy(desc(sql`COALESCE(SUM(${exhibitionButterflies.likes}), 0)`))
+        .orderBy(desc(sql`COALESCE(COUNT(${exhibitionFrameLikes.id}), 0)`))
         .limit(100);
 
       return this.formatRankingResults(userStats, 'likes', currentUserId);
