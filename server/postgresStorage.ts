@@ -5802,12 +5802,24 @@ export class PostgresStorage {
   }
 
   private getCaterpillarSellPrice(rarity: string): number {
-    // NEW: Caterpillar prices are 30% more than flowers of same rarity (130% of flower price)
-    // First get the flower price for this rarity
-    const flowerPrice = this.getFlowerSellPrice(rarity);
+    // Raupenpreise = 40% der Fischpreise (Marie Posa zahlt 50% vom Fisch-Marktpreis)
+    // First get the fish market price for this rarity
+    const fishMarketPrice = (() => {
+      switch (rarity) {
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
+      }
+    })();
     
-    // Return 130% of flower price (30% more valuable than flowers)
-    return Math.floor(flowerPrice * 1.3);
+    // Return 40% of fish market price, then Marie Posa pays 50% of that (= 20% of fish market price)
+    const caterpillarMarketPrice = Math.floor(fishMarketPrice * 0.4);
+    return Math.floor(caterpillarMarketPrice * 0.5);
   }
 
   private getButterflySellPrice(rarity: string): number {

@@ -104,18 +104,17 @@ const getItemPrice = (type: string, rarity: number): number => {
       return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 10) * 0.3);
     }
     case 'caterpillar': {
-      // FIXED: Use correct Exhibition-based butterfly prices!
-      const butterflyPrices = {
-        'common': 10,
-        'uncommon': 25,
-        'rare': 50,
-        'super-rare': 100,
-        'epic': 200,
-        'legendary': 500,
-        'mythical': 1000
+      // Raupenpreise = 40% der Fischpreise
+      const fishPrices = {
+        'common': 80,
+        'uncommon': 200,
+        'rare': 450,
+        'super-rare': 940,
+        'epic': 1500,
+        'legendary': 2200,
+        'mythical': 4000
       };
-      // Raupenpreise = 85% der Schmetterlingspreise
-      return Math.floor((butterflyPrices[rarityTier as keyof typeof butterflyPrices] || 50) * 0.85);
+      return Math.floor((fishPrices[rarityTier as keyof typeof fishPrices] || 80) * 0.4);
     }
     default:
       return 50;

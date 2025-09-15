@@ -138,20 +138,20 @@ export const CaterpillarDetailModal: React.FC<CaterpillarDetailModalProps> = ({
   };
 
   const getCaterpillarPrice = (rarity: string): number => {
-    // Caterpillar prices are 85% of butterfly prices
-    const basePrice = (() => {
+    // Raupenpreise = 40% der Fischpreise
+    const fishPrice = (() => {
       switch (rarity.toLowerCase()) {
-        case 'common': return 50;
-        case 'uncommon': return 100;
-        case 'rare': return 200;
-        case 'super-rare': return 400;
-        case 'epic': return 600;
-        case 'legendary': return 800;
-        case 'mythical': return 1000;
-        default: return 50;
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
       }
     })();
-    return Math.floor(basePrice * 0.85); // 85% of butterfly price
+    return Math.floor(fishPrice * 0.4); // 40% of fish price
   };
 
   const handleSell = async () => {
