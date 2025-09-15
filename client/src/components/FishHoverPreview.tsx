@@ -32,29 +32,41 @@ export const FishHoverPreview: React.FC<FishHoverPreviewProps> = ({
     const dialogHeight = 320; // Dialog height + padding
     const margin = 8; // Margin from element
     
-    // Get viewport dimensions
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    // Check if we're inside a modal dialog
+    const modalDialog = e.currentTarget.closest('[role="dialog"]');
+    let viewportWidth = window.innerWidth;
+    let viewportHeight = window.innerHeight;
+    let viewportLeft = 0;
+    let viewportTop = 0;
+    
+    if (modalDialog) {
+      // Use modal dialog boundaries instead of full viewport
+      const modalRect = modalDialog.getBoundingClientRect();
+      viewportWidth = modalRect.width;
+      viewportHeight = modalRect.height;
+      viewportLeft = modalRect.left;
+      viewportTop = modalRect.top;
+    }
     
     // Calculate horizontal position
     let x = rect.right + margin; // Default: right of element
-    if (x + dialogWidth > viewportWidth) {
+    if (x + dialogWidth > viewportLeft + viewportWidth) {
       // Not enough space on right, position on left
       x = rect.left - dialogWidth - margin;
-      if (x < 0) {
-        // Not enough space on left either, center it
-        x = Math.max(margin, (viewportWidth - dialogWidth) / 2);
+      if (x < viewportLeft) {
+        // Not enough space on left either, center it within available space
+        x = Math.max(viewportLeft + margin, viewportLeft + (viewportWidth - dialogWidth) / 2);
       }
     }
     
     // Calculate vertical position
     let y = rect.top; // Default: aligned with top of element
-    if (y + dialogHeight > viewportHeight) {
+    if (y + dialogHeight > viewportTop + viewportHeight) {
       // Not enough space below, position above
       y = rect.bottom - dialogHeight;
-      if (y < 0) {
-        // Not enough space above either, center vertically
-        y = Math.max(margin, (viewportHeight - dialogHeight) / 2);
+      if (y < viewportTop) {
+        // Not enough space above either, center vertically within available space
+        y = Math.max(viewportTop + margin, viewportTop + (viewportHeight - dialogHeight) / 2);
       }
     }
     
