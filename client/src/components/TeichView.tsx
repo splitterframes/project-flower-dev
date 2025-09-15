@@ -43,6 +43,20 @@ const getRarityDisplayNameGerman = (rarity: string): string => {
   return rarityNames[rarity as keyof typeof rarityNames] || rarity;
 };
 
+// Hex color function for backgrounds (not Tailwind classes)
+const getRarityHexColor = (rarity: string): string => {
+  const rarityColors = {
+    'common': '#FACC15',      // yellow-400
+    'uncommon': '#4ADE80',    // green-400  
+    'rare': '#60A5FA',        // blue-400
+    'super-rare': '#22D3EE',  // cyan-400
+    'epic': '#A855F7',        // purple-400
+    'legendary': '#FB923C',   // orange-400
+    'mythical': '#F87171'     // red-400
+  };
+  return rarityColors[rarity as keyof typeof rarityColors] || '#9CA3AF';
+};
+
 // PondFieldHover component with optimized performance and proper centering
 const PondFieldHover: React.FC<{ 
   fieldId: number; 
@@ -143,10 +157,13 @@ const PondFieldHover: React.FC<{
       {isOpen && data && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
           <div 
-            className="px-3 py-2 rounded-lg text-sm font-medium text-white shadow-lg border"
+            className="px-4 py-3 rounded-lg text-sm font-bold text-white shadow-xl border-2"
             style={{ 
-              backgroundColor: data.averageRarity ? getRarityColor(data.averageRarity.toLowerCase() as RarityTier) || '#374151' : '#374151',
-              borderColor: data.averageRarity ? getRarityColor(data.averageRarity.toLowerCase() as RarityTier) || '#6B7280' : '#6B7280'
+              backgroundColor: data.averageRarity ? getRarityHexColor(data.averageRarity.toLowerCase()) : '#6B7280',
+              borderColor: data.averageRarity ? getRarityHexColor(data.averageRarity.toLowerCase()) : '#9CA3AF',
+              opacity: 0.95,
+              minWidth: '120px',
+              textAlign: 'center' as const
             }}
           >
             {data.averageRarity ? getRarityDisplayNameGerman(data.averageRarity) : 'Noch keine Raupen gefüttert'}
