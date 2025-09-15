@@ -88,13 +88,21 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
   useEffect(() => {
     if (!fish || readOnly) return;
 
+    let currentFishId = fish.id; // Capture current fish ID
+    let isCancelled = false; // Flag to prevent race conditions
+
     const fetchSellStatus = async () => {
+      if (isCancelled || fish.id !== currentFishId) return; // Prevent outdated calls
+      
       try {
         const response = await fetch(`/api/aquarium/fish/${fish.id}/sell-status`, {
           headers: { 
             'X-User-Id': fish.userId.toString()
           }
         });
+        
+        // Check again after async operation
+        if (isCancelled || fish.id !== currentFishId) return;
         
         if (response.ok) {
           const data = await response.json();
@@ -117,14 +125,38 @@ export const FishDetailModal: React.FC<FishDetailModalProps> = ({
           }
         }
       } catch (error) {
+        if (isCancelled || fish.id !== currentFishId) return;
         console.error('Failed to fetch fish sell status:', error);
       }
     };
 
-    fetchSellStatus();
-    const interval = setInterval(fetchSellStatus, 1000);
+    // Update local countdown every second
+    const updateLocalCountdown = () => {
+      if (isCancelled || fish.id !== currentFishId) return;
+      
+      setTimeRemaining(prevTime => {
+        const newTime = Math.max(0, prevTime - 1000); // Subtract 1 second
+        if (newTime <= 0) {
+          setCanSell(true);
+        }
+        return newTime;
+      });
+    };
 
-    return () => clearInterval(interval);
+    // Fetch immediately
+    fetchSellStatus();
+
+    // Update countdown every second for smooth display
+    const countdownInterval = setInterval(updateLocalCountdown, 1000);
+    
+    // Sync with server every 30 seconds to prevent drift
+    const serverSyncInterval = setInterval(fetchSellStatus, 30000);
+
+    return () => {
+      isCancelled = true; // Cancel any pending operations
+      clearInterval(countdownInterval);
+      clearInterval(serverSyncInterval);
+    };
   }, [fish, readOnly]);
 
   const formatTime = (ms: number): string => {
