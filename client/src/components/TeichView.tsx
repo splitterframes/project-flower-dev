@@ -133,7 +133,7 @@ const PondFieldHover: React.FC<{
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    if (abortRef.current) {
+    if (abortRef.current && !abortRef.current.signal.aborted) {
       abortRef.current.abort();
     }
     setIsOpen(false);
