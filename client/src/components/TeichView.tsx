@@ -1782,50 +1782,49 @@ export const TeichView: React.FC = () => {
 
                     {/* Pond Feeding Progress Icons - Show fish symbols for feeding progress */}
                     {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div 
-                              className="absolute inset-0 flex items-center justify-center z-20 cursor-help pointer-events-none"
-                            >
-                              {field.feedingProgress === 1 && (
-                                <div className="text-6xl animate-pulse drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(59,130,246,0.5)]">🐟</div>
-                              )}
-                              {field.feedingProgress === 2 && (
-                                <div className="text-6xl animate-bounce drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(34,197,94,0.5)]">🐠</div>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-black/90 text-white border-gray-600 max-w-xs">
-                            {pondHoverData && pondHoverData.fieldId === field.id ? (
-                              <div className="text-sm">
-                                <div className="font-semibold mb-2">🐟 Teichfeld {field.id}</div>
-                                <div className="mb-1">Fütterungsstufe: {field.feedingProgress}/3</div>
-                                {pondHoverData.averageRarity ? (
-                                  <>
-                                    <div className="mb-1">
-                                      <span className="font-medium">Aktuelle Durchschnittsrarität:</span>
-                                    </div>
-                                    <div className={`font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)}`}>
-                                      {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
-                                    </div>
-                                    <div className="text-xs text-gray-300 mt-1">
-                                      Basierend auf {pondHoverData.caterpillarCount} gefütterten Raupen
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="text-gray-400">Noch keine Raupen gefüttert</div>
-                                )}
+                      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                        {field.feedingProgress === 1 && (
+                          <div className="text-6xl animate-pulse drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(59,130,246,0.5)]">🐟</div>
+                        )}
+                        {field.feedingProgress === 2 && (
+                          <div className="text-6xl animate-bounce drop-shadow-lg filter drop-shadow-[0_2px_8px_rgba(34,197,94,0.5)]">🐠</div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Pond Hover Overlay - Show rarity info when hovering pond fields */}
+                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && pondHoverData && pondHoverData.fieldId === field.id && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
+                        <div className="bg-black/90 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm max-w-xs">
+                          <div className="font-semibold mb-2">🐟 Teichfeld {field.id}</div>
+                          <div className="mb-1">Fütterungsstufe: {field.feedingProgress}/3</div>
+                          {pondHoverData.averageRarity ? (
+                            <>
+                              <div className="mb-1">
+                                <span className="font-medium">Aktuelle Durchschnittsrarität:</span>
                               </div>
-                            ) : loadingHoverFields.has(field.id) ? (
-                              <div className="text-sm">Lade Daten...</div>
-                            ) : (
-                              <div className="text-sm">
-                                <div className="font-semibold mb-1">🐟 Teichfeld {field.id}</div>
-                                <div>Fütterungsstufe: {field.feedingProgress}/3</div>
+                              <div className={`font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)}`}>
+                                {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
                               </div>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
+                              <div className="text-xs text-gray-300 mt-1">
+                                Basierend auf {pondHoverData.caterpillarCount} gefütterten Raupen
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-gray-400">Noch keine Raupen gefüttert</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Loading overlay for pond hover data */}
+                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && loadingHoverFields.has(field.id) && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
+                        <div className="bg-black/90 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                          <div className="font-semibold mb-1">🐟 Teichfeld {field.id}</div>
+                          <div>Lade Daten...</div>
+                        </div>
+                      </div>
                     )}
 
 
