@@ -1346,6 +1346,11 @@ export const TeichView: React.FC = () => {
                 // In TeichView, no unlock logic needed since grass fields are auto-unlocked
                 const isNextToUnlock = false;
                 
+                // DEBUG: Log which fields should have hover
+                if (field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3) {
+                  console.log("🐟 DEBUG: Field", field.id, "should have hover (feedingProgress:", field.feedingProgress, ")");
+                }
+                
                 return (
                   <div
                     key={field.id}
@@ -1363,8 +1368,14 @@ export const TeichView: React.FC = () => {
                       }
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
-                    onMouseEnter={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => fetchPondFieldAverageRarity(field.id) : undefined}
-                    onMouseLeave={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => clearPondHoverData(field.id) : undefined}
+                    onMouseEnter={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
+                      console.log("🐟 HOVER ENTER: Field", field.id, "feedingProgress:", field.feedingProgress);
+                      fetchPondFieldAverageRarity(field.id);
+                    } : undefined}
+                    onMouseLeave={field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 ? () => {
+                      console.log("🐟 HOVER LEAVE: Field", field.id);
+                      clearPondHoverData(field.id);
+                    } : undefined}
                     style={{
                       backgroundColor: field.isPond 
                         ? 'rgba(34, 118, 182, 0.2)' // Transparent blue for pond fields
@@ -1792,37 +1803,11 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Pond Hover Overlay - Show rarity info when hovering pond fields */}
-                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && pondHoverData && pondHoverData.fieldId === field.id && (
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
-                        <div className="bg-black/90 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm max-w-xs">
-                          <div className="font-semibold mb-2">🐟 Teichfeld {field.id}</div>
-                          <div className="mb-1">Fütterungsstufe: {field.feedingProgress}/3</div>
-                          {pondHoverData.averageRarity ? (
-                            <>
-                              <div className="mb-1">
-                                <span className="font-medium">Aktuelle Durchschnittsrarität:</span>
-                              </div>
-                              <div className={`font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)}`}>
-                                {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
-                              </div>
-                              <div className="text-xs text-gray-300 mt-1">
-                                Basierend auf {pondHoverData.caterpillarCount} gefütterten Raupen
-                              </div>
-                            </>
-                          ) : (
-                            <div className="text-gray-400">Noch keine Raupen gefüttert</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Loading overlay for pond hover data */}
-                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && loadingHoverFields.has(field.id) && (
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
-                        <div className="bg-black/90 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm">
-                          <div className="font-semibold mb-1">🐟 Teichfeld {field.id}</div>
-                          <div>Lade Daten...</div>
+                    {/* Simple rarity tooltip - only show average rarity in color */}
+                    {field.isPond && field.feedingProgress && field.feedingProgress > 0 && field.feedingProgress < 3 && pondHoverData && pondHoverData.fieldId === field.id && pondHoverData.averageRarity && (
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+                        <div className={`px-2 py-1 rounded text-xs font-bold ${getRarityColor(pondHoverData.averageRarity as RarityTier)} bg-black/80 border border-gray-500`}>
+                          {getRarityDisplayNameGerman(pondHoverData.averageRarity)}
                         </div>
                       </div>
                     )}
