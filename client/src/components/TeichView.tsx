@@ -86,7 +86,7 @@ const PondFieldHover: React.FC<{
     setIsLoading(true);
     
     try {
-      const response = await fetch(`/api/user/${userId}/pond-field/${fieldId}/average-rarity`);
+      const response = await fetch(`/api/user/${userId}/pond-field/${fieldId - 1}/average-rarity`);
       
       if (response.ok) {
         const result = await response.json();
