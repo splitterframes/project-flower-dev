@@ -1155,25 +1155,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid field index' });
       }
 
-      // Get all fed caterpillars for this user
-      const fedCaterpillars = await storage.getFieldCaterpillars(userId);
+      // Check pond feeding progress from database first
+      const pondProgress = await storage.getUserPondProgress(userId);
+      const feedingCount = pondProgress[fieldIndex] || 0;
       
-      // Filter caterpillars for this specific field
-      const fieldCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === fieldIndex);
-      
-      if (fieldCaterpillars.length === 0) {
-        return res.json({ averageRarity: null, caterpillarCount: 0 });
-      }
-      
-      // Get rarities and calculate average
-      const rarities = fieldCaterpillars.map(c => c.caterpillarRarity);
+      // Get average rarity from feeding data
       const averageRarity = await storage.getCurrentFeedingAverageRarity(userId, fieldIndex);
       
-      res.json({ 
-        averageRarity, 
-        caterpillarCount: rarities.length,
-        caterpillarRarities: rarities
-      });
+      console.log(`🎯 Field ${fieldIndex}: feedingCount=${feedingCount}, averageRarity=${averageRarity}`);
+      
+      // If we have feeding progress but no rarity data (lost memory), show default
+      if (feedingCount > 0 && averageRarity === null) {
+        // Default to 'uncommon' for lost feeding data 
+        res.json({ 
+          averageRarity: 1, // uncommon (green)
+          caterpillarCount: feedingCount,
+          note: "Fütterungsdaten vorhanden, Rarität-Info verloren"
+        });
+      } else if (averageRarity !== null) {
+        res.json({ 
+          averageRarity, 
+          caterpillarCount: feedingCount
+        });
+      } else {
+        res.json({ 
+          averageRarity: null, 
+          caterpillarCount: 0 
+        });
+      }
     } catch (error) {
       console.error('Get pond field average rarity error:', error);
       res.status(500).json({ message: 'Fehler beim Laden der Durchschnittsrarität.' });
