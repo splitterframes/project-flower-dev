@@ -5750,14 +5750,14 @@ export class PostgresStorage {
     // Aquarium direct sale - full market value (100%)
     const basePrice = (() => {
       switch (rarity) {
-        case 'common': return 80;
-        case 'uncommon': return 200;
-        case 'rare': return 450;
-        case 'super-rare': return 940;
-        case 'epic': return 1500;
-        case 'legendary': return 2200;
-        case 'mythical': return 4000;
-        default: return 80;
+        case 'common': return 40;
+        case 'uncommon': return 100;
+        case 'rare': return 225;
+        case 'super-rare': return 470;
+        case 'epic': return 750;
+        case 'legendary': return 1100;
+        case 'mythical': return 2000;
+        default: return 40;
       }
     })();
     
@@ -5768,14 +5768,14 @@ export class PostgresStorage {
     // Fish prices - Marie Posa pays 50% of market value
     const basePrice = (() => {
       switch (rarity) {
-        case 'common': return 80;
-        case 'uncommon': return 200;
-        case 'rare': return 450;
-        case 'super-rare': return 940;
-        case 'epic': return 1500;
-        case 'legendary': return 2200;
-        case 'mythical': return 4000;
-        default: return 80;
+        case 'common': return 40;
+        case 'uncommon': return 100;
+        case 'rare': return 225;
+        case 'super-rare': return 470;
+        case 'epic': return 750;
+        case 'legendary': return 1100;
+        case 'mythical': return 2000;
+        default: return 40;
       }
     })();
     
