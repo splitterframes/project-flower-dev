@@ -583,6 +583,7 @@ export type WeeklyChallenge = typeof weeklyChallenges.$inferSelect;
 export type WeeklyChallengeProgress = typeof weeklyChallengeProgress.$inferSelect;
 export type ChallengeDonation = typeof challengeDonations.$inferSelect;
 export type ChallengeReward = typeof challengeRewards.$inferSelect;
+export type UserNotification = typeof userNotifications.$inferSelect;
 export type DonateChallengeFlowerRequest = z.infer<typeof donateChallengeFlowerSchema>;
 export type PlaceButterflyOnFieldRequest = z.infer<typeof placeButterflyOnFieldSchema>;
 export type PlaceFlowerOnFieldRequest = z.infer<typeof placeFlowerOnFieldSchema>;
@@ -628,6 +629,30 @@ export const dailyRedemptions = pgTable("daily_redemptions", {
   redeemedAt: timestamp("redeemed_at").defaultNow(),
 }, (table) => ({
   userDatePrizeUnique: unique().on(table.userId, table.date, table.prizeType),
+}));
+
+// User Notifications - for login notifications about rewards
+export const userNotifications = pgTable("user_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'challenge_reward', 'achievement', 'system'
+  title: text("title").notNull(), // "🏆 Challenge Gewonnen!"
+  message: text("message").notNull(), // Detailed message about the reward
+  isRead: boolean("is_read").notNull().default(false),
+  // Optional reward details
+  rewardType: varchar("reward_type", { length: 50 }), // 'butterfly', 'credits', 'vip_butterfly'
+  rewardItemId: integer("reward_item_id"), // Butterfly ID, item ID etc
+  rewardItemName: text("reward_item_name"), // Butterfly name, item name
+  rewardItemRarity: text("reward_item_rarity"), // 'legendary', 'mythical'
+  rewardAmount: integer("reward_amount"), // Credits amount or quantity
+  // Challenge specific info
+  challengeId: integer("challenge_id").references(() => weeklyChallenges.id),
+  challengeRank: integer("challenge_rank"), // 1, 2, 3...
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  readAt: timestamp("read_at"), // When user acknowledged the notification
+}, (table) => ({
+  userNotReadIdx: index("idx_user_notif_unread").on(table.userId, table.isRead),
 }));
 
 // Castle Garden Tables
