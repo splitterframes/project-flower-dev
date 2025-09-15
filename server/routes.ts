@@ -3786,6 +3786,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Notifications Routes
+  app.get('/api/user/:userId/notifications', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      const notifications = await storage.getUserNotifications(userId);
+      
+      res.json({ notifications });
+    } catch (error) {
+      console.error('🔴 Error getting user notifications:', error);
+      res.status(500).json({ error: 'Failed to get notifications' });
+    }
+  });
+
+  app.post('/api/user/:userId/notifications/:notificationId/read', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const notificationId = parseInt(req.params.notificationId);
+      
+      await storage.markNotificationAsRead(notificationId, userId);
+      
+      res.json({ message: 'Notification marked as read' });
+    } catch (error) {
+      console.error('🔴 Error marking notification as read:', error);
+      res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.post('/api/user/:userId/notifications/read-all', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      await storage.markAllNotificationsAsRead(userId);
+      
+      res.json({ message: 'All notifications marked as read' });
+    } catch (error) {
+      console.error('🔴 Error marking all notifications as read:', error);
+      res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

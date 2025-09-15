@@ -4242,6 +4242,59 @@ export class PostgresStorage {
     console.log(`📨 Created challenge reward notification for user ${userId}, rank ${rank}: ${title}`);
   }
 
+  /**
+   * Get unread notifications for a user
+   */
+  async getUserNotifications(userId: number): Promise<UserNotification[]> {
+    const notifications = await this.db
+      .select()
+      .from(userNotifications)
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.isRead, false)
+      ))
+      .orderBy(desc(userNotifications.createdAt));
+
+    console.log(`📨 Found ${notifications.length} unread notifications for user ${userId}`);
+    return notifications;
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markNotificationAsRead(notificationId: number, userId: number): Promise<void> {
+    await this.db
+      .update(userNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: sql`now()` 
+      })
+      .where(and(
+        eq(userNotifications.id, notificationId),
+        eq(userNotifications.userId, userId)
+      ));
+
+    console.log(`📨 Marked notification ${notificationId} as read for user ${userId}`);
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await this.db
+      .update(userNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: sql`now()` 
+      })
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.isRead, false)
+      ));
+
+    console.log(`📨 Marked all notifications as read for user ${userId}`);
+  }
+
   async processChallengeRewards(challengeId: number): Promise<void> {
     const leaderboard = await this.getChallengeLeaderboard(challengeId);
     
