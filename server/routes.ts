@@ -2174,49 +2174,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🐛 DEBUG: Test endpoint to reproduce sell-status bug
-  app.get("/api/debug/sell-status-bug", async (req, res) => {
-    try {
-      // Test with User 1 who has 5 butterflies
-      const userId = 1;
-      console.log(`🐛 DEBUG: Testing sell-status for user ${userId}`);
-      
-      const butterflies = await storage.getExhibitionButterflies(userId);
-      console.log(`🐛 DEBUG: Found ${butterflies.length} butterflies:`, butterflies.map(b => ({ id: b.id, placedAt: b.placedAt })));
-      
-      if (butterflies.length > 0) {
-        const firstButterfly = butterflies[0];
-        const canSell = await storage.canSellButterfly(userId, firstButterfly.id);
-        const timeRemaining = await storage.getTimeUntilSellable(userId, firstButterfly.id);
-        
-        console.log(`🐛 DEBUG: Butterfly ${firstButterfly.id} - canSell: ${canSell}, timeRemaining: ${timeRemaining}ms`);
-        console.log(`🐛 DEBUG: PlacedAt: ${firstButterfly.placedAt}, Current: ${new Date().toISOString()}`);
-        
-        const likesCount = await storage.getFrameLikesCount(firstButterfly.frameId);
-        
-        res.json({
-          debug: true,
-          userId,
-          butterfly: {
-            id: firstButterfly.id,
-            placedAt: firstButterfly.placedAt,
-            frameId: firstButterfly.frameId
-          },
-          sellStatus: {
-            canSell,
-            timeRemainingMs: timeRemaining,
-            likesCount
-          },
-          timestamp: new Date().toISOString()
-        });
-      } else {
-        res.json({ debug: true, error: "No butterflies found for user 1" });
-      }
-    } catch (error) {
-      console.error('🐛 DEBUG: Error testing sell-status:', error);
-      res.status(500).json({ debug: true, error: error.message });
-    }
-  });
 
   // 🔒 SECURED: Batch sell-status endpoint with rate limiting and array size guards
   app.post("/api/exhibition/sell-status-batch", batchApiLimiter, async (req, res) => {

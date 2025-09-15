@@ -3320,15 +3320,13 @@ export class PostgresStorage {
   }
 
   async getTimeUntilSellable(userId: number, exhibitionButterflyId: number): Promise<number> {
-    const butterfly = await this.db
-      .select()
-      .from(exhibitionButterflies)
-      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+    // 🚀 PERFORMANCE: Use optimized single butterfly query
+    const butterfly = await this.getExhibitionButterflyById(userId, exhibitionButterflyId);
     
-    if (butterfly.length === 0) return 0;
+    if (!butterfly) return 0;
     
     const now = new Date();
-    const placedAt = new Date(butterfly[0].placedAt);
+    const placedAt = new Date(butterfly.placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
     // Base time: 72 hours for production (no more likes time reduction)
@@ -3442,15 +3440,13 @@ export class PostgresStorage {
   }
 
   async getTimeUntilVipSellable(userId: number, exhibitionVipButterflyId: number): Promise<number> {
-    const vipButterfly = await this.db
-      .select()
-      .from(exhibitionVipButterflies)
-      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+    // 🚀 PERFORMANCE: Use optimized single VIP butterfly query
+    const vipButterfly = await this.getExhibitionVipButterflyById(userId, exhibitionVipButterflyId);
     
-    if (vipButterfly.length === 0) return 0;
+    if (!vipButterfly) return 0;
     
     const now = new Date();
-    const placedAt = new Date(vipButterfly[0].placedAt);
+    const placedAt = new Date(vipButterfly.placedAt);
     const msElapsed = now.getTime() - placedAt.getTime();
     
     // Base time: 72 hours for production (no more likes time reduction)
@@ -6433,7 +6429,7 @@ export class PostgresStorage {
   }
 
   // Helper function to get frame likes count
-  private async getFrameLikesCount(frameId: number): Promise<number> {
+  async getFrameLikesCount(frameId: number): Promise<number> {
     try {
       const result = await this.db
         .select({ count: sql<number>`COUNT(*)` })
