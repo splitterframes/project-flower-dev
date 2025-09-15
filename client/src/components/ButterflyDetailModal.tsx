@@ -83,12 +83,13 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     }
   }, [isOpen, onNext, onPrevious, currentIndex, totalCount]);
 
-  // Calculate countdown every second (using server data with like reduction)
+  // Calculate countdown every second (using server data with local countdown)
   useEffect(() => {
     if (!butterfly || readOnly) return;
 
     let currentButterflyId = butterfly.id; // Capture current butterfly ID
     let isCancelled = false; // Flag to prevent race conditions
+    let lastServerUpdate = Date.now(); // Track when we last got server data
 
     const fetchSellStatus = async () => {
       if (isCancelled || butterfly.id !== currentButterflyId) return; // Prevent outdated calls
@@ -115,6 +116,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           setCanSell(data.canSell);
           setTimeRemaining(data.timeRemainingMs);
           setFrameLikes(data.likesCount || 0);
+          lastServerUpdate = Date.now(); // Update last server sync time
         } else {
           // Fallback to local calculation
           const placedTime = new Date(butterfly.placedAt).getTime();
@@ -130,6 +132,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
             setCanSell(false);
             setTimeRemaining(remaining);
           }
+          lastServerUpdate = Date.now();
         }
       } catch (error) {
         if (isCancelled || butterfly.id !== currentButterflyId) return;
@@ -149,29 +152,46 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           setCanSell(false);
           setTimeRemaining(remaining);
         }
+        lastServerUpdate = Date.now();
       }
+    };
+
+    // Update local countdown every second
+    const updateLocalCountdown = () => {
+      if (isCancelled || butterfly.id !== currentButterflyId) return;
+      
+      setTimeRemaining(prevTime => {
+        const newTime = Math.max(0, prevTime - 1000); // Subtract 1 second
+        if (newTime <= 0) {
+          setCanSell(true);
+        }
+        return newTime;
+      });
     };
 
     // Fetch immediately
     fetchSellStatus();
 
-    // OPTIMIZED: Update every 30 seconds (reduced from 1 second for better performance)
-    const interval = setInterval(fetchSellStatus, 30000);
+    // Update countdown every second for smooth display
+    const countdownInterval = setInterval(updateLocalCountdown, 1000);
+    
+    // Sync with server every 30 seconds to prevent drift
+    const serverSyncInterval = setInterval(fetchSellStatus, 30000);
 
     return () => {
       isCancelled = true; // Cancel any pending operations
-      clearInterval(interval);
+      clearInterval(countdownInterval);
+      clearInterval(serverSyncInterval);
     };
   }, [butterfly, readOnly]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     if (milliseconds <= 0) return "Verkaufbar!";
 
-    // Round to nearest minute to prevent flickering between values
-    const roundedMs = Math.ceil(milliseconds / (1000 * 60)) * (1000 * 60);
-    const hours = Math.floor(roundedMs / (1000 * 60 * 60));
-    const minutes = Math.floor((roundedMs % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((roundedMs % (1000 * 60)) / 1000);
+    // No rounding for precise countdown display
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
 
     if (hours > 0) {
       return `${hours}h ${minutes}m ${seconds}s`;
