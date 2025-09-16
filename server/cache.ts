@@ -11,8 +11,25 @@ interface CacheEntry<T> {
 
 class SimpleCache {
   private cache = new Map<string, CacheEntry<any>>();
+  private readonly maxSize: number;
+  
+  constructor(maxSize = 1000) {
+    this.maxSize = maxSize;
+  }
   
   set<T>(key: string, data: T, ttlSeconds = 300): void {
+    // 🚀 MEMORY: Enforce cache size limit with LRU eviction
+    if (this.cache.size >= this.maxSize) {
+      // Remove oldest entries (simple LRU)
+      const oldestKeys = Array.from(this.cache.entries())
+        .sort(([,a], [,b]) => a.timestamp - b.timestamp)
+        .slice(0, Math.floor(this.maxSize * 0.1)) // Remove 10% of oldest entries
+        .map(([key]) => key);
+        
+      oldestKeys.forEach(key => this.cache.delete(key));
+      console.log(`🗑️ Cache evicted ${oldestKeys.length} old entries (size: ${this.cache.size}/${this.maxSize})`);
+    }
+    
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -22,14 +39,19 @@ class SimpleCache {
   
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+      this.misses++;
+      return null;
+    }
     
     // Check if expired
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
+      this.misses++;
       return null;
     }
     
+    this.hits++;
     return entry.data;
   }
   
@@ -55,11 +77,21 @@ class SimpleCache {
     }
   }
   
+  // Cache statistics
+  private hits = 0;
+  private misses = 0;
+  
   // Get cache stats
-  getStats(): { size: number; keys: string[] } {
+  getStats(): { size: number; keys: string[]; hitRate: string; hits: number; misses: number } {
+    const total = this.hits + this.misses;
+    const hitRate = total > 0 ? ((this.hits / total) * 100).toFixed(1) + '%' : '0%';
+    
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
+      hitRate,
+      hits: this.hits,
+      misses: this.misses
     };
   }
 }

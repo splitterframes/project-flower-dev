@@ -9,6 +9,8 @@ import { generateToken, requireAuth, requireAuthenticatedUser, optionalAuth, typ
 import { getUserResources, getUserInventory, updateUserResources, warmupDatabase } from "./optimizedRoutes";
 import { cache, CacheKeys, withCache } from "./cache";
 import { getUserCompleteState, getUserGardenState, getExhibitionSellStatusUltraBatch, getStaticGameData } from "./ultraOptimizedRoutes";
+import { hashPassword, verifyPassword, isPasswordHashed } from "./passwordSecurity";
+import { authLimiter } from "./index";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -21,8 +23,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     legacyHeaders: false,
   });
   
-  // Authentication routes
-  app.post("/api/auth/register", async (req, res) => {
+  // Authentication routes - WITH RATE LIMITING
+  app.post("/api/auth/register", authLimiter, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       
@@ -32,7 +34,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      const user = await storage.createUser(userData);
+      // 🔒 SECURITY: Hash password before storing
+      const hashedPassword = await hashPassword(userData.password);
+      const userDataWithHashedPassword = { ...userData, password: hashedPassword };
+      
+      const user = await storage.createUser(userDataWithHashedPassword);
       
       // Generate JWT token
       const token = generateToken({ id: user.id, username: user.username });
@@ -65,12 +71,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", authLimiter, async (req, res) => {
     try {
       const loginData = loginSchema.parse(req.body);
       
       const user = await storage.getUserByUsername(loginData.username);
-      if (!user || user.password !== loginData.password) {
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // 🔒 SECURITY: Use bcrypt to verify password
+      const isPasswordValid = await verifyPassword(loginData.password, user.password);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
 
@@ -142,6 +154,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:userId/inventory", requireAuthenticatedUser, getUserInventory); 
   app.post("/api/user/:userId/resources/update", requireAuthenticatedUser, updateUserResources);
   app.get("/api/db/warmup", warmupDatabase);
+  
+  // 📊 Cache monitoring endpoint
+  app.get("/api/admin/cache-stats", (req, res) => {
+    const stats = cache.getStats();
+    res.json({
+      ...stats,
+      message: `Cache: ${stats.size} entries, ${stats.hitRate} hit rate (${stats.hits} hits, ${stats.misses} misses)`
+    });
+  });
   
   // 🔥 ULTRA-Optimized Routes - Replace multiple calls with single calls
   app.get("/api/user/:userId/complete-state", requireAuthenticatedUser, getUserCompleteState);
@@ -765,6 +786,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sellerId = parseInt(req.headers['x-user-id'] as string) || 1;
       
       const listing = await storage.createMarketListing(sellerId, listingData);
+      
+      // 🚀 CACHE: Invalidate cache after creating listing
+      cache.delete(CacheKeys.USER_BUTTERFLIES(sellerId));
+      cache.delete(`user:${sellerId}:complete-state`);
+      
       res.json({ listing });
     } catch (error) {
       if (error instanceof z.ZodError) {

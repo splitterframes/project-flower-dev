@@ -128,11 +128,10 @@ export class PostgresStorage {
     // Initialize creature systems (Fish and Caterpillars)
     this.initializeCreaturesSystems();
     
-    // Migrate butterfly names from German to Latin (one-time migration)
-    this.migrateButterflyNamesToLatin();
-    
-    // Add database indexes for performance (one-time)
-    this.addPerformanceIndexes();
+    // 🚀 PERFORMANCE: Run migrations in background to reduce cold-start time
+    setImmediate(() => {
+      this.runBackgroundMigrations();
+    });
 }
 
 /**
@@ -333,6 +332,71 @@ private async addPerformanceIndexes(): Promise<void> {
     
   } catch (error) {
     console.error('❌ Failed to add performance indexes:', error);
+  }
+}
+
+/**
+ * Migrate plaintext passwords to bcrypt hashing (one-time security migration)
+ */
+private async migratePasswordSecurity(): Promise<void> {
+  try {
+    console.log('🔒 Checking for plaintext passwords to migrate...');
+    
+    // Import password functions
+    const { hashPassword, isPasswordHashed } = await import('./passwordSecurity');
+    
+    // Get all users
+    const allUsers = await this.db.execute('SELECT id, username, password FROM users');
+    
+    let migratedCount = 0;
+    
+    for (const user of allUsers.rows) {
+      const { id, username, password } = user;
+      
+      // Skip if already hashed
+      if (isPasswordHashed(password)) {
+        continue;
+      }
+      
+      // Hash the plaintext password
+      const hashedPassword = await hashPassword(password);
+      
+      // Update in database
+      await this.db.execute('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, id]);
+      
+      console.log(`  ✅ Migrated password for user: ${username}`);
+      migratedCount++;
+    }
+    
+    if (migratedCount > 0) {
+      console.log(`🎉 Password security migration complete! Migrated ${migratedCount} user passwords to bcrypt.`);
+    } else {
+      console.log('✅ All passwords already secure (bcrypt hashed)');
+    }
+    
+  } catch (error) {
+    console.error('❌ Password security migration failed:', error);
+  }
+}
+
+/**
+ * Run all background migrations asynchronously 
+ */
+private async runBackgroundMigrations(): Promise<void> {
+  console.log('🔄 Running background migrations...');
+  
+  try {
+    // Run migrations in parallel where possible
+    await Promise.all([
+      this.migrateButterflyNamesToLatin(),
+      this.addPerformanceIndexes(),
+      this.migratePasswordSecurity()
+    ]);
+    
+    console.log('✅ All background migrations completed successfully');
+    
+  } catch (error) {
+    console.error('❌ Background migrations failed:', error);
   }
 }
 
@@ -1230,34 +1294,39 @@ private async addPerformanceIndexes(): Promise<void> {
 
   async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
     if (data.itemType === "seed") {
-      // Check if user has enough seeds
-      const userSeedsResult = await this.db
-        .select()
-        .from(userSeeds)
-        .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
-      
-      if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < data.quantity) {
-        throw new Error('Insufficient seeds');
-      }
+      // 🔒 TRANSACTION: Wrap seed market listing in transaction
+      return await this.db.transaction(async (tx) => {
+        // Check if user has enough seeds
+        const userSeedsResult = await tx
+          .select()
+          .from(userSeeds)
+          .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+        
+        if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < data.quantity) {
+          throw new Error('Insufficient seeds');
+        }
 
-      // Create seed listing
-      const listing = await this.db.insert(marketListings).values({
-        sellerId,
-        itemType: "seed",
-        seedId: data.seedId!,
-        caterpillarId: null,
-        quantity: data.quantity,
-        pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit * data.quantity
-      }).returning();
+        // Create seed listing
+        const listing = await tx.insert(marketListings).values({
+          sellerId,
+          itemType: "seed",
+          seedId: data.seedId!,
+          caterpillarId: null,
+          quantity: data.quantity,
+          pricePerUnit: data.pricePerUnit,
+          totalPrice: data.pricePerUnit * data.quantity
+        }).returning();
 
-      // Deduct seeds from seller
-      await this.db
-        .update(userSeeds)
-        .set({ quantity: userSeedsResult[0].quantity - data.quantity })
-        .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+        // Deduct seeds from seller
+        await tx
+          .update(userSeeds)
+          .set({ quantity: userSeedsResult[0].quantity - data.quantity })
+          .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
 
-      return listing[0];
+        console.log(`🌱 Successfully created market listing for ${data.quantity} seeds (${data.pricePerUnit} credits each)`);
+        
+        return listing[0];
+      });
     } else if (data.itemType === "caterpillar") {
       // Check if user has enough caterpillars
       const caterpillarResult = await this.db
@@ -1391,63 +1460,68 @@ private async addPerformanceIndexes(): Promise<void> {
 
       return listing[0];
     } else if (data.itemType === "butterfly") {
-      // Check if user has the butterfly (from inventory, not exhibition)
-      const butterflyResult = await this.db
-        .select()
-        .from(userButterflies)
-        .where(and(eq(userButterflies.userId, sellerId), eq(userButterflies.id, data.butterflyId!)));
-      
-      if (butterflyResult.length === 0) {
-        throw new Error('Butterfly not found or in exhibition');
-      }
+      // 🔒 TRANSACTION: Wrap butterfly market listing in transaction to prevent data loss
+      return await this.db.transaction(async (tx) => {
+        // Check if user has the butterfly (from inventory, not exhibition)
+        const butterflyResult = await tx
+          .select()
+          .from(userButterflies)
+          .where(and(eq(userButterflies.userId, sellerId), eq(userButterflies.id, data.butterflyId!)));
+        
+        if (butterflyResult.length === 0) {
+          throw new Error('Butterfly not found or in exhibition');
+        }
 
-      // Butterflies are unique items (quantity = 1)
-      if (data.quantity !== 1) {
-        throw new Error('Butterflies can only be sold one at a time');
-      }
+        // Butterflies are unique items (quantity = 1)
+        if (data.quantity !== 1) {
+          throw new Error('Butterflies can only be sold one at a time');
+        }
 
-      const butterfly = butterflyResult[0];
+        const butterfly = butterflyResult[0];
 
-      // Create butterfly listing with COPIED data
-      const listing = await this.db.insert(marketListings).values({
-        sellerId,
-        itemType: "butterfly",
-        quantity: 1,
-        pricePerUnit: data.pricePerUnit,
-        totalPrice: data.pricePerUnit,
-        // Copy butterfly data directly into listing
-        butterflyId: data.butterflyId!,
-        butterflyName: butterfly.butterflyName,
-        butterflyRarity: butterfly.butterflyRarity,
-        butterflyImageUrl: butterfly.butterflyImageUrl,
-        butterflyIdOriginal: butterfly.butterflyId, // Game ID
-        // Set other item fields to null
-        seedId: null,
-        seedName: null,
-        seedRarity: null,
-        caterpillarId: null,
-        caterpillarName: null,
-        caterpillarRarity: null,
-        caterpillarImageUrl: null,
-        caterpillarIdOriginal: null,
-        flowerId: null,
-        flowerName: null,
-        flowerRarity: null,
-        flowerImageUrl: null,
-        flowerIdOriginal: null,
-        fishId: null,
-        fishName: null,
-        fishRarity: null,
-        fishImageUrl: null,
-        fishIdOriginal: null,
-      }).returning();
+        // Create butterfly listing with COPIED data
+        const listing = await tx.insert(marketListings).values({
+          sellerId,
+          itemType: "butterfly",
+          quantity: 1,
+          pricePerUnit: data.pricePerUnit,
+          totalPrice: data.pricePerUnit,
+          // Copy butterfly data directly into listing
+          butterflyId: data.butterflyId!,
+          butterflyName: butterfly.butterflyName,
+          butterflyRarity: butterfly.butterflyRarity,
+          butterflyImageUrl: butterfly.butterflyImageUrl,
+          butterflyIdOriginal: butterfly.butterflyId, // Game ID
+          // Set other item fields to null
+          seedId: null,
+          seedName: null,
+          seedRarity: null,
+          caterpillarId: null,
+          caterpillarName: null,
+          caterpillarRarity: null,
+          caterpillarImageUrl: null,
+          caterpillarIdOriginal: null,
+          flowerId: null,
+          flowerName: null,
+          flowerRarity: null,
+          flowerImageUrl: null,
+          flowerIdOriginal: null,
+          fishId: null,
+          fishName: null,
+          fishRarity: null,
+          fishImageUrl: null,
+          fishIdOriginal: null,
+        }).returning();
 
-      // Remove butterfly from seller's inventory
-      await this.db
-        .delete(userButterflies)
-        .where(eq(userButterflies.id, data.butterflyId!));
+        // Remove butterfly from seller's inventory
+        await tx
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, data.butterflyId!));
 
-      return listing[0];
+        console.log(`🦋 Successfully created market listing for butterfly ${butterfly.butterflyName} (${data.pricePerUnit} credits)`);
+        
+        return listing[0];
+      });
     } else if (data.itemType === "fish") {
       // Check if user has the fish
       const fishResult = await this.db

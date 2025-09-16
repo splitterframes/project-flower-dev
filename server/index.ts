@@ -2,11 +2,36 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabaseKeepAlive } from "./dbKeepAlive";
 
 const app = express();
+
+// 🔒 SECURITY: Helmet middleware for security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite dev
+      styleSrc: ["'self'", "'unsafe-inline'"], // Needed for Tailwind
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:"], // WebSocket support
+    },
+  },
+  crossOriginEmbedderPolicy: false // Disable for dev compatibility
+}));
+
+// 🔒 SECURITY: Rate limiting for auth endpoints
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 login attempts per IP per 15 minutes
+  message: { error: "Too many login attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Performance middleware - Enhanced compression
 app.use(compression({
@@ -83,7 +108,7 @@ app.use((req, res, next) => {
 
   // serve the app on port 3000 (or PORT from env)
   // this serves both the API and the client
-  const port = process.env.PORT ? parseInt(process.env.PORT) : 7893;
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 7894;
   server.listen(port, "localhost", () => {
     log(`serving on port ${port}`);
     

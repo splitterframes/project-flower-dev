@@ -48,6 +48,9 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
   const [timeRemaining, setTimeRemaining] = useState<number>(72 * 60 * 60 * 1000); // Default: 72h
   const [canSell, setCanSell] = useState<boolean>(false);
   const [isServerDataLoaded, setIsServerDataLoaded] = useState<boolean>(false);
+  
+  // 🚀 PERFORMANCE: Single global timer instead of per-modal timers
+  const [globalTimerActive, setGlobalTimerActive] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const [frameLikes, setFrameLikes] = useState<number>(0);
   
