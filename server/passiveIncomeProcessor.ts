@@ -38,10 +38,28 @@ class PassiveIncomeProcessor {
 
   private async processAllUsersPassiveIncome() {
     try {
-      console.log('💰 Processing passive income for all users...');
+      // console.log('💰 Processing passive income for all users...'); // Reduced logging
       
-      // Get all users who are online or have exhibition butterflies
-      const allUsers = await storage.getAllUsersWithStatus();
+      // 🎯 OPTIMIZATION: Only process passive income for recently active users  
+      const { cache } = await import('./cache');
+      const cacheKey = 'passive-income:active-users';
+      
+      let allUsers = cache.get(cacheKey);
+      if (!allUsers) {
+        const allUsersList = await storage.getAllUsersWithStatus();
+        
+        // Filter to only users active in last 30 minutes
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        allUsers = allUsersList.filter((user: any) => {
+          const lastActive = new Date(user.lastActive || user.createdAt);
+          return lastActive > thirtyMinutesAgo;
+        });
+        
+        cache.set(cacheKey, allUsers, 300); // 5 minute cache
+        if (allUsersList.length - allUsers.length > 0) {
+          console.log(`💰 Processing ${allUsers.length} active users (${allUsersList.length - allUsers.length} offline users skipped)`);
+        }
+      }
       let totalCreditsAwarded = 0;
       let usersProcessed = 0;
 

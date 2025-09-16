@@ -1,8 +1,5 @@
-import OpenAI from "openai";
 import { getRarityTierIndex, type RarityTier } from "@shared/rarity";
-
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { generateBouquetName as generateEnglishBouquetName } from './bouquetNameGenerator';
 
 interface ButterflyData {
   id: number;
@@ -35,70 +32,16 @@ async function getExistingBouquetNames(): Promise<string[]> {
 
 export async function generateBouquetName(rarity: RarityTier): Promise<string> {
   try {
-    const rarityDescriptions = {
-      common: "einfach und bescheiden",
-      uncommon: "charmant und ansprechend", 
-      rare: "elegant und außergewöhnlich",
-      "super-rare": "prächtig und beeindruckend",
-      epic: "majestätisch und kraftvoll",
-      legendary: "mythisch und ehrfurchtgebietend",
-      mythical: "göttlich und transzendent"
-    };
-
-    // Get existing names to tell the AI to avoid them
+    // Get existing names to avoid duplicates
     const existingNames = await getExistingBouquetNames();
-    const existingNamesText = existingNames.length > 0 
-      ? `\n\nVERMEIDE diese bereits existierenden Namen: ${existingNames.slice(-10).join(', ')}`
-      : '';
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [
-        {
-          role: "system",
-          content: `Du bist ein Experte für Blumenbouquets und erstellst einzigartige, poetische Namen. 
-          Erstelle kreative deutsche Bouquet-Namen, die ${rarityDescriptions[rarity]} klingen.
-          
-          Verwende Muster wie:
-          - [Adjektiv] + [Blumen-/Natur-Substantiv] (z.B. "Strahlende Morgenröte", "Sanfte Brise")
-          - [Poetisches Wort] + der/des + [Natur-Element] (z.B. "Symphonie der Blüten", "Hauch des Frühlings")
-          - [Emotional] + [Naturphänomen] (z.B. "Verzauberte Dämmerung", "Träumende Wiese")
-          - [Zeitbezug] + [Natur] (z.B. "Mitternachtstraum", "Morgentau", "Abendsonne")
-          - [Gefühl] + [Element] (z.B. "Stille Schönheit", "Wilde Anmut", "Zarte Kraft")
-          
-          Sei SEHR kreativ und verwende ungewöhnliche Wort-Kombinationen!
-          Antworte nur mit dem Namen, keine Erklärung. Maximal 3-4 Wörter.${existingNamesText}`
-        },
-        {
-          role: "user", 
-          content: `Erstelle einen völlig EINZIGARTIGEN ${rarityDescriptions[rarity]} Bouquet-Namen der Seltenheitsstufe ${rarity}. Verwende seltene, poetische Wörter und ungewöhnliche Kombinationen!`
-        }
-      ],
-      max_tokens: 30,
-      temperature: 1.1
-    });
-
-    const generatedName = response.choices[0].message.content?.trim() || "Unbenanntes Bouquet";
     
-    // Clean up the name (remove quotes, ensure proper formatting)
-    return generatedName.replace(/"/g, '').replace(/\.$/, '');
-    
+    // Use the new English bouquet name generator
+    return generateEnglishBouquetName(rarity, existingNames);
   } catch (error) {
     console.error('Failed to generate bouquet name:', error);
     
-    // Fallback names based on rarity
-    const fallbackNames = {
-      common: ["Schlichte Schönheit", "Einfache Freude", "Bescheidene Blüte"],
-      uncommon: ["Sanfte Harmonie", "Liebliche Melodie", "Charmante Komposition"],
-      rare: ["Elegante Symphonie", "Seltene Pracht", "Edle Komposition"],
-      "super-rare": ["Prächtige Verzauberung", "Glanzvolle Erscheinung", "Strahlende Vollendung"],
-      epic: ["Majestätische Offenbarung", "Kraftvolle Schönheit", "Epische Blütenpracht"],
-      legendary: ["Legendäre Verzauberung", "Mythische Schönheit", "Ewige Vollendung"],
-      mythical: ["Göttliche Perfektion", "Transzendente Pracht", "Mystische Offenbarung"]
-    };
-    
-    const options = fallbackNames[rarity];
-    return options[Math.floor(Math.random() * options.length)];
+    // Ultimate fallback
+    return generateEnglishBouquetName(rarity, []);
   }
 }
 
@@ -298,9 +241,9 @@ export async function generateRandomButterfly(rarity: RarityTier): Promise<Butte
   const availableIds = matchingIds.length > 0 ? matchingIds : AVAILABLE_BUTTERFLY_IDS.filter(id => id > 0);
   const butterflyId = availableIds[Math.floor(Math.random() * availableIds.length)];
   
-  // Generate consistent German name using butterflyId as seed
-  const { generateGermanButterflyName } = await import('../shared/rarity');
-  const name = generateGermanButterflyName(butterflyId);
+  // Generate consistent Latin name using butterflyId as seed
+const { generateLatinButterflyName } = await import('../shared/rarity');
+const name = generateLatinButterflyName(butterflyId);
 
   return {
     id: butterflyId,

@@ -2,9 +2,9 @@ import Stripe from 'stripe';
 import { Request, Response } from 'express';
 
 // Stripe Setup mit API Keys aus Environment
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-08-27.basil',
-});
+}) : null;
 
 /**
  * 💳 Stripe Checkout Session erstellen
@@ -12,6 +12,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  */
 export async function createDonationCheckoutSession(req: Request, res: Response) {
   try {
+    if (!stripe) {
+      return res.status(503).json({
+        error: 'Stripe nicht konfiguriert. Spenden derzeit nicht verfügbar.'
+      });
+    }
+
     const { amount, donorName, recipientName } = req.body;
 
     // Validation
@@ -70,6 +76,12 @@ export async function createDonationCheckoutSession(req: Request, res: Response)
  */
 export async function getDonationStatus(req: Request, res: Response) {
   try {
+    if (!stripe) {
+      return res.status(503).json({
+        error: 'Stripe nicht konfiguriert.'
+      });
+    }
+
     const { sessionId } = req.params;
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -103,6 +115,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
   }
 
   try {
+    if (!stripe) {
+      return res.status(503).send('Stripe nicht konfiguriert');
+    }
+
     const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
 
     switch (event.type) {

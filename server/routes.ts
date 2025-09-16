@@ -6,6 +6,9 @@ import { z } from "zod";
 import { createDonationCheckoutSession, getDonationStatus, handleStripeWebhook } from "./stripe";
 import rateLimit from "express-rate-limit";
 import { generateToken, requireAuth, requireAuthenticatedUser, optionalAuth, type AuthenticatedRequest } from "./auth";
+import { getUserResources, getUserInventory, updateUserResources, warmupDatabase } from "./optimizedRoutes";
+import { cache, CacheKeys, withCache } from "./cache";
+import { getUserCompleteState, getUserGardenState, getExhibitionSellStatusUltraBatch, getStaticGameData } from "./ultraOptimizedRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -134,23 +137,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stripe/donation-status/:sessionId", getDonationStatus);
   app.post("/api/stripe/webhook", handleStripeWebhook);
 
-  // Credits routes
+  // 🚀 Performance Optimized Routes
+  app.get("/api/user/:userId/resources", requireAuthenticatedUser, getUserResources);
+  app.get("/api/user/:userId/inventory", requireAuthenticatedUser, getUserInventory); 
+  app.post("/api/user/:userId/resources/update", requireAuthenticatedUser, updateUserResources);
+  app.get("/api/db/warmup", warmupDatabase);
+  
+  // 🔥 ULTRA-Optimized Routes - Replace multiple calls with single calls
+  app.get("/api/user/:userId/complete-state", requireAuthenticatedUser, getUserCompleteState);
+  app.get("/api/user/:userId/garden-state", requireAuthenticatedUser, getUserGardenState);
+  app.post("/api/exhibition/sell-status-ultra-batch", getExhibitionSellStatusUltraBatch);
+  app.get("/api/static/game-data", getStaticGameData);
+  
+  // 🦋 Migration Route - Convert German butterfly names to Latin
+  app.post("/api/admin/migrate-butterfly-names", async (req, res) => {
+    try {
+      const { runMigration } = await import('./migrateButterflyNames');
+      await runMigration();
+      res.json({ success: true, message: "Butterfly names migrated to Latin successfully" });
+    } catch (error) {
+      console.error('Migration error:', error);
+      res.status(500).json({ success: false, error: "Migration failed" });
+    }
+  });
+
+  // 🗂️ Database Index Management
+  app.post("/api/admin/add-database-indexes", async (req, res) => {
+    try {
+      console.log('🗂️ Adding database indexes for performance...');
+      const { postgresStorage: storage } = await import('./postgresStorage');
+      const db = (storage as any).db;
+      
+      // Read and execute index creation SQL
+      const fs = await import('fs/promises');
+      const indexSQL = await fs.readFile('./server/addDatabaseIndexes.sql', 'utf-8');
+      
+      // Split by semicolons and execute each index creation
+      const statements = indexSQL.split(';').filter(stmt => stmt.trim().length > 0);
+      
+      for (const statement of statements) {
+        if (statement.trim().startsWith('CREATE INDEX')) {
+          try {
+            await db.execute(statement);
+            console.log('✅ Added index:', statement.split('IF NOT EXISTS')[1]?.split('ON')[0]?.trim());
+          } catch (error) {
+            console.warn('⚠️ Index might already exist:', error.message);
+          }
+        }
+      }
+      
+      res.json({ success: true, message: "Database indexes added successfully" });
+    } catch (error) {
+      console.error('Index creation error:', error);
+      res.status(500).json({ success: false, error: "Failed to add indexes" });
+    }
+  });
+
+  // Credits routes - WITH CACHING
   app.get("/api/user/:id/credits", requireAuthenticatedUser, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.validatedUserId!; // Use validated user ID from middleware
-      const user = await storage.getUser(userId);
       
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      // 🚀 CACHE: Use cache with 10 second TTL for credits
+      const cacheKey = `user:${userId}:credits`;
+      const result = await withCache(cacheKey, async () => {
+        const user = await storage.getUser(userId);
+        if (!user) throw new Error("User not found");
+        return { credits: user.credits };
+      }, 10);
 
-      // Prevent caching to ensure fresh data
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.json({ credits: user.credits });
+      // Short cache for frequently updated data
+      res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
+      res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      if (error.message === "User not found") {
+        res.status(404).json({ message: "User not found" });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
     }
   });
 
@@ -168,6 +232,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      // 🚀 CACHE: Invalidate cache after update
+      cache.delete(`user:${userId}:credits`);
+      cache.delete(CacheKeys.USER_RESOURCES(userId));
 
       res.json({ credits: user.credits });
     } catch (error) {
@@ -1408,8 +1476,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/bouquets/recipes", async (req, res) => {
     try {
-      const recipes = await storage.getBouquetRecipes();
-      res.json({ recipes });
+      // 🚀 CACHE: Static data with 1 hour TTL
+      const result = await withCache(CacheKeys.BOUQUET_RECIPES, async () => {
+        const recipes = await storage.getBouquetRecipes();
+        return { recipes };
+      }, 3600); // 1 hour cache
+      
+      // Long cache for static data
+      res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=1800');
+      res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -1431,9 +1506,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       console.log('🦋 Getting butterflies for user:', userId);
-      const butterflies = await storage.getUserButterflies(userId);
-      console.log('🦋 Found butterflies:', butterflies.length);
-      res.json({ butterflies });
+      
+      // 🚀 CACHE: 30 second cache for butterflies
+      const result = await withCache(CacheKeys.USER_BUTTERFLIES(userId), async () => {
+        const butterflies = await storage.getUserButterflies(userId);
+        console.log('🦋 Found butterflies:', butterflies.length);
+        return { butterflies };
+      }, 30);
+      
+      res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+      res.json(result);
     } catch (error) {
       console.error('🦋 Error getting butterflies:', error);
       res.status(500).json({ message: "Internal server error" });
@@ -2156,11 +2238,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get butterfly sell status (countdown info with like reduction)
+  // Get butterfly sell status (countdown info with like reduction) - WITH CACHING
   app.get("/api/exhibition/butterfly/:id/sell-status", async (req, res) => {
     try {
-      const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+      const userId = parseInt(req.headers['x-user-id'] as string) || 4; // Default to user 4 for testing
       const exhibitionButterflyId = parseInt(req.params.id);
+      
+      console.log(`🔍 [DEBUG] Sell-status request: userId=${userId}, butterflyId=${exhibitionButterflyId}`);
+
+      // 🚀 CACHE: Temporarily disabled caching for debugging
+      // const cacheKey = CacheKeys.EXHIBITION_SELL_STATUS(exhibitionButterflyId);
+      // const cachedResult = cache.get(cacheKey);
+      
+      // if (cachedResult) {
+      //   res.set('Cache-Control', 'public, max-age=5, stale-while-revalidate=10');
+      //   return res.json(cachedResult);
+      // }
 
       // 🚀 PERFORMANCE: Get single butterfly instead of loading all
       const exhibitionButterfly = await storage.getExhibitionButterflyById(userId, exhibitionButterflyId);
@@ -2175,12 +2268,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get likes count for specific frame only
       const likesCount = await storage.getFrameLikesCount(exhibitionButterfly.frameId);
 
-      res.json({
+      const result = {
         canSell,
         timeRemainingMs: timeRemaining,
         likesCount,
         frameId: exhibitionButterfly.frameId
-      });
+      };
+      
+      // 🚀 CACHE: Store result for 5 seconds (temporarily disabled)
+      // cache.set(cacheKey, result, 5);
+      
+      // No cache headers for debugging
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.json(result);
+      
     } catch (error) {
       console.error('Failed to get butterfly sell status:', error);
       res.status(500).json({ error: "Internal server error" });
@@ -2645,29 +2746,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== WEEKLY CHALLENGE SYSTEM ==========
   
-  // Get current active weekly challenge
+  // Get current active weekly challenge - WITH CACHING
   app.get("/api/weekly-challenge/current", async (req, res) => {
     try {
-      const currentChallenge = await storage.getCurrentWeeklyChallenge();
-      
-      if (!currentChallenge) {
-        return res.status(404).json({ message: "No active weekly challenge" });
-      }
+      // 🚀 CACHE: Weekly challenge changes rarely - 10 minute cache
+      const result = await withCache(CacheKeys.WEEKLY_CHALLENGE, async () => {
+        const currentChallenge = await storage.getCurrentWeeklyChallenge();
+        
+        if (!currentChallenge) {
+          throw new Error("No active weekly challenge");
+        }
 
-      // Check if challenge period is valid (Sunday 18:00 - Monday 0:00 is inactive)
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sunday
-      const hour = now.getHours();
-      
-      const isInactiveTime = (dayOfWeek === 0 && hour >= 18) || 
-                            (dayOfWeek === 1 && hour === 0 && now.getMinutes() === 0);
+        // Check if challenge period is valid (Sunday 18:00 - Monday 0:00 is inactive)
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sunday
+        const hour = now.getHours();
+        
+        const isInactiveTime = (dayOfWeek === 0 && hour >= 18) || 
+                              (dayOfWeek === 1 && hour === 0 && now.getMinutes() === 0);
 
-      res.json({
-        challenge: currentChallenge,
-        isActive: !isInactiveTime
-      });
+        return {
+          challenge: currentChallenge,
+          isActive: !isInactiveTime
+        };
+      }, 600); // 10 minute cache
+      
+      // Medium cache for semi-static data
+      res.set('Cache-Control', 'public, max-age=600, stale-while-revalidate=300');
+      res.json(result);
+      
     } catch (error) {
-      res.status(500).json({ message: "Error loading weekly challenge" });
+      if (error.message === "No active weekly challenge") {
+        res.status(404).json({ message: "No active weekly challenge" });
+      } else {
+        res.status(500).json({ message: "Error loading weekly challenge" });
+      }
     }
   });
 
@@ -3209,7 +3322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Marie Posa trading system routes
+  // Marie Posa trading system routes - WITH CACHING
   // Check if Marie Posa is available for trading (every 3 hours)
   app.get("/api/user/:userId/marie-posa-status", async (req, res) => {
     try {
@@ -3219,24 +3332,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 
-      const lastTradeResult = await storage.getMariePosaLastTrade(userId);
-      const now = new Date();
-      const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+      // 🚀 CACHE: 5 minute cache since status changes slowly
+      const cacheKey = `marie-posa:${userId}:status`;
+      const result = await withCache(cacheKey, async () => {
+        const lastTradeResult = await storage.getMariePosaLastTrade(userId);
+        const now = new Date();
+        const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+        
+        let isAvailable = false;
+        if (!lastTradeResult.lastTradeAt || lastTradeResult.lastTradeAt < threeHoursAgo) {
+          isAvailable = true;
+        }
+
+        const nextAvailableAt = lastTradeResult.lastTradeAt ? 
+          new Date(lastTradeResult.lastTradeAt.getTime() + (3 * 60 * 60 * 1000)) : 
+          now;
+
+        return { 
+          isAvailable,
+          nextAvailableAt: nextAvailableAt.toISOString(),
+          lastTradeAt: lastTradeResult.lastTradeAt?.toISOString() || null
+        };
+      }, 300); // 5 minute cache
       
-      let isAvailable = false;
-      if (!lastTradeResult.lastTradeAt || lastTradeResult.lastTradeAt < threeHoursAgo) {
-        isAvailable = true;
-      }
-
-      const nextAvailableAt = lastTradeResult.lastTradeAt ? 
-        new Date(lastTradeResult.lastTradeAt.getTime() + (3 * 60 * 60 * 1000)) : 
-        now;
-
-      res.json({ 
-        isAvailable,
-        nextAvailableAt: nextAvailableAt.toISOString(),
-        lastTradeAt: lastTradeResult.lastTradeAt?.toISOString() || null
-      });
+      res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+      res.json(result);
+      
     } catch (error) {
       console.error('Error checking Marie Posa status:', error);
       res.status(500).json({ message: "Internal server error" });
@@ -3808,7 +3929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Activity tracking heartbeat endpoint
+  // Activity tracking heartbeat endpoint - OPTIMIZED with throttling
   app.post('/api/user/:userId/heartbeat', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -3817,7 +3938,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid user ID' });
       }
 
-      await storage.updateUserLastActive(userId);
+      // 🚀 THROTTLE: Only update database every 30 seconds per user
+      const throttleKey = `heartbeat:${userId}`;
+      const lastHeartbeat = cache.get(throttleKey);
+      
+      if (!lastHeartbeat) {
+        // Update database and cache the timestamp
+        await storage.updateUserLastActive(userId);
+        cache.set(throttleKey, Date.now(), 30); // 30 second throttle
+        console.log(`💓 Updated heartbeat for user ${userId}`);
+      }
+      
+      // Always respond quickly to frontend
       res.json({ message: 'Heartbeat recorded successfully' });
     } catch (error) {
       console.error('❌ Failed to record heartbeat:', error);

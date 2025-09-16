@@ -86,7 +86,7 @@ import {
 import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
+import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateLatinButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
 
@@ -96,14 +96,28 @@ import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpilla
  */
 export class PostgresStorage {
   private db: any;
+  private static instance: PostgresStorage;
 
   constructor() {
+    // Prevent multiple instances
+    if (PostgresStorage.instance) {
+      return PostgresStorage.instance;
+    }
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is required for PostgreSQL storage');
     }
-    const sql = neon(process.env.DATABASE_URL);
+    // 🚀 PERFORMANCE: Configure Neon for better performance
+    const sql = neon(process.env.DATABASE_URL, {
+      timeout: 30000,      // 30s timeout
+      keepAlive: true,     // Keep HTTP connections alive
+      poolSize: 10,        // Larger connection pool
+      pipelineConnect: false // Better for single queries
+    });
     this.db = drizzle(sql);
     console.log('🗄️ PostgreSQL-only storage initialized');
+    
+    // Store singleton instance
+    PostgresStorage.instance = this;
     
     // Initialize basic seeds if they don't exist
     this.initializeSeeds();
@@ -114,8 +128,213 @@ export class PostgresStorage {
     // Initialize creature systems (Fish and Caterpillars)
     this.initializeCreaturesSystems();
     
-    // Start butterfly lifecycle service
+    // Migrate butterfly names from German to Latin (one-time migration)
+    this.migrateButterflyNamesToLatin();
+    
+    // Add database indexes for performance (one-time)
+    this.addPerformanceIndexes();
+}
+
+/**
+ * Atomic user update - combines multiple resource changes in single query
+ */
+async atomicUpdateUser(userId: number, updates: any) {
+  const updateFields: any = {};
+  
+  // Build dynamic update object
+  if (updates.credits !== undefined) {
+    updateFields.credits = typeof updates.credits === 'string' && updates.credits.startsWith('+') 
+      ? sql`${users.credits} + ${parseInt(updates.credits.slice(1))}`
+      : updates.credits;
   }
+  if (updates.suns !== undefined) {
+    updateFields.suns = typeof updates.suns === 'string' && updates.suns.startsWith('+')
+      ? sql`${users.suns} + ${parseInt(updates.suns.slice(1))}`
+      : updates.suns;
+  }
+  if (updates.hearts !== undefined) {
+    updateFields.hearts = typeof updates.hearts === 'string' && updates.hearts.startsWith('+')
+      ? sql`${users.hearts} + ${parseInt(updates.hearts.slice(1))}`
+      : updates.hearts;
+  }
+  if (updates.dna !== undefined) {
+    updateFields.dna = typeof updates.dna === 'string' && updates.dna.startsWith('+')
+      ? sql`${users.dna} + ${parseInt(updates.dna.slice(1))}`
+      : updates.dna;
+  }
+  if (updates.tickets !== undefined) {
+    updateFields.tickets = typeof updates.tickets === 'string' && updates.tickets.startsWith('+')
+      ? sql`${users.tickets} + ${parseInt(updates.tickets.slice(1))}`
+      : updates.tickets;
+  }
+  
+  // Single atomic update with returning clause
+  const result = await this.db.update(users)
+    .set(updateFields)
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      credits: users.credits,
+      suns: users.suns,
+      hearts: users.hearts,
+      dna: users.dna,
+      tickets: users.tickets
+    });
+    
+  return result[0];
+}
+
+/**
+ * One-time migration: Convert German butterfly names to Latin names
+ */
+private async migrateButterflyNamesToLatin(): Promise<void> {
+  try {
+    console.log('🔄 Checking for German butterfly names to migrate...');
+    
+    // Check if migration is needed by looking for German butterfly names
+    const germanCheck = await this.db.execute(`
+      SELECT COUNT(*) as count FROM user_butterflies 
+      WHERE butterfly_name LIKE '%Falter%' OR butterfly_name LIKE '%Weißling%' 
+      OR butterfly_name LIKE '%Silberner%' OR butterfly_name LIKE '%Großer%'
+    `);
+    
+    const germanCount = germanCheck.rows[0]?.count || 0;
+    if (germanCount === 0) {
+      console.log('✅ No German butterfly names found - migration not needed');
+      return;
+    }
+    
+    console.log(`🦋 Found ${germanCount} German butterfly names - starting migration...`);
+    
+    // Update user_butterflies with Latin names using Drizzle ORM
+    const germanUserButterflies = await this.db.select({
+      id: userButterflies.id,
+      butterflyId: userButterflies.butterflyId,
+      butterflyName: userButterflies.butterflyName
+    }).from(userButterflies);
+    
+    for (const butterfly of germanUserButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(userButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(userButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ User butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+      }
+    }
+    
+    // Update field_butterflies with Latin names using Drizzle ORM
+    const germanFieldButterflies = await this.db.select({
+      id: fieldButterflies.id,
+      butterflyId: fieldButterflies.butterflyId,
+      butterflyName: fieldButterflies.butterflyName
+    }).from(fieldButterflies);
+    
+    let fieldUpdateCount = 0;
+    for (const butterfly of germanFieldButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(fieldButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(fieldButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ Field butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+        fieldUpdateCount++;
+      }
+    }
+    
+    // Update exhibition_butterflies with Latin names using Drizzle ORM
+    const germanExhibitionButterflies = await this.db.select({
+      id: exhibitionButterflies.id,
+      butterflyId: exhibitionButterflies.butterflyId,
+      butterflyName: exhibitionButterflies.butterflyName
+    }).from(exhibitionButterflies);
+    
+    let exhibitionUpdateCount = 0;
+    for (const butterfly of germanExhibitionButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(exhibitionButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(exhibitionButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ Exhibition butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+        exhibitionUpdateCount++;
+      }
+    }
+    
+    const totalUpdated = germanUserButterflies.length + fieldUpdateCount + exhibitionUpdateCount;
+    console.log(`🎉 Migration complete! Updated ${totalUpdated} butterfly names to Latin.`);
+    
+  } catch (error) {
+    console.error('❌ Butterfly name migration failed:', error);
+  }
+}
+
+/**
+ * Add database indexes for better query performance
+ */
+private async addPerformanceIndexes(): Promise<void> {
+  try {
+    console.log('🗂️ Adding performance indexes...');
+    
+    const indexes = [
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_butterflies_user_id ON user_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_butterflies_user_id ON exhibition_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_field_butterflies_user_id ON field_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_flowers_user_id ON user_flowers(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_planted_fields_user_id ON planted_fields(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sun_spawns_user_id ON sun_spawns(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_status ON market_listings(status)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_likes_frame_id ON exhibition_likes(frame_id)'
+    ];
+    
+    let addedCount = 0;
+    for (const indexSQL of indexes) {
+      try {
+        await this.db.execute(indexSQL);
+        addedCount++;
+        
+        const indexName = indexSQL.split('idx_')[1]?.split(' ON')[0];
+        console.log(`  ✅ Added index: ${indexName}`);
+      } catch (error) {
+        // Index might already exist - that's okay
+        if (error.message.includes('already exists')) {
+          console.log('  ⚪ Index already exists');
+        } else {
+          console.warn('  ⚠️ Index creation failed:', error.message);
+        }
+      }
+    }
+    
+    console.log(`🎉 Performance indexes complete! Added ${addedCount} new indexes.`);
+    
+  } catch (error) {
+    console.error('❌ Failed to add performance indexes:', error);
+  }
+}
 
   /**
    * Update collection statistics when a user obtains an item
@@ -6982,7 +7201,7 @@ export class PostgresStorage {
   // Helper method to add butterfly to user with UPSERT logic
   private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
     // Generate consistent butterfly name using fixed ID as seed
-    const butterflyName = generateGermanButterflyName(butterflyId);
+    const butterflyName = generateLatinButterflyName(butterflyId);
     
     try {
       // Try to insert first (most common case)

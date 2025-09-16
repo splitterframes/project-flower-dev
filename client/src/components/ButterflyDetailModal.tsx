@@ -120,6 +120,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
         
         if (response.ok) {
           const data = await response.json();
+          console.log(`🔍 [DEBUG] Sell-status response for butterfly ${butterfly.id}:`, data);
           setCanSell(data.canSell);
           setTimeRemaining(data.timeRemainingMs);
           setFrameLikes(data.likesCount || 0);
@@ -128,7 +129,7 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
           lastServerUpdate = Date.now(); // Update last server sync time
         } else {
           // 🚨 FIX: Server error - default to safe conservative state, no "verkaufbar" fallback
-          console.warn('Sell status endpoint returned non-OK status:', response.status);
+          console.error('Sell status endpoint returned non-OK status:', response.status, await response.text());
           setCanSell(false); // Always safe default
           setTimeRemaining(72 * 60 * 60 * 1000); // Default to 72h remaining
           setFrameLikes(0);

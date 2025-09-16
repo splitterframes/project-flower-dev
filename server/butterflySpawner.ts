@@ -58,8 +58,24 @@ export class ButterflySpawner {
       let totalSpawns = 0;
       let totalChecked = 0;
       
-      // Get all users with active bouquets  
-      const allUsers = await storage.getAllUsersWithStatus();
+      // 🚀 CACHE: Cache user list for 1 minute to reduce DB load
+      const { cache } = await import('./cache');
+      const cacheKey = 'spawner:all-users';
+      
+      let allUsers = cache.get(cacheKey);
+      if (!allUsers) {
+        allUsers = await storage.getAllUsersWithStatus();
+        
+        // 🎯 OPTIMIZATION: Only process users who were active in last 10 minutes
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+        allUsers = allUsers.filter((user: any) => {
+          const lastActive = new Date(user.lastActive || user.createdAt);
+          return lastActive > tenMinutesAgo;
+        });
+        
+        cache.set(cacheKey, allUsers, 60); // 60 second cache
+        console.log(`🔄 Cached ${allUsers.length} active users for spawning (filtered from offline users)`);
+      }
       
       for (const user of allUsers) {
         try {

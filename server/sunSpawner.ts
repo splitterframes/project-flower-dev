@@ -45,10 +45,26 @@ class SunSpawner {
 
   private async attemptSunSpawn() {
     try {
-      console.log('☀️ Attempting to spawn sun...');
+      // console.log('☀️ Attempting to spawn sun...'); // Reduced logging
 
-      // Get all users with unlocked fields
-      const allUsers = await storage.getAllUsersWithStatus();
+      // 🎯 OPTIMIZATION: Only spawn suns for recently active users
+      const { cache } = await import('./cache');
+      const cacheKey = 'sun-spawner:active-users';
+      
+      let allUsers = cache.get(cacheKey);
+      if (!allUsers) {
+        const allUsersList = await storage.getAllUsersWithStatus();
+        
+        // Filter to only users active in last 15 minutes
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        allUsers = allUsersList.filter((user: any) => {
+          const lastActive = new Date(user.lastActive || user.createdAt);
+          return lastActive > fifteenMinutesAgo;
+        });
+        
+        cache.set(cacheKey, allUsers, 120); // 2 minute cache for sun spawner
+        console.log(`☀️ Processing ${allUsers.length} active users for sun spawning (${allUsersList.length - allUsers.length} offline users skipped)`);
+      }
       
       if (allUsers.length === 0) {
         console.log('☀️ No users found, skipping sun spawn');
@@ -60,12 +76,13 @@ class SunSpawner {
       // Try to spawn a sun for each user on inactive fields
       for (const user of allUsers) {
         try {
-          console.log(`☀️ Processing user ${user.username} (ID: ${user.id})`);
+          // Reduced logging for background processing
+          // console.log(`☀️ Processing user ${user.username} (ID: ${user.id})`);
           
           // Get user's unlocked fields
           const unlockedFields = await storage.getUnlockedFields(user.id);
           const unlockedFieldIndices = unlockedFields.map(field => field.fieldIndex);
-          console.log(`☀️ User ${user.username} unlocked fields:`, unlockedFieldIndices);
+          // console.log(`☀️ User ${user.username} unlocked fields:`, unlockedFieldIndices);
           
           // Calculate which fields are "unlock fields" (adjacent to unlocked fields)
           const unlockFieldIndices: number[] = [];
