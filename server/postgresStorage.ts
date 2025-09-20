@@ -350,8 +350,8 @@ private async addPerformanceIndexes(): Promise<void> {
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_flowers_user_id ON user_flowers(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_planted_fields_user_id ON planted_fields(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sun_spawns_user_id ON sun_spawns(user_id)',
-      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_status ON market_listings(status)',
-      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_likes_frame_id ON exhibition_likes(frame_id)'
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_is_active ON market_listings(is_active)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_frame_likes_frame_id ON exhibition_frame_likes(frame_id)'
     ];
     
     let addedCount = 0;
