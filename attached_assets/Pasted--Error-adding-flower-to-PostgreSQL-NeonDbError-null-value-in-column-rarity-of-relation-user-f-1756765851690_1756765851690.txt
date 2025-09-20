@@ -1,0 +1,117 @@
+💾 Error adding flower to PostgreSQL: NeonDbError: null value in column "rarity" of relation "user_flowers" violates not-null constraint
+2025-09-02 00:30:39.22
+f7152f35
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-09-02 00:30:39.22
+f7152f35
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-09-02 00:30:39.22
+f7152f35
+User
+code: '23502',
+2025-09-02 00:30:39.22
+f7152f35
+User
+detail: 'Failing row contains (21, 2, 49, null, 1, 2025-09-01 22:30:39.177, Elegans regalis, common, /Blumen/49.jpg).',
+2025-09-02 00:30:39.22
+f7152f35
+User
+hint: undefined,
+2025-09-02 00:30:39.22
+f7152f35
+User
+internalPosition: undefined,
+2025-09-02 00:30:39.22
+f7152f35
+User
+internalQuery: undefined,
+2025-09-02 00:30:39.22
+f7152f35
+User
+where: undefined,
+2025-09-02 00:30:39.22
+f7152f35
+User
+table: 'user_flowers',
+2025-09-02 00:30:39.22
+f7152f35
+User
+constraint: undefined,
+2025-09-02 00:30:39.22
+f7152f35
+User
+line: '2021',
+2025-09-02 00:30:39.22
+f7152f35
+User
+routine: 'ExecConstraints',
+2025-09-02 00:30:39.22
+f7152f35
+User
+}
+2025-09-02 00:30:40.11
+f7152f35
+User
+💾 Error adding flower to PostgreSQL: NeonDbError: null value in column "rarity" of relation "user_flowers" violates not-null constraint
+2025-09-02 00:30:40.11
+f7152f35
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-09-02 00:30:40.11
+f7152f35
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-09-02 00:30:40.11
+f7152f35
+User
+at async MemStorage.addFlowerToInventory (file:///home/runner/workspace/dist/index.js:1456:15)
+2025-09-02 00:30:40.11
+f7152f35
+User
+hint: undefined,
+2025-09-02 00:30:40.11
+f7152f35
+User
+position: undefined,
+2025-09-02 00:30:40.11
+f7152f35
+User
+internalPosition: undefined,
+2025-09-02 00:30:40.11
+f7152f35
+User
+internalQuery: undefined,
+2025-09-02 00:30:40.11
+f7152f35
+User
+schema: 'public',
+2025-09-02 00:30:40.11
+f7152f35
+User
+table: 'user_flowers',
+2025-09-02 00:30:40.11
+f7152f35
+User
+column: 'rarity',
+2025-09-02 00:30:40.11
+f7152f35
+User
+constraint: undefined,
+2025-09-02 00:30:40.11
+f7152f35
+User
+file: 'execMain.c',
+2025-09-02 00:30:40.11
+f7152f35
+User
+line: '2021',
+2025-09-02 00:30:40.11
+f7152f35
+User
+routine: 'ExecConstraints',
+2025-09-02 00:30:40.11
+f7152f35
+User
+sourceError: undefined

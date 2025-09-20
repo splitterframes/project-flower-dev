@@ -1,0 +1,7667 @@
+import { 
+  users, 
+  seeds, 
+  userSeeds, 
+  marketListings,
+  plantedFields,
+  userFlowers,
+  bouquets,
+  userBouquets,
+  bouquetRecipes,
+  placedBouquets,
+  userButterflies,
+  userFish,
+  userCaterpillars,
+  fieldButterflies,
+  fieldFlowers,
+  fieldCaterpillars,
+  fedCaterpillars as fedCaterpillarsTable,
+  userVipButterflies,
+  exhibitionFrames,
+  exhibitionButterflies,
+  exhibitionVipButterflies,
+  passiveIncomeLog,
+  exhibitionFrameLikes,
+  weeklyChallenges,
+  weeklyChallengeProgress,
+  challengeDonations,
+  challengeRewards,
+  unlockedFields,
+  sunSpawns,
+  pondFeedingProgressTable,
+  fieldFish,
+  aquariumTanks,
+  aquariumFish,
+  mariePosaTracker,
+  dailyItems,
+  dailyRedemptions,
+  castleUnlockedParts,
+  castleGridState,
+  userUnlockedFeatures,
+  collectionStats,
+  userNotifications,
+  type User, 
+  type Seed, 
+  type UserSeed, 
+  type MarketListing,
+  type PlantedField,
+  type CreateMarketListingRequest,
+  type BuyListingRequest,
+  type PlantSeedRequest,
+  type HarvestFieldRequest,
+  type UserFlower,
+  type Bouquet,
+  type UserBouquet,
+  type BouquetRecipe,
+  type PlacedBouquet,
+  type UserButterfly,
+  type UserFish,
+  type UserCaterpillar,
+  type FieldButterfly,
+  type UserVipButterfly,
+  type ExhibitionFrame,
+  type ExhibitionButterfly,
+  type ExhibitionVipButterfly,
+  type PassiveIncomeLog,
+  type CreateBouquetRequest,
+  type PlaceBouquetRequest,
+  type UnlockedField,
+  type UnlockFieldRequest,
+  type WeeklyChallenge,
+  type ChallengeDonation,
+  type ChallengeReward,
+  type DonateChallengeFlowerRequest,
+  type AquariumTank,
+  type AquariumFish,
+  type DailyItems,
+  type CastleUnlockedPart,
+  type NewCastleUnlockedPart,
+  type CollectionStats,
+  type NewCollectionStats,
+  type CastleGridState,
+  type NewCastleGridState,
+  type UserNotification,
+  insertUserSchema
+} from "@shared/schema";
+import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateLatinButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
+import { generateBouquetName, calculateAverageRarity, getBouquetSeedDrop } from './bouquet';
+import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
+
+/**
+ * PostgreSQL-only Storage Implementation
+ * Direct database operations without memory caching
+ */
+export class PostgresStorage {
+  private db: any;
+  private static instance: PostgresStorage;
+
+  constructor() {
+    // Prevent multiple instances
+    if (PostgresStorage.instance) {
+      return PostgresStorage.instance;
+    }
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required for PostgreSQL storage');
+    }
+    // 🚀 PERFORMANCE: Configure Neon for better performance
+    const sql = neon(process.env.DATABASE_URL, {
+      timeout: 30000,      // 30s timeout
+      keepAlive: true,     // Keep HTTP connections alive
+      poolSize: 10,        // Larger connection pool
+      pipelineConnect: false // Better for single queries
+    });
+    this.db = drizzle(sql);
+    console.log('🗄️ PostgreSQL-only storage initialized');
+    
+    // Store singleton instance
+    PostgresStorage.instance = this;
+    
+    // Initialize basic seeds if they don't exist
+    this.initializeSeeds();
+    
+    // Initialize starter fields for existing users
+    this.initializeStarterFields();
+    
+    // Initialize creature systems (Fish and Caterpillars)
+    this.initializeCreaturesSystems();
+    
+    // 🚀 PERFORMANCE: Run migrations in background to reduce cold-start time
+    setImmediate(() => {
+      this.runBackgroundMigrations();
+    });
+}
+
+/**
+ * Atomic user update - combines multiple resource changes in single query
+ */
+async atomicUpdateUser(userId: number, updates: any) {
+  const updateFields: any = {};
+  
+  // Build dynamic update object
+  if (updates.credits !== undefined) {
+    updateFields.credits = typeof updates.credits === 'string' && updates.credits.startsWith('+') 
+      ? sql`${users.credits} + ${parseInt(updates.credits.slice(1))}`
+      : updates.credits;
+  }
+  if (updates.suns !== undefined) {
+    updateFields.suns = typeof updates.suns === 'string' && updates.suns.startsWith('+')
+      ? sql`${users.suns} + ${parseInt(updates.suns.slice(1))}`
+      : updates.suns;
+  }
+  if (updates.hearts !== undefined) {
+    updateFields.hearts = typeof updates.hearts === 'string' && updates.hearts.startsWith('+')
+      ? sql`${users.hearts} + ${parseInt(updates.hearts.slice(1))}`
+      : updates.hearts;
+  }
+  if (updates.dna !== undefined) {
+    updateFields.dna = typeof updates.dna === 'string' && updates.dna.startsWith('+')
+      ? sql`${users.dna} + ${parseInt(updates.dna.slice(1))}`
+      : updates.dna;
+  }
+  if (updates.tickets !== undefined) {
+    updateFields.tickets = typeof updates.tickets === 'string' && updates.tickets.startsWith('+')
+      ? sql`${users.tickets} + ${parseInt(updates.tickets.slice(1))}`
+      : updates.tickets;
+  }
+  
+  // Single atomic update with returning clause
+  const result = await this.db.update(users)
+    .set(updateFields)
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      credits: users.credits,
+      suns: users.suns,
+      hearts: users.hearts,
+      dna: users.dna,
+      tickets: users.tickets
+    });
+    
+  return result[0];
+}
+
+/**
+ * One-time migration: Convert German butterfly names to Latin names
+ */
+private async migrateButterflyNamesToLatin(): Promise<void> {
+  try {
+    console.log('🔄 Checking for German butterfly names to migrate...');
+    
+    // Check if migration is needed by looking for German butterfly names
+    const germanCheck = await this.db.execute(`
+      SELECT COUNT(*) as count FROM user_butterflies 
+      WHERE butterfly_name LIKE '%Falter%' OR butterfly_name LIKE '%Weißling%' 
+      OR butterfly_name LIKE '%Silberner%' OR butterfly_name LIKE '%Großer%'
+    `);
+    
+    const germanCount = germanCheck.rows[0]?.count || 0;
+    if (germanCount === 0) {
+      console.log('✅ No German butterfly names found - migration not needed');
+      return;
+    }
+    
+    console.log(`🦋 Found ${germanCount} German butterfly names - starting migration...`);
+    
+    // Update user_butterflies with Latin names using Drizzle ORM
+    const germanUserButterflies = await this.db.select({
+      id: userButterflies.id,
+      butterflyId: userButterflies.butterflyId,
+      butterflyName: userButterflies.butterflyName
+    }).from(userButterflies);
+    
+    for (const butterfly of germanUserButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(userButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(userButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ User butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+      }
+    }
+    
+    // Update field_butterflies with Latin names using Drizzle ORM
+    const germanFieldButterflies = await this.db.select({
+      id: fieldButterflies.id,
+      butterflyId: fieldButterflies.butterflyId,
+      butterflyName: fieldButterflies.butterflyName
+    }).from(fieldButterflies);
+    
+    let fieldUpdateCount = 0;
+    for (const butterfly of germanFieldButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(fieldButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(fieldButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ Field butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+        fieldUpdateCount++;
+      }
+    }
+    
+    // Update exhibition_butterflies with Latin names using Drizzle ORM
+    const germanExhibitionButterflies = await this.db.select({
+      id: exhibitionButterflies.id,
+      butterflyId: exhibitionButterflies.butterflyId,
+      butterflyName: exhibitionButterflies.butterflyName
+    }).from(exhibitionButterflies);
+    
+    let exhibitionUpdateCount = 0;
+    for (const butterfly of germanExhibitionButterflies) {
+      // Check if name is German
+      if (butterfly.butterflyName && (
+          butterfly.butterflyName.includes('Falter') ||
+          butterfly.butterflyName.includes('Weißling') ||
+          butterfly.butterflyName.includes('Silberner') ||
+          butterfly.butterflyName.includes('Großer')
+        )) {
+        const newLatinName = generateLatinButterflyName(butterfly.butterflyId);
+        
+        await this.db.update(exhibitionButterflies)
+          .set({ butterflyName: newLatinName })
+          .where(eq(exhibitionButterflies.id, butterfly.id));
+        
+        console.log(`  ✅ Exhibition butterfly ${butterfly.id}: "${butterfly.butterflyName}" → "${newLatinName}"`);
+        exhibitionUpdateCount++;
+      }
+    }
+    
+    const totalUpdated = germanUserButterflies.length + fieldUpdateCount + exhibitionUpdateCount;
+    console.log(`🎉 Migration complete! Updated ${totalUpdated} butterfly names to Latin.`);
+    
+  } catch (error) {
+    console.error('❌ Butterfly name migration failed:', error);
+  }
+}
+
+/**
+ * Add database indexes for better query performance
+ */
+private async addPerformanceIndexes(): Promise<void> {
+  try {
+    console.log('🗂️ Adding performance indexes...');
+    
+    const indexes = [
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_butterflies_user_id ON user_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_butterflies_user_id ON exhibition_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_field_butterflies_user_id ON field_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_flowers_user_id ON user_flowers(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_planted_fields_user_id ON planted_fields(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sun_spawns_user_id ON sun_spawns(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_status ON market_listings(status)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_likes_frame_id ON exhibition_likes(frame_id)'
+    ];
+    
+    let addedCount = 0;
+    for (const indexSQL of indexes) {
+      try {
+        await this.db.execute(indexSQL);
+        addedCount++;
+        
+        const indexName = indexSQL.split('idx_')[1]?.split(' ON')[0];
+        console.log(`  ✅ Added index: ${indexName}`);
+      } catch (error) {
+        // Index might already exist - that's okay
+        if (error.message.includes('already exists')) {
+          console.log('  ⚪ Index already exists');
+        } else {
+          console.warn('  ⚠️ Index creation failed:', error.message);
+        }
+      }
+    }
+    
+    console.log(`🎉 Performance indexes complete! Added ${addedCount} new indexes.`);
+    
+  } catch (error) {
+    console.error('❌ Failed to add performance indexes:', error);
+  }
+}
+
+/**
+ * Migrate plaintext passwords to bcrypt hashing (one-time security migration)
+ */
+private async migratePasswordSecurity(): Promise<void> {
+  try {
+    console.log('🔒 Checking for plaintext passwords to migrate...');
+    
+    // Import password functions
+    const { hashPassword, isPasswordHashed } = await import('./passwordSecurity');
+    
+    // Get all users
+    const allUsers = await this.db.execute('SELECT id, username, password FROM users');
+    
+    let migratedCount = 0;
+    
+    for (const user of allUsers.rows) {
+      const { id, username, password } = user;
+      
+      // Skip if user data is incomplete
+      if (!id || !password || typeof password !== 'string') {
+        console.log(`  ⚠ Skipping user ${username || 'unknown'}: incomplete data`);
+        continue;
+      }
+      
+      // Skip if already hashed
+      if (isPasswordHashed(password)) {
+        continue;
+      }
+      
+      // Hash the plaintext password
+      const hashedPassword = await hashPassword(password);
+      
+      // Update in database with explicit type casting
+      await this.db.execute('UPDATE users SET password = $1 WHERE id = $2', [
+        String(hashedPassword), 
+        Number(id)
+      ]);
+      
+      console.log(`  ✅ Migrated password for user: ${username}`);
+      migratedCount++;
+    }
+    
+    if (migratedCount > 0) {
+      console.log(`🎉 Password security migration complete! Migrated ${migratedCount} user passwords to bcrypt.`);
+    } else {
+      console.log('✅ All passwords already secure (bcrypt hashed)');
+    }
+    
+  } catch (error) {
+    console.error('❌ Password security migration failed:', error);
+  }
+}
+
+/**
+ * Run all background migrations asynchronously 
+ */
+private async runBackgroundMigrations(): Promise<void> {
+  console.log('🔄 Running background migrations...');
+  
+  try {
+    // Run migrations in parallel where possible
+    await Promise.all([
+      this.migrateButterflyNamesToLatin(),
+      this.addPerformanceIndexes(),
+      this.migratePasswordSecurity()
+    ]);
+    
+    console.log('✅ All background migrations completed successfully');
+    
+  } catch (error) {
+    console.error('❌ Background migrations failed:', error);
+  }
+}
+
+  /**
+   * Update collection statistics when a user obtains an item
+   * This tracks lifetime acquisition counts for the encyclopedia
+   * Uses UPSERT to handle race conditions safely
+   */
+  private async updateCollectionStats(
+    userId: number, 
+    itemType: 'flowers' | 'butterflies' | 'caterpillars' | 'fish', // Using plural forms to match schema
+    itemId: number,
+    quantity: number = 1
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Use UPSERT to handle race conditions safely
+      await this.db
+        .insert(collectionStats)
+        .values({
+          userId,
+          itemType,
+          itemId,
+          totalObtained: quantity,
+          firstObtainedAt: now,
+          lastObtainedAt: now
+        })
+        .onConflictDoUpdate({
+          target: [collectionStats.userId, collectionStats.itemType, collectionStats.itemId],
+          set: {
+            totalObtained: sql`${collectionStats.totalObtained} + ${quantity}`,
+            lastObtainedAt: now,
+            updatedAt: now
+          }
+        });
+    } catch (error) {
+      console.error(`Failed to update collection stats for ${itemType} ${itemId}:`, error);
+    }
+  }
+
+  /**
+   * Idempotent collection stats update for backfill operations
+   * Sets totalObtained to current inventory value instead of incrementing
+   * Safe to run multiple times without inflating counts
+   */
+  private async updateCollectionStatsForBackfill(
+    userId: number, 
+    itemType: 'flowers' | 'butterflies' | 'caterpillars' | 'fish',
+    itemId: number,
+    currentInventoryQuantity: number
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Use UPSERT with GREATEST to ensure we don't decrease existing higher values
+      // This handles edge cases where collection stats might already have higher values
+      await this.db
+        .insert(collectionStats)
+        .values({
+          userId,
+          itemType,
+          itemId,
+          totalObtained: currentInventoryQuantity,
+          firstObtainedAt: now,
+          lastObtainedAt: now
+        })
+        .onConflictDoUpdate({
+          target: [collectionStats.userId, collectionStats.itemType, collectionStats.itemId],
+          set: {
+            // Use GREATEST to ensure we don't decrease existing values in case of legitimate higher counts
+            totalObtained: sql`GREATEST(${collectionStats.totalObtained}, ${currentInventoryQuantity})`,
+            lastObtainedAt: now,
+            updatedAt: now
+          }
+        });
+    } catch (error) {
+      console.error(`Failed to update collection stats for backfill ${itemType} ${itemId}:`, error);
+    }
+  }
+
+  /**
+   * Get user's lifetime collection statistics for encyclopedia
+   */
+  async getUserCollectionStats(userId: number, itemType?: string): Promise<CollectionStats[]> {
+    try {
+      let query = this.db
+        .select()
+        .from(collectionStats)
+        .where(eq(collectionStats.userId, userId));
+
+      // Filter by item type if provided
+      if (itemType && ['flowers', 'butterflies', 'caterpillars', 'fish'].includes(itemType)) {
+        query = query.where(and(
+          eq(collectionStats.userId, userId),
+          eq(collectionStats.itemType, itemType)
+        ));
+      }
+
+      const stats = await query;
+      console.log(`📊 Found ${stats.length} collection stats for user ${userId}, type: ${itemType || 'all'}`);
+      return stats;
+    } catch (error) {
+      console.error('📊 Error getting collection stats:', error);
+      return [];
+    }
+  }
+
+  private async initializeSeeds() {
+    try {
+      // Check if seeds exist
+      const existingSeeds = await this.db.select().from(seeds);
+      
+      if (existingSeeds.length === 0) {
+        console.log('🌱 Initializing basic seeds...');
+        
+        // Create basic seeds for all rarity tiers
+        const basicSeeds = [
+          { name: 'Gelbe Samen', rarity: 'common', price: 10, description: 'Gewöhnliche gelbe Samen' },
+          { name: 'Grüne Samen', rarity: 'uncommon', price: 25, description: 'Ungewöhnliche grüne Samen' },
+          { name: 'Blaue Samen', rarity: 'rare', price: 50, description: 'Seltene blaue Samen' },
+          { name: 'Türkise Samen', rarity: 'super-rare', price: 100, description: 'Super seltene türkise Samen' },
+          { name: 'Lila Samen', rarity: 'epic', price: 200, description: 'Epische lila Samen' },
+          { name: 'Orange Samen', rarity: 'legendary', price: 500, description: 'Legendäre orange Samen' },
+          { name: 'Rote Samen', rarity: 'mythical', price: 1000, description: 'Mythische rote Samen' }
+        ];
+        
+        await this.db.insert(seeds).values(basicSeeds);
+        console.log(`🌱 Created ${basicSeeds.length} basic seeds in database`);
+      }
+    } catch (error) {
+      console.error('Failed to initialize seeds:', error);
+    }
+  }
+
+  private async initializeStarterFields() {
+    try {
+      // Check if unlocked_fields table exists and initialize starter fields
+      // Exclude lastActiveAt until migration completes
+      const allUsers = await this.db.select({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      }).from(users);
+      
+      for (const user of allUsers) {
+        const existingUnlockedFields = await this.db
+          .select()
+          .from(unlockedFields)
+          .where(eq(unlockedFields.userId, user.id));
+        
+        // If user has no unlocked fields, give them starter fields (0, 1, 10, 11)
+        if (existingUnlockedFields.length === 0) {
+          const starterFields = [0, 1, 10, 11]; // Field indices 0,1,10,11 = Field IDs 1,2,11,12
+          
+          for (const fieldIndex of starterFields) {
+            await this.db.insert(unlockedFields).values({
+              userId: user.id,
+              fieldIndex,
+              cost: 0, // Free starter fields
+            });
+          }
+          
+          console.log(`🌱 Initialized starter fields for user ${user.username} (ID: ${user.id})`);
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing starter fields:', error);
+      // This is OK if table doesn't exist yet
+    }
+  }
+
+  private async initializeCreaturesSystems() {
+    try {
+      console.log('🌊 Initializing Fish and Caterpillar systems...');
+      await initializeCreatureSystems();
+      console.log('🌊 Creature systems initialization complete');
+    } catch (error) {
+      console.error('Failed to initialize creature systems:', error);
+    }
+  }
+
+  async canSellCaterpillar(caterpillarId: number): Promise<{ canSell: boolean; timeRemainingMs: number }> {
+    try {
+      // Get caterpillar from user_caterpillars (regular caterpillars)
+      const caterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(eq(userCaterpillars.id, caterpillarId));
+      
+      if (caterpillar.length === 0) {
+        return { canSell: false, timeRemainingMs: 0 };
+      }
+      
+      // Regular caterpillars can be sold immediately (no waiting time)
+      // Only field caterpillars from pond feeding would have waiting time
+      return {
+        canSell: true,
+        timeRemainingMs: 0
+      };
+    } catch (error) {
+      console.error('🐛 Error checking caterpillar sell status:', error);
+      return { canSell: false, timeRemainingMs: 0 };
+    }
+  }
+
+  async sellCaterpillar(userId: number, caterpillarId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    try {
+      console.log(`🐛 Selling caterpillar ${caterpillarId} for user ${userId}`);
+      
+      // Check if caterpillar can be sold
+      const sellStatus = await this.canSellCaterpillar(caterpillarId);
+      if (!sellStatus.canSell) {
+        return { success: false, message: 'Raupe kann noch nicht verkauft werden!' };
+      }
+      
+      // Get caterpillar data
+      const caterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.id, caterpillarId),
+          eq(userCaterpillars.userId, userId)
+        ));
+      
+      if (caterpillar.length === 0) {
+        return { success: false, message: 'Raupe nicht gefunden!' };
+      }
+      
+      const caterpillarData = caterpillar[0];
+      
+      // Calculate price (85% of butterfly prices)
+      const price = this.getCaterpillarSellPrice(caterpillarData.caterpillarRarity);
+      
+      // Decrease quantity or remove if quantity reaches 0
+      const newQuantity = caterpillarData.quantity - 1;
+      
+      if (newQuantity <= 0) {
+        // Remove caterpillar completely
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, caterpillarId));
+      } else {
+        // Decrease quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: newQuantity })
+          .where(eq(userCaterpillars.id, caterpillarId));
+      }
+      
+      // Add credits to user
+      const user = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (user.length > 0) {
+        await this.db
+          .update(users)
+          .set({ credits: user[0].credits + price })
+          .where(eq(users.id, userId));
+      }
+      
+      console.log(`🐛 Caterpillar ${caterpillarData.caterpillarName} sold for ${price} credits`);
+      return { success: true, creditsEarned: price };
+    } catch (error) {
+      console.error('🐛 Error selling caterpillar:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
+  }
+
+  // ==================== FISH MANAGEMENT ====================
+
+  async addFishToUser(userId: number, fishId: number): Promise<UserFish | null> {
+    try {
+      const fishData = await generateRandomFish(getFishRarity(fishId));
+      
+      // Add to inventory with UPSERT to prevent race conditions
+      try {
+        // Try to insert first (most common case)
+        const [newFish] = await this.db
+          .insert(userFish)
+          .values({
+            userId,
+            fishId: fishData.id,
+            fishName: fishData.name,
+            fishRarity: getFishRarity(fishData.id),
+            fishImageUrl: fishData.imageUrl,
+            quantity: 1
+          })
+          .returning();
+        console.log(`🐟 Created new fish inventory entry: ${fishData.name}`);
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'fish', fishData.id, 1);
+        
+        return newFish;
+      } catch (error) {
+        // If fish already exists (constraint violation), increment quantity
+        const existingFish = await this.db
+          .select()
+          .from(userFish)
+          .where(and(
+            eq(userFish.userId, userId),
+            eq(userFish.fishId, fishData.id)
+          ));
+
+        if (existingFish.length > 0) {
+          const [updatedFish] = await this.db
+            .update(userFish)
+            .set({ quantity: existingFish[0].quantity + 1 })
+            .where(eq(userFish.id, existingFish[0].id))
+            .returning();
+          console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
+          
+          // Update collection stats
+          await this.updateCollectionStats(userId, 'fish', fishData.id, 1);
+          
+          return updatedFish;
+        } else {
+          // Fallback: re-throw error if not a constraint violation
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add fish to user:', error);
+      return null;
+    }
+  }
+
+  async getUserFish(userId: number): Promise<UserFish[]> {
+    return await this.db
+      .select()
+      .from(userFish)
+      .where(eq(userFish.userId, userId));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await this.db.select().from(users);
+  }
+
+  async updateFishQuantity(fishEntryId: number, newQuantity: number): Promise<void> {
+    await this.db
+      .update(userFish)
+      .set({ quantity: newQuantity })
+      .where(eq(userFish.id, fishEntryId));
+  }
+
+  async deleteFishEntry(fishEntryId: number): Promise<void> {
+    await this.db
+      .delete(userFish)
+      .where(eq(userFish.id, fishEntryId));
+  }
+
+  async consumeFish(userId: number, fishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Consuming fish ${fishId} for user ${userId}`);
+      
+      const fish = await this.db.select().from(userFish).where(
+        and(
+          eq(userFish.userId, userId),
+          eq(userFish.id, fishId)
+        )
+      ).limit(1);
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden' };
+      }
+      
+      const fishData = fish[0];
+      
+      if (fishData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Fische im Inventar' };
+      }
+
+      if (fishData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userFish)
+          .set({ quantity: fishData.quantity - 1 })
+          .where(eq(userFish.id, fishId));
+        console.log(`🐟 Reduced fish ${fishData.fishName} quantity to ${fishData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, fishId));
+        console.log(`🐟 Removed fish ${fishData.fishName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error consuming fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
+  async consumeSeed(userId: number, seedId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🌱 Consuming seed ${seedId} for user ${userId}`);
+      
+      const seed = await this.db.select().from(userSeeds).where(
+        and(
+          eq(userSeeds.userId, userId),
+          eq(userSeeds.id, seedId)
+        )
+      ).limit(1);
+      
+      if (seed.length === 0) {
+        return { success: false, message: 'Samen nicht gefunden' };
+      }
+      
+      const seedData = seed[0];
+      
+      if (seedData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Samen im Inventar' };
+      }
+
+      if (seedData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userSeeds)
+          .set({ quantity: seedData.quantity - 1 })
+          .where(eq(userSeeds.id, seedId));
+        console.log(`🌱 Reduced seed quantity to ${seedData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userSeeds)
+          .where(eq(userSeeds.id, seedId));
+        console.log(`🌱 Removed seed from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🌱 Error consuming seed:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
+  async consumeFlower(userId: number, flowerId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🌸 Consuming flower ${flowerId} for user ${userId}`);
+      
+      const flower = await this.db.select().from(userFlowers).where(
+        and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.id, flowerId)
+        )
+      ).limit(1);
+      
+      if (flower.length === 0) {
+        return { success: false, message: 'Blume nicht gefunden' };
+      }
+      
+      const flowerData = flower[0];
+      
+      if (flowerData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Blumen im Inventar' };
+      }
+
+      if (flowerData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flowerData.quantity - 1 })
+          .where(eq(userFlowers.id, flowerId));
+        console.log(`🌸 Reduced flower ${flowerData.flowerName} quantity to ${flowerData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, flowerId));
+        console.log(`🌸 Removed flower ${flowerData.flowerName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🌸 Error consuming flower:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
+  // ==================== CATERPILLAR MANAGEMENT ====================
+
+  async addCaterpillarToUser(userId: number, caterpillarId: number): Promise<UserCaterpillar | null> {
+    try {
+      const caterpillarData = await generateRandomCaterpillar(getCaterpillarRarity(caterpillarId));
+      
+      // Check if user already has this caterpillar
+      const existingCaterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarData.id)
+        ));
+      
+      if (existingCaterpillar.length > 0) {
+        // Update quantity
+        const [updatedCaterpillar] = await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existingCaterpillar[0].quantity + 1 })
+          .where(eq(userCaterpillars.id, existingCaterpillar[0].id))
+          .returning();
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'caterpillars', caterpillarData.id, 1);
+        
+        return updatedCaterpillar;
+      } else {
+        // Add new caterpillar
+        const [newCaterpillar] = await this.db
+          .insert(userCaterpillars)
+          .values({
+            userId,
+            caterpillarId: caterpillarData.id,
+            caterpillarName: caterpillarData.name,
+            caterpillarRarity: getCaterpillarRarity(caterpillarData.id),
+            caterpillarImageUrl: caterpillarData.imageUrl,
+            quantity: 1
+          })
+          .returning();
+        
+        // Update collection stats
+        await this.updateCollectionStats(userId, 'caterpillars', caterpillarData.id, 1);
+        
+        return newCaterpillar;
+      }
+    } catch (error) {
+      console.error('Failed to add caterpillar to user:', error);
+      return null;
+    }
+  }
+
+  async getUserCaterpillars(userId: number): Promise<UserCaterpillar[]> {
+    return await this.db
+      .select()
+      .from(userCaterpillars)
+      .where(eq(userCaterpillars.userId, userId));
+  }
+
+  async removeCaterpillarFromUser(userId: number, caterpillarId: number, quantity: number = 1): Promise<boolean> {
+    try {
+      console.log(`🐛 Removing ${quantity} of caterpillar ${caterpillarId} from user ${userId}`);
+      
+      // Find the user's caterpillar
+      const [userCaterpillar] = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarId)
+        ));
+
+      if (!userCaterpillar) {
+        console.log('🐛 Caterpillar not found in user inventory');
+        return false;
+      }
+
+      if (userCaterpillar.quantity < quantity) {
+        console.log('🐛 Not enough caterpillars in inventory');
+        return false;
+      }
+
+      if (userCaterpillar.quantity === quantity) {
+        // Remove the entire entry
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, userCaterpillar.id));
+        console.log('🐛 Removed entire caterpillar entry');
+      } else {
+        // Decrease quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: userCaterpillar.quantity - quantity })
+          .where(eq(userCaterpillars.id, userCaterpillar.id));
+        console.log(`🐛 Decreased caterpillar quantity by ${quantity}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to remove caterpillar from user:', error);
+      return false;
+    }
+  }
+
+  async spawnRandomFish(userId: number, fieldIndex: number): Promise<{ fishName: string; fishRarity: string }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${fieldIndex} for user ${userId}`);
+      
+      // Import creatures system for proper fish generation
+      const { generateRandomFishByDistribution, getRandomRarity } = await import('./creatures');
+      const { RARITY_NAMES_DE } = await import('../shared/rarity');
+      
+      // Get random rarity based on proper distribution
+      const rarity = getRandomRarity();
+      
+      // Generate fish with correct rarity distribution
+      const fishData = await generateRandomFishByDistribution(rarity);
+      
+      // Add fish to user inventory
+      const existingFish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fishData.id)
+        ));
+
+      if (existingFish.length > 0) {
+        // Fish already exists, increment quantity
+        await this.db
+          .update(userFish)
+          .set({ 
+            quantity: existingFish[0].quantity + 1
+          })
+          .where(eq(userFish.id, existingFish[0].id));
+        console.log(`🐟 Incremented existing fish ${fishData.name} quantity to ${existingFish[0].quantity + 1}`);
+      } else {
+        // New fish, create entry
+        await this.db.insert(userFish).values({
+          userId,
+          fishId: fishData.id,
+          fishName: fishData.name,
+          fishRarity: rarity,
+          fishImageUrl: fishData.imageUrl,
+          quantity: 1
+        });
+        console.log(`🐟 Created new fish entry: ${fishData.name} (${rarity})`);
+      }
+      
+      console.log(`🐟 Successfully spawned and saved ${fishData.name} (${rarity}) to user ${userId} inventory`);
+      
+      return {
+        fishName: fishData.name,
+        fishRarity: rarity
+      };
+    } catch (error) {
+      console.error('Failed to spawn random fish:', error);
+      return {
+        fishName: 'Unknown Fish',
+        fishRarity: 'common'
+      };
+    }
+  }
+
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    // Exclude lastActiveAt until database migration completes
+    const result = await this.db.select({
+      id: users.id,
+      username: users.username,
+      credits: users.credits,
+      suns: users.suns,
+      dna: users.dna,
+      tickets: users.tickets,
+      hearts: users.hearts,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users).where(eq(users.id, id));
+    return result[0] as User | undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    // Include password field for authentication - needed for login validation
+    const result = await this.db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password, // 🔒 FIXED: Include password field for login validation
+      credits: users.credits,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users).where(ilike(users.username, username));
+    return result[0] as User | undefined;
+  }
+
+  async createUser(user: typeof users.$inferInsert): Promise<User> {
+    const result = await this.db.insert(users).values(user).returning();
+    const newUser = result[0] as User;
+    
+    console.log(`💾 Created new user "${user.username}" in PostgreSQL (ID: ${newUser.id})`);
+    
+    // Give starter seeds to new user (5 common + 3 rare seeds)
+    try {
+      await this.addSeedToInventory(newUser.id, 'common' as RarityTier, 5);
+      await this.addSeedToInventory(newUser.id, 'rare' as RarityTier, 3);
+      console.log(`🌱 Gave starter seeds to new user ${newUser.username}: 5 Common + 3 Rare`);
+    } catch (error) {
+      console.error(`Failed to give starter seeds to user ${newUser.id}:`, error);
+    }
+    
+    // Give starter fields to new user (field indices 0, 1, 10, 11)
+    try {
+      const starterFields = [0, 1, 10, 11]; // Field indices 0,1,10,11 = Field IDs 1,2,11,12
+      
+      for (const fieldIndex of starterFields) {
+        await this.db.insert(unlockedFields).values({
+          userId: newUser.id,
+          fieldIndex,
+          cost: 0, // Free starter fields
+        });
+      }
+      
+      console.log(`🌱 Gave starter fields to new user ${newUser.username}: Fields 1,2,11,12 (indices 0,1,10,11)`);
+    } catch (error) {
+      console.error(`Failed to give starter fields to user ${newUser.id}:`, error);
+    }
+    
+    return newUser;
+  }
+
+  async updateUserCredits(id: number, amount: number): Promise<User | undefined> {
+    // First get current credits
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const newCredits = currentUser.credits + amount; // amount is a delta (change), not absolute
+    console.log(`💰 Credit Update: User ${id} hatte ${currentUser.credits} Cr, ${amount >= 0 ? '+' : ''}${amount} Cr = ${newCredits} Cr`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ credits: newCredits })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
+    return result[0] as User | undefined;
+  }
+
+  async updateUserSuns(id: number, amount: number): Promise<User | undefined> {
+    // First get current suns
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentSuns = currentUser.suns || 100; // Default to 100 if null
+    const newSuns = currentSuns + amount; // amount is a delta (change), not absolute
+    console.log(`☀️ Suns Update: User ${id} hatte ${currentSuns} ☀️, ${amount >= 0 ? '+' : ''}${amount} ☀️ = ${newSuns} ☀️`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ suns: newSuns })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        suns: users.suns,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
+    return result[0] as User | undefined;
+  }
+
+  async updateUserDna(id: number, amount: number): Promise<User | undefined> {
+    // First get current DNA
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentDna = currentUser.dna || 0; // Default to 0 if null
+    const newDna = currentDna + amount; // amount is a delta (change), not absolute
+    console.log(`🧬 DNA Update: User ${id} hatte ${currentDna} DNA, ${amount >= 0 ? '+' : ''}${amount} DNA = ${newDna} DNA`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ dna: newDna })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        dna: users.dna,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
+    return result[0] as User | undefined;
+  }
+
+  async updateUserTickets(id: number, amount: number): Promise<User | undefined> {
+    // First get current tickets
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentTickets = currentUser.tickets || 0; // Default to 0 if null
+    const newTickets = currentTickets + amount; // amount is a delta (change), not absolute
+    console.log(`🎫 Tickets Update: User ${id} hatte ${currentTickets} Tickets, ${amount >= 0 ? '+' : ''}${amount} Tickets = ${newTickets} Tickets`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ tickets: newTickets })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        tickets: users.tickets,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
+    return result[0] as User | undefined;
+  }
+
+  async updateUserHearts(id: number, amount: number): Promise<User | undefined> {
+    // First get current hearts
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    const currentHearts = currentUser.hearts || 0; // Default to 0 if null
+    const newHearts = currentHearts + amount; // amount is a delta (change), not absolute
+    console.log(`💖 Hearts Update: User ${id} hatte ${currentHearts} Herzen, ${amount >= 0 ? '+' : ''}${amount} Herzen = ${newHearts} Herzen`);
+    
+    const result = await this.db
+      .update(users)
+      .set({ hearts: newHearts })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        credits: users.credits,
+        hearts: users.hearts,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastPassiveIncomeAt: users.lastPassiveIncomeAt
+      });
+    return result[0] as User | undefined;
+  }
+
+  // Market methods
+  async getMarketListings(): Promise<any[]> {
+    // Get all market listings with their copied data - only one JOIN needed for seller username
+    const listings = await this.db
+      .select({
+        id: marketListings.id,
+        sellerId: marketListings.sellerId,
+        itemType: marketListings.itemType,
+        seedId: marketListings.seedId,
+        caterpillarId: marketListings.caterpillarId,
+        flowerId: marketListings.flowerId,
+        butterflyId: marketListings.butterflyId,
+        fishId: marketListings.fishId,
+        quantity: marketListings.quantity,
+        pricePerUnit: marketListings.pricePerUnit,
+        totalPrice: marketListings.totalPrice,
+        createdAt: marketListings.createdAt,
+        sellerUsername: users.username,
+        // Item data (directly stored in market_listings - no inventory JOINs needed!)
+        seedName: marketListings.seedName,
+        seedRarity: marketListings.seedRarity,
+        caterpillarName: marketListings.caterpillarName,
+        caterpillarRarity: marketListings.caterpillarRarity,
+        caterpillarImageUrl: marketListings.caterpillarImageUrl,
+        caterpillarIdOriginal: marketListings.caterpillarIdOriginal,
+        flowerName: marketListings.flowerName,
+        flowerRarity: marketListings.flowerRarity,
+        flowerImageUrl: marketListings.flowerImageUrl,
+        flowerIdOriginal: marketListings.flowerIdOriginal,
+        butterflyName: marketListings.butterflyName,
+        butterflyRarity: marketListings.butterflyRarity,
+        butterflyImageUrl: marketListings.butterflyImageUrl,
+        butterflyIdOriginal: marketListings.butterflyIdOriginal,
+        fishName: marketListings.fishName,
+        fishRarity: marketListings.fishRarity,
+        fishImageUrl: marketListings.fishImageUrl,
+        fishIdOriginal: marketListings.fishIdOriginal,
+      })
+      .from(marketListings)
+      .leftJoin(users, eq(marketListings.sellerId, users.id))
+      .where(eq(marketListings.isActive, true));
+    
+    return listings;
+  }
+
+  async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
+    if (data.itemType === "seed") {
+      // 🔒 TRANSACTION: Wrap seed market listing in transaction
+      return await this.db.transaction(async (tx) => {
+        // Check if user has enough seeds
+        const userSeedsResult = await tx
+          .select()
+          .from(userSeeds)
+          .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+        
+        if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < data.quantity) {
+          throw new Error('Insufficient seeds');
+        }
+
+        // Create seed listing
+        const listing = await tx.insert(marketListings).values({
+          sellerId,
+          itemType: "seed",
+          seedId: data.seedId!,
+          caterpillarId: null,
+          quantity: data.quantity,
+          pricePerUnit: data.pricePerUnit,
+          totalPrice: data.pricePerUnit * data.quantity
+        }).returning();
+
+        // Deduct seeds from seller
+        await tx
+          .update(userSeeds)
+          .set({ quantity: userSeedsResult[0].quantity - data.quantity })
+          .where(and(eq(userSeeds.userId, sellerId), eq(userSeeds.seedId, data.seedId!)));
+
+        console.log(`🌱 Successfully created market listing for ${data.quantity} seeds (${data.pricePerUnit} credits each)`);
+        
+        return listing[0];
+      });
+    } else if (data.itemType === "caterpillar") {
+      // Check if user has enough caterpillars
+      const caterpillarResult = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(eq(userCaterpillars.userId, sellerId), eq(userCaterpillars.id, data.caterpillarId!)));
+      
+      if (caterpillarResult.length === 0) {
+        throw new Error('Caterpillar not found');
+      }
+
+      if (caterpillarResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient caterpillars');
+      }
+
+      const caterpillar = caterpillarResult[0];
+
+      // Create caterpillar listing with COPIED data (no more JOINs needed!)
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "caterpillar",
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy caterpillar data directly into listing
+        caterpillarId: data.caterpillarId!,
+        caterpillarName: caterpillar.caterpillarName,
+        caterpillarRarity: caterpillar.caterpillarRarity,
+        caterpillarImageUrl: caterpillar.caterpillarImageUrl,
+        caterpillarIdOriginal: caterpillar.caterpillarId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        flowerId: null,
+        flowerName: null,
+        flowerRarity: null,
+        flowerImageUrl: null,
+        flowerIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
+        fishId: null,
+        fishName: null,
+        fishRarity: null,
+        fishImageUrl: null,
+        fishIdOriginal: null,
+      }).returning();
+
+      // Update caterpillar quantity in seller's inventory
+      const newQuantity = caterpillar.quantity - data.quantity;
+      if (newQuantity <= 0) {
+        // Remove caterpillar entirely if no more left
+        await this.db
+          .delete(userCaterpillars)
+          .where(eq(userCaterpillars.id, data.caterpillarId!));
+      } else {
+        // Update quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: newQuantity })
+          .where(eq(userCaterpillars.id, data.caterpillarId!));
+      }
+
+      return listing[0];
+    } else if (data.itemType === "flower") {
+      // Check if user has the flower
+      const flowerResult = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(eq(userFlowers.userId, sellerId), eq(userFlowers.id, data.flowerId!)));
+      
+      if (flowerResult.length === 0) {
+        throw new Error('Flower not found');
+      }
+
+      if (flowerResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient flowers');
+      }
+
+      const flower = flowerResult[0];
+
+      // Create flower listing with COPIED data
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "flower",
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy flower data directly into listing
+        flowerId: data.flowerId!,
+        flowerName: flower.flowerName,
+        flowerRarity: flower.flowerRarity,
+        flowerImageUrl: flower.flowerImageUrl,
+        flowerIdOriginal: flower.flowerId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        caterpillarId: null,
+        caterpillarName: null,
+        caterpillarRarity: null,
+        caterpillarImageUrl: null,
+        caterpillarIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
+        fishId: null,
+        fishName: null,
+        fishRarity: null,
+        fishImageUrl: null,
+        fishIdOriginal: null,
+      }).returning();
+
+      // Update flower quantity
+      const newQuantity = flower.quantity - data.quantity;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, data.flowerId!));
+      } else {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: newQuantity })
+          .where(eq(userFlowers.id, data.flowerId!));
+      }
+
+      return listing[0];
+    } else if (data.itemType === "butterfly") {
+      // 🔒 TRANSACTION: Wrap butterfly market listing in transaction to prevent data loss
+      return await this.db.transaction(async (tx) => {
+        // Check if user has the butterfly (from inventory, not exhibition)
+        const butterflyResult = await tx
+          .select()
+          .from(userButterflies)
+          .where(and(eq(userButterflies.userId, sellerId), eq(userButterflies.id, data.butterflyId!)));
+        
+        if (butterflyResult.length === 0) {
+          throw new Error('Butterfly not found or in exhibition');
+        }
+
+        // Butterflies are unique items (quantity = 1)
+        if (data.quantity !== 1) {
+          throw new Error('Butterflies can only be sold one at a time');
+        }
+
+        const butterfly = butterflyResult[0];
+
+        // Create butterfly listing with COPIED data
+        const listing = await tx.insert(marketListings).values({
+          sellerId,
+          itemType: "butterfly",
+          quantity: 1,
+          pricePerUnit: data.pricePerUnit,
+          totalPrice: data.pricePerUnit,
+          // Copy butterfly data directly into listing
+          butterflyId: data.butterflyId!,
+          butterflyName: butterfly.butterflyName,
+          butterflyRarity: butterfly.butterflyRarity,
+          butterflyImageUrl: butterfly.butterflyImageUrl,
+          butterflyIdOriginal: butterfly.butterflyId, // Game ID
+          // Set other item fields to null
+          seedId: null,
+          seedName: null,
+          seedRarity: null,
+          caterpillarId: null,
+          caterpillarName: null,
+          caterpillarRarity: null,
+          caterpillarImageUrl: null,
+          caterpillarIdOriginal: null,
+          flowerId: null,
+          flowerName: null,
+          flowerRarity: null,
+          flowerImageUrl: null,
+          flowerIdOriginal: null,
+          fishId: null,
+          fishName: null,
+          fishRarity: null,
+          fishImageUrl: null,
+          fishIdOriginal: null,
+        }).returning();
+
+        // Remove butterfly from seller's inventory
+        await tx
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, data.butterflyId!));
+
+        console.log(`🦋 Successfully created market listing for butterfly ${butterfly.butterflyName} (${data.pricePerUnit} credits)`);
+        
+        return listing[0];
+      });
+    } else if (data.itemType === "fish") {
+      // Check if user has the fish
+      const fishResult = await this.db
+        .select()
+        .from(userFish)
+        .where(and(eq(userFish.userId, sellerId), eq(userFish.id, data.fishId!)));
+      
+      if (fishResult.length === 0) {
+        throw new Error('Fish not found');
+      }
+
+      if (fishResult[0].quantity < data.quantity) {
+        throw new Error('Insufficient fish');
+      }
+
+      const fish = fishResult[0];
+
+      // Create fish listing with COPIED data
+      const listing = await this.db.insert(marketListings).values({
+        sellerId,
+        itemType: "fish",
+        quantity: data.quantity,
+        pricePerUnit: data.pricePerUnit,
+        totalPrice: data.pricePerUnit * data.quantity,
+        // Copy fish data directly into listing
+        fishId: data.fishId!,
+        fishName: fish.fishName,
+        fishRarity: fish.fishRarity,
+        fishImageUrl: fish.fishImageUrl,
+        fishIdOriginal: fish.fishId, // Game ID
+        // Set other item fields to null
+        seedId: null,
+        seedName: null,
+        seedRarity: null,
+        caterpillarId: null,
+        caterpillarName: null,
+        caterpillarRarity: null,
+        caterpillarImageUrl: null,
+        caterpillarIdOriginal: null,
+        flowerId: null,
+        flowerName: null,
+        flowerRarity: null,
+        flowerImageUrl: null,
+        flowerIdOriginal: null,
+        butterflyId: null,
+        butterflyName: null,
+        butterflyRarity: null,
+        butterflyImageUrl: null,
+        butterflyIdOriginal: null,
+      }).returning();
+
+      // Update fish quantity
+      const newQuantity = fish.quantity - data.quantity;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, data.fishId!));
+      } else {
+        await this.db
+          .update(userFish)
+          .set({ quantity: newQuantity })
+          .where(eq(userFish.id, data.fishId!));
+      }
+
+      return listing[0];
+    } else {
+      throw new Error('Invalid item type');
+    }
+  }
+
+  async buyMarketListing(buyerId: number, data: BuyListingRequest): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🛒 Buying listing ${data.listingId} for user ${buyerId}, quantity: ${data.quantity}`);
+      
+      // Step 1: Get listing
+      const listings = await this.db
+        .select()
+        .from(marketListings)
+        .where(eq(marketListings.id, data.listingId));
+
+      if (listings.length === 0) {
+        console.log(`❌ Listing ${data.listingId} not found`);
+        return { success: false, message: 'Listing not found' };
+      }
+
+      const listing = listings[0];
+      const totalPrice = listing.pricePerUnit * data.quantity;
+      
+      console.log(`💰 Total price: ${totalPrice} credits for ${data.quantity} ${listing.itemType}(s)`);
+
+      // Step 2: Validate buyer credits
+      const buyer = await this.getUser(buyerId);
+      if (!buyer) {
+        return { success: false, message: 'Buyer not found' };
+      }
+      
+      if (buyer.credits < totalPrice) {
+        return { success: false, message: 'Insufficient credits' };
+      }
+
+      // Step 3: Validate listing data completeness
+      const validationResult = this.validateListingData(listing);
+      if (!validationResult.isValid) {
+        return { success: false, message: validationResult.message };
+      }
+
+      // Step 4: Process the purchase
+      const purchaseResult = await this.processPurchase(listing, buyerId, data.quantity, totalPrice, buyer);
+      if (!purchaseResult.success) {
+        return purchaseResult;
+      }
+
+      // Step 5: Update or remove listing
+      await this.updateListingAfterPurchase(listing, data.quantity);
+
+      console.log(`✅ Purchase completed successfully`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error in buyMarketListing:', error);
+      return { success: false, message: 'Purchase failed due to system error' };
+    }
+  }
+
+  private validateListingData(listing: any): { isValid: boolean; message?: string } {
+    switch (listing.itemType) {
+      case "seed":
+        if (!listing.seedName || !listing.seedRarity) {
+          return { isValid: false, message: 'Seed data incomplete' };
+        }
+        break;
+      case "caterpillar":
+        if (!listing.caterpillarName || !listing.caterpillarRarity) {
+          return { isValid: false, message: 'Caterpillar data incomplete' };
+        }
+        break;
+      case "flower":
+        if (!listing.flowerName || !listing.flowerRarity) {
+          return { isValid: false, message: 'Flower data incomplete' };
+        }
+        break;
+      case "butterfly":
+        if (!listing.butterflyName || !listing.butterflyRarity) {
+          return { isValid: false, message: 'Butterfly data incomplete' };
+        }
+        break;
+      case "fish":
+        if (!listing.fishName || !listing.fishRarity) {
+          return { isValid: false, message: 'Fish data incomplete' };
+        }
+        break;
+      default:
+        return { isValid: false, message: 'Unknown item type' };
+    }
+    return { isValid: true };
+  }
+
+  private async processPurchase(listing: any, buyerId: number, quantity: number, totalPrice: number, buyer: any): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Transfer credits between seller and buyer (skip if self-purchase)
+      if (listing.sellerId === buyerId) {
+        console.log(`🔄 Self-purchase detected: No credit transfer needed`);
+      } else {
+        await this.transferCredits(listing.sellerId, buyerId, totalPrice, buyer);
+      }
+
+      // Add item to buyer's inventory based on type
+      switch (listing.itemType) {
+        case "seed":
+          // Check if user already has this seed type
+          const existingSeed = await this.db.select()
+            .from(userSeeds)
+            .where(and(eq(userSeeds.userId, buyerId), eq(userSeeds.seedId, listing.seedId || 0)))
+            .limit(1);
+          
+          if (existingSeed.length > 0) {
+            // Update existing seed quantity
+            await this.db.update(userSeeds)
+              .set({ quantity: existingSeed[0].quantity + quantity })
+              .where(eq(userSeeds.id, existingSeed[0].id));
+          } else {
+            // Create new seed entry
+            await this.db.insert(userSeeds).values({
+              userId: buyerId,
+              seedId: listing.seedId || 0,
+              quantity: quantity
+            });
+          }
+          break;
+          
+        case "caterpillar":
+          if (quantity !== 1) {
+            return { success: false, message: 'Caterpillars can only be purchased one at a time' };
+          }
+          await this.db.insert(userCaterpillars).values({
+            userId: buyerId,
+            caterpillarId: listing.caterpillarIdOriginal || 0,
+            caterpillarName: listing.caterpillarName,
+            caterpillarRarity: listing.caterpillarRarity,
+            caterpillarImageUrl: listing.caterpillarImageUrl || '',
+            quantity: 1
+          });
+          
+          // Update collection stats for purchased caterpillar
+          await this.updateCollectionStats(buyerId, 'caterpillars', listing.caterpillarIdOriginal || 0, 1);
+          break;
+          
+        case "flower":
+          await this.addFlowerToInventoryWithQuantity(
+            buyerId, 
+            listing.flowerIdOriginal || 0, 
+            listing.flowerName, 
+            listing.flowerRarity, 
+            listing.flowerImageUrl || '', 
+            quantity
+          );
+          break;
+          
+        case "butterfly":
+          if (quantity !== 1) {
+            return { success: false, message: 'Butterflies can only be purchased one at a time' };
+          }
+          await this.db.insert(userButterflies).values({
+            userId: buyerId,
+            butterflyId: listing.butterflyIdOriginal || 0,
+            butterflyName: listing.butterflyName,
+            butterflyRarity: listing.butterflyRarity,
+            butterflyImageUrl: listing.butterflyImageUrl || '',
+            quantity: 1
+          });
+          
+          // Update collection stats for purchased butterfly
+          await this.updateCollectionStats(buyerId, 'butterflies', listing.butterflyIdOriginal || 0, 1);
+          break;
+          
+        case "fish":
+          await this.addFishToInventoryWithQuantity(
+            buyerId, 
+            listing.fishIdOriginal || 0, 
+            listing.fishName, 
+            listing.fishRarity, 
+            listing.fishImageUrl || '', 
+            quantity
+          );
+          break;
+          
+        default:
+          return { success: false, message: 'Unsupported item type' };
+      }
+
+      console.log(`📦 Added ${quantity} ${listing.itemType}(s) to buyer ${buyerId}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error processing purchase:', error);
+      return { success: false, message: 'Failed to process purchase' };
+    }
+  }
+
+  private async transferCredits(sellerId: number, buyerId: number, amount: number, buyer: any): Promise<void> {
+    // Add credits to seller
+    const seller = await this.getUser(sellerId);
+    if (seller) {
+      await this.db
+        .update(users)
+        .set({ credits: seller.credits + amount })
+        .where(eq(users.id, sellerId));
+      console.log(`💰 Seller ${sellerId}: +${amount} credits`);
+    }
+
+    // Deduct credits from buyer
+    await this.db
+      .update(users)
+      .set({ credits: buyer.credits - amount })
+      .where(eq(users.id, buyerId));
+    console.log(`💰 Buyer ${buyerId}: -${amount} credits`);
+  }
+
+  private async updateListingAfterPurchase(listing: any, purchaseQuantity: number): Promise<void> {
+    if (listing.quantity > purchaseQuantity) {
+      // Partial purchase - update quantity
+      await this.db
+        .update(marketListings)
+        .set({ quantity: listing.quantity - purchaseQuantity })
+        .where(eq(marketListings.id, listing.id));
+      console.log(`📋 Updated listing ${listing.id}: quantity ${listing.quantity} → ${listing.quantity - purchaseQuantity}`);
+    } else {
+      // Complete purchase - remove listing
+      await this.db
+        .delete(marketListings)
+        .where(eq(marketListings.id, listing.id));
+      console.log(`🗑️ Removed completed listing ${listing.id}`);
+    }
+  }
+
+  async getUserSeeds(userId: number): Promise<any[]> {
+    const result = await this.db
+      .select({
+        id: userSeeds.id,
+        userId: userSeeds.userId,
+        seedId: userSeeds.seedId,
+        quantity: userSeeds.quantity,
+        createdAt: userSeeds.createdAt,
+        seedName: seeds.name,
+        seedRarity: seeds.rarity,
+        seedPrice: seeds.price,
+        seedDescription: seeds.description,
+        seedImageUrl: seeds.imageUrl
+      })
+      .from(userSeeds)
+      .leftJoin(seeds, eq(userSeeds.seedId, seeds.id))
+      .where(eq(userSeeds.userId, userId));
+    
+    return result;
+  }
+
+  // Garden methods
+  async plantSeed(userId: number, data: PlantSeedRequest): Promise<{ success: boolean; message?: string }> {
+    // Frontend handles pond field restrictions - backend just processes the request
+    
+    // Check if user has seeds
+    const userSeedsResult = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, data.seedId)));
+
+    if (userSeedsResult.length === 0 || userSeedsResult[0].quantity < 1) {
+      return { success: false, message: 'No seeds available' };
+    }
+
+    // Check if field is empty
+    const existingField = await this.db
+      .select()
+      .from(plantedFields)
+      .where(and(eq(plantedFields.userId, userId), eq(plantedFields.fieldIndex, data.fieldIndex)));
+
+    if (existingField.length > 0) {
+      return { success: false, message: 'Field already occupied' };
+    }
+
+    // Get seed info for random flower generation
+    const seedInfo = await this.db
+      .select()
+      .from(seeds)
+      .where(eq(seeds.id, data.seedId));
+
+    if (seedInfo.length === 0) {
+      return { success: false, message: 'Invalid seed' };
+    }
+
+    // Generate random flower
+    const randomFlower = generateRandomFlower(seedInfo[0].rarity as RarityTier);
+    
+    if (!randomFlower) {
+      return { success: false, message: 'Failed to generate flower' };
+    }
+
+    // Plant seed
+    await this.db.insert(plantedFields).values({
+      userId,
+      fieldIndex: data.fieldIndex,
+      seedId: data.seedId,
+      seedRarity: seedInfo[0].rarity,
+      plantedAt: new Date(),
+      isGrown: false,
+      flowerId: randomFlower.id,
+      flowerName: randomFlower.name,
+      flowerImageUrl: randomFlower.imageUrl
+    });
+
+    // Deduct seed
+    await this.db
+      .update(userSeeds)
+      .set({ quantity: userSeedsResult[0].quantity - 1 })
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, data.seedId)));
+
+    return { success: true };
+  }
+
+  async getPlantedFields(userId: number): Promise<PlantedField[]> {
+    const result = await this.db
+      .select()
+      .from(plantedFields)
+      .where(eq(plantedFields.userId, userId));
+    
+    return result;
+  }
+
+  async harvestField(userId: number, data: HarvestFieldRequest): Promise<{ success: boolean; message?: string }> {
+    const field = await this.db
+      .select()
+      .from(plantedFields)
+      .where(and(eq(plantedFields.userId, userId), eq(plantedFields.fieldIndex, data.fieldIndex)));
+
+    if (field.length === 0) {
+      return { success: false, message: 'No planted field found' };
+    }
+
+    const plantedField = field[0];
+    const growthTime = getGrowthTime(plantedField.seedRarity as RarityTier);
+    const now = new Date();
+    const plantedTime = new Date(plantedField.plantedAt);
+    const isGrown = (now.getTime() - plantedTime.getTime()) >= growthTime * 1000;
+
+    if (!isGrown) {
+      return { success: false, message: 'Flower is not ready for harvest yet' };
+    }
+
+    // Add flower to inventory
+    await this.addFlowerToInventory(
+      userId,
+      plantedField.flowerId!,
+      plantedField.flowerName!,
+      plantedField.seedRarity!,
+      plantedField.flowerImageUrl!
+    );
+
+    // Remove planted field
+    await this.db
+      .delete(plantedFields)
+      .where(and(eq(plantedFields.userId, userId), eq(plantedFields.fieldIndex, data.fieldIndex)));
+
+    return { success: true };
+  }
+
+  // Flower inventory methods
+  async getUserFlowers(userId: number): Promise<UserFlower[]> {
+    const result = await this.db
+      .select()
+      .from(userFlowers)
+      .where(eq(userFlowers.userId, userId));
+    
+    return result;
+  }
+
+  async addFlowerToInventory(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string): Promise<void> {
+    // Check if user already has this flower
+    const existingFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(eq(userFlowers.userId, userId), eq(userFlowers.flowerId, flowerId)))
+      .limit(1);
+
+    if (existingFlower.length > 0) {
+      // Increase quantity of existing flower
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: existingFlower[0].quantity + 1 })
+        .where(eq(userFlowers.id, existingFlower[0].id));
+      
+      console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + 1} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
+    } else {
+      // Create new flower entry
+      await this.db.insert(userFlowers).values({
+        userId,
+        flowerId,
+        rarity: this.getRarityInteger(flowerRarity),
+        flowerName,
+        flowerRarity,
+        flowerImageUrl,
+        quantity: 1
+      });
+      console.log(`💾 Added new flower ${flowerName} for user ${userId} to PostgreSQL`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
+    }
+  }
+
+  async addFlowerToInventoryWithQuantity(userId: number, flowerId: number, flowerName: string, flowerRarity: string, flowerImageUrl: string, quantity: number): Promise<void> {
+    // Check if user already has this flower
+    const existingFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(eq(userFlowers.userId, userId), eq(userFlowers.flowerId, flowerId)))
+      .limit(1);
+
+    if (existingFlower.length > 0) {
+      // Increase quantity of existing flower
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: existingFlower[0].quantity + quantity })
+        .where(eq(userFlowers.id, existingFlower[0].id));
+      
+      console.log(`💾 Increased ${flowerName} quantity to ${existingFlower[0].quantity + quantity} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, quantity);
+    } else {
+      // Add new flower to inventory
+      await this.db
+        .insert(userFlowers)
+        .values({
+          userId,
+          flowerId,
+          rarity: this.getRarityInteger(flowerRarity),
+          flowerName,
+          flowerRarity,
+          flowerImageUrl,
+          quantity
+        });
+      
+      console.log(`💾 Added new flower ${flowerName} (x${quantity}) to user ${userId} inventory`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'flowers', flowerId, quantity);
+    }
+  }
+
+  async addFishToInventoryWithQuantity(userId: number, fishId: number, fishName: string, fishRarity: string, fishImageUrl: string, quantity: number): Promise<void> {
+    // Check if user already has this fish type
+    const existingFish = await this.db
+      .select()
+      .from(userFish)
+      .where(and(eq(userFish.userId, userId), eq(userFish.fishId, fishId)))
+      .limit(1);
+
+    if (existingFish.length > 0) {
+      // Increase quantity of existing fish
+      await this.db
+        .update(userFish)
+        .set({ quantity: existingFish[0].quantity + quantity })
+        .where(eq(userFish.id, existingFish[0].id));
+      
+      console.log(`🐟 Increased ${fishName} quantity to ${existingFish[0].quantity + quantity} for user ${userId}`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'fish', fishId, quantity);
+    } else {
+      // Add new fish to inventory
+      await this.db
+        .insert(userFish)
+        .values({
+          userId,
+          fishId,
+          fishName,
+          fishRarity,
+          fishImageUrl,
+          quantity
+        });
+      
+      console.log(`🐟 Added new fish ${fishName} (x${quantity}) to user ${userId} inventory`);
+      
+      // Update collection stats
+      await this.updateCollectionStats(userId, 'fish', fishId, quantity);
+    }
+  }
+
+  private getRarityInteger(rarity: string): number {
+    switch (rarity.toLowerCase()) {
+      case 'common': return 1;
+      case 'uncommon': return 2;
+      case 'rare': return 3;
+      case 'super-rare': return 4;
+      case 'epic': return 5;
+      case 'legendary': return 6;
+      case 'mythical': return 7;
+      default: return 1; // Default to common
+    }
+  }
+
+  // NEW: Implement correct addSeedToInventory from interface
+  async addSeedToInventory(userId: number, rarity: RarityTier, quantity: number): Promise<void> {
+    // Find seed ID by rarity
+    const seedResult = await this.db
+      .select()
+      .from(seeds)
+      .where(eq(seeds.rarity, rarity));
+    
+    if (seedResult.length === 0) {
+      throw new Error(`No seed found for rarity: ${rarity}`);
+    }
+    
+    const seedId = seedResult[0].id;
+    await this.addSeedToInventoryById(userId, seedId, quantity);
+  }
+
+  async addSeedToInventoryById(userId: number, seedId: number, quantity: number): Promise<void> {
+    // Check if user already has this seed type
+    const existing = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+
+    if (existing.length > 0) {
+      // Update quantity
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: existing[0].quantity + quantity })
+        .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+    } else {
+      // Create new entry
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity
+      });
+    }
+  }
+
+  // Create bouquet from 3 flowers
+  async createBouquet(userId: number, data: CreateBouquetRequest, skipCreditDeduction: boolean = false): Promise<{ success: boolean; message?: string; bouquet?: Bouquet }> {
+    try {
+      console.log(`🔍 Creating bouquet for user ${userId} with flowers:`, data);
+      
+      // Get all flowers for this user
+      const allUserFlowers = await this.db
+        .select()
+        .from(userFlowers)
+        .where(eq(userFlowers.userId, userId));
+
+      console.log(`🔍 Available flowers:`, allUserFlowers.map(f => ({ id: f.id, flowerId: f.flowerId, name: f.flowerName })));
+
+      // Find the specific flowers by flowerId (not by id)
+      const flower1 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId1);
+      const flower2 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId2);
+      const flower3 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId3);
+
+      console.log(`🔍 Found flowers:`, { 
+        flower1: flower1 ? { id: flower1.id, name: flower1.flowerName } : 'NOT FOUND',
+        flower2: flower2 ? { id: flower2.id, name: flower2.flowerName } : 'NOT FOUND',
+        flower3: flower3 ? { id: flower3.id, name: flower3.flowerName } : 'NOT FOUND'
+      });
+
+      if (!flower1 || !flower2 || !flower3) {
+        return { success: false, message: 'Eine oder mehrere Blumen nicht gefunden' };
+      }
+
+      // Calculate average rarity
+      const rarity1 = flower1.flowerRarity as RarityTier;
+      const rarity2 = flower2.flowerRarity as RarityTier;
+      const rarity3 = flower3.flowerRarity as RarityTier;
+      const avgRarity = calculateAverageRarity(rarity1, rarity2, rarity3);
+
+      // Generate or use provided name and check uniqueness
+      let bouquetName: string;
+      if (data.name) {
+        // Manual name provided - check if it's unique
+        if (await this.isBouquetNameTaken(data.name)) {
+          return { success: false, message: "Dieser Bouquet-Name existiert bereits. Bitte wählen Sie einen anderen Namen." };
+        }
+        bouquetName = data.name;
+      } else if (data.generateName) {
+        // Generate unique AI name
+        bouquetName = await this.generateUniqueBouquetName(avgRarity);
+      } else {
+        // Default fallback name - ensure uniqueness
+        let baseName = `${flower1.flowerName} Bouquet`;
+        bouquetName = await this.ensureUniqueName(baseName);
+      }
+
+      // Create bouquet
+      const newBouquet = await this.db.insert(bouquets).values({
+        name: bouquetName,
+        rarity: avgRarity,
+        imageUrl: "/Blumen/bouquet.jpg",
+        createdByUserId: userId
+      }).returning();
+
+      // Create recipe
+      await this.db.insert(bouquetRecipes).values({
+        bouquetId: newBouquet[0].id,
+        flowerId1: flower1.flowerId,
+        flowerId2: flower2.flowerId,
+        flowerId3: flower3.flowerId
+      });
+
+      // Add to user inventory
+      await this.db.insert(userBouquets).values({
+        userId,
+        bouquetId: newBouquet[0].id,
+        quantity: 1,
+        bouquetName: bouquetName,
+        bouquetRarity: avgRarity,
+        bouquetImageUrl: "/Blumen/bouquet.jpg"
+      });
+
+      // Remove flowers from inventory (decrease quantity or delete if quantity becomes 0)
+      
+      // Handle flower1
+      if (flower1.quantity > 1) {
+        console.log(`🌸 Reducing flower1 (${flower1.flowerName}) quantity from ${flower1.quantity} to ${flower1.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower1.quantity - 1 })
+          .where(eq(userFlowers.id, flower1.id));
+      } else {
+        console.log(`🌸 Deleting flower1 (${flower1.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower1.id));
+      }
+      
+      // Handle flower2
+      if (flower2.quantity > 1) {
+        console.log(`🌸 Reducing flower2 (${flower2.flowerName}) quantity from ${flower2.quantity} to ${flower2.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower2.quantity - 1 })
+          .where(eq(userFlowers.id, flower2.id));
+      } else {
+        console.log(`🌸 Deleting flower2 (${flower2.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower2.id));
+      }
+      
+      // Handle flower3
+      if (flower3.quantity > 1) {
+        console.log(`🌸 Reducing flower3 (${flower3.flowerName}) quantity from ${flower3.quantity} to ${flower3.quantity - 1}`);
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: flower3.quantity - 1 })
+          .where(eq(userFlowers.id, flower3.id));
+      } else {
+        console.log(`🌸 Deleting flower3 (${flower3.flowerName}) completely`);
+        await this.db.delete(userFlowers).where(eq(userFlowers.id, flower3.id));
+      }
+
+      // Deduct 30 credits for bouquet creation (unless skipped for recreation)
+      if (!skipCreditDeduction) {
+        const user = await this.getUser(userId);
+        if (user && user.credits >= 30) {
+          await this.updateUserCredits(userId, -30); // Deduct 30 credits (negative delta)
+          console.log(`💰 Deducted 30 credits for bouquet creation. User ${userId} credits: ${user.credits} -> ${user.credits - 30}`);
+        } else {
+          console.log(`⚠️ Warning: User ${userId} has insufficient credits (${user?.credits || 0}) for bouquet creation, but bouquet was still created`);
+        }
+      } else {
+        console.log(`🆓 Skipped credit deduction for bouquet recreation (free recreation)`);
+      }
+
+      console.log(`💐 Created bouquet "${bouquetName}" for user ${userId}`);
+      return { success: true, bouquet: newBouquet[0] };
+
+    } catch (error) {
+      console.error('Failed to create bouquet:', error);
+      return { success: false, message: 'Fehler beim Erstellen des Bouquets' };
+    }
+  }
+
+  async getUserBouquets(userId: number): Promise<UserBouquet[]> {
+    const result = await this.db
+      .select()
+      .from(userBouquets)
+      .where(eq(userBouquets.userId, userId));
+    
+    return result;
+  }
+
+  async getBouquetRecipes(): Promise<BouquetRecipe[]> {
+    const result = await this.db.select().from(bouquetRecipes);
+    return result;
+  }
+
+  async getUserCreatedBouquetRecipes(userId: number): Promise<any[]> {
+    // Get all bouquets created by this user with their recipes
+    const result = await this.db
+      .select({
+        bouquetId: bouquets.id,
+        bouquetName: bouquets.name,
+        bouquetRarity: bouquets.rarity,
+        bouquetImageUrl: bouquets.imageUrl,
+        createdAt: bouquets.createdAt,
+        flowerId1: bouquetRecipes.flowerId1,
+        flowerId2: bouquetRecipes.flowerId2,
+        flowerId3: bouquetRecipes.flowerId3
+      })
+      .from(bouquets)
+      .leftJoin(bouquetRecipes, eq(bouquets.id, bouquetRecipes.bouquetId))
+      .where(eq(bouquets.createdByUserId, userId))
+      .orderBy(bouquets.createdAt);
+    
+    return result;
+  }
+
+  async getBouquetRecipe(bouquetId: number): Promise<BouquetRecipe | null> {
+    const result = await this.db
+      .select()
+      .from(bouquetRecipes)
+      .where(eq(bouquetRecipes.bouquetId, bouquetId));
+    
+    return result[0] || null;
+  }
+
+  async placeBouquet(userId: number, data: PlaceBouquetRequest): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if user has the bouquet
+      const userBouquet = await this.db
+        .select()
+        .from(userBouquets)
+        .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)))
+        .limit(1);
+
+      if (userBouquet.length === 0) {
+        return { success: false, message: 'Bouquet nicht gefunden' };
+      }
+
+      // Check if field is already occupied
+      const existingField = await this.db
+        .select()
+        .from(placedBouquets)
+        .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, data.fieldIndex)))
+        .limit(1);
+
+      if (existingField.length > 0) {
+        return { success: false, message: 'Feld ist bereits belegt' };
+      }
+
+      // Calculate spawn timing (4 butterflies over 21 minutes)
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 21 * 60 * 1000); // 21 minutes
+      const nextSpawnAt = new Date(now.getTime() + 5.25 * 60 * 1000); // First spawn in 5.25 minutes
+
+      // Place bouquet
+      await this.db.insert(placedBouquets).values({
+        userId,
+        bouquetId: data.bouquetId,
+        fieldIndex: data.fieldIndex,
+        placedAt: now,
+        expiresAt: expiresAt,
+        nextSpawnAt: nextSpawnAt,
+        currentSpawnSlot: 1
+      });
+
+      // Remove bouquet from user inventory
+      if (userBouquet[0].quantity > 1) {
+        await this.db
+          .update(userBouquets)
+          .set({ quantity: userBouquet[0].quantity - 1 })
+          .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)));
+      } else {
+        await this.db
+          .delete(userBouquets)
+          .where(and(eq(userBouquets.userId, userId), eq(userBouquets.bouquetId, data.bouquetId)));
+      }
+
+      console.log(`💐 Placed bouquet ${data.bouquetId} on field ${data.fieldIndex} for user ${userId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to place bouquet:', error);
+      return { success: false, message: 'Fehler beim Platzieren des Bouquets' };
+    }
+  }
+
+  async getPlacedBouquets(userId: number): Promise<PlacedBouquet[]> {
+    const result = await this.db
+      .select({
+        id: placedBouquets.id,
+        userId: placedBouquets.userId,
+        bouquetId: placedBouquets.bouquetId,
+        fieldIndex: placedBouquets.fieldIndex,
+        placedAt: placedBouquets.placedAt,
+        expiresAt: placedBouquets.expiresAt,
+        nextSpawnAt: placedBouquets.nextSpawnAt,
+        currentSpawnSlot: placedBouquets.currentSpawnSlot,
+        createdAt: placedBouquets.createdAt,
+        bouquetName: bouquets.name,
+        bouquetRarity: bouquets.rarity
+      })
+      .from(placedBouquets)
+      .leftJoin(bouquets, eq(placedBouquets.bouquetId, bouquets.id))
+      .where(eq(placedBouquets.userId, userId));
+    
+    console.log(`💾 Retrieved placed bouquets for user ${userId}:`, result.map((r: any) => ({ fieldIndex: r.fieldIndex, rarity: r.bouquetRarity, name: r.bouquetName })));
+    
+    return result as any;
+  }
+
+  async getUserButterflies(userId: number): Promise<UserButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(userButterflies)
+      .where(eq(userButterflies.userId, userId));
+    
+    return result;
+  }
+
+  async addButterflyToInventory(userId: number, rarity: RarityTier, quantity: number = 1): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    try {
+      console.log(`🦋 Adding ${quantity} butterfly(s) of rarity ${rarity} to user ${userId} inventory`);
+      
+      // Generate random butterfly using the existing system
+      const { generateRandomButterfly } = await import('./bouquet');
+      const butterflyData = await generateRandomButterfly(rarity);
+      
+      // Check if user already has this butterfly type
+      const existing = await this.db
+        .select()
+        .from(userButterflies)
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyData.id)));
+
+      let result: UserButterfly;
+      
+      if (existing.length > 0) {
+        // Increase quantity
+        console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + quantity}`);
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existing[0].quantity + quantity })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyData.id)))
+          .returning();
+        result = updated[0];
+        
+        // Update collection stats for existing butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyData.id, quantity);
+      } else {
+        // Add new butterfly to inventory  
+        console.log(`🦋 Adding new butterfly to inventory`);
+        const newButterfly = await this.db.insert(userButterflies).values({
+          userId,
+          butterflyId: butterflyData.id,
+          butterflyName: butterflyData.name,
+          butterflyRarity: rarity,
+          butterflyImageUrl: butterflyData.imageUrl,
+          quantity
+        }).returning();
+        result = newButterfly[0];
+        
+        // Update collection stats for new butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyData.id, quantity);
+      }
+
+      console.log(`🦋 Successfully added butterfly: ${result.butterflyName} (${rarity}) to user ${userId}`);
+      return { success: true, butterfly: result };
+    } catch (error) {
+      console.error('🦋 Error adding butterfly to inventory:', error);
+      return { success: false };
+    }
+  }
+
+  // VIP Butterfly methods
+  async getUserVipButterflies(userId: number): Promise<UserVipButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(eq(userVipButterflies.userId, userId));
+    
+    return result;
+  }
+
+  async addVipButterflyToInventory(userId: number, vipButterflyId: number, vipButterflyName: string, vipButterflyImageUrl: string): Promise<void> {
+    // Check if user already has this VIP butterfly
+    const existing = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(and(eq(userVipButterflies.userId, userId), eq(userVipButterflies.vipButterflyId, vipButterflyId)));
+
+    if (existing.length > 0) {
+      // Increase quantity
+      await this.db
+        .update(userVipButterflies)
+        .set({ quantity: existing[0].quantity + 1 })
+        .where(eq(userVipButterflies.id, existing[0].id));
+      
+      // Update collection stats for VIP butterfly
+      await this.updateCollectionStats(userId, 'butterflies', vipButterflyId, 1);
+    } else {
+      // Add new VIP butterfly
+      await this.db.insert(userVipButterflies).values({
+        userId,
+        vipButterflyId,
+        vipButterflyName,
+        vipButterflyImageUrl,
+        quantity: 1
+      });
+      
+      // Update collection stats for VIP butterfly
+      await this.updateCollectionStats(userId, 'butterflies', vipButterflyId, 1);
+    }
+    
+    console.log(`✨ Added VIP butterfly ${vipButterflyName} to user ${userId}'s inventory`);
+  }
+
+  // VIP Exhibition methods
+  async getExhibitionVipButterflies(userId: number): Promise<ExhibitionVipButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.userId, userId));
+    
+    return result;
+  }
+
+  // 🚀 PERFORMANCE: Get single VIP butterfly by ID (much faster than loading all)
+  async getExhibitionVipButterflyById(userId: number, vipButterflyId: number): Promise<ExhibitionVipButterfly | null> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(
+        eq(exhibitionVipButterflies.userId, userId),
+        eq(exhibitionVipButterflies.id, vipButterflyId)
+      ))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async placeVipButterflyInExhibition(userId: number, frameId: number, slotIndex: number, vipButterflyId: number): Promise<{ success: boolean; message?: string }> {
+    // Check if user has this VIP butterfly
+    const userVipButterfly = await this.db
+      .select()
+      .from(userVipButterflies)
+      .where(and(eq(userVipButterflies.userId, userId), eq(userVipButterflies.vipButterflyId, vipButterflyId)));
+
+    if (userVipButterfly.length === 0) {
+      return { success: false, message: "VIP-Schmetterling nicht gefunden" };
+    }
+
+    // Check if slot is already occupied
+    const existingPlacement = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.frameId, frameId), eq(exhibitionVipButterflies.slotIndex, slotIndex)));
+
+    if (existingPlacement.length > 0) {
+      return { success: false, message: "Slot bereits belegt" };
+    }
+
+    const vipButterfly = userVipButterfly[0];
+
+    // Place VIP butterfly in exhibition
+    await this.db.insert(exhibitionVipButterflies).values({
+      userId,
+      frameId,
+      slotIndex,
+      vipButterflyId: vipButterfly.vipButterflyId,
+      vipButterflyName: vipButterfly.vipButterflyName,
+      vipButterflyImageUrl: vipButterfly.vipButterflyImageUrl
+    });
+
+    // Remove from user inventory (or decrease quantity)
+    if (vipButterfly.quantity > 1) {
+      await this.db
+        .update(userVipButterflies)
+        .set({ quantity: vipButterfly.quantity - 1 })
+        .where(eq(userVipButterflies.id, vipButterfly.id));
+    } else {
+      await this.db
+        .delete(userVipButterflies)
+        .where(eq(userVipButterflies.id, vipButterfly.id));
+    }
+
+    console.log(`✨ Placed VIP butterfly ${vipButterfly.vipButterflyName} in frame ${frameId}, slot ${slotIndex}`);
+    return { success: true };
+  }
+
+  async removeVipButterflyFromExhibition(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
+    // Find the VIP butterfly in the exhibition
+    const exhibitionVipButterfly = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(
+        eq(exhibitionVipButterflies.userId, userId),
+        eq(exhibitionVipButterflies.frameId, frameId),
+        eq(exhibitionVipButterflies.slotIndex, slotIndex)
+      ));
+
+    if (exhibitionVipButterfly.length === 0) {
+      return { success: false, message: "Kein VIP-Schmetterling in diesem Slot gefunden" };
+    }
+
+    const vipButterfly = exhibitionVipButterfly[0];
+
+    // Remove from exhibition
+    await this.db
+      .delete(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.id, vipButterfly.id));
+
+    // Return to user inventory
+    await this.addVipButterflyToInventory(
+      userId,
+      vipButterfly.vipButterflyId,
+      vipButterfly.vipButterflyName,
+      vipButterfly.vipButterflyImageUrl
+    );
+
+    console.log(`✨ Removed VIP butterfly ${vipButterfly.vipButterflyName} from frame ${frameId}, slot ${slotIndex}`);
+    return { success: true };
+  }
+
+  // Field butterfly methods
+  async getFieldButterflies(userId: number): Promise<FieldButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(fieldButterflies)
+      .where(eq(fieldButterflies.userId, userId));
+    
+    return result;
+  }
+
+  /**
+   * Get field caterpillars for a user
+   */
+  async getFieldCaterpillars(userId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(fieldCaterpillars)
+      .where(eq(fieldCaterpillars.userId, userId));
+    
+    return result;
+  }
+
+  /**
+   * Collect a field caterpillar (remove from field and add to inventory)
+   */
+  async collectFieldCaterpillar(userId: number, fieldIndex: number): Promise<{ success: boolean; caterpillar?: UserCaterpillar }> {
+    console.log(`🐛 🔥 COLLECT-START: Collecting field caterpillar for user ${userId} on field ${fieldIndex}`);
+    
+    // ATOMIC: Delete and return the caterpillar in one operation
+    const deletedCaterpillar = await this.db
+      .delete(fieldCaterpillars)
+      .where(and(eq(fieldCaterpillars.userId, userId), eq(fieldCaterpillars.fieldIndex, fieldIndex)))
+      .returning();
+
+    if (deletedCaterpillar.length === 0) {
+      console.log(`🐛 No caterpillar found on field ${fieldIndex} for user ${userId}`);
+      return { success: false };
+    }
+
+    const fieldCaterpillar = deletedCaterpillar[0];
+    console.log(`🐛 Found field caterpillar: ${fieldCaterpillar.caterpillarName} (ID: ${fieldCaterpillar.caterpillarId})`);
+    console.log(`🐛 Field caterpillar rarity: ${fieldCaterpillar.caterpillarRarity}`);
+    console.log(`🐛 Removed caterpillar from field ${fieldIndex}`);
+
+    // Add to user inventory - group by caterpillarId AND caterpillarRarity
+    console.log(`🐛 Looking for existing caterpillar with ID ${fieldCaterpillar.caterpillarId} and rarity ${fieldCaterpillar.caterpillarRarity}`);
+    const existing = await this.db
+      .select()
+      .from(userCaterpillars)
+      .where(and(
+        eq(userCaterpillars.userId, userId), 
+        eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId),
+        eq(userCaterpillars.caterpillarRarity, fieldCaterpillar.caterpillarRarity)
+      ));
+    
+    console.log(`🐛 Found ${existing.length} existing caterpillars with same ID and rarity`);
+
+    let result: UserCaterpillar;
+    
+    try {
+      if (existing.length > 0) {
+        // Increase quantity by exactly 1
+        console.log(`🐛 🔥 CRITICAL: Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+        const updated = await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existing[0].quantity + 1 })
+          .where(and(
+            eq(userCaterpillars.userId, userId), 
+            eq(userCaterpillars.caterpillarId, fieldCaterpillar.caterpillarId),
+            eq(userCaterpillars.caterpillarRarity, fieldCaterpillar.caterpillarRarity)
+          ))
+          .returning();
+        result = updated[0];
+      } else {
+        // Add new caterpillar to inventory  
+        console.log(`🐛 Adding new caterpillar to inventory`);
+        const newCaterpillar = await this.db.insert(userCaterpillars).values({
+          userId,
+          caterpillarId: fieldCaterpillar.caterpillarId,
+          caterpillarName: fieldCaterpillar.caterpillarName,
+          caterpillarRarity: fieldCaterpillar.caterpillarRarity,
+          caterpillarImageUrl: fieldCaterpillar.caterpillarImageUrl,
+          quantity: 1
+        }).returning();
+        result = newCaterpillar[0];
+      }
+    } catch (error: any) {
+      console.error('🐛 Error adding caterpillar to inventory:', error);
+      return { success: false };
+    }
+
+    // Update collection stats for acquired caterpillar
+    await this.updateCollectionStats(userId, 'caterpillars', fieldCaterpillar.caterpillarId, 1);
+
+    console.log(`🐛 Successfully collected caterpillar ${fieldCaterpillar.caterpillarName} for user ${userId}`);
+    return { success: true, caterpillar: result };
+  }
+
+  async placeButterflyOnField(userId: number, fieldIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string; butterfly?: any }> {
+    console.log(`🦋 Placing butterfly ${butterflyId} on field ${fieldIndex} for user ${userId}`);
+    
+    // Check if user has this butterfly
+    const userButterfly = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.id, butterflyId)));
+
+    if (userButterfly.length === 0) {
+      return { success: false, message: "Schmetterling nicht gefunden" };
+    }
+
+    // Check if field already has a butterfly
+    const existingButterfly = await this.db
+      .select()
+      .from(fieldButterflies)
+      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+
+    if (existingButterfly.length > 0) {
+      return { success: false, message: "Auf diesem Feld ist bereits ein Schmetterling platziert" };
+    }
+
+    const butterfly = userButterfly[0];
+
+    if (butterfly.quantity <= 0) {
+      return { success: false, message: "Nicht genügend Schmetterlinge im Inventar" };
+    }
+
+    try {
+      // Place butterfly on field (no bouquet required for this system)
+      const placedButterfly = await this.db.insert(fieldButterflies).values({
+        userId,
+        fieldIndex,
+        butterflyId: butterfly.butterflyId,
+        butterflyName: butterfly.butterflyName,
+        butterflyRarity: butterfly.butterflyRarity,
+        butterflyImageUrl: butterfly.butterflyImageUrl,
+        bouquetId: 1 // Dummy bouquet ID since the schema requires it
+      }).returning();
+
+      // Remove from user inventory (or decrease quantity)
+      if (butterfly.quantity > 1) {
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterfly.quantity - 1 })
+          .where(eq(userButterflies.id, butterfly.id));
+      } else {
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterfly.id));
+      }
+
+      console.log(`🦋 Successfully placed butterfly ${butterfly.butterflyName} on field ${fieldIndex}`);
+      return { success: true, butterfly: placedButterfly[0] };
+    } catch (error) {
+      console.error('🦋 Error placing butterfly on field:', error);
+      return { success: false, message: 'Datenbankfehler beim Platzieren' };
+    }
+  }
+
+  async removeFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; message?: string }> {
+    console.log(`🦋 Removing field butterfly on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      // First, let's see what butterflies exist
+      const existing = await this.db
+        .select()
+        .from(fieldButterflies)
+        .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
+      
+      console.log(`🦋 Found ${existing.length} existing butterflies on field ${fieldIndex}:`, existing.map(b => ({ id: b.id, name: b.butterflyName })));
+
+      const result = await this.db
+        .delete(fieldButterflies)
+        .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)))
+        .returning();
+
+      console.log(`🦋 Deletion result: ${result.length} rows deleted`);
+
+      if (result.length === 0) {
+        return { success: false, message: 'No butterfly found on field' };
+      }
+
+      console.log(`🦋 Successfully removed butterfly from field ${fieldIndex}:`, result[0].butterflyName);
+      return { success: true };
+    } catch (error) {
+      console.error('🦋 Error removing field butterfly:', error);
+      return { success: false, message: 'Database error' };
+    }
+  }
+
+  async spawnCaterpillarOnField(userId: number, fieldIndex: number, parentRarity: string): Promise<{ success: boolean; message?: string; caterpillar?: any }> {
+    console.log(`🐛 Spawning caterpillar on field ${fieldIndex} with parent rarity ${parentRarity}`);
+    
+    // Rarity inheritance system: 50% same, 30% lower, 20% higher
+    const inheritedRarity = this.inheritCaterpillarRarity(parentRarity);
+    
+    // Get random caterpillar for the inherited rarity
+    const caterpillar = await this.getRandomCaterpillarByRarity(inheritedRarity);
+    
+    if (!caterpillar) {
+      return { success: false, message: `No caterpillar found for rarity ${inheritedRarity}` };
+    }
+
+    try {
+      // 🐛 🔥 FIX: Only place caterpillar on field - do NOT add to inventory yet!
+      // User gets caterpillar in inventory when they click to collect it
+      
+      // Place caterpillar permanently on the field (blocks field until collected)
+      await this.db.insert(fieldCaterpillars).values({
+        userId,
+        fieldIndex,
+        caterpillarId: caterpillar.id,
+        caterpillarName: caterpillar.name,
+        caterpillarRarity: inheritedRarity,
+        caterpillarImageUrl: caterpillar.imageUrl,
+        spawnedAt: new Date()
+      });
+
+      console.log(`🐛 Successfully spawned caterpillar ${caterpillar.name} (${inheritedRarity}) from butterfly (${parentRarity})`);
+      console.log(`🐛 Caterpillar placed permanently on field ${fieldIndex} - blocks until user clicks to collect!`);
+      return { success: true, caterpillar };
+    } catch (error) {
+      console.error('🐛 Error spawning caterpillar:', error);
+      return { success: false, message: 'Database error spawning caterpillar' };
+    }
+  }
+
+  private inheritCaterpillarRarity(parentRarity: string): string {
+    const rarities = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    const currentIndex = rarities.indexOf(parentRarity);
+    
+    if (currentIndex === -1) return 'common';
+    
+    const roll = Math.random();
+    
+    if (roll < 0.5) {
+      // 50% same rarity
+      return parentRarity;
+    } else if (roll < 0.8) {
+      // 30% lower rarity
+      return currentIndex > 0 ? rarities[currentIndex - 1] : rarities[0];
+    } else {
+      // 20% higher rarity
+      return currentIndex < rarities.length - 1 ? rarities[currentIndex + 1] : rarities[rarities.length - 1];
+    }
+  }
+
+  private async addCaterpillarToInventory(userId: number, caterpillarId: number, caterpillarName: string, rarity: string, imageUrl: string): Promise<void> {
+    console.log(`🐛 Adding caterpillar ${caterpillarName} (${rarity}) to user ${userId} inventory`);
+    
+    try {
+      // Check if user already has this caterpillar type
+      const existingCaterpillar = await this.db
+        .select()
+        .from(userCaterpillars)
+        .where(and(
+          eq(userCaterpillars.userId, userId),
+          eq(userCaterpillars.caterpillarId, caterpillarId)
+        ));
+
+      if (existingCaterpillar.length > 0) {
+        // Update quantity
+        await this.db
+          .update(userCaterpillars)
+          .set({ quantity: existingCaterpillar[0].quantity + 1 })
+          .where(eq(userCaterpillars.id, existingCaterpillar[0].id));
+        
+        console.log(`🐛 Updated caterpillar quantity: ${existingCaterpillar[0].quantity + 1}`);
+      } else {
+        // Add new caterpillar with quantity=1 
+        console.log(`🐛 CREATING new caterpillar ${caterpillarName} with quantity=1`);
+        const result = await this.db
+          .insert(userCaterpillars)
+          .values({
+            userId,
+            caterpillarId,
+            caterpillarName,
+            caterpillarRarity: rarity,
+            caterpillarImageUrl: imageUrl,
+            quantity: 1
+          })
+          .returning();
+        
+        console.log(`🐛 NEW CATERPILLAR CREATED:`, result[0]);
+        console.log(`🐛 ✅ Confirmed: Created with quantity=${result[0].quantity}`);
+      }
+    } catch (error) {
+      console.error('🐛 Database error adding caterpillar to inventory:', error);
+      throw error;
+    }
+  }
+
+  private async getRandomCaterpillarByRarity(rarity: string) {
+    // Use the professional system from creatures.ts with beautiful Latin names!
+    const { generateRandomCaterpillar } = await import('./creatures');
+    return await generateRandomCaterpillar(rarity as any);
+  }
+
+  private mapRarityToNumber(rarity: string): number {
+    const rarityMap: { [key: string]: number } = {
+      'common': 1,
+      'uncommon': 2, 
+      'rare': 3,
+      'super-rare': 4,
+      'epic': 5,
+      'legendary': 6,
+      'mythical': 7
+    };
+    return rarityMap[rarity] || 1; // Default to common if unknown
+  }
+
+  async collectFieldButterfly(userId: number, fieldIndex: number): Promise<{ success: boolean; butterfly?: UserButterfly }> {
+    console.log(`🦋 Collecting butterfly for user ${userId} on field ${fieldIndex}`);
+    
+    // ATOMIC: Delete and return the butterfly in one operation - only one request can succeed
+    const deletedButterfly = await this.db
+      .delete(fieldButterflies)
+      .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)))
+      .returning();
+
+    if (deletedButterfly.length === 0) {
+      console.log(`🦋 No butterfly found on field ${fieldIndex} for user ${userId}`);
+      return { success: false };
+    }
+
+    const fieldButterfly = deletedButterfly[0];
+    console.log(`🦋 Found butterfly: ${fieldButterfly.butterflyName} (ID: ${fieldButterfly.butterflyId})`);
+    console.log(`🦋 Removed butterfly from field ${fieldIndex}`);
+
+    // Check if user already has this butterfly type
+    const existing = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)));
+
+    let result: UserButterfly;
+    
+    try {
+      if (existing.length > 0) {
+        // Increase quantity
+        console.log(`🦋 Increasing quantity from ${existing[0].quantity} to ${existing[0].quantity + 1}`);
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existing[0].quantity + 1 })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)))
+          .returning();
+        result = updated[0];
+      } else {
+        // Add new butterfly to inventory  
+        console.log(`🦋 Adding new butterfly to inventory`);
+        const newButterfly = await this.db.insert(userButterflies).values({
+          userId,
+          butterflyId: fieldButterfly.butterflyId,
+          butterflyName: fieldButterfly.butterflyName,
+          butterflyRarity: fieldButterfly.butterflyRarity,
+          butterflyImageUrl: fieldButterfly.butterflyImageUrl,
+          quantity: 1
+        }).returning();
+        result = newButterfly[0];
+      }
+    } catch (error: any) {
+      // Handle unique constraint violation (race condition)
+      if (error.code === '23505') {
+        console.log(`🦋 Race condition detected, retrying with quantity update`);
+        const existingRetry = await this.db
+          .select()
+          .from(userButterflies)
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)));
+        
+        const updated = await this.db
+          .update(userButterflies)
+          .set({ quantity: existingRetry[0].quantity + 1 })
+          .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, fieldButterfly.butterflyId)))
+          .returning();
+        result = updated[0];
+      } else {
+        throw error;
+      }
+    }
+
+    // Update collection stats for acquired butterfly
+    await this.updateCollectionStats(userId, 'butterflies', fieldButterfly.butterflyId, 1);
+
+    console.log(`🦋 Successfully collected butterfly: ${result.butterflyName}`);
+    return { success: true, butterfly: result };
+  }
+
+  // Exhibition methods
+  async getExhibitionFrames(userId: number): Promise<ExhibitionFrame[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionFrames)
+      .where(eq(exhibitionFrames.userId, userId));
+    
+    return result;
+  }
+
+  async purchaseExhibitionFrame(userId: number): Promise<{ success: boolean; message?: string; newCredits?: number; frame?: ExhibitionFrame }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    // Get current frame count to determine next frame number
+    const existingFrames = await this.getExhibitionFrames(userId);
+    const frameNumber = existingFrames.length + 1;
+    
+    // Calculate cost - first frame is free, subsequent frames increase exponentially
+    let cost = 0;
+    if (frameNumber > 1) {
+      // First frame is free, subsequent frames cost credits with exponential scaling
+      cost = Math.round(500 * Math.pow(1.6, frameNumber - 2));
+    }
+
+    if (user.credits < cost) {
+      return { success: false, message: 'Insufficient credits' };
+    }
+
+    // Create frame
+    const newFrame = await this.db.insert(exhibitionFrames).values({
+      userId,
+      frameNumber
+    }).returning();
+
+    // Deduct credits (only if cost > 0)
+    let updatedUser = user;
+    if (cost > 0) {
+      const creditResult = await this.updateUserCredits(userId, -cost); // Use negative delta to deduct credits
+      if (creditResult) {
+        updatedUser = creditResult;
+      }
+    }
+
+    console.log(`🖼️ User ${userId} purchased frame ${frameNumber} for ${cost} credits`);
+
+    return { 
+      success: true, 
+      newCredits: updatedUser?.credits || user.credits,
+      frame: newFrame[0]
+    };
+  }
+
+  async getExhibitionButterflies(userId: number): Promise<ExhibitionButterfly[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(eq(exhibitionButterflies.userId, userId));
+    
+    return result;
+  }
+
+  // 🚀 PERFORMANCE: Get single butterfly by ID (much faster than loading all)
+  async getExhibitionButterflyById(userId: number, butterflyId: number): Promise<ExhibitionButterfly | null> {
+    const result = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(
+        eq(exhibitionButterflies.userId, userId),
+        eq(exhibitionButterflies.id, butterflyId)
+      ))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async placeExhibitionButterfly(userId: number, frameId: number, slotIndex: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
+    // Check if user has the butterfly
+    const userButterfly = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyId)));
+
+    if (userButterfly.length === 0) {
+      return { success: false, message: 'Butterfly not found' };
+    }
+
+    // Check if slot is empty
+    const existingSlot = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.frameId, frameId), eq(exhibitionButterflies.slotIndex, slotIndex)));
+
+    if (existingSlot.length > 0) {
+      return { success: false, message: 'Slot already occupied' };
+    }
+
+    // Place butterfly
+    await this.db.insert(exhibitionButterflies).values({
+      userId,
+      frameId,
+      slotIndex,
+      butterflyId: userButterfly[0].butterflyId,
+      butterflyName: userButterfly[0].butterflyName,
+      butterflyRarity: userButterfly[0].butterflyRarity,
+      butterflyImageUrl: userButterfly[0].butterflyImageUrl
+    });
+
+    // Remove from inventory
+    if (userButterfly[0].quantity > 1) {
+      await this.db
+        .update(userButterflies)
+        .set({ quantity: userButterfly[0].quantity - 1 })
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyId)));
+    } else {
+      await this.db
+        .delete(userButterflies)
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterflyId)));
+    }
+
+    return { success: true };
+  }
+
+  async removeExhibitionButterfly(userId: number, frameId: number, slotIndex: number): Promise<{ success: boolean; message?: string }> {
+    const butterfly = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.frameId, frameId), eq(exhibitionButterflies.slotIndex, slotIndex)));
+
+    if (butterfly.length === 0) {
+      return { success: false, message: 'No butterfly in slot' };
+    }
+
+    // Return to inventory
+    const existing = await this.db
+      .select()
+      .from(userButterflies)
+      .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterfly[0].butterflyId)));
+
+    if (existing.length > 0) {
+      await this.db
+        .update(userButterflies)
+        .set({ quantity: existing[0].quantity + 1 })
+        .where(and(eq(userButterflies.userId, userId), eq(userButterflies.butterflyId, butterfly[0].butterflyId)));
+    } else {
+      await this.db.insert(userButterflies).values({
+        userId,
+        butterflyId: butterfly[0].butterflyId,
+        butterflyName: butterfly[0].butterflyName,
+        butterflyRarity: butterfly[0].butterflyRarity,
+        butterflyImageUrl: butterfly[0].butterflyImageUrl,
+        quantity: 1
+      });
+    }
+
+    // Remove from exhibition
+    await this.db
+      .delete(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.frameId, frameId), eq(exhibitionButterflies.slotIndex, slotIndex)));
+
+    return { success: true };
+  }
+
+  // Additional methods that may be needed
+  async collectExpiredBouquet(userId: number, fieldIndex: number): Promise<{ success: boolean; seedDrop?: { rarity: RarityTier; quantity: number } }> {
+    try {
+      // Find expired bouquet on this field with bouquet details
+      const expiredBouquet = await this.db
+        .select({
+          id: placedBouquets.id,
+          bouquetId: placedBouquets.bouquetId,
+          bouquetRarity: bouquets.rarity
+        })
+        .from(placedBouquets)
+        .leftJoin(bouquets, eq(placedBouquets.bouquetId, bouquets.id))
+        .where(and(
+          eq(placedBouquets.userId, userId), 
+          eq(placedBouquets.fieldIndex, fieldIndex),
+          lt(placedBouquets.expiresAt, new Date()) // Must be expired
+        ))
+        .limit(1);
+
+      if (expiredBouquet.length === 0) {
+        return { success: false };
+      }
+
+      const bouquetRarity = expiredBouquet[0].bouquetRarity as RarityTier || 'common';
+
+      // Generate seed drop based on bouquet rarity (1-3 seeds, more for better bouquets)
+      const seedQuantity = this.getBouquetSeedQuantity(bouquetRarity);
+      const seedRarity = this.getBouquetInfluencedSeedRarity(bouquetRarity);
+
+      // Get a random seed ID of this rarity
+      const availableSeeds = await this.db
+        .select()
+        .from(seeds)
+        .where(eq(seeds.rarity, seedRarity));
+
+      if (availableSeeds.length === 0) {
+        return { success: false };
+      }
+
+      const randomSeed = availableSeeds[Math.floor(Math.random() * availableSeeds.length)];
+
+      // Add seeds to user inventory
+      await this.addSeedToInventoryById(userId, randomSeed.id, seedQuantity);
+
+      // Remove the expired bouquet
+      await this.db
+        .delete(placedBouquets)
+        .where(and(
+          eq(placedBouquets.userId, userId),
+          eq(placedBouquets.fieldIndex, fieldIndex)
+        ));
+
+      console.log(`💧 Collected expired ${bouquetRarity} bouquet on field ${fieldIndex} for user ${userId}, got ${seedQuantity}x ${seedRarity} seeds`);
+
+      return { 
+        success: true, 
+        seedDrop: { 
+          rarity: seedRarity, 
+          quantity: seedQuantity 
+        } 
+      };
+    } catch (error) {
+      console.error('Failed to collect expired bouquet:', error);
+      return { success: false };
+    }
+  }
+
+  // Bouquet name uniqueness methods
+  async isBouquetNameTaken(name: string): Promise<boolean> {
+    const existing = await this.db
+      .select()
+      .from(bouquets)
+      .where(eq(bouquets.name, name))
+      .limit(1);
+    return existing.length > 0;
+  }
+
+  // Generate unique bouquet name using AI with retry logic
+  async generateUniqueBouquetName(rarity: RarityTier): Promise<string> {
+    const { generateBouquetName } = await import('./bouquet');
+    const maxAttempts = 5;
+    
+    console.log(`🌹 Generating unique bouquet name for rarity: ${rarity}`);
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      console.log(`🌹 Attempt ${attempt}/${maxAttempts}: Calling OpenAI API...`);
+      const generatedName = await generateBouquetName(rarity);
+      
+      console.log(`🌹 Generated name: "${generatedName}", checking availability...`);
+      const isNameTaken = await this.isBouquetNameTaken(generatedName);
+      
+      if (!isNameTaken) {
+        console.log(`🌹 ✅ Name "${generatedName}" is available!`);
+        return generatedName;
+      }
+      
+      console.log(`🌹 ❌ Name "${generatedName}" already exists (attempt ${attempt}/${maxAttempts})`);
+      
+      // If first attempt failed, show better error logging
+      if (attempt === 1) {
+        console.log(`🌹 🔄 First generated name was taken, retrying with ${maxAttempts - 1} more attempts...`);
+      }
+    }
+    
+    // If all AI attempts failed, create a fallback unique name
+    console.log(`🌹 ⚠️ All ${maxAttempts} OpenAI attempts produced duplicate names, using fallback strategy`);
+    const fallbackName = await this.ensureUniqueName(`Seltene ${rarity} Kollektion`);
+    console.log(`🌹 📝 Fallback name generated: "${fallbackName}"`);
+    return fallbackName;
+  }
+
+  // Ensure name is unique by adding number suffix if needed
+  async ensureUniqueName(baseName: string): Promise<string> {
+    let candidateName = baseName;
+    let counter = 1;
+    
+    while (await this.isBouquetNameTaken(candidateName)) {
+      candidateName = `${baseName} ${counter}`;
+      counter++;
+    }
+    
+    return candidateName;
+  }
+
+  // Helper method to determine seed quantity based on bouquet rarity
+  private getBouquetSeedQuantity(bouquetRarity: RarityTier): number {
+    const rarityMultipliers = {
+      'common': 1,
+      'uncommon': 1.2,
+      'rare': 1.4,
+      'super-rare': 1.6,
+      'epic': 1.8,
+      'legendary': 2.0,
+      'mythical': 2.5
+    };
+
+    const baseSeeds = Math.floor(Math.random() * 3) + 1; // 1-3 base seeds
+    const multiplier = rarityMultipliers[bouquetRarity as keyof typeof rarityMultipliers] || 1;
+    
+    return Math.min(5, Math.floor(baseSeeds * multiplier)); // Max 5 seeds
+  }
+
+  // Helper method to get rarity-influenced seed drop based on bouquet quality
+  private getBouquetInfluencedSeedRarity(bouquetRarity: RarityTier): RarityTier {
+    // Create modified weights based on bouquet rarity
+    const baseWeights = {
+      'common': 45,
+      'uncommon': 30,
+      'rare': 15,
+      'super-rare': 7,
+      'epic': 2.5,
+      'legendary': 0.4,
+      'mythical': 0.1
+    };
+
+    // Boost better rarities based on bouquet quality
+    const rarityBoostFactors = {
+      'common': { 'rare': 1, 'super-rare': 1, 'epic': 1, 'legendary': 1, 'mythical': 1 },
+      'uncommon': { 'rare': 1.5, 'super-rare': 1.2, 'epic': 1.1, 'legendary': 1, 'mythical': 1 },
+      'rare': { 'rare': 2, 'super-rare': 1.8, 'epic': 1.5, 'legendary': 1.2, 'mythical': 1 },
+      'super-rare': { 'rare': 2.5, 'super-rare': 2.2, 'epic': 2, 'legendary': 1.5, 'mythical': 1.2 },
+      'epic': { 'rare': 3, 'super-rare': 2.8, 'epic': 2.5, 'legendary': 2, 'mythical': 1.5 },
+      'legendary': { 'rare': 4, 'super-rare': 3.5, 'epic': 3, 'legendary': 2.5, 'mythical': 2 },
+      'mythical': { 'rare': 5, 'super-rare': 4.5, 'epic': 4, 'legendary': 3.5, 'mythical': 3 }
+    };
+
+    const boostFactors = rarityBoostFactors[bouquetRarity as keyof typeof rarityBoostFactors] || rarityBoostFactors['common'];
+
+    // Apply boosts to weights
+    const modifiedWeights = {
+      'common': baseWeights.common * 0.8, // Slightly reduce common chance for all bouquets
+      'uncommon': baseWeights.uncommon * 0.9, // Slightly reduce uncommon chance
+      'rare': baseWeights.rare * (boostFactors['rare'] || 1),
+      'super-rare': baseWeights['super-rare'] * (boostFactors['super-rare'] || 1),
+      'epic': baseWeights.epic * (boostFactors['epic'] || 1),
+      'legendary': baseWeights.legendary * (boostFactors['legendary'] || 1),
+      'mythical': baseWeights.mythical * (boostFactors['mythical'] || 1)
+    };
+
+    // Calculate total weight
+    const totalWeight = Object.values(modifiedWeights).reduce((sum, weight) => sum + weight, 0);
+    const random = Math.random() * totalWeight;
+
+    // Select rarity based on modified weights
+    let currentWeight = 0;
+    for (const [rarity, weight] of Object.entries(modifiedWeights)) {
+      currentWeight += weight;
+      if (random <= currentWeight) {
+        return rarity as RarityTier;
+      }
+    }
+
+    return 'common'; // Fallback
+  }
+
+  // Field Unlocking System
+  async getUnlockedFields(userId: number): Promise<UnlockedField[]> {
+    const result = await this.db
+      .select()
+      .from(unlockedFields)
+      .where(eq(unlockedFields.userId, userId));
+    
+    return result;
+  }
+
+  async isFieldUnlocked(userId: number, fieldIndex: number): Promise<boolean> {
+    const result = await this.db
+      .select()
+      .from(unlockedFields)
+      .where(and(eq(unlockedFields.userId, userId), eq(unlockedFields.fieldIndex, fieldIndex)));
+    
+    return result.length > 0;
+  }
+
+  async unlockField(userId: number, data: UnlockFieldRequest, cost: number): Promise<{ success: boolean; message?: string }> {
+    // Check if field is already unlocked
+    const isUnlocked = await this.isFieldUnlocked(userId, data.fieldIndex);
+    if (isUnlocked) {
+      return { success: false, message: "Field is already unlocked" };
+    }
+
+    // Check if user has enough credits
+    const user = await this.getUser(userId);
+    if (!user || user.credits < cost) {
+      return { success: false, message: "Not enough credits" };
+    }
+
+    try {
+      // Deduct credits and unlock field in a transaction-like manner
+      await this.updateUserCredits(userId, -cost);
+      
+      await this.db.insert(unlockedFields).values({
+        userId,
+        fieldIndex: data.fieldIndex,
+        cost,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error unlocking field:', error);
+      return { success: false, message: "Failed to unlock field" };
+    }
+  }
+
+  /**
+   * Get all available fields for butterfly spawning (only unlocked & free fields)
+   */
+  // Check if a field is in the pond area (Teich)
+  private isPondField(fieldIndex: number): boolean {
+    const fieldId = fieldIndex + 1; // Convert 0-indexed to 1-indexed
+    const row = Math.floor((fieldId - 1) / 10);
+    const col = (fieldId - 1) % 10;
+    
+    // Pond area: rows 1-3, columns 1-8 (0-indexed)
+    return row >= 1 && row <= 3 && col >= 1 && col <= 8;
+  }
+
+  async getAvailableFieldsForButterflies(userId: number): Promise<number[]> {
+    // Get all occupied fields for this user in parallel
+    const [userPlantedFields, userPlacedBouquets, userExistingButterflies, userUnlockedFields] = await Promise.all([
+      this.db.select({ fieldIndex: plantedFields.fieldIndex }).from(plantedFields).where(eq(plantedFields.userId, userId)),
+      this.db.select({ fieldIndex: placedBouquets.fieldIndex }).from(placedBouquets).where(eq(placedBouquets.userId, userId)),
+      this.db.select({ fieldIndex: fieldButterflies.fieldIndex }).from(fieldButterflies).where(eq(fieldButterflies.userId, userId)),
+      this.db.select({ fieldIndex: unlockedFields.fieldIndex }).from(unlockedFields).where(eq(unlockedFields.userId, userId))
+    ]);
+
+    // Collect all occupied field indices
+    const occupiedFields = new Set([
+      ...userPlantedFields.map((f: { fieldIndex: number }) => f.fieldIndex),
+      ...userPlacedBouquets.map((f: { fieldIndex: number }) => f.fieldIndex),
+      ...userExistingButterflies.map((f: { fieldIndex: number }) => f.fieldIndex)
+    ]);
+
+    // Get unlocked field indices
+    const unlockedFieldIndices = new Set(
+      userUnlockedFields.map((f: { fieldIndex: number }) => f.fieldIndex)
+    );
+
+    // Find available fields (unlocked AND free AND NOT pond fields)
+    const availableFields = Array.from(unlockedFieldIndices).filter(fieldIndex => 
+      !occupiedFields.has(fieldIndex) && !this.isPondField(fieldIndex)
+    );
+    
+    console.log(`🦋 GARDEN/TEICH SEPARATION: Available butterfly fields for user ${userId}:`, availableFields, '(pond fields excluded)');
+    
+    return availableFields;
+  }
+
+  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+    try {
+      // Find the placed bouquet to get the field index
+      const placedBouquet = await this.db
+        .select()
+        .from(placedBouquets)
+        .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.bouquetId, bouquetId)))
+        .limit(1);
+
+      if (placedBouquet.length === 0) {
+        return { success: false };
+      }
+
+      // Find all available fields for butterfly spawning
+      const availableFields = await this.getAvailableFieldsForButterflies(userId);
+
+      if (availableFields.length === 0) {
+        console.log(`🦋 No available fields for butterfly spawn for user ${userId} (garden full)`);
+        return { success: false };
+      }
+
+      // Select random available field from entire garden
+      const fieldIndex = availableFields[Math.floor(Math.random() * availableFields.length)];
+
+      // Generate random butterfly based on bouquet rarity
+      const { generateRandomButterfly } = await import('./bouquet');
+      const butterflyData = await generateRandomButterfly(bouquetRarity);
+
+      // Create field butterfly with 24-hour despawn time
+      const spawnTime = new Date();
+      const despawnTime = new Date(spawnTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
+      
+      const newFieldButterfly = await this.db.insert(fieldButterflies).values({
+        userId,
+        fieldIndex,
+        butterflyId: butterflyData.id,
+        butterflyName: butterflyData.name,
+        butterflyRarity: bouquetRarity,
+        butterflyImageUrl: butterflyData.imageUrl,
+        bouquetId: bouquetId,
+        spawnedAt: spawnTime,
+        despawnAt: despawnTime
+      }).returning();
+
+      console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
+      console.log(`🔍 DEBUG: Random spawn from ${availableFields.length} available fields: [${availableFields.join(', ')}]`);
+      
+      return { 
+        success: true, 
+        fieldButterfly: newFieldButterfly[0],
+        fieldIndex: fieldIndex
+      };
+      
+    } catch (error) {
+      console.error('Failed to spawn butterfly:', error);
+      return { success: false };
+    }
+  }
+
+  // Additional exhibition methods (from routes usage)
+  async canSellButterfly(userId: number, exhibitionButterflyId: number): Promise<boolean> {
+    const timeRemaining = await this.getTimeUntilSellable(userId, exhibitionButterflyId);
+    return timeRemaining === 0;
+  }
+
+  // OPTIMIZED: Batch sell-status for multiple butterflies in single query
+  async getBatchSellStatus(userId: number, butterflyIds: number[], vipButterflyIds: number[]): Promise<{
+    normal: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>,
+    vip: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>
+  }> {
+    const now = new Date();
+    const baseTimeMs = 72 * 60 * 60 * 1000; // 72 hours
+    const result: {
+      normal: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>,
+      vip: Array<{ id: number, canSell: boolean, timeRemainingMs: number, likesCount: number }>
+    } = { normal: [], vip: [] };
+
+    // Get all normal butterflies in one query
+    if (butterflyIds.length > 0) {
+      const normalButterflies = await this.db
+        .select({ 
+          id: exhibitionButterflies.id, 
+          placedAt: exhibitionButterflies.placedAt,
+          frameId: exhibitionButterflies.frameId
+        })
+        .from(exhibitionButterflies)
+        .where(
+          and(
+            eq(exhibitionButterflies.userId, userId),
+            inArray(exhibitionButterflies.id, butterflyIds)
+          )
+        );
+
+      // Get likes counts for frames in one query
+      const frameIds = normalButterflies.map(b => b.frameId).filter(Boolean);
+      const frameLikesData = frameIds.length > 0 ? await this.db
+        .select({
+          frameId: exhibitionFrameLikes.frameId,
+          count: sql`count(*)`
+        })
+        .from(exhibitionFrameLikes)
+        .where(inArray(exhibitionFrameLikes.frameId, frameIds))
+        .groupBy(exhibitionFrameLikes.frameId) : [];
+
+      const likesMap = new Map(frameLikesData.map(item => [item.frameId, Number(item.count)]));
+
+      // Calculate status for each butterfly
+      for (const butterfly of normalButterflies) {
+        const placedAt = new Date(butterfly.placedAt);
+        const msElapsed = now.getTime() - placedAt.getTime();
+        const remainingMs = Math.max(0, baseTimeMs - msElapsed);
+        const likesCount = likesMap.get(butterfly.frameId) || 0;
+        
+        result.normal.push({
+          id: butterfly.id,
+          canSell: remainingMs === 0,
+          timeRemainingMs: remainingMs,
+          likesCount
+        });
+      }
+    }
+
+    // Get all VIP butterflies in one query
+    if (vipButterflyIds.length > 0) {
+      const vipButterflies = await this.db
+        .select({ 
+          id: exhibitionVipButterflies.id, 
+          placedAt: exhibitionVipButterflies.placedAt,
+          frameId: exhibitionVipButterflies.frameId
+        })
+        .from(exhibitionVipButterflies)
+        .where(
+          and(
+            eq(exhibitionVipButterflies.userId, userId),
+            inArray(exhibitionVipButterflies.id, vipButterflyIds)
+          )
+        );
+
+      // Get VIP frame likes
+      const vipFrameIds = vipButterflies.map(b => b.frameId).filter(Boolean);
+      const vipFrameLikesData = vipFrameIds.length > 0 ? await this.db
+        .select({
+          frameId: exhibitionFrameLikes.frameId,
+          count: sql`count(*)`
+        })
+        .from(exhibitionFrameLikes)
+        .where(inArray(exhibitionFrameLikes.frameId, vipFrameIds))
+        .groupBy(exhibitionFrameLikes.frameId) : [];
+
+      const vipLikesMap = new Map(vipFrameLikesData.map(item => [item.frameId, Number(item.count)]));
+
+      // Calculate status for each VIP butterfly
+      for (const vipButterfly of vipButterflies) {
+        const placedAt = new Date(vipButterfly.placedAt);
+        const msElapsed = now.getTime() - placedAt.getTime();
+        const remainingMs = Math.max(0, baseTimeMs - msElapsed);
+        const likesCount = vipLikesMap.get(vipButterfly.frameId) || 0;
+        
+        result.vip.push({
+          id: vipButterfly.id,
+          canSell: remainingMs === 0,
+          timeRemainingMs: remainingMs,
+          likesCount
+        });
+      }
+    }
+
+    return result;
+  }
+
+  async getTimeUntilSellable(userId: number, exhibitionButterflyId: number): Promise<number> {
+    // 🚀 PERFORMANCE: Use optimized single butterfly query
+    const butterfly = await this.getExhibitionButterflyById(userId, exhibitionButterflyId);
+    
+    if (!butterfly) return 0;
+    
+    const now = new Date();
+    const placedAt = new Date(butterfly.placedAt);
+    const msElapsed = now.getTime() - placedAt.getTime();
+    
+    // Base time: 72 hours for production (no more likes time reduction)
+    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
+    
+    // No more likes time reduction - always 72 hours for selling
+    const requiredTimeMs = baseTimeMs;
+    
+    // Time remaining = required time - elapsed time
+    const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
+    
+    
+    return remainingMs;
+  }
+
+  async getUserFrameLikes(userId: number): Promise<any[]> {
+    // Simple approach: get all likes and group manually
+    const allLikes = await this.db
+      .select()
+      .from(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameOwnerId, userId));
+    
+    // Group by frameId and count
+    const frameGroups = allLikes.reduce((groups: any, like: any) => {
+      const frameId = like.frameId;
+      if (!groups[frameId]) {
+        groups[frameId] = { frameId, totalLikes: 0 };
+      }
+      groups[frameId].totalLikes++;
+      return groups;
+    }, {});
+    
+    return Object.values(frameGroups);
+  }
+
+  async getFrameLikesForUser(likerId: number, frameOwnerId: number): Promise<any[]> {
+    // Get all butterflies (frames) owned by frameOwnerId
+    const ownerButterflies = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(eq(exhibitionButterflies.userId, frameOwnerId));
+
+    // Get all likes for the frame owner's frames
+    const allLikes = await this.db
+      .select()
+      .from(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameOwnerId, frameOwnerId));
+    
+    // Get unique frame IDs
+    const uniqueFrameIds = [...new Set(ownerButterflies.map(b => b.frameId))];
+    
+    // Create a result for each frame
+    const result: any[] = [];
+    
+    for (const frameId of uniqueFrameIds) {
+      const frameLikes = allLikes.filter(like => like.frameId === frameId);
+      
+      result.push({
+        frameId,
+        totalLikes: frameLikes.length,
+        isLiked: frameLikes.some(like => like.likerId === likerId)
+      });
+    }
+    
+    return result;
+  }
+
+  async sellExhibitionButterfly(userId: number, exhibitionButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    const canSell = await this.canSellButterfly(userId, exhibitionButterflyId);
+    if (!canSell) {
+      return { success: false, message: 'Butterfly not ready for sale yet' };
+    }
+
+    const butterfly = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+    
+    if (butterfly.length === 0) {
+      return { success: false, message: 'Butterfly not found' };
+    }
+
+    const butterflyData = butterfly[0];
+    const frameId = butterflyData.frameId;
+
+    // Calculate credits based on rarity
+    const rarityValues = { common: 10, uncommon: 25, rare: 50, 'super-rare': 100, epic: 200, legendary: 500, mythical: 1000 };
+    const creditsEarned = rarityValues[butterflyData.butterflyRarity as keyof typeof rarityValues] || 10;
+
+    // Remove all likes for this frame when butterfly is sold
+    await this.db
+      .delete(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameId, frameId));
+
+    console.log(`💔 Removed all likes for frame ${frameId} due to butterfly sale`);
+
+    // Remove butterfly
+    await this.db
+      .delete(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+
+    // Add credits
+    await this.updateUserCredits(userId, creditsEarned);
+
+    return { success: true, creditsEarned };
+  }
+
+  async canSellVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<boolean> {
+    const timeRemaining = await this.getTimeUntilVipSellable(userId, exhibitionVipButterflyId);
+    return timeRemaining === 0;
+  }
+
+  async getTimeUntilVipSellable(userId: number, exhibitionVipButterflyId: number): Promise<number> {
+    // 🚀 PERFORMANCE: Use optimized single VIP butterfly query
+    const vipButterfly = await this.getExhibitionVipButterflyById(userId, exhibitionVipButterflyId);
+    
+    if (!vipButterfly) return 0;
+    
+    const now = new Date();
+    const placedAt = new Date(vipButterfly.placedAt);
+    const msElapsed = now.getTime() - placedAt.getTime();
+    
+    // Base time: 72 hours for production (no more likes time reduction)
+    const baseTimeMs = 72 * 60 * 60 * 1000; // = 259,200,000 ms (72 hours)
+    
+    // No more likes time reduction - always 72 hours for selling
+    const requiredTimeMs = baseTimeMs;
+    
+    // Time remaining = required time - elapsed time
+    const remainingMs = Math.max(0, requiredTimeMs - msElapsed);
+    
+    
+    return remainingMs;
+  }
+
+  async sellExhibitionVipButterfly(userId: number, exhibitionVipButterflyId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    const canSell = await this.canSellVipButterfly(userId, exhibitionVipButterflyId);
+    if (!canSell) {
+      return { success: false, message: 'VIP Butterfly not ready for sale yet' };
+    }
+
+    const vipButterfly = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+    
+    if (vipButterfly.length === 0) {
+      return { success: false, message: 'VIP Butterfly not found' };
+    }
+
+    const vipButterflyData = vipButterfly[0];
+    const frameId = vipButterflyData.frameId;
+
+    // VIP butterflies are worth much more! Fixed high value
+    const creditsEarned = 2500; // VIP butterflies are super valuable
+
+    // Remove all likes for this frame when VIP butterfly is sold
+    await this.db
+      .delete(exhibitionFrameLikes)
+      .where(eq(exhibitionFrameLikes.frameId, frameId));
+
+    console.log(`💔 Removed all likes for frame ${frameId} due to VIP butterfly sale`);
+
+    // Remove VIP butterfly from exhibition
+    await this.db
+      .delete(exhibitionVipButterflies)
+      .where(and(eq(exhibitionVipButterflies.userId, userId), eq(exhibitionVipButterflies.id, exhibitionVipButterflyId)));
+
+    // Add credits
+    await this.updateUserCredits(userId, creditsEarned);
+
+    console.log(`✨ Sold VIP butterfly ${vipButterflyData.vipButterflyName} for ${creditsEarned} credits`);
+    return { success: true, creditsEarned };
+  }
+
+  async applyButterflyTimeBoost(userId: number, exhibitionButterflyId: number, minutes: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if butterfly exists and belongs to user
+      const butterfly = await this.db
+        .select()
+        .from(exhibitionButterflies)
+        .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+      
+      if (butterfly.length === 0) {
+        return { success: false, message: 'Schmetterling nicht gefunden oder gehört dir nicht' };
+      }
+
+      // Check if already sellable
+      const canSell = await this.canSellButterfly(userId, exhibitionButterflyId);
+      if (canSell) {
+        return { success: false, message: 'Schmetterling ist bereits verkaufbar' };
+      }
+
+      // Calculate new placedAt date (move it back by the specified minutes)
+      const currentPlacedAt = new Date(butterfly[0].placedAt);
+      const newPlacedAt = new Date(currentPlacedAt.getTime() - (minutes * 60 * 1000));
+
+      // Update the placedAt time
+      await this.db
+        .update(exhibitionButterflies)
+        .set({ placedAt: newPlacedAt })
+        .where(and(eq(exhibitionButterflies.userId, userId), eq(exhibitionButterflies.id, exhibitionButterflyId)));
+
+      console.log(`☀️ Time Boost: User ${userId} butterfly ${exhibitionButterflyId} placedAt moved back ${minutes} minutes`);
+      
+      return { success: true, message: `Countdown um ${minutes} Minuten verkürzt` };
+    } catch (error) {
+      console.error('Error applying butterfly time boost:', error);
+      return { success: false, message: 'Fehler beim Anwenden des Zeit-Boosts' };
+    }
+  }
+
+  async processPassiveIncome(userId: number): Promise<{ success: boolean; creditsEarned?: number }> {
+    console.log(`🔍 Processing passive income for user ${userId}...`);
+    
+    // Get all exhibition butterflies (normal + VIP) for this user
+    const normalButterflies = await this.getExhibitionButterflies(userId);
+    const vipButterflies = await this.getExhibitionVipButterflies(userId);
+    
+    console.log(`🔍 User ${userId}: ${normalButterflies.length} normal butterflies, ${vipButterflies.length} VIP butterflies`);
+    
+    if (normalButterflies.length === 0 && vipButterflies.length === 0) {
+      console.log(`🔍 User ${userId}: No exhibition butterflies, skipping passive income`);
+      return { success: true, creditsEarned: 0 };
+    }
+    
+    // Get user's last passive income time
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false };
+    }
+    
+    const now = new Date();
+    let lastIncomeTime: Date;
+    let minutesElapsed: number;
+    
+    if (user.lastPassiveIncomeAt) {
+      // Normal case: use actual last income time
+      lastIncomeTime = user.lastPassiveIncomeAt;
+      minutesElapsed = Math.floor((now.getTime() - lastIncomeTime.getTime()) / (1000 * 60));
+    } else {
+      // First time or null case: check when first butterfly was placed
+      const firstButterflyTime = await this.getFirstButterflyPlacedTime(userId);
+      if (firstButterflyTime) {
+        lastIncomeTime = firstButterflyTime;
+        minutesElapsed = Math.floor((now.getTime() - firstButterflyTime.getTime()) / (1000 * 60));
+        console.log(`🔍 User ${userId}: First time passive income - using first butterfly time ${firstButterflyTime.toISOString()}`);
+      } else {
+        // Fallback: 1 minute ago
+        lastIncomeTime = new Date(now.getTime() - 60 * 1000);
+        minutesElapsed = 1;
+      }
+    }
+    
+    console.log(`🔍 User ${userId}: lastPassiveIncomeAt=${user.lastPassiveIncomeAt}, minutesElapsed=${minutesElapsed}`);
+    
+    // Don't process if less than 1 minute has passed
+    if (minutesElapsed < 1) {
+      console.log(`🔍 User ${userId}: Only ${minutesElapsed} minutes elapsed, skipping (need >=1 minute)`);
+      return { success: true, creditsEarned: 0 };
+    }
+    
+    // Calculate total hourly income from ALL butterflies with degradation
+    let totalHourlyIncome = 0;
+    
+    // Get all frame likes for this user to calculate like bonuses
+    const userFrameLikes = await this.getUserFrameLikes(userId);
+    
+    // Helper function to calculate degraded income for a butterfly with like bonus
+    const calculateDegradedIncome = (rarity: string, isVip: boolean, placedAt: Date, frameId: number): number => {
+      let baseValue: number;
+      
+      if (isVip) {
+        // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+        baseValue = this.calculateDegradedValue(60, 6, placedAt);
+      } else {
+        const rarityValues: Record<string, { start: number; min: number }> = {
+          'common': { start: 1, min: 1 },       // No degradation for Common
+          'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+          'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+          'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+          'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+          'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+          'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+        };
+
+        const values = rarityValues[rarity] || { start: 1, min: 1 };
+        baseValue = this.calculateDegradedValue(values.start, values.min, placedAt);
+      }
+      
+      // Apply like bonus: 2% per like for 72 hours
+      const frameWithLikes = userFrameLikes.find((f: any) => f.frameId === frameId);
+      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
+      const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+      
+      return Math.round(baseValue * likeBonus);
+    };
+    
+    // Add income from normal butterflies (with degradation and like bonus)
+    for (const butterfly of normalButterflies) {
+      const degradedIncome = calculateDegradedIncome(butterfly.butterflyRarity, false, butterfly.placedAt, butterfly.frameId);
+      totalHourlyIncome += degradedIncome;
+    }
+    
+    // Add income from VIP butterflies (with degradation and like bonus)
+    for (const vipButterfly of vipButterflies) {
+      const degradedIncome = calculateDegradedIncome('vip', true, vipButterfly.placedAt, vipButterfly.frameId);
+      totalHourlyIncome += degradedIncome;
+    }
+    
+    if (totalHourlyIncome === 0) {
+      return { success: true, creditsEarned: 0 };
+    }
+    
+    // Calculate how many credits can be awarded based on total hourly income
+    const minutesPerCredit = 60 / totalHourlyIncome;
+    const totalCredits = Math.floor(minutesElapsed / minutesPerCredit);
+    
+    if (totalCredits > 0) {
+      // Update user credits
+      await this.updateUserCredits(userId, totalCredits);
+      
+      // Log passive income (single log entry for all butterflies)
+      await this.db.insert(passiveIncomeLog).values({
+        userId,
+        amount: totalCredits,
+        sourceType: 'exhibition',
+        sourceDetails: `${normalButterflies.length + vipButterflies.length} butterflies, ${totalHourlyIncome}cr/h`
+      });
+      
+      // Update timestamp by the exact time consumed for the awarded credits
+      const minutesConsumed = totalCredits * minutesPerCredit;
+      const newLastIncomeTime = new Date(lastIncomeTime.getTime() + minutesConsumed * 60 * 1000);
+      await this.db.update(users)
+        .set({ lastPassiveIncomeAt: newLastIncomeTime })
+        .where(eq(users.id, userId));
+      
+      console.log(`💰 User ${userId} earned ${totalCredits} credits from exhibition (${totalHourlyIncome}cr/h, ${minutesPerCredit.toFixed(1)}min/cr)`);
+    }
+    
+    return { success: true, creditsEarned: totalCredits };
+  }
+
+  async updateUserActivity(userId: number): Promise<void> {
+    try {
+      // Update user's last activity timestamp to current time
+      await this.db.update(users)
+        .set({ updatedAt: new Date() })
+        .where(eq(users.id, userId));
+      
+      console.log(`✅ User ${userId} activity timestamp updated`);
+    } catch (error) {
+      console.error(`❌ Failed to update user ${userId} activity:`, error);
+    }
+  }
+
+  async updateUserLastActive(userId: number, lastActiveAt: Date = new Date()): Promise<void> {
+    // Temporarily disabled until database migration completes
+    // TODO: Re-enable after lastActiveAt column is properly added
+    try {
+      console.log(`⏰ Would update lastActive for user ${userId} (temporarily disabled)`);
+      // await this.db.update(users)
+      //   .set({ lastActiveAt })
+      //   .where(eq(users.id, userId));
+      
+      // console.log(`❤️ User ${userId} heartbeat recorded`);
+    } catch (error) {
+      console.error(`❌ Failed to update user ${userId} lastActive:`, error);
+      throw error;
+    }
+  }
+
+  // Emergency system methods
+  async giveUserSeed(userId: number, seedId: number, quantity: number): Promise<void> {
+    console.log(`🎁 Giving ${quantity} seeds (ID: ${seedId}) to user ${userId}`);
+    
+    // Check if user already has this seed type
+    const existingUserSeed = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+    
+    if (existingUserSeed.length > 0) {
+      // Update existing quantity
+      const newQuantity = existingUserSeed[0].quantity + quantity;
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: newQuantity })
+        .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)));
+      
+      console.log(`🎁 Updated existing seed: User ${userId} now has ${newQuantity} seeds (ID: ${seedId})`);
+    } else {
+      // Create new seed entry
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity,
+        createdAt: new Date()
+      });
+      
+      console.log(`🎁 Created new seed entry: User ${userId} received ${quantity} seeds (ID: ${seedId})`);
+    }
+  }
+
+  async checkEmergencyQualification(userId: number): Promise<{ eligible: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { eligible: false, reason: "User not found" };
+    }
+
+    // Check 1: User has 0 credits
+    if (user.credits > 0) {
+      return { eligible: false, reason: "Du hast noch Credits verfügbar" };
+    }
+
+    // Check 2: User has no seeds
+    const userSeedsList = await this.getUserSeeds(userId);
+    const totalSeeds = userSeedsList.reduce((sum, seed) => sum + seed.quantity, 0);
+    if (totalSeeds > 0) {
+      return { eligible: false, reason: "Du hast noch Samen verfügbar" };
+    }
+
+    // Check 3: User has less than 3 flowers for bouquet
+    const userFlowersList = await this.getUserFlowers(userId);
+    if (userFlowersList.length >= 3) {
+      return { eligible: false, reason: "Du hast genug Blumen für ein Bouquet" };
+    }
+
+    // Check 4: User has no bouquets
+    const userBouquetsList = await this.getUserBouquets(userId);
+    if (userBouquetsList.length > 0) {
+      return { eligible: false, reason: "Du hast noch Bouquets verfügbar" };
+    }
+
+    // Check 5: User has no passive income (no exhibition butterflies)
+    const exhibitionButterfliesList = await this.getExhibitionButterflies(userId);
+    const vipButterfliesList = await this.getExhibitionVipButterflies(userId);
+    
+    if (exhibitionButterfliesList.length > 0 || vipButterfliesList.length > 0) {
+      return { eligible: false, reason: "Du hast passives Einkommen durch Ausstellungs-Schmetterlinge" };
+    }
+
+    // User qualifies for emergency seeds!
+    return { eligible: true };
+  }
+
+  async getAllUsersWithStatus(excludeUserId?: number): Promise<Array<{
+    id: number;
+    username: string;
+    isOnline: boolean;
+    exhibitionButterflies: number;
+    lastSeen: string;
+    totalLikes: number;
+  }>> {
+    console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
+    
+    // Get all users (excluding lastActiveAt until migration completes)
+    const allUsers = await this.db.select({
+      id: users.id,
+      username: users.username,
+      credits: users.credits,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users);
+    console.log(`🔍 Found ${allUsers.length} users total`);
+    
+    const userList = [];
+    
+    for (const user of allUsers) {
+      // Skip demo users and current user if specified
+      if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
+      
+      // Count exhibition butterflies for this user
+      const butterflyCountResult = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(exhibitionButterflies)
+        .where(eq(exhibitionButterflies.userId, user.id));
+      
+      const butterflyCount = butterflyCountResult[0]?.count || 0;
+      
+      // Calculate online status based on updatedAt timestamp
+      const now = new Date();
+      const lastActivity = user.updatedAt || user.createdAt;
+      const timeDiff = now.getTime() - lastActivity.getTime();
+      const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+      
+      // Consider user online if last activity was within 5 minutes
+      const isOnline = minutesDiff < 5;
+      
+      // Format last seen
+      let lastSeen = '';
+      if (!isOnline) {
+        if (minutesDiff < 60) {
+          lastSeen = `vor ${minutesDiff} Min`;
+        } else if (minutesDiff < 1440) { // 24 hours
+          const hours = Math.floor(minutesDiff / 60);
+          lastSeen = `vor ${hours} Std`;
+        } else {
+          const days = Math.floor(minutesDiff / 1440);
+          lastSeen = `vor ${days} Tag${days === 1 ? '' : 'en'}`;
+        }
+      }
+      
+      // Calculate total likes for this user's exhibition
+      const totalLikesResult = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(exhibitionFrameLikes)
+        .where(eq(exhibitionFrameLikes.frameOwnerId, user.id));
+      
+      const totalLikes = totalLikesResult[0]?.count || 0;
+      
+      userList.push({
+        id: user.id,
+        username: user.username,
+        isOnline,
+        exhibitionButterflies: butterflyCount,
+        lastSeen,
+        totalLikes
+      });
+    }
+    
+    // Sort by online status first, then by username
+    userList.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) {
+        return b.isOnline ? 1 : -1; // Online users first
+      }
+      return a.username.localeCompare(b.username);
+    });
+    
+    console.log(`🔍 Processed ${userList.length} users for user list display`);
+    return userList;
+  }
+
+  async likeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    // Can't like your own frame
+    if (userId === frameOwnerId) {
+      return { success: false, message: 'Cannot like your own frame' };
+    }
+
+    // Check if frame is full (6 butterflies)
+    const frameButterflies = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(and(eq(exhibitionButterflies.userId, frameOwnerId), eq(exhibitionButterflies.frameId, frameId)));
+    
+    if (frameButterflies.length < 6) {
+      return { success: false, message: 'Only full frames can be liked' };
+    }
+
+    // Check if already liked
+    const existing = await this.db
+      .select()
+      .from(exhibitionFrameLikes)
+      .where(and(
+        eq(exhibitionFrameLikes.likerId, userId),
+        eq(exhibitionFrameLikes.frameOwnerId, frameOwnerId),
+        eq(exhibitionFrameLikes.frameId, frameId)
+      ));
+
+    if (existing.length > 0) {
+      return { success: false, message: 'Already liked' };
+    }
+
+    await this.db.insert(exhibitionFrameLikes).values({
+      frameOwnerId,
+      likerId: userId,
+      frameId
+    });
+
+    return { success: true };
+  }
+
+  async unlikeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
+    const result = await this.db
+      .delete(exhibitionFrameLikes)
+      .where(and(
+        eq(exhibitionFrameLikes.likerId, userId),
+        eq(exhibitionFrameLikes.frameOwnerId, frameOwnerId),
+        eq(exhibitionFrameLikes.frameId, frameId)
+      ));
+
+    return { success: true };
+  }
+
+  async getForeignExhibitionButterflies(frameOwnerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionButterflies)
+      .where(eq(exhibitionButterflies.userId, frameOwnerId));
+    
+    return result;
+  }
+
+  async getForeignExhibitionFrames(frameOwnerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionFrames)
+      .where(eq(exhibitionFrames.userId, frameOwnerId));
+    
+    return result;
+  }
+
+  async getForeignExhibitionVipButterflies(frameOwnerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(exhibitionVipButterflies)
+      .where(eq(exhibitionVipButterflies.userId, frameOwnerId));
+    
+    return result;
+  }
+
+  async getForeignAquariumFish(ownerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(aquariumFish)
+      .where(eq(aquariumFish.userId, ownerId));
+    
+    return result;
+  }
+
+  async getForeignAquariumTanks(ownerId: number): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(aquariumTanks)
+      .where(eq(aquariumTanks.userId, ownerId));
+    
+    return result;
+  }
+
+  // Bouquet timing methods for butterfly spawner
+  async updateBouquetNextSpawnTime(userId: number, fieldIndex: number, nextSpawnAt: Date): Promise<void> {
+    // Get current spawn slot for this bouquet
+    const currentBouquet = await this.db
+      .select()
+      .from(placedBouquets)
+      .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)))
+      .limit(1);
+
+    if (currentBouquet.length === 0) return;
+
+    const currentSlot = (currentBouquet[0] as any).currentSpawnSlot || 1;
+    const nextSlot = currentSlot + 1;
+    
+    // Generate random spawn interval (1-5 minutes)
+    const { getRandomSpawnInterval } = await import('./bouquet');
+    const randomInterval = getRandomSpawnInterval();
+    const actualNextSpawnAt = new Date(Date.now() + randomInterval);
+
+    console.log(`🦋 Bouquet #${currentBouquet[0].bouquetId}: Advancing from slot ${currentSlot} to ${nextSlot} (${nextSlot > 4 ? 'COMPLETED' : 'Active'})`);
+    
+    await this.db
+      .update(placedBouquets)
+      .set({ 
+        nextSpawnAt: actualNextSpawnAt,
+        currentSpawnSlot: nextSlot 
+      })
+      .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)));
+  }
+
+  // ========== WEEKLY CHALLENGE SYSTEM ==========
+
+  async getCurrentWeeklyChallenge(): Promise<WeeklyChallenge | null> {
+    try {
+      const now = new Date();
+      
+      const challenge = await this.db
+        .select()
+        .from(weeklyChallenges)
+        .where(eq(weeklyChallenges.isActive, true))
+        .limit(1);
+
+      console.log('🌸 Retrieved weekly challenge:', challenge[0] || 'No active challenge');
+      return challenge[0] || null;
+    } catch (error) {
+      console.error('Error retrieving weekly challenge:', error);
+      throw error;
+    }
+  }
+
+  async createWeeklyChallenge(): Promise<WeeklyChallenge> {
+    // Get current Monday 0:00
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(monday.getDate() - (monday.getDay() === 0 ? 6 : monday.getDay() - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    // Sunday 18:00 
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(18, 0, 0, 0);
+
+    // Generate week number (YYYY-WW format)
+    const year = monday.getFullYear();
+    const firstDayOfYear = new Date(year, 0, 1);
+    const pastDaysOfYear = (monday.getTime() - firstDayOfYear.getTime()) / 86400000;
+    const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+
+    // Generate 6 random flowers: 2 uncommon, 2 rare, 2 super-rare
+    const flowerIds = {
+      uncommon1: this.getRandomFlowerByRarity("uncommon"),
+      uncommon2: this.getRandomFlowerByRarity("uncommon"), 
+      rare1: this.getRandomFlowerByRarity("rare"),
+      rare2: this.getRandomFlowerByRarity("rare"),
+      superrare1: this.getRandomFlowerByRarity("super-rare"),
+      superrare2: this.getRandomFlowerByRarity("super-rare")
+    };
+
+    const challengeData = {
+      weekNumber: parseInt(`${year}${weekNumber.toString().padStart(2, '0')}`),
+      year,
+      startTime: monday,
+      endTime: sunday,
+      isActive: true,
+      flowerId1: flowerIds.uncommon1,
+      flowerId2: flowerIds.uncommon2,
+      flowerId3: flowerIds.rare1,
+      flowerId4: flowerIds.rare2,
+      flowerId5: flowerIds.superrare1,
+      flowerId6: flowerIds.superrare2
+    };
+
+    const result = await this.db.insert(weeklyChallenges).values(challengeData).returning();
+    console.log('🌸 Created new weekly challenge:', challengeData);
+    
+    // Initialize all users with 0 points (invisible until they donate)
+    await this.initializeUsersForChallenge(result[0].id);
+    
+    return result[0];
+  }
+
+  async deactivateChallenge(challengeId: number): Promise<void> {
+    try {
+      await this.db
+        .update(weeklyChallenges)
+        .set({ isActive: false })
+        .where(eq(weeklyChallenges.id, challengeId));
+      
+      console.log(`🌸 Deactivated challenge ${challengeId}`);
+    } catch (error) {
+      console.error('Error deactivating challenge:', error);
+      throw error;
+    }
+  }
+
+  private getRandomFlowerByRarity(targetRarity: string): number {
+    // Based on rarity distribution from replit.md:
+    // Uncommon: 56-100, Rare: 101-135, Super-rare: 136-160
+    const ranges = {
+      "uncommon": { min: 56, max: 100 },
+      "rare": { min: 101, max: 135 }, 
+      "super-rare": { min: 136, max: 160 }
+    };
+    
+    const range = ranges[targetRarity as keyof typeof ranges];
+    if (!range) return 1; // fallback
+    
+    return Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+  }
+
+  async donateFlowerToChallenge(userId: number, donation: DonateChallengeFlowerRequest): Promise<{ success: boolean; message?: string; seedsReceived?: number }> {
+    // Check if user has enough flowers
+    const userFlower = await this.db
+      .select()
+      .from(userFlowers)
+      .where(and(
+        eq(userFlowers.userId, userId),
+        eq(userFlowers.flowerId, donation.flowerId)
+      ))
+      .limit(1);
+
+    if (!userFlower[0] || userFlower[0].quantity < donation.quantity) {
+      return { success: false, message: "Nicht genügend Blumen vorhanden" };
+    }
+
+    // Deduct flowers from user
+    const newQuantity = userFlower[0].quantity - donation.quantity;
+    if (newQuantity === 0) {
+      await this.db
+        .delete(userFlowers)
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, donation.flowerId)
+        ));
+    } else {
+      await this.db
+        .update(userFlowers)
+        .set({ quantity: newQuantity })
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, donation.flowerId)
+        ));
+    }
+
+    // Record donation
+    await this.db.insert(challengeDonations).values({
+      challengeId: donation.challengeId,
+      userId,
+      flowerId: donation.flowerId,
+      quantity: donation.quantity
+    });
+
+    // Give seeds (ALWAYS 1 seed per donated flower: 50% same rarity, 50% one tier higher)
+    let seedsReceived = 0;
+    for (let i = 0; i < donation.quantity; i++) {
+      const rewardSeed = this.getChallengeRewardSeed(userFlower[0].flowerRarity || "common");
+      await this.giveUserSeed(userId, rewardSeed, 1);
+      seedsReceived++;
+    }
+
+    console.log(`🌸 User ${userId} donated ${donation.quantity}x flower ${donation.flowerId}, received ${seedsReceived} seeds`);
+    
+    return { 
+      success: true, 
+      message: `${donation.quantity} Blumen gespendet!`,
+      seedsReceived 
+    };
+  }
+
+  private getChallengeRewardSeed(currentRarity: string): number {
+    // 50% same rarity, 50% one tier higher (never lower!)
+    const sameRarity = Math.random() < 0.5;
+    
+    const rarityToSeedMap = {
+      "common": 1,
+      "uncommon": 2,
+      "rare": 3,
+      "super-rare": 4,
+      "epic": 5,
+      "legendary": 5, // legendary can't go higher, stays legendary
+      "mythical": 5  // mythical can't go higher, stays legendary
+    };
+    
+    const currentSeedId = rarityToSeedMap[currentRarity as keyof typeof rarityToSeedMap] || 1;
+    
+    if (sameRarity) {
+      return currentSeedId; // Same rarity as donated flower
+    } else {
+      // One tier higher (max legendary = seedId 5)
+      return Math.min(currentSeedId + 1, 5);
+    }
+  }
+
+  async getChallengeLeaderboard(challengeId: number): Promise<any[]> {
+    const donations = await this.db
+      .select({
+        userId: challengeDonations.userId,
+        totalDonations: challengeDonations.quantity
+      })
+      .from(challengeDonations)
+      .where(eq(challengeDonations.challengeId, challengeId));
+
+    // Group by user and sum donations
+    const userTotals = new Map();
+    donations.forEach((d: any) => {
+      const current = userTotals.get(d.userId) || 0;
+      userTotals.set(d.userId, current + d.totalDonations);
+    });
+
+    // Get user details and sort by total donations - ONLY show users with > 0 donations
+    const leaderboard = [];
+    for (const [userId, total] of userTotals) {
+      if (total > 0) { // Only show users who actually donated
+        const user = await this.getUser(userId);
+        if (user) {
+          leaderboard.push({
+            userId,
+            username: user.username,
+            totalDonations: total
+          });
+        }
+      }
+    }
+
+    return leaderboard.sort((a, b) => b.totalDonations - a.totalDonations);
+  }
+
+  /**
+   * Create a notification for challenge reward winners
+   */
+  async createChallengeRewardNotification(
+    userId: number, 
+    challengeId: number, 
+    challengeRank: number,
+    rewardType: string,
+    rewardItemId?: number,
+    rewardItemName?: string,
+    rewardItemRarity?: string,
+    rewardAmount?: number
+  ): Promise<void> {
+    const rank = challengeRank;
+    const getOrdinal = (num: number) => {
+      const suffix = ["ter", "ter", "ter"]; // German ordinals
+      if (num === 1) return "1.";
+      if (num === 2) return "2.";
+      if (num === 3) return "3.";
+      return num + ".";
+    };
+
+    let title = "";
+    let message = "";
+    
+    if (rank <= 3) {
+      title = `🏆 Challenge ${getOrdinal(rank)} Platz!`;
+      if (rewardType === 'vip_butterfly') {
+        title = `🌟 Challenge Gewonnen!`;
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und einen VIP-Schmetterling gewonnen: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'butterfly') {
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und einen Schmetterling gewonnen: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'credits') {
+        message = `Herzlichen Glückwunsch! Du hast Platz ${rank} in der Weekly Challenge erreicht und ${rewardAmount} Credits gewonnen!`;
+      }
+    } else {
+      title = `🎁 Challenge Belohnung!`;
+      if (rewardType === 'butterfly') {
+        message = `Du hast an der Weekly Challenge teilgenommen und Platz ${rank} erreicht! Als Belohnung erhältst du: ${rewardItemName} (${rewardItemRarity})`;
+      } else if (rewardType === 'credits') {
+        message = `Du hast an der Weekly Challenge teilgenommen und Platz ${rank} erreicht! Als Belohnung erhältst du: ${rewardAmount} Credits`;
+      }
+    }
+
+    await this.db.insert(userNotifications).values({
+      userId,
+      type: 'challenge_reward',
+      title,
+      message,
+      isRead: false,
+      rewardType,
+      rewardItemId,
+      rewardItemName,
+      rewardItemRarity,
+      rewardAmount,
+      challengeId,
+      challengeRank: rank,
+    });
+
+    console.log(`📨 Created challenge reward notification for user ${userId}, rank ${rank}: ${title}`);
+  }
+
+  /**
+   * Get unread notifications for a user
+   */
+  async getUserNotifications(userId: number): Promise<UserNotification[]> {
+    const notifications = await this.db
+      .select()
+      .from(userNotifications)
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.isRead, false)
+      ))
+      .orderBy(desc(userNotifications.createdAt));
+
+    console.log(`📨 Found ${notifications.length} unread notifications for user ${userId}`);
+    return notifications;
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markNotificationAsRead(notificationId: number, userId: number): Promise<void> {
+    await this.db
+      .update(userNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: sql`now()` 
+      })
+      .where(and(
+        eq(userNotifications.id, notificationId),
+        eq(userNotifications.userId, userId)
+      ));
+
+    console.log(`📨 Marked notification ${notificationId} as read for user ${userId}`);
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await this.db
+      .update(userNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: sql`now()` 
+      })
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.isRead, false)
+      ));
+
+    console.log(`📨 Marked all notifications as read for user ${userId}`);
+  }
+
+  async processChallengeRewards(challengeId: number): Promise<void> {
+    const leaderboard = await this.getChallengeLeaderboard(challengeId);
+    
+    for (let rank = 1; rank <= Math.min(10, leaderboard.length); rank++) {
+      const user = leaderboard[rank - 1];
+      let butterfly;
+      let isAnimated = false;
+      let passiveIncome = 0;
+
+      if (rank === 1) {
+        // VIP Animated butterfly with passive income - use real VIP system
+        // Get available VIP files dynamically
+        const availableVipIds = await this.getAvailableVipIds();
+        const randomVipId = availableVipIds[Math.floor(Math.random() * availableVipIds.length)];
+        const vipButterflyName = `VIP Mariposa ${this.getVipName(randomVipId)}`;
+        
+        // Add VIP butterfly to user's collection using VIP system
+        await this.addVipButterflyToInventory(user.userId, randomVipId, vipButterflyName, `/VIP/VIP${randomVipId}.gif`);
+        
+        console.log(`🏆 Winner ${user.username} received VIP butterfly: ${vipButterflyName}`);
+        
+        // Record VIP reward in challenge rewards (modify structure for VIP)
+        await this.db.insert(challengeRewards).values({
+          challengeId,
+          userId: user.userId,
+          rank,
+          totalDonations: user.totalDonations,
+          butterflyId: randomVipId,
+          butterflyName: vipButterflyName,
+          butterflyRarity: "vip",
+          butterflyImageUrl: `/VIP/VIP${randomVipId}.gif`,
+          isAnimated: true,
+          passiveIncome: 60
+        });
+        
+        // Create notification for VIP butterfly winner
+        await this.createChallengeRewardNotification(
+          user.userId,
+          challengeId,
+          rank,
+          'vip_butterfly',
+          randomVipId,
+          vipButterflyName,
+          'VIP',
+          undefined
+        );
+        
+        continue; // Skip normal butterfly processing for rank 1
+      } else if (rank === 2) {
+        butterfly = this.getRandomButterflyByRarity("epic");
+      } else if (rank === 3) {
+        butterfly = this.getRandomButterflyByRarity("super-rare");
+      } else {
+        butterfly = this.getRandomButterflyByRarity("rare");
+      }
+
+      // Add butterfly to user's collection
+      await this.db.insert(userButterflies).values({
+        userId: user.userId,
+        butterflyId: butterfly.id,
+        butterflyName: butterfly.name,
+        butterflyRarity: butterfly.rarity,
+        butterflyImageUrl: butterfly.imageUrl,
+        isAnimated,
+        passiveIncome
+      });
+
+      // Record reward
+      await this.db.insert(challengeRewards).values({
+        challengeId,
+        userId: user.userId,
+        rank,
+        totalDonations: user.totalDonations,
+        butterflyId: butterfly.id,
+        butterflyName: butterfly.name,
+        butterflyRarity: butterfly.rarity,
+        butterflyImageUrl: butterfly.imageUrl,
+        isAnimated,
+        passiveIncome
+      });
+
+      // Create notification for butterfly winner
+      await this.createChallengeRewardNotification(
+        user.userId,
+        challengeId,
+        rank,
+        'butterfly',
+        butterfly.id,
+        butterfly.name,
+        butterfly.rarity,
+        undefined
+      );
+    }
+
+    console.log(`🏆 Processed rewards for challenge ${challengeId}, ${leaderboard.length} participants`);
+    
+    // Reset all users to 0 points after processing rewards
+    await this.resetAllUsersForNewChallenge();
+  }
+
+  async initializeUsersForChallenge(challengeId: number): Promise<void> {
+    try {
+      // Get all existing users
+      const allUsers = await this.db.select({ id: users.id }).from(users);
+      
+      // Create 0-donation entries for all users (invisible until they donate)
+      const initialEntries = allUsers.map((user: any) => ({
+        challengeId,
+        userId: user.id,
+        flowerId: 1, // Dummy flower ID for initialization
+        quantity: 0,
+        createdAt: new Date()
+      }));
+      
+      if (initialEntries.length > 0) {
+        await this.db.insert(challengeDonations).values(initialEntries);
+        console.log(`🌸 Initialized ${initialEntries.length} users with 0 points for challenge ${challengeId}`);
+      }
+    } catch (error) {
+      console.error('🌸 Error initializing users for challenge:', error);
+    }
+  }
+
+  async resetAllUsersForNewChallenge(): Promise<void> {
+    try {
+      // This happens naturally when a new challenge is created with 0-point entries
+      console.log('🌸 User points will be reset with next challenge creation');
+    } catch (error) {
+      console.error('🌸 Error resetting users for new challenge:', error);
+    }
+  }
+
+  private getRandomButterflyByRarity(targetRarity: string): any {
+    return generateRandomButterfly(targetRarity as RarityTier);
+  }
+
+  private async getAvailableVipIds(): Promise<number[]> {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const vipDir = path.join(process.cwd(), 'client/public/VIP');
+      const files = await fs.readdir(vipDir);
+      
+      // Extract VIP numbers from VIPx.gif files
+      const vipIds: number[] = [];
+      files.forEach(file => {
+        const match = file.match(/^VIP(\d+)\.gif$/i);
+        if (match) {
+          const vipId = parseInt(match[1]);
+          if (!isNaN(vipId)) {
+            vipIds.push(vipId);
+          }
+        }
+      });
+      
+      // Sort and return available VIP IDs
+      const sortedIds = vipIds.sort((a, b) => a - b);
+      console.log(`🦋 Found ${sortedIds.length} VIP butterfly files: VIP${sortedIds.join('.gif, VIP')}.gif`);
+      
+      return sortedIds.length > 0 ? sortedIds : [1]; // Fallback to VIP1 if none found
+    } catch (error) {
+      console.error('🦋 Error reading VIP directory:', error);
+      return [1]; // Fallback to VIP1
+    }
+  }
+
+  private getVipName(vipId: number): string {
+    const vipNames = [
+      'Dorada',     // VIP1
+      'Platinada',  // VIP2  
+      'Diamante',   // VIP3
+      'Celestial',  // VIP4
+      'Imperial',   // VIP5
+      'Divina',     // VIP6
+      'Suprema',    // VIP7
+      'Legendaria', // VIP8
+      'Mística',    // VIP9
+      'Eterna'      // VIP10
+    ];
+    
+    // Return name based on VIP ID, with fallback pattern for higher numbers
+    if (vipId <= vipNames.length) {
+      return vipNames[vipId - 1];
+    } else {
+      return `Extraordinaria ${vipId}`;
+    }
+  }
+
+
+  /**
+   * Get the time when the first exhibition butterfly was placed for a user
+   */
+  async getFirstButterflyPlacedTime(userId: number): Promise<Date | null> {
+    try {
+      // Check both normal and VIP exhibition butterflies
+      const normalButterflies = await this.db
+        .select()
+        .from(exhibitionButterflies)
+        .where(eq(exhibitionButterflies.userId, userId))
+        .orderBy(exhibitionButterflies.placedAt)
+        .limit(1);
+        
+      const vipButterflies = await this.db
+        .select()
+        .from(exhibitionVipButterflies)
+        .where(eq(exhibitionVipButterflies.userId, userId))
+        .orderBy(exhibitionVipButterflies.placedAt)
+        .limit(1);
+      
+      const firstNormal = normalButterflies[0]?.placedAt;
+      const firstVip = vipButterflies[0]?.placedAt;
+      
+      if (!firstNormal && !firstVip) {
+        return null;
+      }
+      
+      if (!firstNormal) return new Date(firstVip);
+      if (!firstVip) return new Date(firstNormal);
+      
+      // Return whichever came first
+      return new Date(firstNormal) < new Date(firstVip) 
+        ? new Date(firstNormal) 
+        : new Date(firstVip);
+        
+    } catch (error) {
+      console.error('Error getting first butterfly placed time:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 🔧 ADMIN: Fix passive income time bug for a user
+   * Resets lastPassiveIncomeAt to NULL, allowing the system to use current time
+   */
+  async fixPassiveIncomeTime(userId: number): Promise<void> {
+    console.log(`🔧 Fixing passive income time for user ${userId}`);
+    
+    await this.db
+      .update(users)
+      .set({ lastPassiveIncomeAt: null })
+      .where(eq(users.id, userId));
+      
+    console.log(`✅ Passive income time fixed for user ${userId}`);
+  }
+
+  // Sun Spawn Management
+  /**
+   * Get all active sun spawns
+   */
+  async getActiveSunSpawns(): Promise<any[]> {
+    const now = new Date();
+    return await this.db
+      .select()
+      .from(sunSpawns)
+      .where(and(
+        eq(sunSpawns.isActive, true),
+        gt(sunSpawns.expiresAt, now) // Still active (not expired yet)
+      ));
+  }
+
+  /**
+   * Get active sun spawns for a specific user
+   */
+  async getActiveSunSpawnsForUser(userId: number): Promise<any[]> {
+    const now = new Date();
+    
+    return await this.db
+      .select()
+      .from(sunSpawns)
+      .where(and(
+        eq(sunSpawns.userId, userId), // Only return suns that belong to this user
+        eq(sunSpawns.isActive, true),
+        gt(sunSpawns.expiresAt, now) // Still active (not expired yet)
+      ));
+  }
+
+  /**
+   * Spawn a new sun on a field for a specific user
+   */
+  async spawnSun(fieldIndex: number, userId: number): Promise<{ success: boolean; sunAmount: number }> {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 1000); // 30 seconds
+    const sunAmount = Math.floor(Math.random() * 3) + 1; // 1-3 suns
+
+    try {
+      console.log(`☀️ Spawning ${sunAmount} suns on field ${fieldIndex} for user ${userId}`);
+      
+      await this.db
+        .insert(sunSpawns)
+        .values({
+          userId,
+          fieldIndex,
+          spawnedAt: now,
+          expiresAt,
+          sunAmount,
+          isActive: true
+        });
+
+      return { success: true, sunAmount };
+    } catch (error) {
+      console.error('Error spawning sun:', error);
+      return { success: false, sunAmount: 0 };
+    }
+  }
+
+  /**
+   * Collect sun from a field
+   */
+  async collectSun(fieldIndex: number): Promise<{ success: boolean; sunAmount: number; message: string }> {
+    const now = new Date();
+    
+    try {
+      // Find active sun spawn on this field
+      const activeSun = await this.db
+        .select()
+        .from(sunSpawns)
+        .where(and(
+          eq(sunSpawns.fieldIndex, fieldIndex),
+          eq(sunSpawns.isActive, true),
+          gt(sunSpawns.expiresAt, now) // Not expired yet
+        ))
+        .limit(1);
+
+      if (activeSun.length === 0) {
+        return { success: false, sunAmount: 0, message: 'Keine Sonne zum Einsammeln gefunden' };
+      }
+
+      const sun = activeSun[0];
+      
+      // Deactivate the sun spawn
+      await this.db
+        .update(sunSpawns)
+        .set({ isActive: false })
+        .where(eq(sunSpawns.id, sun.id));
+
+      console.log(`☀️ Collected ${sun.sunAmount} suns from field ${fieldIndex}`);
+      
+      return { 
+        success: true, 
+        sunAmount: sun.sunAmount, 
+        message: `${sun.sunAmount} Sonnen eingesammelt!` 
+      };
+    } catch (error) {
+      console.error('Error collecting sun:', error);
+      return { success: false, sunAmount: 0, message: 'Fehler beim Einsammeln der Sonne' };
+    }
+  }
+
+  /**
+   * Clean up expired sun spawns
+   */
+  async cleanupExpiredSuns(): Promise<void> {
+    const now = new Date();
+    
+    try {
+      const result = await this.db
+        .update(sunSpawns)
+        .set({ isActive: false })
+        .where(and(
+          eq(sunSpawns.isActive, true),
+          lt(sunSpawns.expiresAt, now)
+        ));
+
+      console.log(`☀️ Cleaned up expired sun spawns`);
+    } catch (error) {
+      console.error('Error cleaning up expired suns:', error);
+    }
+  }
+
+
+  /**
+   * Check for active sun on specific field
+   */
+  async getActiveSunOnField(fieldIndex: number): Promise<any | null> {
+    const now = new Date();
+    
+    try {
+      const activeSun = await this.db
+        .select()
+        .from(sunSpawns)
+        .where(and(
+          eq(sunSpawns.fieldIndex, fieldIndex),
+          eq(sunSpawns.isActive, true),
+          gt(sunSpawns.expiresAt, now)
+        ))
+        .limit(1);
+
+      return activeSun.length > 0 ? activeSun[0] : null;
+    } catch (error) {
+      console.error('Error checking active sun on field:', error);
+      return null;
+    }
+  }
+
+  // REMOVED: Duplicate updateUserSuns function (exists on line 437)
+
+  /**
+   * Get butterfly sell price for suns (direct sale from inventory)
+   */
+  getButterflyToSunsPrice(rarity: string): number {
+    const prices = {
+      'common': 30,
+      'uncommon': 45,
+      'rare': 70,
+      'super-rare': 100,
+      'epic': 150,
+      'legendary': 250,
+      'mythical': 500
+    };
+    return prices[rarity as keyof typeof prices] || 30;
+  }
+
+  /**
+   * Sell butterfly from inventory directly for suns
+   */
+  async sellButterflyForSuns(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string; sunsEarned?: number }> {
+    try {
+      // Find the butterfly in user's collection
+      const userButterfliesData = await this.getUserButterflies(userId);
+      const butterfly = userButterfliesData.find(b => b.id === butterflyId);
+      
+      if (!butterfly) {
+        return { success: false, message: "Schmetterling nicht gefunden" };
+      }
+
+      // Check ownership
+      if (butterfly.userId !== userId) {
+        return { success: false, message: "Dieser Schmetterling gehört dir nicht" };
+      }
+
+      // Calculate suns earned
+      const sunsEarned = this.getButterflyToSunsPrice(butterfly.butterflyRarity);
+
+      // Remove butterfly from user's collection (reduce quantity by 1)
+      if (butterfly.quantity <= 1) {
+        // Remove completely if only 1 left
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterflyId));
+      } else {
+        // Reduce quantity by 1
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterfly.quantity - 1 })
+          .where(eq(userButterflies.id, butterflyId));
+      }
+
+      // Add suns to user
+      const user = await this.updateUserSuns(userId, sunsEarned);
+      if (user) {
+        console.log(`☀️ Suns Update: User ${userId} +${sunsEarned} ☀️ = ${user.suns} ☀️`);
+      }
+
+      console.log(`☀️ Sold ${butterfly.butterflyName} for ${sunsEarned} suns`);
+      return { success: true, sunsEarned };
+    } catch (error) {
+      console.error('Error selling butterfly for suns:', error);
+      return { success: false, message: "Fehler beim Verkauf des Schmetterlings" };
+    }
+  }
+
+  // Enhanced system: Spawn butterfly on a garden field with slot-based guarantee system
+  async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+    const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
+    
+    // For all bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
+    const shouldGuaranteeSpawn = currentSlot === totalSlots && alreadySpawnedCount === 0;
+    
+    // Check if butterfly should spawn based on rarity (with guarantee logic)
+    if (!shouldGuaranteeSpawn && !shouldSpawnButterfly(bouquetRarity, currentSlot, totalSlots)) {
+      return { success: false };
+    }
+
+    return this.spawnButterflyOnField(userId, bouquetId, bouquetRarity);
+  }
+  
+  /**
+   * Pond feeding progress methods for persistent storage
+   */
+  async updatePondFeedingProgress(userId: number, fieldIndex: number): Promise<number> {
+    try {
+      console.log(`🐟 Updating pond feeding progress for user ${userId} field ${fieldIndex}`);
+      
+      // Check if feeding progress already exists for this user-field combination
+      const existing = await this.db.select().from(pondFeedingProgressTable).where(
+        and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        )
+      );
+      
+      if (existing.length > 0) {
+        // Increment existing progress
+        const newCount = existing[0].feedingCount + 1;
+        
+        if (newCount >= 3) {
+          // DON'T delete progress here! Update to 3 and let caller handle fish creation and cleanup  
+          await this.db
+            .update(pondFeedingProgressTable)
+            .set({ 
+              feedingCount: 3,
+              lastFedAt: new Date()
+            })
+            .where(eq(pondFeedingProgressTable.id, existing[0].id));
+          console.log(`🐟 Updated feeding progress to 3 for user ${userId} field ${fieldIndex} - ready for fish creation`);
+          return 3; // Return 3 to indicate fish creation needed
+        } else {
+          // Update progress
+          await this.db
+            .update(pondFeedingProgressTable)
+            .set({ 
+              feedingCount: newCount,
+              lastFedAt: new Date()
+            })
+            .where(eq(pondFeedingProgressTable.id, existing[0].id));
+          console.log(`🐟 Updated feeding progress to ${newCount} for user ${userId} field ${fieldIndex}`);
+          return newCount;
+        }
+      } else {
+        // Create new progress entry
+        await this.db.insert(pondFeedingProgressTable).values({
+          userId,
+          fieldIndex,
+          feedingCount: 1,
+          lastFedAt: new Date()
+        });
+        console.log(`🐟 Created new feeding progress (1) for user ${userId} field ${fieldIndex}`);
+        return 1;
+      }
+      
+    } catch (error) {
+      console.error('🐟 Error updating pond feeding progress:', error);
+      throw error;
+    }
+  }
+  
+  async getUserPondProgress(userId: number): Promise<Record<number, number>> {
+    try {
+      console.log(`🐟 Getting pond progress for user ${userId}`);
+      
+      const progressEntries = await this.db.select().from(pondFeedingProgressTable).where(
+        eq(pondFeedingProgressTable.userId, userId)
+      );
+      
+      const userProgress: Record<number, number> = {};
+      for (const entry of progressEntries) {
+        userProgress[entry.fieldIndex] = entry.feedingCount;
+      }
+      
+      console.log(`🐟 Retrieved pond progress for user ${userId}:`, userProgress);
+      return userProgress;
+      
+    } catch (error) {
+      console.error('🐟 Error getting user pond progress:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Field Fish system methods
+   */
+  async spawnFishOnField(userId: number, pondFieldIndex: number, customRarity?: string): Promise<{ fishName: string, fishRarity: RarityTier }> {
+    try {
+      console.log(`🐟 SPAWNING FISH: field ${pondFieldIndex} for user ${userId}${customRarity ? ` with custom rarity: ${customRarity}` : ''}`);
+      
+      // Check if a fish already exists on this field and remove it first
+      const existingFish = await this.db
+        .select()
+        .from(fieldFish)
+        .where(and(
+          eq(fieldFish.userId, userId),
+          eq(fieldFish.fieldIndex, pondFieldIndex)
+        ))
+        .limit(1);
+      
+      if (existingFish.length > 0) {
+        console.log(`🐟 WARNING: Fish already exists on field ${pondFieldIndex}, removing old fish first`);
+        await this.db
+          .delete(fieldFish)
+          .where(and(
+            eq(fieldFish.userId, userId),
+            eq(fieldFish.fieldIndex, pondFieldIndex)
+          ));
+        console.log(`🐟 Removed existing fish from field ${pondFieldIndex}`);
+      }
+      
+      // Use custom rarity if provided, otherwise generate random
+      const rarity = (customRarity as RarityTier) || getRandomCreatureRarity();
+      const fishData = await generateRandomFish(rarity);
+      
+      console.log(`🐟 Generated fish: ${fishData.name} (${rarity}) - ID: ${fishData.id} for field ${pondFieldIndex}`);
+      
+      // Spawn fish on field first (not directly in inventory)
+      await this.db.insert(fieldFish).values({
+        userId,
+        fieldIndex: pondFieldIndex,
+        fishId: fishData.id,
+        fishName: fishData.name,
+        fishRarity: rarity,
+        fishImageUrl: fishData.imageUrl,
+        spawnedAt: new Date(),
+        isShrinking: false
+      });
+      
+      console.log(`🐟 ✅ FISH SPAWNED SUCCESSFULLY: ${fishData.name} (${rarity}) on pond field ${pondFieldIndex}`);
+      return { fishName: fishData.name, fishRarity: rarity };
+      
+    } catch (error) {
+      console.error('🐟 Error spawning fish on field:', error);
+      throw error;
+    }
+  }
+
+  // REMOVED: In-memory storage - using PostgreSQL-only storage per replit.md requirements
+  
+
+  // Get current average rarity of fed caterpillars for a field from PostgreSQL
+  async getCurrentFeedingAverageRarity(userId: number, fieldIndex: number): Promise<string> {
+    try {
+      // Get fed caterpillars from PostgreSQL for this field
+      const fedCaterpillars = await this.db
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ))
+        .orderBy(fedCaterpillarsTable.fedAt);
+      
+      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      console.log(`🐟 DEBUG: Getting average for field ${fieldIndex}, PostgreSQL rarities:`, rarities);
+      
+      if (rarities.length === 0) {
+        console.log(`🐟 DEBUG: No rarities in PostgreSQL, returning 'common'`);
+        return 'common'; // Default if no caterpillars fed yet
+      }
+      
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 DEBUG: Calculated average from [${rarities.join(', ')}] = ${averageRarity}`);
+      return averageRarity;
+    } catch (error) {
+      console.error('🐟 Error getting current feeding average rarity:', error);
+      return 'common';
+    }
+  }
+  
+  // Complete fish feeding with caterpillar - handles average calculation and fish creation
+  async feedFishWithCaterpillar(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<any> {
+    try {
+      // Get fed caterpillars from PostgreSQL for this field
+      const fedCaterpillars = await this.db
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ))
+        .orderBy(fedCaterpillarsTable.fedAt);
+      
+      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      console.log(`🐟 Fed caterpillar rarities from PostgreSQL for field ${fieldIndex}:`, rarities);
+      
+      if (rarities.length < 3) {
+        throw new Error(`Not enough caterpillars fed (${rarities.length}/3)`);
+      }
+      
+      // Calculate average rarity
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+      
+      // Spawn fish with calculated average rarity
+      console.log(`🐟 CALLING spawnFishOnField with fieldIndex: ${fieldIndex}`);
+      const fishResult = await this.spawnFishOnField(userId, fieldIndex, averageRarity);
+      console.log('🐟 FISH SPAWNED SUCCESS with CALCULATED AVERAGE RARITY:', fishResult);
+      
+      // Clean up fed caterpillars AND pond progress from PostgreSQL after fish creation  
+      await this.db
+        .delete(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ));
+      
+      await this.db
+        .delete(pondFeedingProgressTable)
+        .where(and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        ));
+      
+      console.log(`🐟 Cleaned up fed caterpillars AND pond progress from PostgreSQL for field ${fieldIndex}`);
+      
+      return {
+        feedingCount: 3,
+        fishCreated: true,
+        fishName: fishResult.fishName,
+        fishRarity: fishResult.fishRarity
+      };
+      
+    } catch (error) {
+      console.error('🐟 Error in feedFishWithCaterpillar:', error);
+      throw error;
+    }
+  }
+
+  async addFedCaterpillar(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<void> {
+    try {
+      console.log(`🐟 Adding fed caterpillar to PostgreSQL: user ${userId}, field ${fieldIndex}, rarity ${caterpillarRarity}`);
+      
+      await this.db.insert(fedCaterpillarsTable).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        caterpillarId: 0, // Not used for fish feeding tracking
+        caterpillarRarity: caterpillarRarity,
+        fedAt: new Date()
+      });
+      
+      console.log(`🐟 Successfully stored fed caterpillar for field ${fieldIndex}`);
+      
+    } catch (error) {
+      console.error('🐟 Error adding fed caterpillar:', error);
+      throw error;
+    }
+  }
+
+  async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
+    // ATOMIC TRANSACTION to prevent synchronization issues
+    return await this.db.transaction(async (tx) => {
+      console.log(`🐟 🔐 ATOMIC: Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
+      
+      // 1. Store caterpillar rarity in PostgreSQL fedCaterpillars table
+      await tx.insert(fedCaterpillarsTable).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        caterpillarId: 0, // Not used for fish feeding, only for tracking
+        caterpillarRarity: caterpillarRarity,
+        fedAt: new Date()
+      });
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillar inserted successfully`);
+      
+      // 2. Get current fed caterpillars count from PostgreSQL (within transaction)
+      const fedCaterpillars = await tx
+        .select()
+        .from(fedCaterpillarsTable)
+        .where(and(
+          eq(fedCaterpillarsTable.userId, userId),
+          eq(fedCaterpillarsTable.fieldIndex, fieldIndex)
+        ));
+      
+      const feedingCount = fedCaterpillars.length;
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
+      
+      // 3. Update feeding progress within same transaction
+      const existingProgress = await tx
+        .select()
+        .from(pondFeedingProgressTable)
+        .where(and(
+          eq(pondFeedingProgressTable.userId, userId),
+          eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+        ));
+      
+      let newProgress: number;
+      if (existingProgress.length > 0) {
+        // Update existing progress
+        await tx
+          .update(pondFeedingProgressTable)
+          .set({ feedingCount: feedingCount, updatedAt: new Date() })
+          .where(and(
+            eq(pondFeedingProgressTable.userId, userId),
+            eq(pondFeedingProgressTable.fieldIndex, fieldIndex)
+          ));
+        newProgress = feedingCount;
+      } else {
+        // Create new progress entry
+        await tx.insert(pondFeedingProgressTable).values({
+          userId: userId,
+          fieldIndex: fieldIndex,
+          feedingCount: feedingCount,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        newProgress = feedingCount;
+      }
+      
+      console.log(`🐟 🔐 ATOMIC: Updated feeding progress to ${newProgress} for user ${userId} field ${fieldIndex}`);
+      
+      // If fish is created (3 feedings), log that we're ready
+      if (newProgress >= 3) {
+        console.log(`🐟 🔐 ATOMIC: Fish will be created, rarities ready for average:`, fedCaterpillars.map(c => c.caterpillarRarity));
+      }
+      
+      return newProgress;
+    });
+  }
+
+  async spawnFishOnFieldWithAverageRarity(userId: number, pondFieldIndex: number): Promise<{ fishName: string, fishRarity: RarityTier }> {
+    try {
+      console.log(`🐟 Spawning fish on field ${pondFieldIndex} for user ${userId} with AVERAGE rarity`);
+      
+      // Get stored caterpillar rarities for this field from database
+      const fedCaterpillars = await this.getFieldCaterpillars(userId);
+      const pondCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === pondFieldIndex);
+      const rarities = pondCaterpillars.map(c => c.caterpillarRarity);
+      
+      console.log(`🐟 Fed caterpillar rarities for average calculation:`, rarities);
+      
+      if (rarities.length === 0) {
+        // Fallback to random if no rarities stored (shouldn't happen)
+        console.warn('🐟 No fed caterpillar rarities found, using random rarity');
+        const fishRarity = getRandomCreatureRarity();
+        const fishData = await generateRandomFish(fishRarity);
+        
+        await this.db.insert(fieldFish).values({
+          userId,
+          fieldIndex: pondFieldIndex,
+          fishId: fishData.id,
+          fishName: fishData.name,
+          fishRarity: fishRarity,
+          fishImageUrl: fishData.imageUrl,
+          spawnedAt: new Date(),
+          isShrinking: false
+        });
+        
+        return { fishName: fishData.name, fishRarity: fishRarity };
+      }
+      
+      // Calculate average rarity from fed caterpillars
+      const averageRarity = this.calculateAverageRarity(rarities);
+      console.log(`🐟 Calculated average rarity from [${rarities.join(', ')}] = ${averageRarity}`);
+      
+      const fishData = await generateRandomFish(averageRarity);
+      
+      console.log(`🐟 Generated fish: ${fishData.name} (${averageRarity}) from average of caterpillars - ID: ${fishData.id}`);
+      
+      // Spawn fish on field first (not directly in inventory)
+      await this.db.insert(fieldFish).values({
+        userId,
+        fieldIndex: pondFieldIndex,
+        fishId: fishData.id,
+        fishName: fishData.name,
+        fishRarity: averageRarity,
+        fishImageUrl: fishData.imageUrl,
+        spawnedAt: new Date(),
+        isShrinking: false
+      });
+      
+      // Clean up fed caterpillars after creating fish  
+      await this.db.delete(fieldCaterpillars)
+        .where(and(
+          eq(fieldCaterpillars.userId, userId),
+          eq(fieldCaterpillars.fieldIndex, pondFieldIndex)
+        ));
+      console.log(`🐟 Cleaned up stored caterpillar rarities for field ${pondFieldIndex}`);
+      
+      console.log(`🐟 Successfully spawned ${fishData.name} (${averageRarity}) on pond field ${pondFieldIndex} based on average caterpillar rarity`);
+      return { fishName: fishData.name, fishRarity: averageRarity };
+      
+    } catch (error) {
+      console.error('🐟 Error spawning fish on field with average rarity:', error);
+      throw error;
+    }
+  }
+
+  private calculateAverageRarity(rarities: string[]): RarityTier {
+    // Map rarities to numeric values for averaging
+    const rarityValues: Record<string, number> = {
+      'common': 0,
+      'uncommon': 1, 
+      'rare': 2,
+      'super-rare': 3,
+      'epic': 4,
+      'legendary': 5,
+      'mythical': 6
+    };
+    
+    const valueToRarity: RarityTier[] = [
+      'common',
+      'uncommon', 
+      'rare',
+      'super-rare',
+      'epic',
+      'legendary',
+      'mythical'
+    ];
+    
+    // Calculate average numeric value
+    const totalValue = rarities.reduce((sum, rarity) => {
+      return sum + (rarityValues[rarity] || 0);
+    }, 0);
+    
+    const averageValue = Math.round(totalValue / rarities.length);
+    const clampedValue = Math.max(0, Math.min(6, averageValue));
+    
+    const result = valueToRarity[clampedValue];
+    console.log(`🐟 Average calculation: [${rarities.join(', ')}] → values [${rarities.map(r => rarityValues[r] || 0).join(', ')}] → avg ${totalValue}/${rarities.length} = ${averageValue} → ${result}`);
+    
+    return result;
+  }
+  
+  async getFieldFish(userId: number): Promise<any[]> {
+    try {
+      console.log(`🐟 Getting field fish for user: ${userId}`);
+      
+      const fieldFishList = await this.db.select().from(fieldFish).where(
+        eq(fieldFish.userId, userId)
+      );
+      
+      console.log(`🐟 Found field fish: ${fieldFishList.length}`);
+      return fieldFishList;
+    } catch (error) {
+      console.error('🐟 Error getting field fish:', error);
+      throw error;
+    }
+  }
+  
+  async collectFieldFish(userId: number, fieldFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Collecting field fish ${fieldFishId} for user ${userId}`);
+      
+      // Get the field fish data
+      const fieldFishData = await this.db.select().from(fieldFish).where(
+        and(
+          eq(fieldFish.id, fieldFishId),
+          eq(fieldFish.userId, userId)
+        )
+      ).limit(1);
+      
+      if (fieldFishData.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden' };
+      }
+      
+      const fish = fieldFishData[0];
+      
+      // Add to inventory with UPSERT to prevent race conditions
+      try {
+        // Try to insert first (most common case)
+        await this.db.insert(userFish).values({
+          userId,
+          fishId: fish.fishId,
+          fishName: fish.fishName,
+          fishRarity: fish.fishRarity,
+          fishImageUrl: fish.fishImageUrl,
+          quantity: 1
+        });
+        console.log(`🐟 Created new fish inventory entry: ${fish.fishName}`);
+      } catch (error) {
+        // If fish already exists (constraint violation), increment quantity
+        const existingFish = await this.db.select().from(userFish).where(
+          and(
+            eq(userFish.userId, userId),
+            eq(userFish.fishId, fish.fishId)
+          )
+        );
+
+        if (existingFish.length > 0) {
+          await this.db
+            .update(userFish)
+            .set({ 
+              quantity: existingFish[0].quantity + 1
+            })
+            .where(eq(userFish.id, existingFish[0].id));
+          console.log(`🐟 Incremented existing fish ${fish.fishName} quantity to ${existingFish[0].quantity + 1}`);
+        } else {
+          // Fallback: re-throw error if not a constraint violation
+          throw error;
+        }
+      }
+      
+      // Update collection stats for acquired fish
+      await this.updateCollectionStats(userId, 'fish', fish.fishId, 1);
+      
+      // Remove fish from field
+      await this.db.delete(fieldFish).where(eq(fieldFish.id, fieldFishId));
+      console.log(`🐟 Removed field fish from field ${fish.fieldIndex}`);
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error('🐟 Error collecting field fish:', error);
+      return { success: false, message: 'Fehler beim Sammeln des Fisches' };
+    }
+  }
+
+  async getUserButterfly(userId: number, butterflyId: number): Promise<any | null> {
+    try {
+      console.log(`🦋 Getting butterfly ${butterflyId} for user ${userId}`);
+      
+      const butterfly = await this.db.select().from(userButterflies).where(
+        and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.id, butterflyId)
+        )
+      ).limit(1);
+      
+      if (butterfly.length === 0) {
+        console.log(`🦋 Butterfly ${butterflyId} not found for user ${userId}`);
+        return null;
+      }
+      
+      console.log(`🦋 Found butterfly: ${butterfly[0].butterflyName} (quantity: ${butterfly[0].quantity})`);
+      return butterfly[0];
+    } catch (error) {
+      console.error('🦋 Error getting user butterfly:', error);
+      return null;
+    }
+  }
+
+  async consumeButterfly(userId: number, butterflyId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🦋 Consuming butterfly ${butterflyId} for user ${userId}`);
+      
+      const butterfly = await this.db.select().from(userButterflies).where(
+        and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.id, butterflyId)
+        )
+      ).limit(1);
+      
+      if (butterfly.length === 0) {
+        return { success: false, message: 'Schmetterling nicht gefunden' };
+      }
+      
+      const butterflyData = butterfly[0];
+      
+      if (butterflyData.quantity <= 0) {
+        return { success: false, message: 'Nicht genügend Schmetterlinge im Inventar' };
+      }
+
+      if (butterflyData.quantity > 1) {
+        // Reduce quantity by 1
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: butterflyData.quantity - 1 })
+          .where(eq(userButterflies.id, butterflyId));
+        console.log(`🦋 Reduced butterfly ${butterflyData.butterflyName} quantity to ${butterflyData.quantity - 1}`);
+      } else {
+        // Remove completely if quantity is 1
+        await this.db
+          .delete(userButterflies)
+          .where(eq(userButterflies.id, butterflyId));
+        console.log(`🦋 Removed butterfly ${butterflyData.butterflyName} from inventory`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🦋 Error consuming butterfly:', error);
+      return { success: false, message: 'Datenbankfehler beim Verbrauchen' };
+    }
+  }
+
+  // AQUARIUM SYSTEM METHODS
+  // ======================
+
+  async getAquariumTanks(userId: number): Promise<AquariumTank[]> {
+    try {
+      const tanks = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(eq(aquariumTanks.userId, userId))
+        .orderBy(aquariumTanks.tankNumber);
+      
+      console.log(`🐟 Found ${tanks.length} aquarium tanks for user ${userId}`);
+      return tanks;
+    } catch (error) {
+      console.error('🐟 Error getting aquarium tanks:', error);
+      return [];
+    }
+  }
+
+  async getAquariumFish(userId: number): Promise<AquariumFish[]> {
+    try {
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(eq(aquariumFish.userId, userId))
+        .orderBy(aquariumFish.tankId, aquariumFish.slotIndex);
+      
+      console.log(`🐟 Found ${fish.length} aquarium fish for user ${userId}`);
+      return fish;
+    } catch (error) {
+      console.error('🐟 Error getting aquarium fish:', error);
+      return [];
+    }
+  }
+
+  async purchaseAquariumTank(userId: number, tankNumber: number): Promise<{ success: boolean; message?: string; tank?: AquariumTank }> {
+    try {
+      console.log(`🐟 User ${userId} purchasing aquarium tank ${tankNumber}`);
+      
+      // Check if tank already exists
+      const existingTank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      if (existingTank.length > 0) {
+        return { success: false, message: 'Aquarium bereits gekauft!' };
+      }
+      
+      // Calculate cost: Tank 1 = free, Tank 2 = 2500, each further x1.5
+      let cost = 0;
+      if (tankNumber === 1) {
+        cost = 0; // First aquarium is free
+      } else {
+        // Tank 2 = 2500, Tank 3 = 2500*1.5 = 3750, Tank 4 = 3750*1.5 = 5625, etc.
+        cost = Math.round(2500 * Math.pow(2.5, tankNumber - 2));
+      }
+      
+      // Check user credits
+      const user = await this.getUser(userId);
+      if (!user || user.credits < cost) {
+        return { success: false, message: `Nicht genügend Credits! Benötigt: ${cost}` };
+      }
+      
+      // Deduct credits and create tank (no transaction needed for Neon)
+      // Deduct credits first
+      await this.db
+        .update(users)
+        .set({ credits: user.credits - cost })
+        .where(eq(users.id, userId));
+      
+      // Create tank
+      await this.db
+        .insert(aquariumTanks)
+        .values({
+          userId,
+          tankNumber
+        });
+      
+      console.log(`🐟 Tank ${tankNumber} purchased for ${cost} credits`);
+      
+      // Return the new tank
+      const newTank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      return { success: true, tank: newTank[0] };
+    } catch (error) {
+      console.error('🐟 Error purchasing aquarium tank:', error);
+      return { success: false, message: 'Datenbankfehler beim Kauf' };
+    }
+  }
+
+  async placeAquariumFish(userId: number, tankNumber: number, slotIndex: number, userFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Placing fish ${userFishId} in tank ${tankNumber}, slot ${slotIndex} for user ${userId}`);
+      
+      // Check if tank exists and belongs to user
+      const tank = await this.db
+        .select()
+        .from(aquariumTanks)
+        .where(and(
+          eq(aquariumTanks.userId, userId),
+          eq(aquariumTanks.tankNumber, tankNumber)
+        ));
+      
+      if (tank.length === 0) {
+        return { success: false, message: 'Aquarium nicht gefunden!' };
+      }
+      
+      // Check if slot is already occupied
+      const existingFish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.tankId, tank[0].id),
+          eq(aquariumFish.slotIndex, slotIndex)
+        ));
+      
+      if (existingFish.length > 0) {
+        return { success: false, message: 'Platz bereits belegt!' };
+      }
+      
+      // Check if user has the fish
+      const fish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.id, userFishId)
+        ));
+      
+      if (fish.length === 0 || fish[0].quantity <= 0) {
+        return { success: false, message: 'Fisch nicht im Inventar!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Place fish in aquarium and reduce inventory (no transaction for Neon)
+      // Place fish in aquarium first
+      await this.db
+        .insert(aquariumFish)
+        .values({
+          userId,
+          tankId: tank[0].id,
+          slotIndex,
+          fishId: fishData.fishId,
+          fishName: fishData.fishName,
+          fishRarity: fishData.fishRarity,
+          fishImageUrl: fishData.fishImageUrl
+        });
+      
+      // Reduce fish quantity in inventory
+      if (fishData.quantity > 1) {
+        await this.db
+          .update(userFish)
+          .set({ quantity: fishData.quantity - 1 })
+          .where(eq(userFish.id, userFishId));
+      } else {
+        await this.db
+          .delete(userFish)
+          .where(eq(userFish.id, userFishId));
+      }
+      
+      console.log(`🐟 Fish ${fishData.fishName} placed in aquarium`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error placing aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Platzieren' };
+    }
+  }
+
+  async removeAquariumFish(userId: number, aquariumFishId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Removing aquarium fish ${aquariumFishId} for user ${userId}`);
+      
+      // Get the fish to remove
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Remove from aquarium and add back to inventory (no transaction for Neon)
+      // Remove from aquarium first
+      await this.db
+        .delete(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Add back to inventory
+      const existingFish = await this.db
+        .select()
+        .from(userFish)
+        .where(and(
+          eq(userFish.userId, userId),
+          eq(userFish.fishId, fishData.fishId)
+        ));
+      
+      if (existingFish.length > 0) {
+        // Increase quantity
+        await this.db
+          .update(userFish)
+          .set({ quantity: existingFish[0].quantity + 1 })
+          .where(eq(userFish.id, existingFish[0].id));
+      } else {
+        // Add new entry
+        await this.db
+          .insert(userFish)
+          .values({
+            userId,
+            fishId: fishData.fishId,
+            fishName: fishData.fishName,
+            fishRarity: fishData.fishRarity,
+            fishImageUrl: fishData.fishImageUrl,
+            quantity: 1
+          });
+      }
+      
+      console.log(`🐟 Fish ${fishData.fishName} removed from aquarium and returned to inventory`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error removing aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Entfernen' };
+    }
+  }
+
+  async canSellAquariumFish(aquariumFishId: number): Promise<{ canSell: boolean; timeRemainingMs: number }> {
+    try {
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      if (fish.length === 0) {
+        return { canSell: false, timeRemainingMs: 0 };
+      }
+      
+      const placedTime = new Date(fish[0].placedAt).getTime();
+      const now = new Date().getTime();
+      const timeSincePlacement = now - placedTime;
+      
+      // Fish can be sold after 24 hours (vs 72 hours for butterflies)
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      const timeRemaining = TWENTY_FOUR_HOURS - timeSincePlacement;
+      
+      return {
+        canSell: timeRemaining <= 0,
+        timeRemainingMs: Math.max(0, timeRemaining)
+      };
+    } catch (error) {
+      console.error('🐟 Error checking fish sell status:', error);
+      return { canSell: false, timeRemainingMs: 0 };
+    }
+  }
+
+  async sellAquariumFish(userId: number, aquariumFishId: number): Promise<{ success: boolean; message?: string; creditsEarned?: number }> {
+    try {
+      console.log(`🐟 Selling aquarium fish ${aquariumFishId} for user ${userId}`);
+      
+      // Check if fish can be sold
+      const sellStatus = await this.canSellAquariumFish(aquariumFishId);
+      if (!sellStatus.canSell) {
+        return { success: false, message: 'Fisch kann noch nicht verkauft werden!' };
+      }
+      
+      // Get the fish
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      
+      // Calculate price - full market value for aquarium direct sales
+      const price = this.getAquariumFishPrice(fishData.fishRarity);
+      
+      // Remove fish and add credits (no transaction for Neon)
+      // Remove fish from aquarium first
+      await this.db
+        .delete(aquariumFish)
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Add credits to user
+      const user = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (user.length > 0) {
+        await this.db
+          .update(users)
+          .set({ credits: user[0].credits + price })
+          .where(eq(users.id, userId));
+      }
+      
+      console.log(`🐟 Fish ${fishData.fishName} sold for ${price} credits`);
+      return { success: true, creditsEarned: price };
+    } catch (error) {
+      console.error('🐟 Error selling aquarium fish:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
+  }
+
+  async applyAquariumSunBoost(userId: number, aquariumFishId: number, minutes: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`🐟 Applying ${minutes} minute sun boost to fish ${aquariumFishId} for user ${userId}`);
+      
+      const sunCost = minutes; // 1 sun = 1 minute
+      
+      // Check user suns
+      const user = await this.getUser(userId);
+      if (!user || user.suns < sunCost) {
+        return { success: false, message: 'Nicht genügend Sonnen!' };
+      }
+      
+      // Get the fish
+      const fish = await this.db
+        .select()
+        .from(aquariumFish)
+        .where(and(
+          eq(aquariumFish.id, aquariumFishId),
+          eq(aquariumFish.userId, userId)
+        ));
+      
+      if (fish.length === 0) {
+        return { success: false, message: 'Fisch nicht gefunden!' };
+      }
+      
+      const fishData = fish[0];
+      const currentPlacedAt = new Date(fishData.placedAt);
+      const newPlacedAt = new Date(currentPlacedAt.getTime() - (minutes * 60 * 1000));
+      
+      // Update fish placement time and deduct suns (no transaction for Neon)
+      // Update fish placed time first
+      await this.db
+        .update(aquariumFish)
+        .set({ placedAt: newPlacedAt })
+        .where(eq(aquariumFish.id, aquariumFishId));
+      
+      // Deduct suns
+      await this.db
+        .update(users)
+        .set({ suns: user.suns - sunCost })
+        .where(eq(users.id, userId));
+      
+      console.log(`🐟 Applied ${minutes} minute boost to fish ${fishData.fishName}`);
+      return { success: true };
+    } catch (error) {
+      console.error('🐟 Error applying sun boost:', error);
+      return { success: false, message: 'Datenbankfehler beim Boost' };
+    }
+  }
+
+  private getAquariumFishPrice(rarity: string): number {
+    // Aquarium direct sale - full market value (100%)
+    const basePrice = (() => {
+      switch (rarity) {
+        case 'common': return 40;
+        case 'uncommon': return 100;
+        case 'rare': return 225;
+        case 'super-rare': return 470;
+        case 'epic': return 750;
+        case 'legendary': return 1100;
+        case 'mythical': return 2000;
+        default: return 40;
+      }
+    })();
+    
+    return basePrice; // Aquarium pays full market value
+  }
+
+  private getFishSellPrice(rarity: string): number {
+    // Fish prices - Marie Posa pays 50% of market value
+    const basePrice = (() => {
+      switch (rarity) {
+        case 'common': return 40;
+        case 'uncommon': return 100;
+        case 'rare': return 225;
+        case 'super-rare': return 470;
+        case 'epic': return 750;
+        case 'legendary': return 1100;
+        case 'mythical': return 2000;
+        default: return 40;
+      }
+    })();
+    
+    return Math.floor(basePrice * 0.5); // Marie Posa pays 50% of market value
+  }
+
+  private getFlowerSellPrice(rarity: string): number {
+    // Flower prices for Marie Posa - consistent with Exhibition system
+    // Marie Posa pays 50% of Exhibition market value
+    const exhibitionPrice = (() => {
+      switch (rarity) {
+        case 'common': return 8;
+        case 'uncommon': return 20;
+        case 'rare': return 40;
+        case 'super-rare': return 80;
+        case 'epic': return 160;
+        case 'legendary': return 400;
+        case 'mythical': return 800;
+        default: return 8;
+      }
+    })();
+    
+    return Math.floor(exhibitionPrice * 0.5); // Marie Posa pays 50% of Exhibition value
+  }
+
+  private getCaterpillarSellPrice(rarity: string): number {
+    // Raupenpreise = 40% der Fischpreise (Marie Posa zahlt 50% vom Fisch-Marktpreis)
+    // First get the fish market price for this rarity
+    const fishMarketPrice = (() => {
+      switch (rarity) {
+        case 'common': return 80;
+        case 'uncommon': return 200;
+        case 'rare': return 450;
+        case 'super-rare': return 940;
+        case 'epic': return 1500;
+        case 'legendary': return 2200;
+        case 'mythical': return 4000;
+        default: return 80;
+      }
+    })();
+    
+    // Return 40% of fish market price, then Marie Posa pays 50% of that (= 20% of fish market price)
+    const caterpillarMarketPrice = Math.floor(fishMarketPrice * 0.4);
+    return Math.floor(caterpillarMarketPrice * 0.5);
+  }
+
+  private getButterflySellPrice(rarity: string): number {
+    // Butterfly prices for Marie Posa - consistent with Exhibition system
+    // Marie Posa pays 50% of Exhibition market value
+    const exhibitionPrice = (() => {
+      switch (rarity) {
+        case 'common': return 10;
+        case 'uncommon': return 25;
+        case 'rare': return 50;
+        case 'super-rare': return 100;
+        case 'epic': return 200;
+        case 'legendary': return 500;
+        case 'mythical': return 1000;
+        default: return 10;
+      }
+    })();
+    
+    return Math.floor(exhibitionPrice * 0.5); // Marie Posa pays 50% of Exhibition value
+  }
+
+  // Marie Posa trading system functions
+  async getMariePosaLastTrade(userId: number): Promise<{ lastTradeAt: Date | null }> {
+    try {
+      const result = await this.db
+        .select()
+        .from(mariePosaTracker)
+        .where(eq(mariePosaTracker.userId, userId))
+        .orderBy(desc(mariePosaTracker.lastTradeAt))
+        .limit(1);
+
+      return { 
+        lastTradeAt: result.length > 0 ? result[0].lastTradeAt : null 
+      };
+    } catch (error) {
+      console.error('Error getting Marie Posa last trade:', error);
+      return { lastTradeAt: null };
+    }
+  }
+
+  async processMariePosaSale(userId: number, items: Array<{type: string, originalId: number, sellPrice: number}>): Promise<{
+    success: boolean;
+    message?: string;
+    totalEarned?: number;
+    itemsSold?: number;
+  }> {
+    try {
+      if (!items || items.length === 0 || items.length > 4) {
+        return { success: false, message: 'Ungültige Item-Auswahl' };
+      }
+
+      let totalEarned = 0;
+      let itemsSold = 0;
+
+      // Begin transaction to ensure all operations succeed or fail together
+      for (const item of items) {
+        let deleteResult = false;
+        let actualSellPrice = 0;
+        
+        // FIRST: Calculate sell price based on item data BEFORE deletion
+        switch (item.type) {
+          case 'flower':
+            const flowerData = await this.db
+              .select()
+              .from(userFlowers)
+              .where(and(
+                eq(userFlowers.id, item.originalId),
+                eq(userFlowers.userId, userId)
+              ))
+              .limit(1);
+            if (flowerData.length > 0) {
+              const { getFlowerRarityById } = await import('../shared/rarity');
+              const flowerRarity = getFlowerRarityById(flowerData[0].flowerId);
+              actualSellPrice = this.getFlowerSellPrice(flowerRarity);
+            }
+            break;
+            
+          case 'butterfly':
+            const butterflyData = await this.db
+              .select()
+              .from(userButterflies)
+              .where(and(
+                eq(userButterflies.id, item.originalId),
+                eq(userButterflies.userId, userId)
+              ))
+              .limit(1);
+            if (butterflyData.length > 0) {
+              actualSellPrice = this.getButterflySellPrice(butterflyData[0].butterflyRarity);
+            }
+            break;
+            
+          case 'fish':
+            const fishDataForPrice = await this.db
+              .select()
+              .from(userFish)
+              .where(and(
+                eq(userFish.id, item.originalId),
+                eq(userFish.userId, userId)
+              ))
+              .limit(1);
+            if (fishDataForPrice.length > 0) {
+              const fishRarity = getFishRarity(fishDataForPrice[0].fishId);
+              actualSellPrice = this.getFishSellPrice(fishRarity);
+            }
+            break;
+            
+          case 'caterpillar':
+            const caterpillarDataForPrice = await this.db
+              .select()
+              .from(userCaterpillars)
+              .where(and(
+                eq(userCaterpillars.id, item.originalId),
+                eq(userCaterpillars.userId, userId)
+              ))
+              .limit(1);
+            if (caterpillarDataForPrice.length > 0) {
+              actualSellPrice = this.getCaterpillarSellPrice(caterpillarDataForPrice[0].caterpillarRarity);
+            }
+            break;
+            
+          default:
+            console.warn(`Unknown item type for price calculation: ${item.type}`);
+            actualSellPrice = item.sellPrice; // Fallback to client price
+            break;
+        }
+        
+        // SECOND: Delete the item from user's inventory based on type
+        switch (item.type) {
+          case 'flower':
+            const flowerResult = await this.db
+              .delete(userFlowers)
+              .where(and(
+                eq(userFlowers.id, item.originalId),
+                eq(userFlowers.userId, userId)
+              ))
+              .returning();
+            deleteResult = flowerResult.length > 0;
+            break;
+            
+          case 'butterfly':
+            const butterflyResult = await this.db
+              .delete(userButterflies)
+              .where(and(
+                eq(userButterflies.id, item.originalId),
+                eq(userButterflies.userId, userId)
+              ))
+              .returning();
+            deleteResult = butterflyResult.length > 0;
+            break;
+            
+          case 'fish':
+            // Handle fish differently - check if quantity > 1, decrease quantity instead of deleting
+            const fishData = await this.db
+              .select()
+              .from(userFish)
+              .where(and(
+                eq(userFish.id, item.originalId),
+                eq(userFish.userId, userId)
+              ))
+              .limit(1);
+
+            if (fishData.length > 0) {
+              if (fishData[0].quantity > 1) {
+                // Decrease quantity by 1
+                await this.db
+                  .update(userFish)
+                  .set({ quantity: fishData[0].quantity - 1 })
+                  .where(eq(userFish.id, item.originalId));
+                deleteResult = true;
+              } else {
+                // Delete if quantity is 1
+                const fishResult = await this.db
+                  .delete(userFish)
+                  .where(and(
+                    eq(userFish.id, item.originalId),
+                    eq(userFish.userId, userId)
+                  ))
+                  .returning();
+                deleteResult = fishResult.length > 0;
+              }
+            }
+            break;
+            
+          case 'caterpillar':
+            console.log(`🐛 Marie Posa: Processing caterpillar sale for item ID ${item.originalId}, user ${userId}`);
+            // Handle caterpillars like fish - check if quantity > 1, decrease quantity instead of deleting
+            const caterpillarData = await this.db
+              .select()
+              .from(userCaterpillars)
+              .where(and(
+                eq(userCaterpillars.id, item.originalId),
+                eq(userCaterpillars.userId, userId)
+              ))
+              .limit(1);
+
+            console.log(`🐛 Marie Posa: Found caterpillar data:`, caterpillarData);
+
+            if (caterpillarData.length > 0) {
+              console.log(`🐛 Marie Posa: Caterpillar quantity: ${caterpillarData[0].quantity}`);
+              if (caterpillarData[0].quantity > 1) {
+                console.log(`🐛 Marie Posa: Decreasing quantity from ${caterpillarData[0].quantity} to ${caterpillarData[0].quantity - 1}`);
+                // Decrease quantity by 1
+                await this.db
+                  .update(userCaterpillars)
+                  .set({ quantity: caterpillarData[0].quantity - 1 })
+                  .where(eq(userCaterpillars.id, item.originalId));
+                deleteResult = true;
+                console.log(`🐛 Marie Posa: Successfully decreased caterpillar quantity`);
+              } else {
+                console.log(`🐛 Marie Posa: Deleting caterpillar completely (quantity is 1)`);
+                // Delete if quantity is 1
+                const caterpillarResult = await this.db
+                  .delete(userCaterpillars)
+                  .where(and(
+                    eq(userCaterpillars.id, item.originalId),
+                    eq(userCaterpillars.userId, userId)
+                  ))
+                  .returning();
+                deleteResult = caterpillarResult.length > 0;
+                console.log(`🐛 Marie Posa: Delete result:`, caterpillarResult, `deleteResult: ${deleteResult}`);
+              }
+            } else {
+              console.log(`🐛 Marie Posa: ERROR - No caterpillar found with ID ${item.originalId} for user ${userId}`);
+            }
+            break;
+            
+          default:
+            console.warn(`Unknown item type: ${item.type}`);
+            continue;
+        }
+
+        if (deleteResult) {
+          totalEarned += actualSellPrice;
+          itemsSold++;
+          console.log(`👑 Marie Posa: Sold ${item.type} (ID: ${item.originalId}) for ${actualSellPrice} credits`);
+        } else {
+          console.warn(`Failed to delete item ${item.originalId} of type ${item.type} for user ${userId}`);
+        }
+      }
+
+      if (itemsSold === 0) {
+        return { success: false, message: 'Keine Items konnten verkauft werden' };
+      }
+
+      // Add credits to user
+      await this.db
+        .update(users)
+        .set({ 
+          credits: sql`credits + ${totalEarned}`,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+
+      // Record this trade - check if entry exists for this user
+      const existingEntry = await this.db
+        .select()
+        .from(mariePosaTracker)
+        .where(eq(mariePosaTracker.userId, userId))
+        .limit(1);
+
+      if (existingEntry.length > 0) {
+        // Update existing entry
+        await this.db
+          .update(mariePosaTracker)
+          .set({ lastTradeAt: new Date() })
+          .where(eq(mariePosaTracker.userId, userId));
+      } else {
+        // Insert new entry
+        await this.db
+          .insert(mariePosaTracker)
+          .values({
+            userId,
+            lastTradeAt: new Date(),
+            createdAt: new Date()
+          });
+      }
+
+      console.log(`👑 Marie Posa: User ${userId} sold ${itemsSold} items for ${totalEarned} credits`);
+      
+      return {
+        success: true,
+        totalEarned,
+        itemsSold
+      };
+    } catch (error) {
+      console.error('Error processing Marie Posa sale:', error);
+      return { success: false, message: 'Datenbankfehler beim Verkauf' };
+    }
+  }
+
+  // ========== TOP 100 RANKINGS METHODS ==========
+
+  async getTop100ByCredits(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        credits: users.credits
+      })
+      .from(users)
+      .orderBy(desc(users.credits))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'credits', currentUserId);
+  }
+
+  async getTop100ByPassiveIncome(currentUserId: number): Promise<any[]> {
+    try {
+      // Get all users and calculate their actual passive income
+      const allUsers = await this.db
+        .select({
+          id: users.id,
+          username: users.username
+        })
+        .from(users);
+
+      // Calculate actual passive income for each user
+      const userStatsWithIncome = await Promise.all(
+        allUsers.map(async (user) => {
+          const exhibitionButterflies = await this.getExhibitionButterflies(user.id);
+          
+          // Sum up actual passive income from all butterflies
+          let totalPassiveIncome = 0;
+          for (const butterfly of exhibitionButterflies) {
+            // Get frame likes for this butterfly's frame
+            const frameLikes = await this.getFrameLikesCount(butterfly.frameId);
+            
+            totalPassiveIncome += this.getCurrentCrPerHour(
+              butterfly.butterflyRarity || 'common',
+              false, // isVip - handled by rarity
+              new Date(butterfly.placedAt || butterfly.createdAt),
+              frameLikes
+            );
+          }
+          
+          // Add VIP butterflies if they exist
+          const vipButterflies = await this.getExhibitionVipButterflies(user.id);
+          for (const vipButterfly of vipButterflies) {
+            const frameLikes = await this.getFrameLikesCount(vipButterfly.frameId);
+            
+            totalPassiveIncome += this.getCurrentCrPerHour(
+              'vip',
+              true,
+              new Date(vipButterfly.placedAt || vipButterfly.createdAt),
+              frameLikes
+            );
+          }
+          
+          return {
+            id: user.id,
+            username: user.username,
+            passiveIncome: Math.round(totalPassiveIncome) // Round to whole numbers
+          };
+        })
+      );
+
+      // Sort by passive income descending and limit to 100
+      const sortedUsers = userStatsWithIncome
+        .sort((a, b) => b.passiveIncome - a.passiveIncome)
+        .slice(0, 100);
+
+      return this.formatRankingResults(sortedUsers, 'passiveIncome', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByPassiveIncome:', error);
+      return [];
+    }
+  }
+
+  async getTop100BySuns(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        suns: users.suns
+      })
+      .from(users)
+      .orderBy(desc(users.suns))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'suns', currentUserId);
+  }
+
+  async getTop100ByDna(currentUserId: number): Promise<any[]> {
+    const allUsers = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        dna: users.dna
+      })
+      .from(users)
+      .orderBy(desc(users.dna))
+      .limit(100);
+
+    return this.formatRankingResults(allUsers, 'dna', currentUserId);
+  }
+
+  async getTop100ByLikes(currentUserId: number): Promise<any[]> {
+    try {
+      // Calculate total likes from exhibition_frame_likes table
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          likes: sql<number>`COALESCE(COUNT(${exhibitionFrameLikes.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(exhibitionFrameLikes, eq(users.id, exhibitionFrameLikes.frameOwnerId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${exhibitionFrameLikes.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'likes', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByLikes:', error);
+      return [];
+    }
+  }
+
+  async getTop100BySeeds(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          seeds: sql<number>`COALESCE(SUM(${userSeeds.quantity}), 0)`
+        })
+        .from(users)
+        .leftJoin(userSeeds, eq(users.id, userSeeds.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(SUM(${userSeeds.quantity}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'seeds', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100BySeeds:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByFlowers(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          flowers: sql<number>`COALESCE(SUM(${userFlowers.quantity}), 0)`
+        })
+        .from(users)
+        .leftJoin(userFlowers, eq(users.id, userFlowers.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(SUM(${userFlowers.quantity}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'flowers', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByFlowers:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByBouquets(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          bouquets: sql<number>`COALESCE(COUNT(${userBouquets.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(userBouquets, eq(users.id, userBouquets.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${userBouquets.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'bouquets', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByBouquets:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByHearts(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          hearts: users.hearts
+        })
+        .from(users)
+        .orderBy(desc(users.hearts))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'hearts', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByHearts:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByButterflies(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          butterflies: sql<number>`COALESCE(COUNT(${userButterflies.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(userButterflies, eq(users.id, userButterflies.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${userButterflies.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'butterflies', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByButterflies:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByCaterpillars(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          caterpillars: sql<number>`COALESCE(COUNT(${userCaterpillars.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(userCaterpillars, eq(users.id, userCaterpillars.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${userCaterpillars.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'caterpillars', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByCaterpillars:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByFish(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          fish: sql<number>`COALESCE(COUNT(${userFish.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(userFish, eq(users.id, userFish.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${userFish.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'fish', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByFish:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByExhibitionButterflies(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          exhibitionButterflies: sql<number>`COALESCE(COUNT(${exhibitionButterflies.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(exhibitionButterflies, eq(users.id, exhibitionButterflies.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${exhibitionButterflies.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'exhibitionButterflies', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByExhibitionButterflies:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByExhibitionFish(currentUserId: number): Promise<any[]> {
+    try {
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          exhibitionFish: sql<number>`COALESCE(COUNT(${aquariumFish.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(aquariumFish, eq(users.id, aquariumFish.userId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${aquariumFish.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'exhibitionFish', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByExhibitionFish:', error);
+      return [];
+    }
+  }
+
+  async getTop100ByBouquetRecipes(currentUserId: number): Promise<any[]> {
+    try {
+      // Count bouquet recipes created by each user
+      const userStats = await this.db
+        .select({
+          id: users.id,
+          username: users.username,
+          bouquetRecipes: sql<number>`COALESCE(COUNT(${bouquets.id}), 0)`
+        })
+        .from(users)
+        .leftJoin(bouquets, eq(users.id, bouquets.createdByUserId))
+        .groupBy(users.id, users.username)
+        .orderBy(desc(sql`COALESCE(COUNT(${bouquets.id}), 0)`))
+        .limit(100);
+
+      return this.formatRankingResults(userStats, 'bouquetRecipes', currentUserId);
+    } catch (error) {
+      console.error('🏆 Error in getTop100ByBouquetRecipes:', error);
+      return [];
+    }
+  }
+
+  private formatRankingResults(results: any[], valueKey: string, currentUserId: number): any[] {
+    console.log(`🏆 formatRankingResults: ${valueKey}, results:`, results);
+    return results.map((user, index) => ({
+      id: user.id || user.userId,
+      username: user.username,
+      value: user[valueKey] || 0,
+      rank: index + 1,
+      isCurrentUser: (user.id === currentUserId) || (user.userId === currentUserId)
+    }));
+  }
+
+  // Helper function to get frame likes count
+  async getFrameLikesCount(frameId: number): Promise<number> {
+    try {
+      const result = await this.db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(exhibitionFrameLikes)
+        .where(eq(exhibitionFrameLikes.frameId, frameId));
+      
+      return Number(result[0]?.count) || 0;
+    } catch (error) {
+      console.error('Error getting frame likes count:', error);
+      return 0;
+    }
+  }
+
+  // Calculate current Cr/h based on degradation over 72 hours with like bonus
+  private getCurrentCrPerHour(rarity: string, isVip: boolean, placedAt: Date, likesCount: number = 0): number {
+    let baseValue: number;
+    
+    if (isVip || rarity === 'vip') {
+      // VIP butterflies: 60 Cr/h → 6 Cr/h over 72 hours
+      const startValue = 60;
+      const minValue = 6;
+      baseValue = this.calculateDegradedValue(startValue, minValue, placedAt);
+    } else {
+      const rarityValues: Record<string, { start: number; min: number }> = {
+        'common': { start: 1, min: 1 },       // No degradation for Common
+        'uncommon': { start: 2, min: 1 },     // 2 → 1 Cr/h
+        'rare': { start: 5, min: 1 },         // 5 → 1 Cr/h  
+        'super-rare': { start: 10, min: 1 },  // 10 → 1 Cr/h
+        'epic': { start: 20, min: 2 },        // 20 → 2 Cr/h
+        'legendary': { start: 50, min: 5 },   // 50 → 5 Cr/h
+        'mythical': { start: 100, min: 10 }   // 100 → 10 Cr/h
+      };
+
+      const values = rarityValues[rarity] || { start: 1, min: 1 };
+      baseValue = this.calculateDegradedValue(values.start, values.min, placedAt);
+    }
+    
+    // Apply like bonus: 2% per like
+    const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+    baseValue = Math.round(baseValue * likeBonus);
+    
+    return baseValue;
+  }
+
+  // Calculate degraded value over 72 hours
+  private calculateDegradedValue(startValue: number, minValue: number, placedAt: Date): number {
+    const placedTime = placedAt.getTime();
+    const now = new Date().getTime();
+    const timeSincePlacement = now - placedTime;
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+
+    // If less than 72 hours have passed, calculate degradation
+    if (timeSincePlacement < SEVENTY_TWO_HOURS) {
+      const degradationProgress = timeSincePlacement / SEVENTY_TWO_HOURS; // 0 to 1
+      const valueRange = startValue - minValue;
+      const currentValue = startValue - (valueRange * degradationProgress);
+      return Math.max(Math.round(currentValue), minValue);
+    }
+
+    // After 72 hours, return minimum value
+    return minValue;
+  }
+
+  // ==================== FIELD FLOWERS MANAGEMENT (for Pond Caterpillar Spawning) ====================
+
+  async getUserFlower(userId: number, flowerId: number): Promise<any | null> {
+    try {
+      console.log(`🌸 Getting flower ${flowerId} for user ${userId}`);
+      
+      const flower = await this.db.select().from(userFlowers).where(
+        and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.id, flowerId)
+        )
+      ).limit(1);
+      
+      if (flower.length === 0) {
+        console.log(`🌸 Flower ${flowerId} not found for user ${userId}`);
+        return null;
+      }
+      
+      console.log(`🌸 Found flower: ${flower[0].flowerName} (quantity: ${flower[0].quantity})`);
+      return flower[0];
+    } catch (error) {
+      console.error('🌸 Error getting user flower:', error);
+      return null;
+    }
+  }
+
+  async getFieldFlower(userId: number, fieldIndex: number): Promise<any | null> {
+    try {
+      const flower = await this.db.select().from(fieldFlowers).where(
+        and(
+          eq(fieldFlowers.userId, userId),
+          eq(fieldFlowers.fieldIndex, fieldIndex)
+        )
+      ).limit(1);
+      
+      return flower.length > 0 ? flower[0] : null;
+    } catch (error) {
+      console.error('🌸 Error getting field flower:', error);
+      return null;
+    }
+  }
+
+  async placeFlowerOnField(userId: number, fieldIndex: number, flowerId: number): Promise<{ success: boolean; message?: string; flower?: any }> {
+    console.log(`🌸 Placing flower ${flowerId} on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      // Check if user has this flower
+      const userFlower = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(eq(userFlowers.userId, userId), eq(userFlowers.id, flowerId)));
+
+      if (userFlower.length === 0) {
+        return { success: false, message: "Blume nicht gefunden" };
+      }
+
+      if (userFlower[0].quantity <= 0) {
+        return { success: false, message: "Nicht genügend Blumen im Inventar" };
+      }
+
+      // Check if field already has a flower
+      const existingFlower = await this.db
+        .select()
+        .from(fieldFlowers)
+        .where(and(eq(fieldFlowers.userId, userId), eq(fieldFlowers.fieldIndex, fieldIndex)));
+
+      if (existingFlower.length > 0) {
+        return { success: false, message: "Auf diesem Feld ist bereits eine Blume platziert" };
+      }
+
+      // Place flower on field
+      await this.db.insert(fieldFlowers).values({
+        userId: userId,
+        fieldIndex: fieldIndex,
+        flowerId: userFlower[0].flowerId,
+        flowerName: userFlower[0].flowerName,
+        flowerRarity: userFlower[0].flowerRarity,
+        flowerImageUrl: userFlower[0].flowerImageUrl,
+        isShrinking: false
+      });
+
+      // Consume flower from user inventory
+      const newQuantity = userFlower[0].quantity - 1;
+      if (newQuantity <= 0) {
+        await this.db
+          .delete(userFlowers)
+          .where(eq(userFlowers.id, flowerId));
+      } else {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: newQuantity })
+          .where(eq(userFlowers.id, flowerId));
+      }
+
+      console.log(`🌸 Flower ${userFlower[0].flowerName} placed on field ${fieldIndex}`);
+      return { success: true, flower: userFlower[0] };
+    } catch (error) {
+      console.error('🌸 Error placing flower on field:', error);
+      return { success: false, message: "Datenbankfehler beim Platzieren der Blume" };
+    }
+  }
+
+  async getFieldFlowers(userId: number): Promise<any[]> {
+    try {
+      console.log(`🌸 Getting field flowers for user ${userId}`);
+      
+      const flowers = await this.db
+        .select()
+        .from(fieldFlowers)
+        .where(sql`user_id = ${userId}`)
+        .orderBy(fieldFlowers.fieldIndex);
+      
+      console.log(`🌸 Found ${flowers.length} field flowers for user ${userId}`);
+      return flowers;
+    } catch (error) {
+      console.error('🌸 Error getting field flowers:', error);
+      return [];
+    }
+  }
+
+  async removeFieldFlower(userId: number, fieldIndex: number): Promise<{ success: boolean; message?: string }> {
+    console.log(`🌸 Removing field flower on field ${fieldIndex} for user ${userId}`);
+    
+    try {
+      const result = await this.db
+        .delete(fieldFlowers)
+        .where(and(eq(fieldFlowers.userId, userId), eq(fieldFlowers.fieldIndex, fieldIndex)))
+        .returning();
+
+      console.log(`🌸 Deletion result: ${result.length} rows deleted`);
+
+      if (result.length === 0) {
+        return { success: false, message: 'No flower found on field' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('🌸 Error removing field flower:', error);
+      return { success: false, message: "Datenbankfehler beim Entfernen der Blume" };
+    }
+  }
+  // Daily Items System
+  async getDailyItems(): Promise<DailyItems | null> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      let [dailyItemsRecord] = await this.db
+        .select()
+        .from(dailyItems)
+        .where(eq(dailyItems.date, today))
+        .limit(1);
+
+      if (!dailyItemsRecord) {
+        // Generate new daily items for today
+        dailyItemsRecord = await this.generateDailyItems(today);
+      }
+
+      return dailyItemsRecord;
+    } catch (error) {
+      console.error('Failed to get daily items:', error);
+      return null;
+    }
+  }
+
+  async getDailyItemsWithRedemptions(userId?: number): Promise<(DailyItems & { redemptions?: Record<string, boolean> }) | null> {
+    try {
+      const dailyItemsData = await this.getDailyItems();
+      if (!dailyItemsData || !userId) {
+        return dailyItemsData;
+      }
+
+      // Get redemption status for each daily prize type
+      const prizeTypes = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'];
+      const redemptions: Record<string, boolean> = {};
+
+      for (const prizeType of prizeTypes) {
+        redemptions[prizeType] = await this.checkDailyRedemption(userId, prizeType);
+      }
+
+      return {
+        ...dailyItemsData,
+        redemptions
+      };
+    } catch (error) {
+      console.error('Failed to get daily items with redemptions:', error);
+      return null;
+    }
+  }
+
+  private async generateDailyItems(date: string): Promise<DailyItems> {
+    // Generate ONLY rare items (rarity 2)
+    const getRandomRareId = (max: number) => Math.floor(Math.random() * max);
+    const getRareRarity = () => 2; // Always rare (2)
+
+    const newDailyItems = {
+      date,
+      flowerId: getRandomRareId(200),
+      flowerRarity: getRareRarity(),
+      butterflyId: getRandomRareId(960),
+      butterflyRarity: getRareRarity(),
+      caterpillarId: getRandomRareId(124),
+      caterpillarRarity: getRareRarity(),
+      fishId: getRandomRareId(278),
+      fishRarity: getRareRarity(),
+    };
+
+    const [inserted] = await this.db
+      .insert(dailyItems)
+      .values(newDailyItems)
+      .returning();
+
+    return inserted;
+  }
+
+  // Daily Redemption System
+  async checkDailyRedemption(userId: number, prizeType: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [existing] = await this.db
+        .select()
+        .from(dailyRedemptions)
+        .where(
+          and(
+            eq(dailyRedemptions.userId, userId),
+            eq(dailyRedemptions.date, today),
+            eq(dailyRedemptions.prizeType, prizeType)
+          )
+        )
+        .limit(1);
+      
+      return !!existing; // Return true if already redeemed today
+    } catch (error) {
+      console.error('Failed to check daily redemption:', error);
+      return false;
+    }
+  }
+
+  async recordDailyRedemption(userId: number, prizeType: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      await this.db
+        .insert(dailyRedemptions)
+        .values({
+          userId,
+          date: today,
+          prizeType
+        });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to record daily redemption:', error);
+      return false;
+    }
+  }
+
+  // Ticket Redemption System
+  async redeemTickets(userId: number, prizeType: string, cost: number): Promise<{ success: boolean; message: string }> {
+    try {
+      // Check if this is a daily prize that can only be redeemed once per day
+      const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prizeType);
+      
+      if (isDailyPrize) {
+        const alreadyRedeemed = await this.checkDailyRedemption(userId, prizeType);
+        if (alreadyRedeemed) {
+          return { success: false, message: "Du hast diesen Preis heute bereits eingelöst. Komm morgen wieder!" };
+        }
+      }
+
+      const userResult = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (userResult.length === 0) {
+        return { success: false, message: "User not found" };
+      }
+      
+      const user = userResult[0];
+
+      if (user.tickets < cost) {
+        return { success: false, message: `Nicht genügend Lose. Du hast ${user.tickets}, brauchst aber ${cost}.` };
+      }
+
+      // Deduct tickets
+      await this.db
+        .update(users)
+        .set({ tickets: user.tickets - cost })
+        .where(eq(users.id, userId));
+
+      // Award prize based on type
+      switch (prizeType) {
+        case 'seed':
+        case 'common-seed':
+          await this.addSeedToUser(userId, 1, 1); // Common seed
+          break;
+        case 'suns':
+          await this.addSunsToUser(userId, 5); // Updated to match frontend description
+          break;
+        case 'rare-seed':
+          await this.addSeedToUser(userId, 3, 1); // Rare seed (seedId 3 = rare)
+          break;
+        case 'dna':
+          await this.updateUserDna(userId, 15);
+          break;
+        case 'credits':
+          await this.addCreditsToUser(userId, 500); // 500 credits prize
+          break;
+        case 'daily-credits':
+          await this.addCreditsToUser(userId, 800);
+          break;
+        case 'daily-flower':
+          const dailyItemsForFlower = await this.getDailyItems();
+          if (dailyItemsForFlower) {
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFlower.flowerRarity] || 'common';
+            await this.addFlowerToUser(userId, dailyItemsForFlower.flowerId, rarityName);
+          }
+          break;
+        case 'daily-butterfly':
+          const dailyItemsForButterfly = await this.getDailyItems();
+          if (dailyItemsForButterfly) {
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForButterfly.butterflyRarity] || 'common';
+            await this.addButterflyToUser(userId, dailyItemsForButterfly.butterflyId, rarityName);
+          }
+          break;
+        case 'daily-caterpillar':
+          const dailyItemsForCaterpillar = await this.getDailyItems();
+          if (dailyItemsForCaterpillar) {
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForCaterpillar.caterpillarRarity] || 'common';
+            await this.addCaterpillarForRedemption(userId, dailyItemsForCaterpillar.caterpillarId, rarityName);
+          }
+          break;
+        case 'daily-fish':
+          const dailyItemsForFish = await this.getDailyItems();
+          if (dailyItemsForFish) {
+            // Convert integer rarity to string rarity name
+            const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+            const rarityName = rarityNames[dailyItemsForFish.fishRarity] || 'common';
+            await this.addDailyFishToUser(userId, dailyItemsForFish.fishId, rarityName);
+          }
+          break;
+        default:
+          return { success: false, message: "Unbekannter Preistyp" };
+      }
+
+      // Record daily redemption for daily prizes
+      if (isDailyPrize) {
+        await this.recordDailyRedemption(userId, prizeType);
+      }
+
+      return { success: true, message: "Preis erfolgreich eingelöst!" };
+    } catch (error) {
+      console.error('Failed to redeem tickets:', error);
+      return { success: false, message: "Fehler beim Einlösen" };
+    }
+  }
+
+  // Helper method to add seeds to user
+  private async addSeedToUser(userId: number, seedId: number, quantity: number): Promise<void> {
+    const existing = await this.db
+      .select()
+      .from(userSeeds)
+      .where(and(eq(userSeeds.userId, userId), eq(userSeeds.seedId, seedId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await this.db
+        .update(userSeeds)
+        .set({ quantity: existing[0].quantity + quantity })
+        .where(eq(userSeeds.id, existing[0].id));
+      
+      // Collection stats are not tracked for seeds - only for collectible items like flowers, butterflies, fish, caterpillars
+    } else {
+      await this.db.insert(userSeeds).values({
+        userId,
+        seedId,
+        quantity
+      });
+      
+      // Collection stats are not tracked for seeds - only for collectible items like flowers, butterflies, fish, caterpillars
+    }
+  }
+
+  // Helper method to add suns to user
+  private async addSunsToUser(userId: number, amount: number): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ suns: sql`${users.suns} + ${amount}` })
+      .where(eq(users.id, userId));
+  }
+
+  // Helper method to add credits to user
+  private async addCreditsToUser(userId: number, amount: number): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ credits: sql`${users.credits} + ${amount}` })
+      .where(eq(users.id, userId));
+  }
+
+  // Helper method to add flower to user with UPSERT logic
+  private async addFlowerToUser(userId: number, flowerId: number, rarity: string): Promise<void> {
+    // Generate flower name using flowerId as seed for consistency with dialog
+    const flowerName = generateLatinFlowerName(flowerId);
+    
+    // Convert string rarity to integer for database
+    const rarityNames = ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'];
+    const rarityInteger = rarityNames.indexOf(rarity);
+    
+    try {
+      // Try to insert first (most common case)
+      await this.db.insert(userFlowers).values({
+        userId,
+        flowerId,
+        flowerName,
+        rarity: rarityInteger >= 0 ? rarityInteger : 0, // Integer rarity for DB constraint
+        flowerRarity: rarity,                            // String rarity for display
+        flowerImageUrl: `/Blumen/${flowerId}.jpg`,
+        quantity: 1
+      });
+      console.log(`🌸 Created new flower inventory entry: ${flowerName}`);
+      
+      // Update collection stats for new flower
+      await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
+    } catch (error) {
+      // If flower already exists (constraint violation), increment quantity
+      const existingFlower = await this.db
+        .select()
+        .from(userFlowers)
+        .where(and(
+          eq(userFlowers.userId, userId),
+          eq(userFlowers.flowerId, flowerId)
+        ));
+
+      if (existingFlower.length > 0) {
+        await this.db
+          .update(userFlowers)
+          .set({ quantity: existingFlower[0].quantity + 1 })
+          .where(eq(userFlowers.id, existingFlower[0].id));
+        console.log(`🌸 Incremented existing flower ${flowerName} quantity to ${existingFlower[0].quantity + 1}`);
+        
+        // Update collection stats for existing flower
+        await this.updateCollectionStats(userId, 'flowers', flowerId, 1);
+      } else {
+        throw error; // Re-throw if it's not a constraint violation we can handle
+      }
+    }
+  }
+
+  // Helper method to add butterfly to user with UPSERT logic
+  private async addButterflyToUser(userId: number, butterflyId: number, rarity: string): Promise<void> {
+    // Generate consistent butterfly name using fixed ID as seed
+    const butterflyName = generateLatinButterflyName(butterflyId);
+    
+    try {
+      // Try to insert first (most common case)
+      await this.db.insert(userButterflies).values({
+        userId,
+        butterflyId,
+        butterflyName,
+        butterflyRarity: rarity,
+        butterflyImageUrl: `/Schmetterlinge/${String(butterflyId).padStart(3, '0')}.jpg`,
+        quantity: 1
+      });
+      console.log(`🦋 Created new butterfly inventory entry: ${butterflyName}`);
+      
+      // Update collection stats for new butterfly
+      await this.updateCollectionStats(userId, 'butterflies', butterflyId, 1);
+    } catch (error) {
+      // If butterfly already exists (constraint violation), increment quantity
+      const existingButterfly = await this.db
+        .select()
+        .from(userButterflies)
+        .where(and(
+          eq(userButterflies.userId, userId),
+          eq(userButterflies.butterflyId, butterflyId)
+        ));
+
+      if (existingButterfly.length > 0) {
+        await this.db
+          .update(userButterflies)
+          .set({ quantity: existingButterfly[0].quantity + 1 })
+          .where(eq(userButterflies.id, existingButterfly[0].id));
+        console.log(`🦋 Incremented existing butterfly ${butterflyName} quantity to ${existingButterfly[0].quantity + 1}`);
+        
+        // Update collection stats for existing butterfly
+        await this.updateCollectionStats(userId, 'butterflies', butterflyId, 1);
+      } else {
+        throw error; // Re-throw if it's not a constraint violation we can handle
+      }
+    }
+  }
+
+  // Helper method to add caterpillar to user (for ticket redemption)
+  private async addCaterpillarForRedemption(userId: number, caterpillarId: number, rarity: string): Promise<void> {
+    console.log(`🎫 TICKET-REDEMPTION: Adding caterpillar ${caterpillarId} (${rarity}) to user ${userId}`);
+    // Generate consistent caterpillar name using fixed ID as seed
+    const caterpillarName = generateLatinCaterpillarName(caterpillarId);
+    
+    console.log(`🎫 TICKET-REDEMPTION: About to INSERT caterpillar with quantity=1`);
+    const result = await this.db.insert(userCaterpillars).values({
+      userId,
+      caterpillarId,
+      caterpillarName,
+      caterpillarRarity: rarity,
+      caterpillarImageUrl: `/Raupen/${caterpillarId}.jpg`,
+      quantity: 1
+    }).returning();
+    
+    console.log(`🎫 TICKET-REDEMPTION: ✅ RESULT: Created caterpillar with quantity=${result[0]?.quantity}`);
+    
+    // Update collection stats for redeemed caterpillar
+    await this.updateCollectionStats(userId, 'caterpillars', caterpillarId, 1);
+  }
+
+  // Helper method to add fish to user for daily redemption
+  private async addDailyFishToUser(userId: number, fishId: number, rarity: string): Promise<void> {
+    // Generate consistent fish name using fixed ID as seed
+    const fishName = generateLatinFishName(fishId);
+    
+    await this.db.insert(userFish).values({
+      userId,
+      fishId,
+      fishName,
+      fishRarity: rarity,
+      fishImageUrl: `/Fische/${fishId}.jpg`,
+      quantity: 1
+    });
+    
+    // Update collection stats for daily fish
+    await this.updateCollectionStats(userId, 'fish', fishId, 1);
+  }
+
+  // =============================================
+  // CASTLE GARDEN METHODS
+  // =============================================
+
+  // Get unlocked parts for a user
+  async getCastleUnlockedParts(userId: number): Promise<CastleUnlockedPart[]> {
+    return await this.db
+      .select()
+      .from(castleUnlockedParts)
+      .where(eq(castleUnlockedParts.userId, userId));
+  }
+
+  // Unlock a new part for a user
+  async unlockCastlePart(userId: number, partName: string, price: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if user has enough credits
+      const user = await this.getUser(userId);
+      if (!user) {
+        return { success: false, message: 'Benutzer nicht gefunden' };
+      }
+
+      if (user.credits < price) {
+        return { success: false, message: 'Nicht genügend Credits' };
+      }
+
+      // Check if part is already unlocked
+      const existing = await this.db
+        .select()
+        .from(castleUnlockedParts)
+        .where(and(eq(castleUnlockedParts.userId, userId), eq(castleUnlockedParts.partName, partName)));
+
+      if (existing.length > 0) {
+        return { success: false, message: 'Bauteil bereits freigeschaltet' };
+      }
+
+      // Deduct credits and unlock part
+      await this.updateUserCredits(userId, -price);
+      await this.db.insert(castleUnlockedParts).values({
+        userId,
+        partName,
+        price
+      });
+
+      console.log(`🏰 User ${userId} unlocked castle part: ${partName} for ${price} credits`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to unlock castle part:', error);
+      return { success: false, message: 'Fehler beim Freischalten des Bauteils' };
+    }
+  }
+
+  // Get grid state for a user
+  async getCastleGridState(userId: number): Promise<CastleGridState[]> {
+    return await this.db
+      .select()
+      .from(castleGridState)
+      .where(eq(castleGridState.userId, userId));
+  }
+
+  // Place/update a part on the grid
+  async placeCastlePart(userId: number, gridX: number, gridY: number, partName: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check if user has the part unlocked
+      const unlockedParts = await this.getCastleUnlockedParts(userId);
+      const hasUnlockedPart = unlockedParts.some(part => part.partName === partName);
+
+      if (!hasUnlockedPart) {
+        return { success: false, message: 'Bauteil nicht freigeschaltet' };
+      }
+
+      // Check if position is already occupied
+      const existing = await this.db
+        .select()
+        .from(castleGridState)
+        .where(and(
+          eq(castleGridState.userId, userId),
+          eq(castleGridState.gridX, gridX),
+          eq(castleGridState.gridY, gridY)
+        ));
+
+      if (existing.length > 0) {
+        // Update existing position
+        await this.db
+          .update(castleGridState)
+          .set({ partName })
+          .where(and(
+            eq(castleGridState.userId, userId),
+            eq(castleGridState.gridX, gridX),
+            eq(castleGridState.gridY, gridY)
+          ));
+      } else {
+        // Insert new position
+        await this.db.insert(castleGridState).values({
+          userId,
+          gridX,
+          gridY,
+          partName
+        });
+      }
+
+      console.log(`🏰 User ${userId} placed ${partName} at position (${gridX}, ${gridY})`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to place castle part:', error);
+      return { success: false, message: 'Fehler beim Platzieren des Bauteils' };
+    }
+  }
+
+  // Remove a part from the grid
+  async removeCastlePart(userId: number, gridX: number, gridY: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      const result = await this.db
+        .delete(castleGridState)
+        .where(and(
+          eq(castleGridState.userId, userId),
+          eq(castleGridState.gridX, gridX),
+          eq(castleGridState.gridY, gridY)
+        ));
+
+      console.log(`🏰 User ${userId} removed part from position (${gridX}, ${gridY})`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to remove castle part:', error);
+      return { success: false, message: 'Fehler beim Entfernen des Bauteils' };
+    }
+  }
+
+  // Feature unlocking functions
+  async getUnlockedFeatures(userId: number) {
+    try {
+      const unlockedFeatures = await this.db
+        .select()
+        .from(userUnlockedFeatures)
+        .where(eq(userUnlockedFeatures.userId, userId));
+      
+      return unlockedFeatures.map(f => f.featureName);
+    } catch (error) {
+      console.error(`💾 Failed to get unlocked features for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async unlockFeature(userId: number, featureName: string, creditsRequired: number) {
+    try {
+      // Get current user credits
+      const user = await this.db
+        .select({ credits: users.credits })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user[0]) {
+        throw new Error('User not found');
+      }
+
+      if (user[0].credits < creditsRequired) {
+        throw new Error('Insufficient credits');
+      }
+
+      // Check if feature is already unlocked
+      const existing = await this.db
+        .select()
+        .from(userUnlockedFeatures)
+        .where(
+          and(
+            eq(userUnlockedFeatures.userId, userId),
+            eq(userUnlockedFeatures.featureName, featureName)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        throw new Error('Feature already unlocked');
+      }
+
+      // Deduct credits
+      await this.db
+        .update(users)
+        .set({ 
+          credits: user[0].credits - creditsRequired,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+
+      // Unlock feature
+      await this.db
+        .insert(userUnlockedFeatures)
+        .values({
+          userId,
+          featureName,
+          creditsSpent: creditsRequired,
+        });
+
+      console.log(`✅ Feature ${featureName} unlocked for user ${userId} for ${creditsRequired} credits`);
+      return { success: true, newCredits: user[0].credits - creditsRequired };
+    } catch (error) {
+      console.error(`💾 Failed to unlock feature ${featureName} for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Backfill collection statistics for existing users from their current inventories
+   * This populates the collection_stats table with lifetime acquisition data
+   */
+  async backfillCollectionStats(): Promise<{ success: boolean; stats: any }> {
+    try {
+      console.log('📊 Starting collection stats backfill...');
+      
+      // Get all users
+      const allUsers = await this.db.select({ id: users.id }).from(users);
+      console.log(`📊 Found ${allUsers.length} users to backfill`);
+      
+      let totalInserted = 0;
+      const typeStats = { flowers: 0, butterflies: 0, caterpillars: 0, fish: 0 };
+      
+      for (const user of allUsers) {
+        const userId = user.id;
+        console.log(`📊 Processing user ${userId}...`);
+        
+        // Backfill flowers
+        const userFlowersData = await this.db
+          .select()
+          .from(userFlowers)
+          .where(eq(userFlowers.userId, userId));
+        
+        for (const flower of userFlowersData) {
+          await this.updateCollectionStatsForBackfill(userId, 'flowers', flower.flowerId, flower.quantity);
+          totalInserted++;
+          typeStats.flowers++;
+        }
+        
+        // Backfill butterflies (regular)
+        const userButterfliesData = await this.db
+          .select()
+          .from(userButterflies)
+          .where(eq(userButterflies.userId, userId));
+        
+        for (const butterfly of userButterfliesData) {
+          await this.updateCollectionStatsForBackfill(userId, 'butterflies', butterfly.butterflyId, butterfly.quantity);
+          totalInserted++;
+          typeStats.butterflies++;
+        }
+        
+        // Backfill VIP butterflies
+        const userVipButterfliesData = await this.db
+          .select()
+          .from(userVipButterflies)
+          .where(eq(userVipButterflies.userId, userId));
+        
+        for (const vipButterfly of userVipButterfliesData) {
+          await this.updateCollectionStatsForBackfill(userId, 'butterflies', vipButterfly.vipButterflyId, vipButterfly.quantity);
+          totalInserted++;
+          typeStats.butterflies++;
+        }
+        
+        // Backfill caterpillars
+        const userCaterpillarsData = await this.db
+          .select()
+          .from(userCaterpillars)
+          .where(eq(userCaterpillars.userId, userId));
+        
+        for (const caterpillar of userCaterpillarsData) {
+          await this.updateCollectionStatsForBackfill(userId, 'caterpillars', caterpillar.caterpillarId, caterpillar.quantity);
+          totalInserted++;
+          typeStats.caterpillars++;
+        }
+        
+        // Backfill fish
+        const userFishData = await this.db
+          .select()
+          .from(userFish)
+          .where(eq(userFish.userId, userId));
+        
+        for (const fish of userFishData) {
+          await this.updateCollectionStatsForBackfill(userId, 'fish', fish.fishId, fish.quantity);
+          totalInserted++;
+          typeStats.fish++;
+        }
+        
+        console.log(`📊 User ${userId} backfilled: ${userFlowersData.length} flowers, ${userButterfliesData.length + userVipButterfliesData.length} butterflies, ${userCaterpillarsData.length} caterpillars, ${userFishData.length} fish`);
+      }
+      
+      console.log(`📊 Backfill complete! Inserted ${totalInserted} collection stats entries:`, typeStats);
+      return { 
+        success: true, 
+        stats: { 
+          totalUsers: allUsers.length, 
+          totalEntries: totalInserted, 
+          typeBreakdown: typeStats 
+        } 
+      };
+    } catch (error) {
+      console.error('📊 Backfill failed:', error);
+      return { success: false, stats: { error: error.message } };
+    }
+  }
+}
+
+export const postgresStorage = new PostgresStorage();

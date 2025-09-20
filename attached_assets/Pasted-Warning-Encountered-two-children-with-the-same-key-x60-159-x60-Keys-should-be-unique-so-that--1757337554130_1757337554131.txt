@@ -1,0 +1,52 @@
+Warning: Encountered two children with the same key, &#x60;159&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at _c9 (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/components/ui/card.tsx:103:12)
+    at div
+    at _c (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at div
+    at div
+    at FlowerpowerView (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/components/FlowerpowerView.tsx:30:20)
+    at main
+    at div
+    at Layout (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/components/Layout.tsx:230:41)
+    at App (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/App.tsx?v=MTyQddOWKz3YfRTNlhWSQ:27:64)
+🎈 Balloon spawning phase started (90 seconds)
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+🎈 Balloon spawning phase started (90 seconds)
+🐟 Fish clicked: Scorpaena undulans 43
+🐟 Modal should open: false null
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+🎈 Balloon spawning phase started (90 seconds)
+[vite] hot updated: /src/components/Layout.tsx
+[vite] hot updated: /src/index.css?v=MTyQddOWKz3YfRTNlhWSQ
+🎈 Balloon spawning phase started (90 seconds)
+[vite] hot updated: /src/components/Layout.tsx
+[vite] hot updated: /src/index.css?v=MTyQddOWKz3YfRTNlhWSQ
+🎈 Balloon spawning phase started (90 seconds)
+[vite] hot updated: /src/components/Layout.tsx
+[vite] hot updated: /src/index.css?v=MTyQddOWKz3YfRTNlhWSQ
+🎈 Balloon skipped (pause simulation)
+🎈 Spawning balloon
+🎈 Balloon skipped (pause simulation)
+🎈 Spawning balloon
+[vite] hot updated: /src/components/Layout.tsx
+[vite] hot updated: /src/index.css?v=MTyQddOWKz3YfRTNlhWSQ
+🎈 SPAWN PHASE started (90 seconds)
+🎈 Spawning balloon
+🎈 PAUSE PHASE started (40 seconds)
+[vite] hot updated: /src/components/Layout.tsx
+[vite] hot updated: /src/index.css?v=MTyQddOWKz3YfRTNlhWSQ
+🎈 SPAWN PHASE started (90 seconds)
+🎈 Spawning 3 balloons
+Warning: Updating a style property during rerender (animation) when a conflicting property is set (animationDelay) can lead to styling bugs. To avoid this, don&#x27;t mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values.
+    at div
+    at div
+    at Layout (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/components/Layout.tsx?t=1757337455280:230:41)
+    at App (https://8c436807-aa51-46c1-b7bf-8c801a8e468f-00-3ieaaz9mvrl5m.kirk.replit.dev/src/App.tsx?v=MTyQddOWKz3YfRTNlhWSQ:27:64)
+🎈 Spawning 1 balloon
+🎈 Spawning 2 balloons
+🎈 Spawning 1 balloon
+🎈 PAUSE PHASE started (40 seconds)

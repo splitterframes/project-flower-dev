@@ -1,0 +1,109 @@
+:52:16 PM [express] GET /api/user/4/fish 304 in 138ms :: {"fish":[]}
+2025-09-15 15:52:16.91
+fa29f173
+User
+1:52:16 PM [express] GET /api/user/4/bouquets 304 in 136ms :: {"bouquets":[]}
+2025-09-15 15:52:16.93
+fa29f173
+User
+1:52:16 PM [express] GET /api/user/4/marie-posa-status 200 in 164ms :: {"isAvailable":true,"nextAvai…
+2025-09-15 15:52:16.93
+fa29f173
+User
+🔓 User 4 unlocked features:
+2025-09-15 15:52:16.93
+fa29f173
+User
+1:52:16 PM [express] GET /api/user/4/unlocked-features 304 in 159ms :: {"unlockedFeatures":[]}
+2025-09-15 15:52:16.94
+fa29f173
+User
+🔍 User 4: lastPassiveIncomeAt=Mon Sep 15 2025 13:48:43 GMT+0000 (Coordinated Universal Time), minutesElapsed=3
+2025-09-15 15:52:16.95
+fa29f173
+User
+1:52:16 PM [express] POST /api/exhibition/sell-status-batch 200 in 191ms :: {"normal-55":{"canSell":…
+2025-09-15 15:52:16.98
+fa29f173
+User
+🔍 Processing passive income for user 2...
+2025-09-15 15:52:16.99
+fa29f173
+User
+1:52:16 PM [express] GET /api/user/4/exhibition-vip-butterflies 304 in 45ms :: {"vipButterflies":[]}
+2025-09-15 15:52:17.03
+fa29f173
+User
+1:52:17 PM [express] GET /api/exhibition/butterfly/55/sell-status 200 in 274ms :: {"canSell":false,"…
+2025-09-15 15:52:17.07
+fa29f173
+User
+🔍 User 2: 3 normal butterflies, 0 VIP butterflies
+2025-09-15 15:52:17.12
+fa29f173
+User
+🔍 User 2: lastPassiveIncomeAt=Mon Sep 15 2025 13:43:48 GMT+0000 (Coordinated Universal Time), minutesElapsed=8
+2025-09-15 15:52:17.13
+fa29f173
+User
+1:52:17 PM [express] GET /api/user/4/credits 200 in 47ms :: {"credits":1011}
+2025-09-15 15:52:17.16
+fa29f173
+User
+🔍 Processing passive income for user 1...
+2025-09-15 15:52:17.22
+fa29f173
+User
+☀️ Processing user Orn (ID: 2)
+2025-09-15 15:52:17.25
+fa29f173
+User
+🔍 User 1: 16 normal butterflies, 0 VIP butterflies
+2025-09-15 15:52:17.30
+fa29f173
+User
+🔍 User 1: lastPassiveIncomeAt=Mon Sep 15 2025 13:51:05 GMT+0000 (Coordinated Universal Time), minutesElapsed=1
+2025-09-15 15:52:17.31
+fa29f173
+User
+1:52:17 PM [express] GET /api/user/4/hearts 304 in 45ms :: {"hearts":0}
+2025-09-15 15:52:17.31
+fa29f173
+User
+☀️ User Ralf has 12 inactive fields without active suns
+2025-09-15 15:52:17.35
+fa29f173
+User
+💰 Passive income processing complete: No credits awarded this cycle
+2025-09-15 15:52:17.35
+fa29f173
+User
+1:52:17 PM [express] GET /api/exhibition/butterfly/55/sell-status 200 in 181ms :: {"canSell":false,"…
+2025-09-15 15:52:17.35
+fa29f173
+User
+☀️ VERIFIED SAFE: Field 46 is neither unlocked nor unlock field for user Ralf
+2025-09-15 15:52:17.35
+fa29f173
+User
+☀️ Spawning 3 suns on field 46 for user 1
+2025-09-15 15:52:17.40
+fa29f173
+User
+☀️ Successfully spawned 3 suns on inactive field 46 for user Ralf
+2025-09-15 15:52:17.40
+fa29f173
+User
+☀️ Next sun spawn in 135 seconds
+2025-09-15 15:52:17.65
+fa29f173
+User
+☀️ Cleaned up expired sun spawns
+2025-09-15 15:52:17.68
+fa29f173
+User
+1:52:17 PM [express] GET /api/exhibition/butterfly/55/sell-status 200 in 191ms :: {"canSell":false,"…
+2025-09-15 15:52:18.00
+fa29f173
+User
+1:52:18 PM [express] GET /api/exhibition/butterfly/55/sell-status 200 in 188ms :: {"canSell":false,"…

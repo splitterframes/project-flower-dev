@@ -1,0 +1,42 @@
+jetzt wo wir wissen wie man an die neue DNA Währung kommt und wie man sie einsetzt und wie die ganzen berehnungsformeln dazu aussehen lass und die Ganze DNA Erweiterung
+implementieren.
+
+Aufgaben:
+
+Neue DNA Währung einfügen
+DNA Menge Anzeige im Header oben rechts neben der Sonnen mengen anzeige in gleicher Form aber in Türkiser farbe
+Neuen Button Im Footer DNA mit Icon wie die anderen das zur geichnamigen View führt
+Die neue DNA View ist in 2 Teile aufgeteilt:
+DNA Sequenzer Links und D-Nator rechts
+
+der dna Sequenzer hat dieses 3x3 grid mit 9 feldern 
+felder anklicken und gewünschtes Item aus dem inventar hier einsetzen
+(Auswahldialog für samen, Blumen, Schmetterlinge, raupen, Fische)
+
+Anzeige mit aktuellem wert der berechneten DNA-Menge auf basis der 9 felder
+
+Sequenzierung - Button für die umsetzung der eingesetzten Items in den feldern gegen DNA-Menge
+je nach DNA Menge soll der Sequenzierungsvorgang entsprechende sekunden dauern (30 DNA = 20 sekunden Sequenzierung etc.)
+
+nach der sequenzierungszeit Felder werden geleert und DNA Menge dem spieler gugeschrieben  
+
+DNA Sequenzer bereit für nächste sequenzierung
+
+
+Der D-Nator
+
+hier kann der User wieder ein Item aus seinem inventar wählen (Auswahldialog für samen, Blumen, Schmetterlinge, raupen, Fische)
+
+und stellt dann die gewünschte nächst höhere Rarität ein (Niedrigere Raritäten deaktiviert)
+
+Aktuell berechnete DNA Kosten werden angezeigt
+
+Wenn genug DNA Punkte vorhanden kann dann der D-Nator gestartet werden auch hier (z.b. 30 DNA = 20 sekunden Sequenzierung etc.)
+
+Nach beendigung des Vorgangs der Raritätsverbesserung wird das eingesetzte Item und die benötigten DNA Punkte verbraucht und ein neues zufälliges der gleichen Art mit der eingestellten Rarität erzeugt und dem Spieler ins inventar gegeben.
+(ANzeige des Neuen Items mit bestätigung zur übernahme ins inventar)
+
+Alle Anzeigen werden initialisiert für den nächsten d-nator gebrauch.
+
+Das ganze soll jetzt mit sehr schöner UI/UX im Appstil dargestellt werden
+alle prozesse sollen zb. mit schönen Fortschrittsbalken und blinkenden oder leuchtenden elementen angezeigt werden

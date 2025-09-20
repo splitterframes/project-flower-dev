@@ -1,0 +1,48 @@
+☀️ Attempting to spawn sun...
+🔍 PostgreSQL getAllUsersWithStatus: Finding all users for passive income processing
+🔍 Found 5 users for passive income check: [ 'TestUser2(4)', 'TestUser3(5)', 'Olaf(1)', 'Ralf(2)', 'User1(3)' ]
+☀️ Processing user TestUser2 (ID: 4)
+☀️ User TestUser2 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User TestUser2 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User TestUser2 has 41 inactive fields available
+☀️ User TestUser2 has 41 inactive fields without active suns
+☀️ Spawning 2 suns on field 8
+☀️ Successfully spawned 2 suns on inactive field 8 for user TestUser2
+☀️ Processing user TestUser3 (ID: 5)
+☀️ User TestUser3 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User TestUser3 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User TestUser3 has 41 inactive fields available
+☀️ User TestUser3 has 40 inactive fields without active suns
+☀️ Spawning 1 suns on field 45
+☀️ Successfully spawned 1 suns on inactive field 45 for user TestUser3
+☀️ Processing user Olaf (ID: 1)
+☀️ User Olaf unlocked fields: [ 0, 1, 5, 6 ]
+☀️ User Olaf unlock fields: [
+  10, 11, 2, 15,
+   4, 16, 7
+]
+☀️ User Olaf has 39 inactive fields available
+☀️ User Olaf has 37 inactive fields without active suns
+☀️ Spawning 2 suns on field 17
+☀️ Successfully spawned 2 suns on inactive field 17 for user Olaf
+☀️ Processing user Ralf (ID: 2)
+☀️ User Ralf unlocked fields: [ 0, 1, 10, 11, 22 ]
+☀️ User Ralf unlock fields: [
+   2, 20,  9, 21,
+  12, 32, 23
+]
+☀️ User Ralf has 38 inactive fields available
+☀️ User Ralf has 35 inactive fields without active suns
+☀️ Spawning 1 suns on field 33
+☀️ Successfully spawned 1 suns on inactive field 33 for user Ralf
+☀️ Processing user User1 (ID: 3)
+☀️ User User1 unlocked fields: [ 0, 1, 10, 11 ]
+☀️ User User1 unlock fields: [ 2, 20, 9, 21, 12 ]
+☀️ User User1 has 41 inactive fields available
+☀️ User User1 has 37 inactive fields without active suns
+☀️ Spawning 2 suns on field 40
+☀️ Successfully spawned 2 suns on inactive field 40 for user User1
+☀️ Next sun spawn in 88 seconds
+☀️ Cleaned up expired sun spawns
+🦋 Getting butterflies for user: 2
+7:32:15 PM [expr

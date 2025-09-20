@@ -1,0 +1,462 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations for slot machine */
+@keyframes spin-slow {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100px);
+  }
+}
+
+@keyframes spin-fast {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-200px);
+  }
+}
+
+@keyframes recoil {
+  0% { transform: translateY(0px); }
+  30% { transform: translateY(-8px); }
+  70% { transform: translateY(4px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Golden glow animation for vase frames */
+@keyframes gold-glow-random {
+  0% { 
+    border-color: rgb(100, 116, 139); /* slate-500 */
+    box-shadow: 0 0 0px rgba(251, 191, 36, 0); /* transparent gold */
+  }
+  25% { 
+    border-color: rgb(217, 119, 6); /* amber-600 */
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3); /* soft gold glow */
+  }
+  50% { 
+    border-color: rgb(245, 158, 11); /* amber-500 */
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.6), 0 0 32px rgba(251, 191, 36, 0.2); /* stronger gold glow */
+  }
+  75% { 
+    border-color: rgb(217, 119, 6); /* amber-600 */
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3); /* soft gold glow */
+  }
+  100% { 
+    border-color: rgb(100, 116, 139); /* slate-500 */
+    box-shadow: 0 0 0px rgba(251, 191, 36, 0); /* transparent gold */
+  }
+}
+
+/* Field 3x Spin Animation - for planting flowers/butterflies */
+@keyframes field-spin-3x {
+  0% { transform: rotate(0deg); }
+  33.33% { transform: rotate(360deg); }
+  66.66% { transform: rotate(720deg); }
+  100% { transform: rotate(1080deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 0.1s linear infinite;
+}
+
+.animate-spin-fast {
+  animation: spin-fast 0.05s linear infinite;
+}
+
+.animate-field-spin {
+  animation: field-spin-3x 2.1s ease-in-out;
+}
+
+.animate-gold-glow-random {
+  animation: gold-glow-random infinite ease-in-out;
+}
+
+/* Pause animation on hover to prevent flickering */
+.animate-gold-glow-random:hover {
+  animation-play-state: paused;
+}
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 24 95% 53%;
+    --radius: 0.5rem;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-md;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+}
+
+/* Caterpillar Bounce Spawn Animation */
+@keyframes bounce-spawn {
+  0% {
+    transform: scale(0) translateY(-20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.3) translateY(-5px);
+    opacity: 0.8;
+  }
+  75% {
+    transform: scale(0.9) translateY(2px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0px);
+    opacity: 1;
+  }
+}
+
+/* Flower Shimmer Animation - waiting to spawn caterpillar */
+@keyframes shimmer {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+  }
+  25% {
+    transform: scale(1.05) rotate(1deg);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    transform: scale(1.1) rotate(0deg);
+    filter: brightness(1.4) drop-shadow(0 0 15px rgba(255, 255, 255, 0.7));
+  }
+  75% {
+    transform: scale(1.05) rotate(-1deg);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+  }
+}
+
+/* Flower Dissolve Animation - fading away after spawning caterpillar */
+@keyframes dissolve {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(0.95);
+    opacity: 0.8;
+    filter: brightness(1.1);
+  }
+  70% {
+    transform: scale(0.8);
+    opacity: 0.4;
+    filter: brightness(0.7);
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+    filter: brightness(0.3);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.animate-dissolve {
+  animation: dissolve 1.5s ease-out forwards;
+}
+
+/* Pond field wobble animation */
+@keyframes pond-wobble {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(30deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-30deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Butterfly wiggle animation */
+@keyframes wiggle {
+  0% { transform: translateX(-2px) translateY(0px); }
+  25% { transform: translateX(2px) translateY(-1px); }
+  50% { transform: translateX(-1px) translateY(1px); }
+  75% { transform: translateX(1px) translateY(-2px); }
+  100% { transform: translateX(-2px) translateY(0px); }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.3s ease-in-out infinite;
+}
+
+/* Burst animation - scale up and fade out */
+@keyframes burst {
+  0% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.5);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-burst {
+  animation: burst 0.6s ease-out forwards;
+}
+
+
+/* Sanftes Einblenden der permanenten Raupe */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-in forwards;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+/* Game-specific styles */
+.game-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.game-ui > * {
+  pointer-events: auto;
+}
+
+/* Animation utilities */
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(249, 115, 22, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(249, 115, 22, 0.8), 0 0 30px rgba(249, 115, 22, 0.6);
+  }
+}
+
+.glow-orange {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Custom button variants */
+.btn-game {
+  @apply bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200;
+}
+
+.btn-game:hover {
+  @apply transform scale-105;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20;
+}
+
+.card-hover:hover {
+  @apply transform scale-[1.02] border-orange-500/50;
+}
+
+/* Glass effect utilities */
+.glass {
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Game status indicators */
+.status-ready {
+  @apply text-green-400;
+}
+
+.status-playing {
+  @apply text-orange-400;
+}
+
+.status-ended {
+  @apply text-red-400;
+}
+
+/* Layout fixes for fixed footer */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.layout-footer {
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-stack {
+    @apply flex-col space-x-0 space-y-2;
+  }
+
+  /* Smaller countdown timers on mobile */
+  .countdown-mobile {
+    @apply text-xs px-1 py-0.5 mt-1;
+  }
+
+  /* Touch-friendly buttons */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Disable text selection on touch devices */
+  .no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Mobile garden grid */
+  .garden-grid-mobile {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem; /* 4px */
+  }
+
+  .garden-grid-desktop {
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem; /* 8px */
+  }
+
+  /* Responsive field content */
+  .field-content {
+    @apply w-full h-full flex flex-col items-center justify-center p-1;
+  }
+  
+  .field-image {
+    @apply w-full h-full object-contain;
+  }
+
+  /* Safe area support for modern phones */
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  /* Field Spinning Animation for Harvesting - 1x 360° Drehung */
+  @keyframes field-spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .animate-field-spin {
+    animation: field-spin-animation 0.8s ease-in-out;
+  }
+
+  /* Langsamere Pulse-Animation für DONATE Button */
+  @keyframes slow-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .animate-slow-pulse {
+    animation: slow-pulse 4s ease-in-out infinite;
+  }
+}

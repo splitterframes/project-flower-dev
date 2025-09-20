@@ -1,0 +1,610 @@
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/stores/useAuth";
+import { useCredits } from "@/lib/stores/useCredits";
+import { Flower2, Star, Heart, Gift, Plus, Sparkles, Palette } from "lucide-react";
+import { HelpButton } from './HelpButton';
+import { BouquetCreationModal } from "./BouquetCreationModal";
+import { BouquetRecipeDialog } from "./BouquetRecipeDialog";
+import { RarityImage } from "./RarityImage";
+import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
+import type { UserFlower, UserBouquet, PlacedBouquet, BouquetRecipe } from "@shared/schema";
+
+export const BouquetsView: React.FC = () => {
+  const { user } = useAuth();
+  const { credits, updateCredits } = useCredits();
+  const [myFlowers, setMyFlowers] = useState<UserFlower[]>([]);
+  const [myBouquets, setMyBouquets] = useState<UserBouquet[]>([]);
+  const [myCreatedRecipes, setMyCreatedRecipes] = useState<any[]>([]); // Persistent user recipes
+  const [placedBouquets, setPlacedBouquets] = useState<PlacedBouquet[]>([]);
+  const [showBouquetCreation, setShowBouquetCreation] = useState(false);
+  const [bouquetRecipes, setBouquetRecipes] = useState<Record<number, BouquetRecipe>>({});
+  const [selectedRecipeDialog, setSelectedRecipeDialog] = useState<{
+    bouquetId: number;
+    bouquetName?: string;
+    bouquetRarity?: RarityTier;
+    recipe?: BouquetRecipe;
+  } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchMyFlowers();
+      fetchMyBouquets();
+      fetchMyCreatedRecipes(); // Fetch persistent user recipes
+      fetchPlacedBouquets();
+      fetchBouquetRecipes();
+    }
+  }, [user]);
+
+  const fetchMyFlowers = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/flowers`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyFlowers(data.flowers || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my flowers:', error);
+    }
+  };
+
+  const fetchMyBouquets = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/bouquets`);
+      if (response.ok) {
+        const data = await response.json();
+        // Show all bouquets regardless of quantity for recipe viewing
+        setMyBouquets(data.bouquets || []);
+        console.log('Bouquets loaded:', data.bouquets);
+      }
+    } catch (error) {
+      console.error('Failed to fetch my bouquets:', error);
+    }
+  };
+
+  const fetchMyCreatedRecipes = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/created-bouquet-recipes`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyCreatedRecipes(data.recipes || []);
+        console.log('User created recipes loaded:', data.recipes);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user created recipes:', error);
+    }
+  };
+
+
+  const fetchPlacedBouquets = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/user/${user.id}/placed-bouquets`);
+      if (response.ok) {
+        const data = await response.json();
+        setPlacedBouquets(data.placedBouquets || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch placed bouquets:', error);
+    }
+  };
+
+  const fetchBouquetRecipes = async () => {
+    try {
+      const response = await fetch('/api/bouquets/recipes');
+      if (response.ok) {
+        const data = await response.json();
+        const recipeMap: Record<number, BouquetRecipe> = {};
+        data.recipes.forEach((recipe: BouquetRecipe) => {
+          recipeMap[recipe.bouquetId] = recipe;
+        });
+        setBouquetRecipes(recipeMap);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bouquet recipes:', error);
+    }
+  };
+
+  const [ingredientsCache, setIngredientsCache] = useState<Record<number, any[]>>({});
+
+  const fetchBouquetIngredients = async (bouquetId: number): Promise<any[]> => {
+    if (ingredientsCache[bouquetId]) return ingredientsCache[bouquetId];
+    
+    const recipe = bouquetRecipes[bouquetId];
+    if (!recipe) return [];
+    
+    try {
+      const flowerIds = [recipe.flowerId1, recipe.flowerId2, recipe.flowerId3];
+      const ingredients: any[] = [];
+      
+      // Get flower details for each ingredient
+      for (const flowerId of flowerIds) {
+        const flowerResponse = await fetch(`/api/flower/${flowerId}`);
+        if (flowerResponse.ok) {
+          const flower = await flowerResponse.json();
+          ingredients.push(flower);
+        }
+      }
+      
+      setIngredientsCache(prev => ({ ...prev, [bouquetId]: ingredients }));
+      return ingredients;
+    } catch (error) {
+      console.error('Failed to fetch flower ingredients:', error);
+      return [];
+    }
+  };
+
+  const handleRecreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string) => {
+    try {
+      const response = await fetch('/api/bouquets/recreate', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
+        body: JSON.stringify({
+          flowerId1,
+          flowerId2,
+          flowerId3,
+          name,
+          generateName: false // Never generate new name for recreation
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Show beautiful success toast
+        if (result.bouquet) {
+          const rarityName = getRarityDisplayName(result.bouquet.rarity as RarityTier);
+          
+          toast.success("Bouquet erfolgreich nachgesteckt!", {
+            description: `"${result.bouquet.name}" (${rarityName}) wurde kostenlos nachgesteckt! 💐`,
+            duration: 4000,
+            className: "border-l-4 " + getRarityColor(result.bouquet.rarity as RarityTier).replace('text-', 'border-l-'),
+          });
+        } else {
+          toast.success("Bouquet erfolgreich nachgesteckt!", {
+            description: "Dein nachgestecktes Bouquet steht bereit! 💐",
+            duration: 4000,
+          });
+        }
+        
+        // Refresh all data
+        await fetchMyFlowers();
+        await fetchMyBouquets();
+        await fetchBouquetRecipes();
+        await fetchMyCreatedRecipes();
+        // Note: No need to update credits since recreation is free
+        setSelectedRecipeDialog(null); // Close dialog
+      } else {
+        const error = await response.json();
+        
+        // Show user-friendly error messages
+        if (error.message && error.message.includes('nicht gefunden')) {
+          toast.error("🌸 Blumen nicht gefunden", {
+            description: "Eine der benötigten Blumen ist nicht mehr in deinem Inventar.",
+            duration: 4000,
+            className: "border-l-4 border-l-yellow-500",
+          });
+        } else {
+          toast.error("❌ Fehler beim Nachstecken", {
+            description: error.message || 'Bouquet konnte nicht nachgesteckt werden. Bitte versuche es erneut.',
+            duration: 4000,
+            className: "border-l-4 border-l-red-500",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error recreating bouquet:', error);
+      toast.error("Verbindungsfehler", {
+        description: 'Bouquet konnte nicht nachgesteckt werden',
+        duration: 4000,
+      });
+    }
+  };
+
+  const handleCreateBouquet = async (flowerId1: number, flowerId2: number, flowerId3: number, name?: string, generateName?: boolean) => {
+    try {
+      // Show loading toast when generating name with AI
+      let loadingToast: any;
+      if (generateName) {
+        loadingToast = toast.loading("🧠 KI generiert Bouquet-Namen...", {
+          description: "Dies kann einen Moment dauern.",
+          duration: 0, // Don't auto-dismiss
+        });
+      }
+
+      const response = await fetch('/api/bouquets/create', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': user?.id.toString() || '1'
+        },
+        body: JSON.stringify({
+          flowerId1,
+          flowerId2,
+          flowerId3,
+          name,
+          generateName
+        })
+      });
+
+      // Dismiss loading toast
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Show beautiful success toast
+        if (result.bouquet) {
+          const rarityName = getRarityDisplayName(result.bouquet.rarity as RarityTier);
+          
+          toast.success("Bouquet erfolgreich erstellt!", {
+            description: `"${result.bouquet.name}" (${rarityName}) wurde erstellt! 💐`,
+            duration: 4000,
+            className: "border-l-4 " + getRarityColor(result.bouquet.rarity as RarityTier).replace('text-', 'border-l-'),
+          });
+        } else {
+          toast.success("Bouquet erfolgreich erstellt!", {
+            description: "Dein neues Bouquet steht bereit! 💐",
+            duration: 4000,
+          });
+        }
+        
+        // Refresh all data
+        await fetchMyFlowers();
+        await fetchMyBouquets();
+        await fetchBouquetRecipes();
+        await fetchMyCreatedRecipes();
+        // Fetch updated credits from server after deduction
+        if (user) {
+          const creditsResponse = await fetch(`/api/user/${user.id}/credits`);
+          if (creditsResponse.ok) {
+            const creditsData = await creditsResponse.json();
+            // Update credits display with current value from server
+            const { setCredits } = useCredits.getState();
+            setCredits(creditsData.credits);
+          }
+        }
+        setShowBouquetCreation(false);
+      } else {
+        const error = await response.json();
+        
+        // Show user-friendly error messages based on error type
+        if (error.message && error.message.includes('existiert bereits')) {
+          toast.error("❌ Name bereits vergeben", {
+            description: "Die KI hat einen Namen gewählt, der schon existiert. Versuche es nochmal!",
+            duration: 5000,
+            className: "border-l-4 border-l-red-500",
+          });
+        } else if (error.message && error.message.includes('nicht genügend')) {
+          toast.error("💰 Nicht genügend Credits", {
+            description: "Du benötigst 30 Credits um ein Bouquet zu erstellen.",
+            duration: 4000,
+            className: "border-l-4 border-l-orange-500",
+          });
+        } else if (error.message && error.message.includes('nicht gefunden')) {
+          toast.error("🌸 Blumen nicht gefunden", {
+            description: "Eine der ausgewählten Blumen ist nicht mehr in deinem Inventar.",
+            duration: 4000,
+            className: "border-l-4 border-l-yellow-500",
+          });
+        } else {
+          toast.error("❌ Fehler beim Erstellen", {
+            description: error.message || 'Bouquet konnte nicht erstellt werden. Bitte versuche es erneut.',
+            duration: 4000,
+            className: "border-l-4 border-l-red-500",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating bouquet:', error);
+      toast.error("Verbindungsfehler", {
+        description: 'Bouquet konnte nicht erstellt werden',
+        duration: 4000,
+      });
+    }
+  };
+
+  const getBorderColor = (rarity: RarityTier): string => {
+    switch (rarity) {
+      case 'common': return '#fbbf24';      // yellow-400
+      case 'uncommon': return '#4ade80';    // green-400  
+      case 'rare': return '#3b82f6';        // blue-400
+      case 'super-rare': return '#06b6d4';  // cyan-400
+      case 'epic': return '#a855f7';        // purple-400
+      case 'legendary': return '#f97316';   // orange-400
+      case 'mythical': return '#ef4444';    // red-400
+      default: return '#9ca3af';            // gray-400
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Card className="bg-slate-800 border-slate-700 text-white">
+          <CardContent className="pt-6">
+            <p className="text-center text-slate-400">Bitte melde dich an, um Bouquets zu erstellen</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-full">
+      {/* Compact Bouquets Header */}
+      <div className="bg-slate-800/60 p-4 rounded-lg border border-pink-500/30">
+        <div className="relative mb-3">
+          {/* HelpButton in absoluter Position rechts oben */}
+          <div className="absolute top-0 right-0">
+            <HelpButton helpText="Hier erstellst du wunderschöne Bouquets aus deinen Blumen! Bouquets lockern Schmetterlinge an und können im Garten platziert werden. Je seltener die Blumen, desto wertvoller das Bouquet!" viewType="bouquets" />
+          </div>
+          
+          {/* Zentrierter Content */}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-pink-300 mb-1">
+              Bouquet Kollektion
+            </h1>
+            <p className="text-slate-400 text-sm mb-3">Erstelle Blumensträuße aus deinen Blumen</p>
+            <div className="flex justify-center gap-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <Flower2 className="h-4 w-4 text-blue-400" />
+                <span className="text-white font-semibold">{myFlowers.length}</span>
+                <span className="text-slate-400">Blumen</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Gift className="h-4 w-4 text-pink-400" />
+                <span className="text-white font-semibold">{myCreatedRecipes.length}</span>
+                <span className="text-slate-400">Rezepte</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Clean Bouquet Workshop - Moved to TOP for better UX */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-orange-500/30 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-center">
+            <div className="flex items-center justify-center">
+              <Palette className="h-6 w-6 mr-2 text-orange-400" />
+              <span className="text-xl font-bold text-orange-300">
+                Bouquet Werkstatt
+              </span>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {myFlowers.length < 3 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-red-400/30">
+                <Heart className="h-12 w-12 text-red-400" />
+              </div>
+              <p className="text-slate-300 mb-4 text-xl font-semibold">Du benötigst mindestens 3 Blumen für ein Bouquet</p>
+              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600 inline-block">
+                <div className="text-slate-400 text-lg">
+                  Du hast derzeit <Badge className="bg-rose-500/20 text-rose-400 border border-rose-400/30 px-3 py-1 font-bold">{myFlowers.length}</Badge> Blumen
+                </div>
+                <p className="text-slate-500 mt-3">Züchte mehr Blumen in deinem Garten! 🌱</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              {/* Großer prominenter Erstellen-Button */}
+              <div className="mb-4">
+                <Button
+                  onClick={() => setShowBouquetCreation(true)}
+                  className="bg-gradient-to-r from-orange-600 via-pink-600 to-red-600 hover:from-orange-700 hover:via-pink-700 hover:to-red-700 text-white font-bold text-xl px-8 py-4 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-orange-400/50 hover:border-orange-300"
+                  size="lg"
+                >
+                  <Heart className="h-6 w-6 mr-2 animate-pulse" />
+                  BOUQUET ERSTELLEN
+                  <Sparkles className="h-6 w-6 ml-2 animate-pulse" />
+                </Button>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-800/40 to-pink-800/40 rounded-lg p-4 border border-purple-400/30 max-w-md mx-auto">
+                <div className="flex items-center mb-3">
+                  <Heart className="h-5 w-5 text-purple-400 mr-2" />
+                  <h4 className="text-white font-semibold text-sm">Erstellung</h4>
+                </div>
+                <ul className="text-slate-300 space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    3 Blumen auswählen
+                  </li>
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    30 Credits Kosten
+                  </li>
+                  <li className="flex items-center">
+                    <Star className="h-3 w-3 mr-2 text-yellow-400" />
+                    AI Namen + Ins Inventar
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* My Bouquets Collection - Moved to BOTTOM for better UX */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white flex items-center justify-between">
+            <div className="flex items-center">
+              <Gift className="h-5 w-5 mr-2 text-purple-400" />
+              <span className="text-lg font-semibold text-purple-300">
+                Meine Bouquet-Rezepte
+              </span>
+            </div>
+            <Badge className="bg-purple-600 text-white px-2 py-1 text-sm">
+              {myCreatedRecipes.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {myCreatedRecipes.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-400">Noch keine Bouquet-Rezepte erstellt</p>
+              <p className="text-slate-500 text-sm mt-2">Erstelle dein erstes Bouquet in der Werkstatt oben</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+              {myCreatedRecipes
+                .sort((a, b) => {
+                  // Sortiere nach Kompatibilität: Rezepte mit den meisten verfügbaren Blumen zuerst
+                  const getCompatibilityScore = (recipe: any) => {
+                    const hasFlower1 = myFlowers.some(f => f.flowerId === recipe.flowerId1);
+                    const hasFlower2 = myFlowers.some(f => f.flowerId === recipe.flowerId2);  
+                    const hasFlower3 = myFlowers.some(f => f.flowerId === recipe.flowerId3);
+                    return [hasFlower1, hasFlower2, hasFlower3].filter(Boolean).length;
+                  };
+                  
+                  const scoreA = getCompatibilityScore(a);
+                  const scoreB = getCompatibilityScore(b);
+                  
+                  // Zuerst nach Kompatibilität sortieren (höchste zuerst), dann nach Seltenheit
+                  if (scoreA !== scoreB) {
+                    return scoreB - scoreA;
+                  }
+                  
+                  // Bei gleicher Kompatibilität nach Seltenheit sortieren
+                  const rarityOrder = ['mythical', 'legendary', 'epic', 'super-rare', 'rare', 'uncommon', 'common'];
+                  const rarityA = rarityOrder.indexOf(a.bouquetRarity || 'common');
+                  const rarityB = rarityOrder.indexOf(b.bouquetRarity || 'common');
+                  return rarityA - rarityB;
+                })
+                .map((recipe) => (
+                <Card 
+                  key={recipe.bouquetId}
+                  className="bg-gradient-to-br from-slate-900 to-slate-950 border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <RarityImage 
+                        src="/Blumen/Bouquet.jpg"
+                        alt="Bouquet"
+                        rarity={(recipe.bouquetRarity || "common") as RarityTier}
+                        size="medium"
+                        className="w-16 h-16 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-lg mb-1 truncate">
+                          {recipe.bouquetName || `Bouquet #${recipe.bouquetId}`}
+                        </h4>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Badge 
+                              variant="secondary"
+                              className={`px-2 py-1 text-sm ${getRarityColor((recipe.bouquetRarity || "common") as RarityTier)}`}
+                            >
+                              <Star className="h-3 w-3 mr-1" />
+                              {getRarityDisplayName((recipe.bouquetRarity || "common") as RarityTier)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Kompatibilitäts-Anzeige */}
+                            {(() => {
+                              const hasFlower1 = myFlowers.some(f => f.flowerId === recipe.flowerId1);
+                              const hasFlower2 = myFlowers.some(f => f.flowerId === recipe.flowerId2);  
+                              const hasFlower3 = myFlowers.some(f => f.flowerId === recipe.flowerId3);
+                              const compatibleCount = [hasFlower1, hasFlower2, hasFlower3].filter(Boolean).length;
+                              
+                              if (compatibleCount === 3) {
+                                return (
+                                  <Badge className="bg-green-500/20 text-green-400 border border-green-400/40 px-2 py-1 text-xs font-semibold">
+                                    <Heart className="h-3 w-3 mr-1" />
+                                    ✓ Alle Blumen verfügbar
+                                  </Badge>
+                                );
+                              } else if (compatibleCount > 0) {
+                                return (
+                                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-400/40 px-2 py-1 text-xs">
+                                    <Star className="h-3 w-3 mr-1" />
+                                    {compatibleCount}/3 verfügbar
+                                  </Badge>
+                                );
+                              } else {
+                                return (
+                                  <Badge className="bg-red-500/20 text-red-400 border border-red-400/40 px-2 py-1 text-xs">
+                                    <Flower2 className="h-3 w-3 mr-1" />
+                                    Blumen fehlen
+                                  </Badge>
+                                );
+                              }
+                            })()}
+                            
+                            <Button
+                              onClick={() => {
+                                setSelectedRecipeDialog({
+                                  bouquetId: recipe.bouquetId,
+                                  bouquetName: recipe.bouquetName,
+                                  bouquetRarity: (recipe.bouquetRarity || "common") as RarityTier,
+                                  recipe: {
+                                    id: 0,
+                                    bouquetId: recipe.bouquetId,
+                                    flowerId1: recipe.flowerId1,
+                                    flowerId2: recipe.flowerId2,
+                                    flowerId3: recipe.flowerId3,
+                                    createdAt: new Date()
+                                  }
+                                });
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-purple-300 border-purple-400/30 hover:bg-purple-500/10"
+                            >
+                              Rezept anzeigen
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bouquet Creation Modal */}
+      <BouquetCreationModal
+        isOpen={showBouquetCreation}
+        onClose={() => setShowBouquetCreation(false)}
+        userFlowers={myFlowers}
+        onCreateBouquet={handleCreateBouquet}
+        credits={credits}
+      />
+
+      {/* Bouquet Recipe Dialog */}
+      <BouquetRecipeDialog
+        isOpen={!!selectedRecipeDialog}
+        onClose={() => setSelectedRecipeDialog(null)}
+        bouquetId={selectedRecipeDialog?.bouquetId || 0}
+        bouquetName={selectedRecipeDialog?.bouquetName}
+        bouquetRarity={selectedRecipeDialog?.bouquetRarity}
+        recipe={selectedRecipeDialog?.recipe}
+        userFlowers={myFlowers}
+        onRecreate={async (flowerId1, flowerId2, flowerId3) => {
+          if (selectedRecipeDialog?.bouquetName) {
+            await handleRecreateBouquet(flowerId1, flowerId2, flowerId3, selectedRecipeDialog.bouquetName);
+          }
+        }}
+      />
+    </div>
+  );
+};
