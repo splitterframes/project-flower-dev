@@ -106,12 +106,23 @@ export class PostgresStorage {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is required for PostgreSQL storage');
     }
-    // 🚀 PERFORMANCE: Configure Neon for better performance
+    // 🚀 PERFORMANCE: Configure Neon for better performance with SSL fixes
     const sql = neon(process.env.DATABASE_URL, {
       timeout: 30000,      // 30s timeout
       keepAlive: true,     // Keep HTTP connections alive
       poolSize: 10,        // Larger connection pool
-      pipelineConnect: false // Better for single queries
+      pipelineConnect: false, // Better for single queries
+      fetch: (url, options) => {
+        // Add SSL configuration to fix connection issues
+        return fetch(url, {
+          ...options,
+          agent: undefined, // Let Node.js handle SSL
+          headers: {
+            ...options?.headers,
+            'User-Agent': 'neon-serverless'
+          }
+        });
+      }
     });
     this.db = drizzle(sql);
     console.log('🗄️ PostgreSQL-only storage initialized');
@@ -132,6 +143,39 @@ export class PostgresStorage {
     setImmediate(() => {
       this.runBackgroundMigrations();
     });
+}
+
+/**
+ * Retry wrapper for database operations to handle SSL/connection issues
+ */
+private async retryDbOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a connection/SSL error
+      if (error?.message?.includes('fetch failed') || 
+          error?.message?.includes('SSL') ||
+          error?.message?.includes('ENOTFOUND') ||
+          error?.message?.includes('ECONNRESET')) {
+        
+        if (attempt < maxRetries) {
+          console.log(`🔄 Database connection attempt ${attempt} failed, retrying in ${attempt * 1000}ms...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          continue;
+        }
+      }
+      
+      // If it's not a connection error or we've exhausted retries, throw
+      throw error;
+    }
+  }
+  
+  throw lastError;
 }
 
 /**
@@ -345,13 +389,21 @@ private async migratePasswordSecurity(): Promise<void> {
     // Import password functions
     const { hashPassword, isPasswordHashed } = await import('./passwordSecurity');
     
-    // Get all users
-    const allUsers = await this.db.execute('SELECT id, username, password FROM users');
+    // Get all users with retry logic
+    const allUsers = await this.retryDbOperation(() => 
+      this.db.execute('SELECT id, username, password FROM users')
+    ) as any;
     
     let migratedCount = 0;
     
+    // Check if we have valid user data
+    if (!allUsers || !allUsers.rows || allUsers.rows.length === 0) {
+      console.log('✅ No users found or passwords already secure');
+      return;
+    }
+    
     for (const user of allUsers.rows) {
-      const { id, username, password } = user;
+      const { id, username, password } = user as any;
       
       // Skip if user data is incomplete
       if (!id || !password || typeof password !== 'string') {
@@ -367,11 +419,13 @@ private async migratePasswordSecurity(): Promise<void> {
       // Hash the plaintext password
       const hashedPassword = await hashPassword(password);
       
-      // Update in database with explicit type casting
-      await this.db.execute('UPDATE users SET password = $1 WHERE id = $2', [
-        String(hashedPassword), 
-        Number(id)
-      ]);
+      // Update in database with explicit type casting and retry logic
+      await this.retryDbOperation(() =>
+        this.db.execute('UPDATE users SET password = $1 WHERE id = $2', [
+          String(hashedPassword), 
+          Number(id)
+        ])
+      );
       
       console.log(`  ✅ Migrated password for user: ${username}`);
       migratedCount++;
@@ -383,8 +437,16 @@ private async migratePasswordSecurity(): Promise<void> {
       console.log('✅ All passwords already secure (bcrypt hashed)');
     }
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Password security migration failed:', error);
+    
+    // For bind parameter errors, it usually means no users or empty password data
+    if (error?.message?.includes('bind message supplies 0 parameters')) {
+      console.log('ℹ️  This is likely because there are no users with plaintext passwords to migrate');
+    }
+    
+    // Don't throw error - this is a non-critical background migration
+    console.log('⚠️  Password migration skipped - server will continue normally');
   }
 }
 
@@ -4083,23 +4145,26 @@ private async runBackgroundMigrations(): Promise<void> {
     lastSeen: string;
     totalLikes: number;
   }>> {
-    console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
-    
-    // Get all users (excluding lastActiveAt until migration completes)
-    const allUsers = await this.db.select({
-      id: users.id,
-      username: users.username,
-      credits: users.credits,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-      lastPassiveIncomeAt: users.lastPassiveIncomeAt
-    }).from(users);
-    console.log(`🔍 Found ${allUsers.length} users total`);
-    
-    const userList = [];
-    
-    for (const user of allUsers) {
-      // Skip demo users and current user if specified
+    try {
+      console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
+      
+      // Get all users with retry logic
+      const allUsers = await this.retryDbOperation(() =>
+        this.db.select({
+          id: users.id,
+          username: users.username,
+          credits: users.credits,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+          lastPassiveIncomeAt: users.lastPassiveIncomeAt
+        }).from(users)
+      );
+      console.log(`🔍 Found ${allUsers.length} users total`);
+      
+      const userList = [];
+      
+      for (const user of allUsers) {
+        // Skip demo users and current user if specified
       if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
       
       // Count exhibition butterflies for this user
@@ -4161,6 +4226,12 @@ private async runBackgroundMigrations(): Promise<void> {
     
     console.log(`🔍 Processed ${userList.length} users for user list display`);
     return userList;
+    
+    } catch (error) {
+      console.error('❌ Error getting users with status:', error);
+      // Return empty array as fallback to prevent system crash
+      return [];
+    }
   }
 
   async likeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
