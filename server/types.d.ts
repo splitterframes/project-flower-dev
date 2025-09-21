@@ -10,7 +10,15 @@ declare global {
 
   // Database result types
   interface DatabaseResult {
+    rows?: any[];
     [key: string]: any;
+  }
+
+  // SQL execution result
+  interface SqlResult {
+    rows: any[];
+    rowCount: number;
+    command?: string;
   }
 
   // Error handling
@@ -18,6 +26,22 @@ declare global {
     message: string;
     code?: string;
     detail?: string;
+  }
+
+  // Creature generation types
+  interface CreatureData {
+    id: number;
+    name: string;
+    imageUrl: string;
+    rarity?: string;
+  }
+
+  // Transaction types for Neon
+  interface NeonTransaction {
+    insert<T>(table: any): any;
+    update<T>(table: any): any;
+    delete<T>(table: any): any;
+    select<T>(): any;
   }
 }
 

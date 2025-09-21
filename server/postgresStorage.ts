@@ -106,23 +106,8 @@ export class PostgresStorage {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is required for PostgreSQL storage');
     }
-    // 🚀 PERFORMANCE: Configure Neon for better performance with SSL fixes
-    const sql = neon(process.env.DATABASE_URL, {
-      keepAlive: true,     // Keep HTTP connections alive
-      poolSize: 10,        // Larger connection pool
-      pipelineConnect: false, // Better for single queries
-      fetch: (url: string, options: any) => {
-        // Add SSL configuration to fix connection issues
-        return fetch(url, {
-          ...options,
-          agent: undefined, // Let Node.js handle SSL
-          headers: {
-            ...options?.headers,
-            'User-Agent': 'neon-serverless'
-          }
-        });
-      }
-    });
+    // 🚀 PERFORMANCE: Configure Neon with basic settings
+    const sql = neon(process.env.DATABASE_URL);
     this.db = drizzle(sql);
     console.log('🗄️ PostgreSQL-only storage initialized');
     
@@ -238,7 +223,7 @@ private async migrateButterflyNamesToLatin(): Promise<void> {
       SELECT COUNT(*) as count FROM user_butterflies 
       WHERE butterfly_name LIKE '%Falter%' OR butterfly_name LIKE '%Weißling%' 
       OR butterfly_name LIKE '%Silberner%' OR butterfly_name LIKE '%Großer%'
-    `);
+    `) as SqlResult;
     
     const germanCount = germanCheck.rows[0]?.count || 0;
     if (germanCount === 0) {
@@ -391,7 +376,7 @@ private async migratePasswordSecurity(): Promise<void> {
     // Get all users with retry logic
     const allUsers = await this.retryDbOperation(() => 
       this.db.execute('SELECT id, username, password FROM users')
-    ) as any;
+    ) as SqlResult;
     
     let migratedCount = 0;
     
@@ -424,7 +409,7 @@ private async migratePasswordSecurity(): Promise<void> {
           String(hashedPassword), 
           Number(id)
         ])
-      );
+      ) as SqlResult;
       
       console.log(`  ✅ Migrated password for user: ${username}`);
       migratedCount++;
@@ -1365,7 +1350,7 @@ private async runBackgroundMigrations(): Promise<void> {
   async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
     if (data.itemType === "seed") {
       // 🔒 TRANSACTION: Wrap seed market listing in transaction
-      return await this.db.transaction(async (tx: any) => {
+      return await this.db.transaction(async (tx: NeonTransaction) => {
         // Check if user has enough seeds
         const userSeedsResult = await tx
           .select()
@@ -1531,7 +1516,7 @@ private async runBackgroundMigrations(): Promise<void> {
       return listing[0];
     } else if (data.itemType === "butterfly") {
       // 🔒 TRANSACTION: Wrap butterfly market listing in transaction to prevent data loss
-      return await this.db.transaction(async (tx) => {
+      return await this.db.transaction(async (tx: NeonTransaction) => {
         // Check if user has the butterfly (from inventory, not exhibition)
         const butterflyResult = await tx
           .select()
@@ -3503,7 +3488,7 @@ private async runBackgroundMigrations(): Promise<void> {
     );
 
     // Find available fields (unlocked AND free AND NOT pond fields)
-    const availableFields = Array.from(unlockedFieldIndices).filter(fieldIndex => 
+    const availableFields = (Array.from(unlockedFieldIndices) as number[]).filter((fieldIndex: number) => 
       !occupiedFields.has(fieldIndex) && !this.isPondField(fieldIndex)
     );
     
@@ -3616,7 +3601,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .where(inArray(exhibitionFrameLikes.frameId, frameIds))
         .groupBy(exhibitionFrameLikes.frameId) : [];
 
-      const likesMap = new Map(frameLikesData.map(item => [item.frameId, Number(item.count)]));
+      const likesMap = new Map(frameLikesData.map((item: any) => [item.frameId, Number(item.count)]));
 
       // Calculate status for each butterfly
       for (const butterfly of normalButterflies) {
@@ -3629,7 +3614,7 @@ private async runBackgroundMigrations(): Promise<void> {
           id: butterfly.id,
           canSell: remainingMs === 0,
           timeRemainingMs: remainingMs,
-          likesCount
+         likesCount: typeof likesCount === 'number' ? likesCount : 0
         });
       }
     }
@@ -3661,7 +3646,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .where(inArray(exhibitionFrameLikes.frameId, vipFrameIds))
         .groupBy(exhibitionFrameLikes.frameId) : [];
 
-      const vipLikesMap = new Map(vipFrameLikesData.map(item => [item.frameId, Number(item.count)]));
+      const vipLikesMap = new Map(vipFrameLikesData.map((item: any) => [item.frameId, Number(item.count)]));
 
       // Calculate status for each VIP butterfly
       for (const vipButterfly of vipButterflies) {
@@ -3674,7 +3659,7 @@ private async runBackgroundMigrations(): Promise<void> {
           id: vipButterfly.id,
           canSell: remainingMs === 0,
           timeRemainingMs: remainingMs,
-          likesCount
+         likesCount: typeof likesCount === 'number' ? likesCount : 0
         });
       }
     }
@@ -5353,7 +5338,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .orderBy(fedCaterpillarsTable.fedAt);
       
       // @ts-ignore - Type compatibility issue with map function
-      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      const rarities = fedCaterpillars.map((c: any) => c.caterpillarRarity);
       console.log(`🐟 Fed caterpillar rarities from PostgreSQL for field ${fieldIndex}:`, rarities);
       
       if (rarities.length < 3) {
@@ -5421,7 +5406,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
   async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
     // ATOMIC TRANSACTION to prevent synchronization issues
-    return await this.db.transaction(async (tx: any) => {
+    return await this.db.transaction(async (tx: NeonTransaction) => {
       console.log(`🐟 🔐 ATOMIC: Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
       
       // 1. Store caterpillar rarity in PostgreSQL fedCaterpillars table
@@ -5446,7 +5431,7 @@ private async runBackgroundMigrations(): Promise<void> {
       const feedingCount = fedCaterpillars.length;
       console.log(`🐟 🔐 ATOMIC: Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
       // @ts-ignore - Type compatibility issue
-      console.log(`🐟 🔐 ATOMIC: Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
+      console.log(`🐟 🔐 ATOMIC: Fed caterpillar rarities:`, fedCaterpillars.map((c: any) => c.caterpillarRarity));
       
       // 3. Update feeding progress within same transaction
       const existingProgress = await tx
@@ -5484,7 +5469,7 @@ private async runBackgroundMigrations(): Promise<void> {
       
       // If fish is created (3 feedings), log that we're ready
       if (newProgress >= 3) {
-        console.log(`🐟 🔐 ATOMIC: Fish will be created, rarities ready for average:`, fedCaterpillars.map(c => c.caterpillarRarity));
+        console.log(`🐟 🔐 ATOMIC: Fish will be created, rarities ready for average:`, fedCaterpillars.map((c: any) => c.caterpillarRarity));
       }
       
       return newProgress;
@@ -5498,7 +5483,7 @@ private async runBackgroundMigrations(): Promise<void> {
       // Get stored caterpillar rarities for this field from database
       const fedCaterpillars = await this.getFieldCaterpillars(userId);
       const pondCaterpillars = fedCaterpillars.filter(c => c.fieldIndex === pondFieldIndex);
-      const rarities = pondCaterpillars.map(c => c.caterpillarRarity);
+      const rarities = pondCaterpillars.map((c: any) => c.caterpillarRarity);
       
       console.log(`🐟 Fed caterpillar rarities for average calculation:`, rarities);
       
@@ -5590,7 +5575,7 @@ private async runBackgroundMigrations(): Promise<void> {
     const clampedValue = Math.max(0, Math.min(6, averageValue));
     
     const result = valueToRarity[clampedValue];
-    console.log(`🐟 Average calculation: [${rarities.join(', ')}] → values [${rarities.map(r => rarityValues[r] || 0).join(', ')}] → avg ${totalValue}/${rarities.length} = ${averageValue} → ${result}`);
+    console.log(`🐟 Average calculation: [${rarities.join(', ')}] → values [${rarities.map((r: any) => rarityValues[r] || 0).join(', ')}] → avg ${totalValue}/${rarities.length} = ${averageValue} → ${result}`);
     
     return result;
   }
@@ -6513,7 +6498,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
       // Calculate actual passive income for each user
       const userStatsWithIncome = await Promise.all(
-        allUsers.map(async (user) => {
+        allUsers.map(async (user: any) => {
           const exhibitionButterflies = await this.getExhibitionButterflies(user.id);
           
           // Sum up actual passive income from all butterflies
@@ -6824,7 +6809,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
   private formatRankingResults(results: any[], valueKey: string, currentUserId: number): any[] {
     console.log(`🏆 formatRankingResults: ${valueKey}, results:`, results);
-    return results.map((user, index) => ({
+    return results.map((user: any, index: any) => ({
       id: user.id || user.userId,
       username: user.username,
       value: user[valueKey] || 0,
@@ -7573,7 +7558,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .from(userUnlockedFeatures)
         .where(eq(userUnlockedFeatures.userId, userId));
       
-      return unlockedFeatures.map(f => f.featureName);
+      return unlockedFeatures.map((f: any) => f.featureName);
     } catch (error) {
       console.error(`💾 Failed to get unlocked features for user ${userId}:`, error);
       throw error;
@@ -7732,7 +7717,7 @@ private async runBackgroundMigrations(): Promise<void> {
       };
     } catch (error) {
       console.error('📊 Backfill failed:', error);
-      return { success: false, stats: { error: error.message } };
+      return { success: false, stats: { error: (error instanceof Error ? error.message : String(error)) } };
     }
   }
 }
