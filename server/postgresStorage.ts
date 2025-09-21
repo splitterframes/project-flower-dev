@@ -108,11 +108,10 @@ export class PostgresStorage {
     }
     // 🚀 PERFORMANCE: Configure Neon for better performance with SSL fixes
     const sql = neon(process.env.DATABASE_URL, {
-      timeout: 30000,      // 30s timeout
       keepAlive: true,     // Keep HTTP connections alive
       poolSize: 10,        // Larger connection pool
       pipelineConnect: false, // Better for single queries
-      fetch: (url, options) => {
+      fetch: (url: string, options: any) => {
         // Add SSL configuration to fix connection issues
         return fetch(url, {
           ...options,
@@ -362,12 +361,12 @@ private async addPerformanceIndexes(): Promise<void> {
         
         const indexName = indexSQL.split('idx_')[1]?.split(' ON')[0];
         console.log(`  ✅ Added index: ${indexName}`);
-      } catch (error) {
+      } catch (error: any) {
         // Index might already exist - that's okay
-        if (error.message.includes('already exists')) {
+        if (error?.message?.includes('already exists')) {
           console.log('  ⚪ Index already exists');
         } else {
-          console.warn('  ⚠️ Index creation failed:', error.message);
+          console.warn('  ⚠️ Index creation failed:', error?.message || error);
         }
       }
     }
@@ -1366,7 +1365,7 @@ private async runBackgroundMigrations(): Promise<void> {
   async createMarketListing(sellerId: number, data: CreateMarketListingRequest): Promise<any> {
     if (data.itemType === "seed") {
       // 🔒 TRANSACTION: Wrap seed market listing in transaction
-      return await this.db.transaction(async (tx) => {
+      return await this.db.transaction(async (tx: any) => {
         // Check if user has enough seeds
         const userSeedsResult = await tx
           .select()
@@ -2207,7 +2206,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .from(userFlowers)
         .where(eq(userFlowers.userId, userId));
 
-      console.log(`🔍 Available flowers:`, allUserFlowers.map(f => ({ id: f.id, flowerId: f.flowerId, name: f.flowerName })));
+      console.log(`🔍 Available flowers:`, allUserFlowers.map((f: any) => ({ id: f.id, flowerId: f.flowerId, name: f.flowerName })));
 
       // Find the specific flowers by flowerId (not by id)
       const flower1 = allUserFlowers.find((f: any) => f.flowerId === data.flowerId1);
@@ -2842,7 +2841,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .from(fieldButterflies)
         .where(and(eq(fieldButterflies.userId, userId), eq(fieldButterflies.fieldIndex, fieldIndex)));
       
-      console.log(`🦋 Found ${existing.length} existing butterflies on field ${fieldIndex}:`, existing.map(b => ({ id: b.id, name: b.butterflyName })));
+      console.log(`🦋 Found ${existing.length} existing butterflies on field ${fieldIndex}:`, existing.map((b: any) => ({ id: b.id, name: b.butterflyName })));
 
       const result = await this.db
         .delete(fieldButterflies)
@@ -3607,7 +3606,7 @@ private async runBackgroundMigrations(): Promise<void> {
         );
 
       // Get likes counts for frames in one query
-      const frameIds = normalButterflies.map(b => b.frameId).filter(Boolean);
+      const frameIds = normalButterflies.map((b: any) => b.frameId).filter(Boolean);
       const frameLikesData = frameIds.length > 0 ? await this.db
         .select({
           frameId: exhibitionFrameLikes.frameId,
@@ -3652,7 +3651,7 @@ private async runBackgroundMigrations(): Promise<void> {
         );
 
       // Get VIP frame likes
-      const vipFrameIds = vipButterflies.map(b => b.frameId).filter(Boolean);
+      const vipFrameIds = vipButterflies.map((b: any) => b.frameId).filter(Boolean);
       const vipFrameLikesData = vipFrameIds.length > 0 ? await this.db
         .select({
           frameId: exhibitionFrameLikes.frameId,
@@ -3740,18 +3739,19 @@ private async runBackgroundMigrations(): Promise<void> {
       .where(eq(exhibitionFrameLikes.frameOwnerId, frameOwnerId));
     
     // Get unique frame IDs
-    const uniqueFrameIds = [...new Set(ownerButterflies.map(b => b.frameId))];
+    const frameIds = ownerButterflies.map((b: any) => b.frameId);
+    const uniqueFrameIds = Array.from(new Set(frameIds));
     
     // Create a result for each frame
     const result: any[] = [];
     
     for (const frameId of uniqueFrameIds) {
-      const frameLikes = allLikes.filter(like => like.frameId === frameId);
+      const frameLikes = allLikes.filter((like: any) => like.frameId === frameId);
       
       result.push({
         frameId,
         totalLikes: frameLikes.length,
-        isLiked: frameLikes.some(like => like.likerId === likerId)
+        isLiked: frameLikes.some((like: any) => like.likerId === likerId)
       });
     }
     
@@ -4159,11 +4159,11 @@ private async runBackgroundMigrations(): Promise<void> {
           lastPassiveIncomeAt: users.lastPassiveIncomeAt
         }).from(users)
       );
-      console.log(`🔍 Found ${allUsers.length} users total`);
+      console.log(`🔍 Found ${(allUsers as any[]).length} users total`);
       
       const userList = [];
       
-      for (const user of allUsers) {
+      for (const user of (allUsers as any[])) {
         // Skip demo users and current user if specified
       if (user.id === 99 || (excludeUserId && user.id === excludeUserId)) continue;
       
@@ -4561,7 +4561,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
     // Get user details and sort by total donations - ONLY show users with > 0 donations
     const leaderboard = [];
-    for (const [userId, total] of userTotals) {
+    for (const [userId, total] of Array.from(userTotals.entries())) {
       if (total > 0) { // Only show users who actually donated
         const user = await this.getUser(userId);
         if (user) {
@@ -5322,7 +5322,7 @@ private async runBackgroundMigrations(): Promise<void> {
         ))
         .orderBy(fedCaterpillarsTable.fedAt);
       
-      const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
+      const rarities = fedCaterpillars.map((c: any) => c.caterpillarRarity);
       console.log(`🐟 DEBUG: Getting average for field ${fieldIndex}, PostgreSQL rarities:`, rarities);
       
       if (rarities.length === 0) {
@@ -5352,6 +5352,7 @@ private async runBackgroundMigrations(): Promise<void> {
         ))
         .orderBy(fedCaterpillarsTable.fedAt);
       
+      // @ts-ignore - Type compatibility issue with map function
       const rarities = fedCaterpillars.map(c => c.caterpillarRarity);
       console.log(`🐟 Fed caterpillar rarities from PostgreSQL for field ${fieldIndex}:`, rarities);
       
@@ -5420,7 +5421,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
   async updatePondFeedingProgressWithTracking(userId: number, fieldIndex: number, caterpillarRarity: string): Promise<number> {
     // ATOMIC TRANSACTION to prevent synchronization issues
-    return await this.db.transaction(async (tx) => {
+    return await this.db.transaction(async (tx: any) => {
       console.log(`🐟 🔐 ATOMIC: Updating pond feeding progress for user ${userId}, field ${fieldIndex} with caterpillar rarity: ${caterpillarRarity}`);
       
       // 1. Store caterpillar rarity in PostgreSQL fedCaterpillars table
@@ -5444,6 +5445,7 @@ private async runBackgroundMigrations(): Promise<void> {
       
       const feedingCount = fedCaterpillars.length;
       console.log(`🐟 🔐 ATOMIC: Fed caterpillars count from PostgreSQL for field ${fieldIndex}: ${feedingCount}`);
+      // @ts-ignore - Type compatibility issue
       console.log(`🐟 🔐 ATOMIC: Fed caterpillar rarities:`, fedCaterpillars.map(c => c.caterpillarRarity));
       
       // 3. Update feeding progress within same transaction
