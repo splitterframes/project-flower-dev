@@ -83,12 +83,32 @@ import {
   type UserNotification,
   insertUserSchema
 } from "@shared/schema";
-import { eq, ilike, and, lt, gt, inArray, sql, desc } from "drizzle-orm";
+import { eq, ilike, and, lt, lte, gt, inArray, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { generateRandomFlower, generateRandomButterfly, getGrowthTime, getRandomRarity, generateLatinFlowerName, generateLatinButterflyName, generateLatinCaterpillarName, generateLatinFishName, type RarityTier } from "@shared/rarity";
 import { generateBouquetName, calculateAverageRarity, getBouquetSeedDrop } from './bouquet';
 import { initializeCreatureSystems, generateRandomFish, generateRandomCaterpillar, getFishRarity, getCaterpillarRarity, getRandomRarity as getRandomCreatureRarity } from './creatures';
+
+export interface BouquetSpawnCandidate {
+  userId: number;
+  bouquetId: number;
+  fieldIndex: number;
+  nextSpawnAt: Date;
+  currentSpawnSlot: number;
+  bouquetRarity: RarityTier;
+  expiresAt: Date;
+}
+
+export type ButterflySpawnFailureReason =
+  | 'BOUQUET_NOT_FOUND'
+  | 'NO_FREE_FIELD'
+  | 'PROBABILITY_FAIL'
+  | 'ERROR';
+
+export type ButterflySpawnResult =
+  | { success: true; fieldButterfly: FieldButterfly; fieldIndex: number }
+  | { success: false; reason: ButterflySpawnFailureReason };
 
 /**
  * PostgreSQL-only Storage Implementation
@@ -2449,6 +2469,41 @@ private async runBackgroundMigrations(): Promise<void> {
     return result as any;
   }
 
+  async getBouquetsReadyToSpawn(currentTime: Date): Promise<BouquetSpawnCandidate[]> {
+    try {
+      const result = await this.db
+        .select({
+          userId: placedBouquets.userId,
+          bouquetId: placedBouquets.bouquetId,
+          fieldIndex: placedBouquets.fieldIndex,
+          nextSpawnAt: placedBouquets.nextSpawnAt,
+          currentSpawnSlot: placedBouquets.currentSpawnSlot,
+          expiresAt: placedBouquets.expiresAt,
+          bouquetRarity: bouquets.rarity
+        })
+        .from(placedBouquets)
+        .leftJoin(bouquets, eq(placedBouquets.bouquetId, bouquets.id))
+        .where(and(
+          gt(placedBouquets.expiresAt, currentTime),
+          lte(placedBouquets.nextSpawnAt, currentTime),
+          lt(placedBouquets.currentSpawnSlot, 5)
+        ));
+
+      return result.map((candidate: any) => ({
+        userId: candidate.userId,
+        bouquetId: candidate.bouquetId,
+        fieldIndex: candidate.fieldIndex,
+        nextSpawnAt: new Date(candidate.nextSpawnAt),
+        currentSpawnSlot: candidate.currentSpawnSlot || 1,
+        bouquetRarity: (candidate.bouquetRarity as RarityTier) || 'common',
+        expiresAt: new Date(candidate.expiresAt)
+      }));
+    } catch (error) {
+      console.error('🦋 Failed to load bouquets ready to spawn:', error);
+      return [];
+    }
+  }
+
   async getUserButterflies(userId: number): Promise<UserButterfly[]> {
     const result = await this.db
       .select()
@@ -3501,7 +3556,7 @@ private async runBackgroundMigrations(): Promise<void> {
     return availableFields;
   }
 
-  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+  async spawnButterflyOnField(userId: number, bouquetId: number, bouquetRarity: RarityTier): Promise<ButterflySpawnResult> {
     try {
       // Find the placed bouquet to get the field index
       const placedBouquet = await this.db
@@ -3511,7 +3566,7 @@ private async runBackgroundMigrations(): Promise<void> {
         .limit(1);
 
       if (placedBouquet.length === 0) {
-        return { success: false };
+        return { success: false, reason: 'BOUQUET_NOT_FOUND' };
       }
 
       // Find all available fields for butterfly spawning
@@ -3519,7 +3574,7 @@ private async runBackgroundMigrations(): Promise<void> {
 
       if (availableFields.length === 0) {
         console.log(`🦋 No available fields for butterfly spawn for user ${userId} (garden full)`);
-        return { success: false };
+        return { success: false, reason: 'NO_FREE_FIELD' };
       }
 
       // Select random available field from entire garden
@@ -3548,15 +3603,15 @@ private async runBackgroundMigrations(): Promise<void> {
       console.log(`🦋 Spawned butterfly "${butterflyData.name}" on field ${fieldIndex} for user ${userId}`);
       console.log(`🔍 DEBUG: Random spawn from ${availableFields.length} available fields: [${availableFields.join(', ')}]`);
       
-      return { 
-        success: true, 
+      return {
+        success: true,
         fieldButterfly: newFieldButterfly[0],
         fieldIndex: fieldIndex
       };
       
     } catch (error) {
       console.error('Failed to spawn butterfly:', error);
-      return { success: false };
+      return { success: false, reason: 'ERROR' };
     }
   }
 
@@ -4355,6 +4410,25 @@ private async runBackgroundMigrations(): Promise<void> {
       .where(and(eq(placedBouquets.userId, userId), eq(placedBouquets.fieldIndex, fieldIndex)));
   }
 
+  async scheduleBouquetSpawnRetry(userId: number, bouquetId: number, fieldIndex: number, delayMs: number = 60 * 1000): Promise<void> {
+    try {
+      const retryAt = new Date(Date.now() + delayMs);
+
+      await this.db
+        .update(placedBouquets)
+        .set({ nextSpawnAt: retryAt })
+        .where(and(
+          eq(placedBouquets.userId, userId),
+          eq(placedBouquets.bouquetId, bouquetId),
+          eq(placedBouquets.fieldIndex, fieldIndex)
+        ));
+
+      console.log(`🦋 Bouquet #${bouquetId} for user ${userId} retry scheduled in ${Math.round(delayMs / 1000)}s`);
+    } catch (error) {
+      console.error(`🦋 Failed to schedule bouquet retry for user ${userId} bouquet #${bouquetId}:`, error);
+    }
+  }
+
   // ========== WEEKLY CHALLENGE SYSTEM ==========
 
   async getCurrentWeeklyChallenge(): Promise<WeeklyChallenge | null> {
@@ -5150,7 +5224,7 @@ private async runBackgroundMigrations(): Promise<void> {
   }
 
   // Enhanced system: Spawn butterfly on a garden field with slot-based guarantee system
-  async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<{ success: boolean; fieldButterfly?: FieldButterfly; fieldIndex?: number }> {
+  async spawnButterflyOnFieldWithSlot(userId: number, bouquetId: number, bouquetRarity: RarityTier, currentSlot: number, totalSlots: number, alreadySpawnedCount: number): Promise<ButterflySpawnResult> {
     const { generateRandomButterfly, shouldSpawnButterfly } = await import('./bouquet');
     
     // For all bouquets: guarantee at least 1 spawn if this is the final slot and none spawned yet
@@ -5158,7 +5232,7 @@ private async runBackgroundMigrations(): Promise<void> {
     
     // Check if butterfly should spawn based on rarity (with guarantee logic)
     if (!shouldGuaranteeSpawn && !shouldSpawnButterfly(bouquetRarity, currentSlot, totalSlots)) {
-      return { success: false };
+      return { success: false, reason: 'PROBABILITY_FAIL' };
     }
 
     return this.spawnButterflyOnField(userId, bouquetId, bouquetRarity);

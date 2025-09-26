@@ -1,4 +1,4 @@
-import { postgresStorage as storage, type UserWithStatusList } from './postgresStorage';
+import { postgresStorage as storage, type BouquetSpawnCandidate } from './postgresStorage';
 import type { RarityTier } from '@shared/rarity';
 
 /**
@@ -58,97 +58,94 @@ export class ButterflySpawner {
       let totalSpawns = 0;
       let totalChecked = 0;
       
-      // 🚀 CACHE: Cache user list for 1 minute to reduce DB load
-      const { cache } = await import('./cache');
-      const cacheKey = 'spawner:all-users';
-      
-      let usersToProcess = cache.get<UserWithStatusList>(cacheKey);
-      if (!usersToProcess) {
-        const allUsersList = await storage.getAllUsersWithStatus();
+      const readyBouquets = await storage.getBouquetsReadyToSpawn(currentTime);
 
-        // 🎯 OPTIMIZATION: Prefer recently active users but fall back to everyone if timestamps are stale
-        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-        const activeUsers = allUsersList.filter(user => {
-          const rawLastActive = user.lastActive || user.createdAt;
-          const lastActive = rawLastActive ? new Date(rawLastActive) : null;
-          return lastActive instanceof Date && !Number.isNaN(lastActive.getTime()) && lastActive > tenMinutesAgo;
-        });
-
-        const offlineCount = allUsersList.length - activeUsers.length;
-
-        if (activeUsers.length === 0 && allUsersList.length > 0) {
-          console.warn('🦋 All users appear inactive based on timestamps – processing full list to keep bouquets spawning');
-          usersToProcess = allUsersList;
-        } else {
-          usersToProcess = activeUsers;
-        }
-
-        cache.set<UserWithStatusList>(cacheKey, usersToProcess, 60); // 60 second cache
-        console.log(`🔄 Cached ${usersToProcess.length} users for spawning (skipped ${Math.max(offlineCount, 0)} offline users)`);
+      if (readyBouquets.length === 0) {
+        console.log('🦋 No bouquets ready to spawn in this cycle');
+        return;
       }
-      
-      for (const user of usersToProcess) {
+
+      const bouquetsByUser = new Map<number, BouquetSpawnCandidate[]>();
+      for (const bouquet of readyBouquets) {
+        const list = bouquetsByUser.get(bouquet.userId) ?? [];
+        list.push(bouquet);
+        bouquetsByUser.set(bouquet.userId, list);
+      }
+
+      let blockedDueToFields = 0;
+      let probabilityFailures = 0;
+
+      for (const [userId, bouquets] of bouquetsByUser.entries()) {
         try {
-          const placedBouquets = await storage.getPlacedBouquets(user.id);
-          const activeBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) > currentTime);
-          
-          if (activeBouquets.length === 0) {
-            continue; // Skip this user, no active bouquets
-          }
-          
-          for (const placedBouquet of activeBouquets) {
+          const existingButterflies = await storage.getFieldButterflies(userId);
+          const totalSlots = 4;
+
+          for (const bouquet of bouquets) {
             totalChecked++;
-            
-            // Check if this bouquet is ready to spawn (individual timing)
-            const nextSpawnTime = new Date((placedBouquet as any).nextSpawnAt);
-            if (currentTime < nextSpawnTime) {
-              continue; // Not time yet for this bouquet
+
+            const currentSlot = bouquet.currentSpawnSlot || 1;
+            if (currentSlot > totalSlots) {
+              continue;
             }
-            
-            // Check how many butterflies already spawned for this bouquet
-            const existingButterflies = await storage.getFieldButterflies(user.id);
-            const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === placedBouquet.bouquetId).length;
-            
-            // 4-Slot System: Each bouquet has exactly 4 spawn opportunities (one per slot)
-            const currentSlot = (placedBouquet as any).currentSpawnSlot || 1;
-            
-            if (currentSlot > 4) {
-              continue; // This bouquet has completed all 4 spawn slots
-            }
-            
-            // Use the rarity stored in the placed bouquet
-            const rarity = (placedBouquet as any).bouquetRarity as RarityTier || 'common';
-            
+
+            const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === bouquet.bouquetId).length;
+            const rarity = bouquet.bouquetRarity as RarityTier || 'common';
+
             const result = await storage.spawnButterflyOnFieldWithSlot(
-              user.id, 
-              placedBouquet.bouquetId, 
+              userId,
+              bouquet.bouquetId,
               rarity,
               currentSlot,
-              4, // total attempts
-              butterflyCount // already spawned count
+              totalSlots,
+              butterflyCount
             );
-            
+
             if (result.success) {
               totalSpawns++;
-              console.log(`✨ User ${user.id}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly?.butterflyName} from ${rarity} bouquet #${placedBouquet.bouquetId}! (Slot ${currentSlot}/4)`);
-              
-              // Advance to next spawn slot
-              await storage.updateBouquetNextSpawnTime(user.id, placedBouquet.fieldIndex, new Date());
+              existingButterflies.push(result.fieldButterfly);
+              console.log(`✨ User ${userId}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly.butterflyName} from ${rarity} bouquet #${bouquet.bouquetId}! (Slot ${currentSlot}/${totalSlots})`);
+
+              await storage.updateBouquetNextSpawnTime(userId, bouquet.fieldIndex, new Date());
             } else {
-              // Spawn failed due to probability check - still advance to next slot
-              console.log(`🎲 User ${user.id}: Spawn probability check failed for ${rarity} bouquet #${placedBouquet.bouquetId} (Slot ${currentSlot}/4)`);
-              await storage.updateBouquetNextSpawnTime(user.id, placedBouquet.fieldIndex, new Date());
+              switch (result.reason) {
+                case 'NO_FREE_FIELD':
+                  blockedDueToFields++;
+                  console.warn(`🚫 User ${userId}: Garden full, bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots}) will retry in 60s`);
+                  await storage.scheduleBouquetSpawnRetry(userId, bouquet.bouquetId, bouquet.fieldIndex);
+                  break;
+                case 'BOUQUET_NOT_FOUND':
+                  console.warn(`⚠️ User ${userId}: Bouquet #${bouquet.bouquetId} missing during spawn attempt`);
+                  break;
+                case 'ERROR':
+                  console.error(`❌ User ${userId}: Error spawning from bouquet #${bouquet.bouquetId}, scheduling retry in 120s`);
+                  await storage.scheduleBouquetSpawnRetry(userId, bouquet.bouquetId, bouquet.fieldIndex, 120 * 1000);
+                  break;
+                case 'PROBABILITY_FAIL':
+                default:
+                  probabilityFailures++;
+                  console.log(`🎲 User ${userId}: Spawn probability check failed for ${rarity} bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots})`);
+                  await storage.updateBouquetNextSpawnTime(userId, bouquet.fieldIndex, new Date());
+                  break;
+              }
             }
           }
         } catch (error) {
-          console.error(`🦋 Error checking bouquets for user ${user.id}:`, error);
+          console.error(`🦋 Error processing bouquets for user ${userId}:`, error);
         }
       }
-      
+
       if (totalSpawns > 0) {
         console.log(`🦋 Individual spawn cycle complete: ${totalSpawns} butterflies spawned from ${totalChecked} bouquets checked`);
       } else {
         console.log(`🦋 Individual spawn cycle complete: No butterflies spawned (${totalChecked} bouquets checked)`);
+      }
+
+      if (blockedDueToFields > 0) {
+        console.warn(`🦋 ${blockedDueToFields} bouquet spawn attempts blocked due to full gardens`);
+      }
+
+      if (probabilityFailures > 0) {
+        console.log(`🦋 ${probabilityFailures} spawn attempts failed probability checks this cycle`);
       }
       
     } catch (error) {

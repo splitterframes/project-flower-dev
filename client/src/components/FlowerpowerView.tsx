@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useAuth } from "@/lib/stores/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { RarityImage } from "./RarityImage";
-import { Sparkles, Flower, Zap, Star, Heart, Plus, Minus, Trophy, Users, Info, Gift } from "lucide-react";
+import { FlowerHoverPreview } from "./FlowerHoverPreview";
+import { Sparkles, Flower, Zap, Star, Heart, Plus, Minus, Trophy, Users, Gift } from "lucide-react";
 import { HelpButton } from './HelpButton';
+import { generateLatinFlowerName, type RarityTier } from "@shared/rarity";
 
 interface WeeklyChallenge {
   id: number;
@@ -144,7 +146,7 @@ export const FlowerpowerView: React.FC = () => {
     return flower?.quantity || 0;
   };
 
-  const getFlowerRarity = (flowerId: number): string => {
+  const getFlowerRarity = (flowerId: number): RarityTier => {
     // Based on rarity distribution from replit.md
     if (flowerId <= 55) return "common";
     if (flowerId <= 100) return "uncommon";
@@ -153,6 +155,10 @@ export const FlowerpowerView: React.FC = () => {
     if (flowerId <= 180) return "epic";
     if (flowerId <= 195) return "legendary";
     return "mythical";
+  };
+
+  const getFlowerName = (flowerId: number): string => {
+    return generateLatinFlowerName(flowerId);
   };
 
   const getRarityColor = (rarity: string): string => {
@@ -285,6 +291,7 @@ export const FlowerpowerView: React.FC = () => {
                     const rarity = getFlowerRarity(flowerId);
                     const quantity = getFlowerQuantity(flowerId);
                     const color = getRarityColor(rarity);
+                    const flowerName = getFlowerName(flowerId);
                     
                     return (
                       <div key={`challenge-flower-${index}-${flowerId}`} className="relative">
@@ -293,15 +300,27 @@ export const FlowerpowerView: React.FC = () => {
                             <Badge className={`bg-${color}-500/20 text-${color}-300`}>
                               {rarity}
                             </Badge>
-                            <span className="text-sm text-slate-400">#{flowerId}</span>
+                            <span
+                              className="text-xs font-medium text-slate-200 truncate max-w-[110px] text-right"
+                              title={flowerName}
+                            >
+                              {flowerName}
+                            </span>
                           </div>
                           
-                          <RarityImage
-                            src={`/Blumen/${flowerId}.jpg`}
-                            alt={`Blume ${flowerId}`}
+                          <FlowerHoverPreview
+                            flowerImageUrl={`/Blumen/${flowerId}.jpg`}
+                            flowerName={flowerName}
                             rarity={rarity}
-                            size={60}
-                          />
+                          >
+                            <RarityImage
+                              src={`/Blumen/${flowerId}.jpg`}
+                              alt={flowerName}
+                              rarity={rarity}
+                              size={100}
+                              className="mx-auto cursor-pointer"
+                            />
+                          </FlowerHoverPreview>
                           
                           <div className="mt-2 flex items-center justify-between">
                             <span className="text-xs text-slate-400">Besitzt:</span>
@@ -491,10 +510,13 @@ export const FlowerpowerView: React.FC = () => {
                 <div className="text-center">
                   <RarityImage
                     src={`/Blumen/${donateFlowerId}.jpg`}
-                    alt={`Blume ${donateFlowerId}`}
+                    alt={getFlowerName(donateFlowerId)}
                     rarity={getFlowerRarity(donateFlowerId)}
                     size={80}
                   />
+                  <p className="mt-2 text-base font-semibold text-slate-100">
+                    {getFlowerName(donateFlowerId)}
+                  </p>
                   <p className="mt-2 text-sm text-slate-400">
                     Besitzt: {getFlowerQuantity(donateFlowerId)} Stück
                   </p>
