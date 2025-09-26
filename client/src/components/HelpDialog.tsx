@@ -666,7 +666,19 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, viewTyp
           )}
 
           {/* Rarität-System Info für relevante Views */}
-          {(['garden', 'pond', 'market', 'inventory', 'bouquets', 'exhibition'] as const).includes(viewType) && (
+          {(
+            new Set([
+              'garden',
+              'pond',
+              'market',
+              'inventory',
+              'bouquets',
+              'exhibition',
+              'aquarium',
+              'flowerpower',
+              'dna'
+            ])
+          ).has(viewType) && (
             <Card className="bg-gradient-to-r from-purple-800/20 to-pink-800/20 border-2 border-purple-500/30 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-white">

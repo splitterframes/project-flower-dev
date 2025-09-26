@@ -1,4 +1,4 @@
-import { postgresStorage as storage } from './postgresStorage';
+import { postgresStorage as storage, type UserWithStatusList } from './postgresStorage';
 
 class SunSpawner {
   private isRunning = false;
@@ -51,19 +51,21 @@ class SunSpawner {
       const { cache } = await import('./cache');
       const cacheKey = 'sun-spawner:active-users';
       
-      let allUsers = cache.get(cacheKey);
+      let allUsers = cache.get<UserWithStatusList>(cacheKey);
       if (!allUsers) {
         const allUsersList = await storage.getAllUsersWithStatus();
         
         // Filter to only users active in last 15 minutes
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-        allUsers = allUsersList.filter((user: any) => {
+        const activeUsers = allUsersList.filter(user => {
           const lastActive = new Date(user.lastActive || user.createdAt);
           return lastActive > fifteenMinutesAgo;
         });
         
-        cache.set(cacheKey, allUsers, 120); // 2 minute cache for sun spawner
-        console.log(`☀️ Processing ${allUsers.length} active users for sun spawning (${allUsersList.length - allUsers.length} offline users skipped)`);
+        allUsers = activeUsers;
+        cache.set<UserWithStatusList>(cacheKey, allUsers, 120); // 2 minute cache for sun spawner
+        const skipped = allUsersList.length - allUsers.length;
+        console.log(`☀️ Processing ${allUsers.length} active users for sun spawning (${skipped} offline users skipped)`);
       }
       
       if (allUsers.length === 0) {

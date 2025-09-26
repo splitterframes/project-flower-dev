@@ -148,6 +148,23 @@ const rarityComponents: Record<RarityTier, NameComponents> = {
     ],
     prefixes: ["Ultimate", "Final", "Last", "First", "Only", "Pure"],
     suffixes: ["Absolute", "Ultimate", "Final", "Complete", "Perfect", "Pure"]
+  },
+
+  vip: {
+    adjectives: [
+      "Prestige", "Premier", "Exclusive", "Privileged", "Luxurious", "Opulent",
+      "Celestial", "Radiant", "Gilded", "Sparkling", "Illuminated", "Resplendent",
+      "Infinite", "Elysian", "Majestic", "Imperial", "Crowned", "Noble",
+      "Starry", "Auroral", "Sovereign", "Royal", "Charmed", "Enraptured"
+    ],
+    nouns: [
+      "Constellation", "Paragon", "Treasure", "Miracle", "Wonder", "Splendor",
+      "Aurora", "Crown", "Diadem", "Radiance", "Eminence", "Privilege",
+      "Sanctum", "Vault", "Mythos", "Empire", "Dynasty", "Pantheon",
+      "Celestia", "Serenade", "Seraph", "Halo", "Lustre", "Legend"
+    ],
+    prefixes: ["Grand", "Supreme", "Infinite", "Stellar", "Prismatic", "Royal"],
+    suffixes: ["Elegance", "Experience", "Ascendancy", "Luxe", "Miracle", "Prestige"]
   }
 };
 

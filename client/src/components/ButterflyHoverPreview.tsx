@@ -8,7 +8,7 @@ interface ButterflyHoverPreviewProps {
   rarity: RarityTier | "vip";
   children: React.ReactNode;
   // Optional sell countdown data
-  placedAt?: string;
+  placedAt?: string | Date;
   canSell?: boolean;
   timeRemainingMs?: number;
   isSpinning?: boolean;

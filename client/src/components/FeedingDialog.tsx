@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getRarityColor, getRarityDisplayName } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, toRarityTier } from "@shared/rarity";
 
 interface UserCaterpillar {
   id: number;
@@ -95,14 +95,17 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
               >
                 <CardContent className="p-3 text-center">
                   <div className="w-16 h-16 mx-auto mb-2 rounded-lg overflow-hidden border-2"
-                       style={{ borderColor: getRarityColor(item.rarity) }}>
+                       style={{ borderColor: getRarityColor(toRarityTier(item.rarity)) }}>
                     <img
                       src={item.imageUrl}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling!.style.display = 'flex';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
                       }}
                     />
                     <div
@@ -117,9 +120,9 @@ export const FeedingDialog: React.FC<FeedingDialogProps> = ({
                   </h3>
                   <Badge 
                     className="mb-2 text-xs"
-                    style={{ backgroundColor: getRarityColor(item.rarity) }}
+                    style={{ backgroundColor: getRarityColor(toRarityTier(item.rarity)) }}
                   >
-                    {getRarityDisplayName(item.rarity)}
+                    {getRarityDisplayName(toRarityTier(item.rarity))}
                   </Badge>
                   <p className="text-blue-300 text-xs">
                     🐛 Verfügbar: {item.quantity}

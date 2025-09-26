@@ -44,10 +44,10 @@ export async function getUserCompleteState(req: AuthenticatedRequest, res: Respo
         storage.getUserFlowers(userId),
         storage.getUserSeeds(userId),
         storage.getUserBouquets(userId),
-        storage.getUserExhibitionButterflies(userId),
-        storage.getUserFieldButterflies(userId),
+  storage.getExhibitionButterflies(userId),
+  storage.getFieldButterflies(userId),
         storage.getUnlockedFeatures(userId),
-        storage.getUserPlacedBouquets(userId)
+  storage.getPlacedBouquets(userId)
       ]);
       
       if (!user) {
@@ -92,7 +92,7 @@ export async function getUserCompleteState(req: AuthenticatedRequest, res: Respo
     
   } catch (error) {
     console.error('[ERROR] getUserCompleteState:', error);
-    if (error.message === "User not found") {
+    if (error instanceof Error && error.message === "User not found") {
       res.status(404).json({ error: "User not found" });
     } else {
       res.status(500).json({ error: "Failed to get complete user state" });
@@ -125,11 +125,11 @@ export async function getUserGardenState(req: AuthenticatedRequest, res: Respons
         pondProgress,
         unlockedFields
       ] = await Promise.all([
-        storage.getUserFieldButterflies(userId),
-        storage.getUserFieldFlowers(userId),
-        storage.getUserFieldFish(userId),
-        storage.getUserFieldCaterpillars(userId),
-        storage.getSunSpawns(userId),
+  storage.getFieldButterflies(userId),
+  storage.getFieldFlowers(userId),
+  storage.getFieldFish(userId),
+  storage.getFieldCaterpillars(userId),
+  storage.getActiveSunSpawnsForUser(userId),
         storage.getUserPondProgress(userId),
         storage.getUnlockedFields(userId)
       ]);
@@ -207,7 +207,8 @@ export async function getExhibitionSellStatusUltraBatch(req: Request, res: Respo
         
       } catch (error) {
         // Skip failed butterflies instead of failing entire request
-        console.warn(`Failed to get sell status for butterfly ${butterflyId}:`, error.message);
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`Failed to get sell status for butterfly ${butterflyId}:`, reason);
         results[`butterfly-${butterflyId}`] = {
           canSell: false,
           timeRemainingMs: 72 * 60 * 60 * 1000,
@@ -249,7 +250,7 @@ export async function getStaticGameData(req: Request, res: Response) {
       return {
         bouquetRecipes,
         weeklyChallenge,
-        rarityTiers: ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical'],
+  rarityTiers: ['common', 'uncommon', 'rare', 'super-rare', 'epic', 'legendary', 'mythical', 'vip'],
         lastUpdated: new Date().toISOString()
       };
       

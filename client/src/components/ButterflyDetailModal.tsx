@@ -241,10 +241,8 @@ export const ButterflyDetailModal: React.FC<ButterflyDetailModalProps> = ({
     }
     
     // Apply like bonus: 2% per like for 72 hours
-    if (butterfly?.frameId && frameLikes) {
-      const frameWithLikes = frameLikes.find(f => f.frameId === butterfly.frameId);
-      const likesCount = frameWithLikes ? frameWithLikes.totalLikes : 0;
-      const likeBonus = 1 + (likesCount * 0.02); // 2% per like
+    if (butterfly?.frameId && frameLikes > 0) {
+      const likeBonus = 1 + (frameLikes * 0.02); // 2% per like
       baseValue = Math.round(baseValue * likeBonus);
     }
     

@@ -8,7 +8,7 @@ import { useNotification } from "../hooks/useNotification";
 import { useCredits } from "@/lib/stores/useCredits";
 import { Fish, Plus, Clock, Star, Waves, Eye } from "lucide-react";
 import { HelpButton } from './HelpButton';
-import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, getRarityCssColor, toRgba, type RarityTier } from "@shared/rarity";
+import { getRarityColor, getRarityDisplayName, getRarityBadgeStyle, getRarityCssColor, toRgba, toRarityTier, type RarityTier } from "@shared/rarity";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FishDetailModal } from "./FishDetailModal";
 import { FishSelectionModal } from "./FishSelectionModal";
@@ -320,7 +320,10 @@ export const AquariumView: React.FC = () => {
                 className="w-full h-full object-contain p-1"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling!.style.display = 'flex';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
                 }}
               />
               <div
@@ -334,11 +337,11 @@ export const AquariumView: React.FC = () => {
               <div 
                 className="absolute inset-0 rounded-lg opacity-50 animate-pulse"
                 style={{ 
-                  backgroundColor: toRgba(getRarityCssColor(fish.fishRarity as RarityTier), 0.2),
+                  backgroundColor: toRgba(getRarityCssColor(toRarityTier(fish.fishRarity)), 0.2),
                   boxShadow: `
-                    inset 0 0 25px ${getRarityCssColor(fish.fishRarity as RarityTier)},
-                    0 0 15px ${getRarityCssColor(fish.fishRarity as RarityTier)},
-                    0 0 30px ${toRgba(getRarityCssColor(fish.fishRarity as RarityTier), 0.4)}
+                    inset 0 0 25px ${getRarityCssColor(toRarityTier(fish.fishRarity))},
+                    0 0 15px ${getRarityCssColor(toRarityTier(fish.fishRarity))},
+                    0 0 30px ${toRgba(getRarityCssColor(toRarityTier(fish.fishRarity)), 0.4)}
                   `,
                   pointerEvents: 'none'
                 }}
@@ -348,8 +351,8 @@ export const AquariumView: React.FC = () => {
           <TooltipContent>
             <div className="text-center">
               <p className="font-semibold">{fish.fishName}</p>
-              <Badge className={`${getRarityBadgeStyle(fish.fishRarity as RarityTier)} text-xs px-2 py-1`}>
-                {getRarityDisplayName(fish.fishRarity as RarityTier)}
+              <Badge className={`${getRarityBadgeStyle(toRarityTier(fish.fishRarity))} text-xs px-2 py-1`}>
+                {getRarityDisplayName(toRarityTier(fish.fishRarity))}
               </Badge>
               <p className="text-xs text-blue-300 mt-1">Klicken für Details</p>
             </div>
@@ -592,7 +595,10 @@ export const AquariumView: React.FC = () => {
                       className="w-12 h-12 mx-auto mb-2 object-contain"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling!.style.display = 'flex';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
                       }}
                     />
                     <div
@@ -606,7 +612,7 @@ export const AquariumView: React.FC = () => {
                     </h3>
                     <Badge 
                       className="mb-1 text-xs"
-                      style={{ backgroundColor: getRarityColor(fish.fishRarity) }}
+                      style={{ backgroundColor: getRarityColor(toRarityTier(fish.fishRarity)) }}
                     >
                       {getRarityDisplayName(fish.fishRarity as RarityTier)}
                     </Badge>

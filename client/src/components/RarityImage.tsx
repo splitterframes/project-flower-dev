@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { type RarityTier } from "@shared/rarity";
+import { type RarityTier, toRarityTier } from "@shared/rarity";
 import { Flower, Sparkles } from "lucide-react";
 
+type RarityLike = RarityTier | (string & {});
+
 interface RarityImageProps {
-  src: string;
+  src?: string | null;
   alt: string;
-  rarity: RarityTier;
-  size?: 'small' | 'medium' | 'large';
+  rarity: RarityLike;
+  size?: 'small' | 'medium' | 'large' | 'xl' | number;
   className?: string;
 }
 
@@ -18,31 +20,47 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   className = ""
 }) => {
   const [imageError, setImageError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
+  const [currentSrc, setCurrentSrc] = useState<string>(src ?? "");
+  const normalizedRarity = toRarityTier(rarity);
 
   // Reset state when src prop changes
   useEffect(() => {
-    setCurrentSrc(src);
-    setImageError(false);
+    if (src) {
+      setCurrentSrc(src);
+      setImageError(false);
+    } else {
+      setCurrentSrc("");
+      setImageError(true);
+    }
   }, [src]);
   
   const sizeClasses = {
     small: 'w-8 h-8',      // 32px
     medium: 'w-12 h-12',   // 48px
-    large: 'w-16 h-16'     // 64px
+    large: 'w-16 h-16',    // 64px
+    xl: 'w-20 h-20'        // 80px
   };
 
   const borderSize = {
     small: 'border-2',
     medium: 'border-2',
-    large: 'border-4'
+    large: 'border-4',
+    xl: 'border-4'
   };
 
   const iconSize = {
     small: 'h-4 w-4',
     medium: 'h-6 w-6',
-    large: 'h-8 w-8'
+    large: 'h-8 w-8',
+    xl: 'h-10 w-10'
   };
+
+  const resolvedSizeKey =
+    typeof size === 'string' && sizeClasses[size as keyof typeof sizeClasses]
+      ? (size as keyof typeof sizeClasses)
+      : 'medium';
+
+  const numericSize = typeof size === 'number' ? size : undefined;
 
   const getBorderColor = (rarity: RarityTier): string => {
     switch (rarity) {
@@ -59,6 +77,11 @@ export const RarityImage: React.FC<RarityImageProps> = ({
 
   const handleImageError = () => {
     // Try fallback to 0.jpg for different creature types before showing icon
+    if (!currentSrc) {
+      setImageError(true);
+      return;
+    }
+
     if (currentSrc.includes('Schmetterlinge') && !currentSrc.includes('0.jpg')) {
       setCurrentSrc('/Schmetterlinge/0.jpg');
     } else if (currentSrc.includes('Fische') && !currentSrc.includes('0.jpg')) {
@@ -79,8 +102,8 @@ export const RarityImage: React.FC<RarityImageProps> = ({
   return (
     <div 
       className={`
-        ${className.includes('field-image') ? '' : sizeClasses[size]} 
-        ${borderSize[size]} 
+        ${className.includes('field-image') ? '' : sizeClasses[resolvedSizeKey]} 
+        ${borderSize[resolvedSizeKey]} 
         rounded-lg 
         overflow-hidden 
         bg-slate-800 
@@ -92,8 +115,9 @@ export const RarityImage: React.FC<RarityImageProps> = ({
       `} 
       style={{ 
         borderStyle: 'solid',
-        borderColor: getBorderColor(rarity),
-        aspectRatio: '1/1'
+        borderColor: getBorderColor(normalizedRarity),
+        aspectRatio: '1/1',
+        ...(numericSize ? { width: numericSize, height: numericSize } : {})
       }}>
       {!imageError ? (
         <img
@@ -106,9 +130,9 @@ export const RarityImage: React.FC<RarityImageProps> = ({
       ) : (
         // Fallback icon for missing images
         currentSrc.includes('Blumen') ? (
-          <Flower className={`${iconSize[size]} text-pink-400`} />
+          <Flower className={`${iconSize[resolvedSizeKey]} text-pink-400`} />
         ) : (
-          <Sparkles className={`${iconSize[size]} text-purple-400`} />
+          <Sparkles className={`${iconSize[resolvedSizeKey]} text-purple-400`} />
         )
       )}
     </div>

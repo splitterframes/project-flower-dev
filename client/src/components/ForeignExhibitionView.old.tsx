@@ -133,7 +133,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
   const handleLike = async (frameId: number) => {
     if (!user) return;
 
-    const frameButterflies = frames.get(frameId) || [];
+  const frameButterflies = butterflies.filter(b => b.frameId === frameId);
     const frameLike = frameLikes.find(fl => fl.frameId === frameId);
     const isCurrentlyLiked = frameLike?.isLiked || false;
 
@@ -285,7 +285,7 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
         </div>
 
         {/* Exhibition Mode */}
-        {viewMode === 'exhibition' && sortedFrameIds.length > 0 && (
+        {viewMode === 'exhibition' && sortedFrameIds.length > 0 ? (
           <div className="space-y-6">
             {/* Navigation Controls */}
             <div className="flex items-center justify-center space-x-3 bg-slate-800/60 rounded-lg p-2 border border-slate-700">
@@ -445,28 +445,37 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
                                 <div 
                                   className="relative w-full h-full group cursor-pointer"
                                   onClick={() => {
+                                    if (!butterfly) return;
                                     setSelectedButterfly(butterfly);
                                     setShowButterflyModal(true);
                                   }}
                                 >
-                                  <RarityImage
-                                    src={butterfly.butterflyImageUrl}
-                                    alt={butterfly.butterflyName}
-                                    rarity={butterfly.butterflyRarity as RarityTier}
-                                    size="medium"
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
-                                    <div className="text-center text-white text-xs">
-                                      <div className="font-bold">{butterfly.butterflyName}</div>
-                                      <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
-                                        {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                                  {butterfly ? (
+                                    <>
+                                      <RarityImage
+                                        src={butterfly.butterflyImageUrl}
+                                        alt={butterfly.butterflyName}
+                                        rarity={butterfly.butterflyRarity as RarityTier}
+                                        size="medium"
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded flex items-center justify-center">
+                                        <div className="text-center text-white text-xs">
+                                          <div className="font-bold">{butterfly.butterflyName}</div>
+                                          <div className={getRarityColor(butterfly.butterflyRarity as RarityTier)}>
+                                            {getRarityDisplayName(butterfly.butterflyRarity as RarityTier)}
+                                          </div>
+                                          <div className="mt-2 text-green-300 font-semibold">
+                                            Klicken für Details
+                                          </div>
+                                        </div>
                                       </div>
-                                      <div className="mt-2 text-green-300 font-semibold">
-                                        Klicken für Details
-                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className="text-slate-500 text-xs text-center">
+                                      Leer
                                     </div>
-                                  </div>
+                                  )}
                                 </div>
                               )
                             ) : (
@@ -503,8 +512,6 @@ export const ForeignExhibitionView: React.FC<ForeignExhibitionViewProps> = ({
               </p>
             </CardContent>
           </Card>
-        )}
-          </>
         )}
       </div>
 

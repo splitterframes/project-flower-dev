@@ -1,4 +1,4 @@
-import { postgresStorage as storage } from './postgresStorage';
+import { postgresStorage as storage, type UserWithStatusList } from './postgresStorage';
 import type { RarityTier } from '@shared/rarity';
 
 /**
@@ -62,19 +62,20 @@ export class ButterflySpawner {
       const { cache } = await import('./cache');
       const cacheKey = 'spawner:all-users';
       
-      let allUsers = cache.get(cacheKey);
+      let allUsers = cache.get<UserWithStatusList>(cacheKey);
       if (!allUsers) {
-        allUsers = await storage.getAllUsersWithStatus();
-        
+        const allUsersList = await storage.getAllUsersWithStatus();
+
         // 🎯 OPTIMIZATION: Only process users who were active in last 10 minutes
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-        allUsers = allUsers.filter((user: any) => {
+        const activeUsers = allUsersList.filter(user => {
           const lastActive = new Date(user.lastActive || user.createdAt);
           return lastActive > tenMinutesAgo;
         });
-        
-        cache.set(cacheKey, allUsers, 60); // 60 second cache
-        console.log(`🔄 Cached ${allUsers.length} active users for spawning (filtered from offline users)`);
+
+        allUsers = activeUsers;
+        cache.set<UserWithStatusList>(cacheKey, allUsers, 60); // 60 second cache
+        console.log(`🔄 Cached ${allUsers.length} active users for spawning (filtered from offline users: ${allUsersList.length - allUsers.length})`);
       }
       
       for (const user of allUsers) {

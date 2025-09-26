@@ -11,7 +11,7 @@ interface ButterflyData {
 // Get existing bouquet names to avoid duplicates
 async function getExistingBouquetNames(): Promise<string[]> {
   try {
-    const { storage } = await import('./storage');
+    const { postgresStorage: storage } = await import('./postgresStorage');
     
     // Get all bouquets from database to find existing names
     const db = (storage as any).db;
@@ -52,7 +52,7 @@ export function calculateAverageRarity(rarity1: RarityTier, rarity2: RarityTier,
   const score3 = getRarityTierIndex(rarity3);
   
   const avgScore = Math.round((score1 + score2 + score3) / 3);
-  const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical"];
+  const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical", "vip"];
   return rarities[Math.min(avgScore, rarities.length - 1)];
 }
 
@@ -105,14 +105,15 @@ function getButterflyImageFilename(id: number): string {
 }
 
 // Base rarity distribution for original 960 butterflies
-const BASE_RARITY_DISTRIBUTION = {
+const BASE_RARITY_DISTRIBUTION: Record<RarityTier, number> = {
   common: Math.floor(960 * 0.443),      // ~425 butterflies (44.3%)
   uncommon: Math.floor(960 * 0.30),     // ~288 butterflies (30%)
   rare: Math.floor(960 * 0.122),        // ~117 butterflies (12.2%)
   'super-rare': Math.floor(960 * 0.078), // ~75 butterflies (7.8%)
   epic: Math.floor(960 * 0.047),        // ~45 butterflies (4.7%)
   legendary: Math.floor(960 * 0.026),   // ~25 butterflies (2.6%)
-  mythical: Math.floor(960 * 0.013)     // ~12 butterflies (1.3%)
+  mythical: Math.floor(960 * 0.013),    // ~12 butterflies (1.3%)
+  vip: 0                                // VIPs are special-case additions
 };
 
 // Ensure we use all 960 original butterflies by adjusting the common tier
@@ -120,7 +121,7 @@ const totalAssigned = Object.values(BASE_RARITY_DISTRIBUTION).reduce((sum, count
 BASE_RARITY_DISTRIBUTION.common += (960 - totalAssigned);
 
 // Dynamic rarity distribution (will be calculated based on total butterflies)
-let RARITY_DISTRIBUTION = { ...BASE_RARITY_DISTRIBUTION };
+let RARITY_DISTRIBUTION: Record<RarityTier, number> = { ...BASE_RARITY_DISTRIBUTION };
 
 // Create randomized rarity assignments for each butterfly ID
 export const BUTTERFLY_RARITY_MAP = new Map<number, RarityTier>();
@@ -183,14 +184,15 @@ async function initializeButterflySystem(): Promise<void> {
     if (newButterflyIds.length > 0) {
       // Assign rarities to new butterflies using same distribution percentages
       const newRarityAssignments: RarityTier[] = [];
-      const percentages = {
+      const percentages: Record<RarityTier, number> = {
         common: 0.443,
         uncommon: 0.30,
         rare: 0.122,
         'super-rare': 0.078,
         epic: 0.047,
         legendary: 0.026,
-        mythical: 0.013
+        mythical: 0.013,
+        vip: 0
       };
       
       for (const [rarity, percentage] of Object.entries(percentages) as [RarityTier, number][]) {
@@ -261,7 +263,8 @@ export function getButterflySpawnProbability(rarity: RarityTier): number {
     "super-rare": 0.50, // 50%
     epic: 0.35,        // 35%
     legendary: 0.20,   // 20%
-    mythical: 0.10     // 10%
+    mythical: 0.10,    // 10%
+    vip: 0.05          // 5%
   };
   
   return probabilities[rarity];
@@ -299,7 +302,8 @@ export function getRarityDistribution(): Record<RarityTier, number> {
     'super-rare': 0,
     epic: 0,
     legendary: 0,
-    mythical: 0
+    mythical: 0,
+    vip: 0
   };
   
   BUTTERFLY_RARITY_MAP.forEach((rarity: RarityTier, id: number) => {
@@ -312,7 +316,7 @@ export function getRarityDistribution(): Record<RarityTier, number> {
 // Get seed drop when bouquet wilts
 export function getBouquetSeedDrop(rarity: RarityTier): { rarity: RarityTier; quantity: number } {
   const quantity = Math.floor(Math.random() * 4) + 1; // 1-4 seeds
-  const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical"];
+  const rarities: RarityTier[] = ["common", "uncommon", "rare", "super-rare", "epic", "legendary", "mythical", "vip"];
   const currentIndex = getRarityTierIndex(rarity);
   
   const roll = Math.random();

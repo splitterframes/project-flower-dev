@@ -10,7 +10,7 @@ import { Request, Response } from "express";
 export async function getUserResources(req: Request, res: Response) {
   try {
     const userId = parseInt(req.params.userId);
-    const { storage } = await import('./storage');
+  const { postgresStorage: storage } = await import('./postgresStorage');
     
     console.time(`[PERF] getUserResources(${userId})`);
     
@@ -49,7 +49,7 @@ export async function getUserResources(req: Request, res: Response) {
 export async function getUserInventory(req: Request, res: Response) {
   try {
     const userId = parseInt(req.params.userId);
-    const { storage } = await import('./storage');
+  const { postgresStorage: storage } = await import('./postgresStorage');
     
     console.time(`[PERF] getUserInventory(${userId})`);
     
@@ -93,7 +93,7 @@ export async function updateUserResources(req: Request, res: Response) {
   try {
     const userId = parseInt(req.params.userId);
     const { credits, suns, hearts, dna, tickets } = req.body;
-    const { storage } = await import('./storage');
+  const { postgresStorage: storage } = await import('./postgresStorage');
     
     console.time(`[PERF] updateUserResources(${userId})`);
     
@@ -137,11 +137,11 @@ export async function updateUserResources(req: Request, res: Response) {
  */
 export async function warmupDatabase(req: Request, res: Response) {
   try {
-    const { storage } = await import('./storage');
+  const { postgresStorage: storage } = await import('./postgresStorage');
     console.time(`[PERF] warmupDatabase`);
     
     // Simple query to keep connection warm
-    await storage.db.execute('SELECT 1 as warmup');
+  await storage.warmupDatabase();
     
     console.timeEnd(`[PERF] warmupDatabase`);
     res.json({ success: true, message: "Database warmed up" });

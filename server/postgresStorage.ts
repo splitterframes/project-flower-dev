@@ -162,6 +162,10 @@ private async retryDbOperation<T>(operation: () => Promise<T>, maxRetries = 3): 
   throw lastError;
 }
 
+  async warmupDatabase(): Promise<void> {
+    await this.retryDbOperation(() => this.db.execute('SELECT 1'));
+  }
+
 /**
  * Atomic user update - combines multiple resource changes in single query
  */
@@ -3457,7 +3461,7 @@ private async runBackgroundMigrations(): Promise<void> {
    * Get all available fields for butterfly spawning (only unlocked & free fields)
    */
   // Check if a field is in the pond area (Teich)
-  private isPondField(fieldIndex: number): boolean {
+  public isPondField(fieldIndex: number): boolean {
     const fieldId = fieldIndex + 1; // Convert 0-indexed to 1-indexed
     const row = Math.floor((fieldId - 1) / 10);
     const col = (fieldId - 1) % 10;
@@ -4129,6 +4133,8 @@ private async runBackgroundMigrations(): Promise<void> {
     exhibitionButterflies: number;
     lastSeen: string;
     totalLikes: number;
+    lastActive: string;
+    createdAt: string;
   }>> {
     try {
       console.log('🔍 PostgreSQL getAllUsersWithStatus: Finding users for user list');
@@ -4191,13 +4197,17 @@ private async runBackgroundMigrations(): Promise<void> {
       
       const totalLikes = totalLikesResult[0]?.count || 0;
       
+      const lastActiveDate = lastActivity instanceof Date ? lastActivity : new Date(lastActivity);
+
       userList.push({
         id: user.id,
         username: user.username,
         isOnline,
         exhibitionButterflies: butterflyCount,
         lastSeen,
-        totalLikes
+        totalLikes,
+        lastActive: lastActiveDate.toISOString(),
+        createdAt: (user.createdAt instanceof Date ? user.createdAt : new Date(user.createdAt)).toISOString()
       });
     }
     
@@ -7721,5 +7731,8 @@ private async runBackgroundMigrations(): Promise<void> {
     }
   }
 }
+
+export type UserWithStatusList = Awaited<ReturnType<PostgresStorage['getAllUsersWithStatus']>>;
+export type UserWithStatus = UserWithStatusList[number];
 
 export const postgresStorage = new PostgresStorage();

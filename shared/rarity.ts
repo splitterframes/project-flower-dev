@@ -2,6 +2,39 @@
 
 export type RarityTier = 'common' | 'uncommon' | 'rare' | 'super-rare' | 'epic' | 'legendary' | 'mythical' | 'vip';
 
+export const RARITY_TIERS: readonly RarityTier[] = [
+  'common',
+  'uncommon',
+  'rare',
+  'super-rare',
+  'epic',
+  'legendary',
+  'mythical',
+  'vip'
+] as const;
+
+export function isRarityTier(value: unknown): value is RarityTier {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return (RARITY_TIERS as readonly string[]).includes(value);
+}
+
+export function toRarityTier(value: unknown, fallback: RarityTier = 'common'): RarityTier {
+  if (isRarityTier(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (isRarityTier(normalized)) {
+      return normalized;
+    }
+  }
+
+  return fallback;
+}
+
 // German rarity names for display
 export const RARITY_NAMES_DE: Record<string, string> = {
   common: 'Häufig',

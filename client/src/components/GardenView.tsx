@@ -35,7 +35,7 @@ import {
   Sparkles,
   Sun
 } from "lucide-react";
-import type { UserBouquet, PlacedBouquet, FieldButterfly } from "@shared/schema";
+import type { UserBouquet, PlacedBouquet, FieldButterfly, UserButterfly } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpButton } from "./HelpButton";
 
@@ -472,10 +472,10 @@ export const GardenView: React.FC = () => {
       });
 
       if (response.ok) {
-        // Refresh unlocked fields and update UI properly without page reload
-        await fetchUnlockedFields();
-        // Subtract the pre-calculated cost to avoid overcharging
-        updateCredits(credits - costBefore);
+  // Refresh unlocked fields and update UI properly without page reload
+  await fetchUnlockedFields();
+  // Subtract the pre-calculated cost to avoid overcharging (API expects delta)
+  await updateCredits(user.id, -costBefore);
         showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${costBefore} Credits freigeschaltet.`, 'success');
       } else {
         const errorData = await response.json();

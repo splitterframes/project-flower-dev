@@ -72,7 +72,7 @@ const ITEM_BASE_VALUES = {
 };
 
 // 3x3 Grid neighbor mapping (orthogonal only)
-const GRID_NEIGHBORS = {
+const GRID_NEIGHBORS: Record<number, number[]> = {
   0: [1, 3],        // Top-left: 2 neighbors
   1: [0, 2, 4],     // Top-center: 3 neighbors
   2: [1, 5],        // Top-right: 2 neighbors
@@ -238,7 +238,7 @@ export const DNAView: React.FC = () => {
         
         // Count neighbors that have items
         const neighborIndices = GRID_NEIGHBORS[index] || [];
-        const occupiedNeighbors = neighborIndices.filter(neighborIndex => 
+        const occupiedNeighbors = neighborIndices.filter((neighborIndex: number) => 
           flatGrid[neighborIndex]?.item !== null
         ).length;
         

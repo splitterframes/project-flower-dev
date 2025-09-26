@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Sprout, Sun, Zap, Coins, Flower, Sparkles } from 'lucide-react';
-import { RarityImage } from './RarityImage';
+import { Ticket, Sprout, Coins, Flower, Sparkles } from 'lucide-react';
 import { FlowerHoverPreview } from './FlowerHoverPreview';
 import { ButterflyHoverPreview } from './ButterflyHoverPreview';
 import { CaterpillarHoverPreview } from './CaterpillarHoverPreview';
 import { FishHoverPreview } from './FishHoverPreview';
-import { getRarityColor, getRarityDisplayName, getRarityFromAssetId, generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName } from '@shared/rarity';
+import { generateLatinFlowerName, generateGermanButterflyName, generateLatinCaterpillarName, generateLatinFishName } from '@shared/rarity';
+import type { RarityTier } from '@shared/rarity';
 
 // Helper function to convert integer rarity to RarityTier string
-const convertIntegerRarityToTier = (rarityInt: number): any => {
+const convertIntegerRarityToTier = (rarityInt: number): RarityTier => {
   switch (rarityInt) {
     case 0: return 'common';
     case 1: return 'uncommon';
@@ -25,7 +25,7 @@ const convertIntegerRarityToTier = (rarityInt: number): any => {
 };
 
 // Helper function for rarity borders (same as RarityImage component)
-const getBorderColor = (rarity: any): string => {
+const getBorderColor = (rarity: RarityTier): string => {
   switch (rarity) {
     case 'common': return '#fbbf24';      // yellow-400
     case 'uncommon': return '#4ade80';    // green-400  
@@ -65,6 +65,23 @@ interface DailyItems {
   };
 }
 
+type DailyPrizeType = 'daily-flower' | 'daily-butterfly' | 'daily-caterpillar' | 'daily-fish' | 'daily-credits';
+type PrizeType = 'seed' | 'suns' | 'rare-seed' | 'dna' | DailyPrizeType;
+
+type Prize = {
+  id: string;
+  cost: number;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  type: PrizeType;
+};
+
+const dailyPrizeTypes: readonly DailyPrizeType[] = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'] as const;
+
+const isDailyPrizeType = (type: PrizeType): type is DailyPrizeType =>
+  (dailyPrizeTypes as readonly string[]).includes(type);
+
 export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem }: TicketRedemptionDialogProps) {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemMessage, setRedeemMessage] = useState('');
@@ -98,7 +115,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
   }, [isOpen]);
 
   // Prize definitions (all 9 prizes)
-  const prizes = [
+  const prizes: Prize[] = [
     {
       id: 'seed',
       cost: 10,
@@ -135,7 +152,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       id: 'flower',
       cost: 50,
       title: dailyItems ? `${generateLatinFlowerName(dailyItems.flowerId)}` : 'Seltene Blume',
-      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.flowerRarity)} Blume` : 'Erhalte eine seltene Blume',
+      description: dailyItems ? `${convertIntegerRarityToTier(Number(dailyItems.flowerRarity))} Blume` : 'Erhalte eine seltene Blume',
       icon: <Flower className="h-6 w-6 text-pink-400" />,
       type: 'daily-flower'
     },
@@ -143,7 +160,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       id: 'butterfly',
       cost: 100,
       title: dailyItems ? `${generateGermanButterflyName(dailyItems.butterflyId)}` : 'Seltener Schmetterling',
-      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.butterflyRarity)} Schmetterling` : 'Erhalte einen seltenen Schmetterling',
+      description: dailyItems ? `${convertIntegerRarityToTier(Number(dailyItems.butterflyRarity))} Schmetterling` : 'Erhalte einen seltenen Schmetterling',
       icon: <Sparkles className="h-6 w-6 text-purple-400" />,
       type: 'daily-butterfly'
     },
@@ -151,7 +168,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       id: 'caterpillar',
       cost: 150,
       title: dailyItems ? `${generateLatinCaterpillarName(dailyItems.caterpillarId)}` : 'Seltene Raupe',
-      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.caterpillarRarity)} Raupe` : 'Erhalte eine seltene Raupe',
+      description: dailyItems ? `${convertIntegerRarityToTier(Number(dailyItems.caterpillarRarity))} Raupe` : 'Erhalte eine seltene Raupe',
       icon: <Sparkles className="h-6 w-6 text-orange-400" />,
       type: 'daily-caterpillar'
     },
@@ -159,7 +176,7 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
       id: 'fish',
       cost: 200,
       title: dailyItems ? `${generateLatinFishName(dailyItems.fishId)}` : 'Seltener Fisch',
-      description: dailyItems ? `${convertIntegerRarityToTier(dailyItems.fishRarity)} Fisch` : 'Erhalte einen seltenen Fisch',
+      description: dailyItems ? `${convertIntegerRarityToTier(Number(dailyItems.fishRarity))} Fisch` : 'Erhalte einen seltenen Fisch',
       icon: <Sparkles className="h-6 w-6 text-cyan-400" />,
       type: 'daily-fish'
     },
@@ -197,10 +214,14 @@ export function TicketRedemptionDialog({ isOpen, onClose, userTickets, onRedeem 
     }
   };
 
-  const renderPrizeCard = (prize: typeof prizes[0]) => {
+  const renderPrizeCard = (prize: Prize) => {
     const canAfford = userTickets >= prize.cost;
-    const isDailyPrize = ['daily-flower', 'daily-butterfly', 'daily-caterpillar', 'daily-fish', 'daily-credits'].includes(prize.type);
-    const isAlreadyRedeemed = isDailyPrize && dailyItems?.redemptions?.[prize.type] === true;
+    let redemptionKey: DailyPrizeType | undefined;
+    if (isDailyPrizeType(prize.type)) {
+      redemptionKey = prize.type;
+    }
+    const isDailyPrize = redemptionKey !== undefined;
+    const isAlreadyRedeemed = redemptionKey ? dailyItems?.redemptions?.[redemptionKey] === true : false;
     const isDisabled = !canAfford || isRedeeming || isAlreadyRedeemed;
 
     const cardContent = (

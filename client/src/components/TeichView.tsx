@@ -170,7 +170,6 @@ import {
   Clock,
   Heart,
   Sparkles,
-  Sun,
   Waves
 } from "lucide-react";
 import type { UserBouquet, PlacedBouquet, FieldButterfly, FieldFish } from "@shared/schema";
@@ -528,9 +527,6 @@ export const TeichView: React.FC = () => {
             console.log(`🐛 Field ${field.id} (index ${fieldIndex}): isPond=${field.isPond}, caterpillar=${!!caterpillar}`);
           }
           
-          // Check for butterfly - should show both on grass fields AND pond fields as small colored dots
-          const butterfly = null; // No butterflies in pond view
-          
           // Removed debug logging - bug fixed!
           
           // Check for field fish (only on pond fields) - BUG FIX: use fieldIndex (0-based) consistently
@@ -554,11 +550,11 @@ export const TeichView: React.FC = () => {
             bouquetRarity: undefined,
             bouquetPlacedAt: undefined,
             bouquetExpiresAt: undefined,
-            hasButterfly: butterfly ? true : false,
-            butterflyId: butterfly ? butterfly.butterflyId : undefined,
-            butterflyName: butterfly ? butterfly.butterflyName : undefined,
-            butterflyImageUrl: butterfly ? butterfly.butterflyImageUrl : undefined,
-            butterflyRarity: butterfly ? butterfly.butterflyRarity : undefined,
+            hasButterfly: false,
+            butterflyId: undefined,
+            butterflyName: undefined,
+            butterflyImageUrl: undefined,
+            butterflyRarity: undefined,
             hasFish: !!fish,
             fishId: fish ? fish.id : undefined,
             fishName: fish ? fish.fishName : undefined,
@@ -618,9 +614,11 @@ export const TeichView: React.FC = () => {
       }
     } catch (error) {
       console.error('🌸 FETCHTEICHDATA CATCH ERROR:', error);
-      console.error('🌸 ERROR NAME:', error?.name);
-      console.error('🌸 ERROR MESSAGE:', error?.message);
-      console.error('🌸 ERROR STACK:', error?.stack);
+      if (error instanceof Error) {
+        console.error('🌸 ERROR NAME:', error.name);
+        console.error('🌸 ERROR MESSAGE:', error.message);
+        console.error('🌸 ERROR STACK:', error.stack);
+      }
     }
   };
 
@@ -809,7 +807,7 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        updateCredits(credits - cost);
+        await updateCredits(user.id, -cost);
         fetchTeichData();
         showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${cost} Credits freigeschaltet.`, 'success');
       } else {
@@ -1519,26 +1517,6 @@ export const TeichView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* No sun spawns in TeichView at all */}
-                    {false && field.hasSunSpawn && field.sunSpawnAmount && !field.isPond && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-yellow-400/20 rounded-lg border border-yellow-400/50 animate-pulse cursor-pointer hover:bg-yellow-400/30">
-                            <Sun className="h-5 w-5 text-yellow-400" />
-                            <span className="text-xs font-bold text-yellow-300">+{field.sunSpawnAmount}</span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Klicken zum Einsammeln: +{field.sunSpawnAmount} Sonnen</p>
-                          {field.sunSpawnExpiresAt && (
-                            <p className="text-xs text-red-300">
-                              Läuft ab in {Math.max(0, Math.ceil((field.sunSpawnExpiresAt.getTime() - Date.now()) / 1000))}s
-                            </p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-
 
                     {/* Persistent field flowers from database (ALWAYS VISIBLE) */}
                     {fieldFlowers.find(f => f.fieldIndex === field.id - 1) && (() => {
@@ -1581,7 +1559,6 @@ export const TeichView: React.FC = () => {
                     {/* Butterflies are only visible in garden view, not in pond view */}
                     {false && (
                       <ButterflyHoverPreview
-                        butterflyId={field.butterflyId!}
                         butterflyName={field.butterflyName!}
                         butterflyImageUrl={field.butterflyImageUrl!}
                         rarity={field.butterflyRarity as RarityTier}
@@ -1607,7 +1584,6 @@ export const TeichView: React.FC = () => {
                       .map(caterpillar => (
                       <CaterpillarHoverPreview
                         key={`real-caterpillar-${caterpillar.id}`}
-                        caterpillarId={caterpillar.caterpillarId}
                         caterpillarName={caterpillar.caterpillarName}
                         caterpillarImageUrl={caterpillar.caterpillarImageUrl}
                         rarity={caterpillar.caterpillarRarity as RarityTier}
@@ -1635,7 +1611,6 @@ export const TeichView: React.FC = () => {
                     {/* Field Caterpillar with Bounce Effect - hide during butterfly animation, local caterpillars AND spawned caterpillars */}
                     {field.hasCaterpillar && field.caterpillarImageUrl && (
                       <CaterpillarHoverPreview
-                        caterpillarId={field.caterpillarId!}
                         caterpillarName={field.caterpillarName!}
                         caterpillarImageUrl={field.caterpillarImageUrl}
                         rarity={field.caterpillarRarity as RarityTier}
@@ -1663,23 +1638,6 @@ export const TeichView: React.FC = () => {
                     )}
 
                     {/* Bouquet - disabled in TeichView */}
-                    {false && field.hasBouquet && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <RarityImage
-                          src="/Blumen/Bouquet.jpg"
-                          alt={field.bouquetName || "Bouquet"}
-                          rarity={field.bouquetRarity as RarityTier || "common"}
-                          size="small"
-                          className="w-10 h-10"
-                        />
-                        {field.bouquetExpiresAt && (
-                          <div className="absolute -bottom-1 text-xs text-white/80 bg-black/60 px-1 rounded">
-                            {Math.max(0, Math.ceil((field.bouquetExpiresAt.getTime() - Date.now()) / (1000 * 60)))}m
-                          </div>
-                        )}
-                      </div>
-                    )}
-
                     {/* Plant/Seed */}
                     {field.hasPlant && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -1719,7 +1677,6 @@ export const TeichView: React.FC = () => {
                           </Tooltip>
                         ) : (
                           <FlowerHoverPreview
-                            flowerId={field.flowerId!}
                             flowerName={field.flowerName!}
                             flowerImageUrl={field.flowerImageUrl!}
                             rarity={field.seedRarity as RarityTier}
@@ -1772,7 +1729,10 @@ export const TeichView: React.FC = () => {
                                 className="w-full h-full object-cover rounded-full"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling!.style.display = 'block';
+                                  const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement | null;
+                                  if (fallbackElement) {
+                                    fallbackElement.style.display = 'block';
+                                  }
                                 }}
                               />
                               <div
@@ -1830,7 +1790,6 @@ export const TeichView: React.FC = () => {
                           caterpillarImageUrl={field.caterpillarImageUrl!}
                           caterpillarName={field.caterpillarName!}
                           rarity={field.caterpillarRarity as RarityTier}
-                          className="z-10"
                         >
                           <div className="relative transform group-hover:scale-110 transition-transform duration-200">
                             <RarityImage 
