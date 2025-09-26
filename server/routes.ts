@@ -213,7 +213,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await db.execute(statement);
             console.log('✅ Added index:', statement.split('IF NOT EXISTS')[1]?.split('ON')[0]?.trim());
           } catch (error) {
-            console.warn('⚠️ Index might already exist:', error.message);
+            const warning = error instanceof Error ? error.message : String(error);
+            console.warn('⚠️ Index might already exist:', warning);
           }
         }
       }
@@ -242,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
       res.json(result);
     } catch (error) {
-      if (error.message === "User not found") {
+      if (error instanceof Error && error.message === "User not found") {
         res.status(404).json({ message: "User not found" });
       } else {
         res.status(500).json({ message: "Internal server error" });
@@ -2813,7 +2814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
       
     } catch (error) {
-      if (error.message === "No active weekly challenge") {
+      if (error instanceof Error && error.message === "No active weekly challenge") {
         res.status(404).json({ message: "No active weekly challenge" });
       } else {
         res.status(500).json({ message: "Error loading weekly challenge" });
@@ -3960,9 +3961,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         creditsSpent: creditsRequired,
         newCredits: result.newCredits
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to unlock feature:', error);
-      res.status(400).json({ error: error.message });
+      const message = error instanceof Error ? error.message : 'Failed to unlock feature';
+      res.status(400).json({ error: message });
     }
   });
 
