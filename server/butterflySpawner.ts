@@ -62,23 +62,32 @@ export class ButterflySpawner {
       const { cache } = await import('./cache');
       const cacheKey = 'spawner:all-users';
       
-      let allUsers = cache.get<UserWithStatusList>(cacheKey);
-      if (!allUsers) {
+      let usersToProcess = cache.get<UserWithStatusList>(cacheKey);
+      if (!usersToProcess) {
         const allUsersList = await storage.getAllUsersWithStatus();
 
-        // 🎯 OPTIMIZATION: Only process users who were active in last 10 minutes
+        // 🎯 OPTIMIZATION: Prefer recently active users but fall back to everyone if timestamps are stale
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         const activeUsers = allUsersList.filter(user => {
-          const lastActive = new Date(user.lastActive || user.createdAt);
-          return lastActive > tenMinutesAgo;
+          const rawLastActive = user.lastActive || user.createdAt;
+          const lastActive = rawLastActive ? new Date(rawLastActive) : null;
+          return lastActive instanceof Date && !Number.isNaN(lastActive.getTime()) && lastActive > tenMinutesAgo;
         });
 
-        allUsers = activeUsers;
-        cache.set<UserWithStatusList>(cacheKey, allUsers, 60); // 60 second cache
-        console.log(`🔄 Cached ${allUsers.length} active users for spawning (filtered from offline users: ${allUsersList.length - allUsers.length})`);
+        const offlineCount = allUsersList.length - activeUsers.length;
+
+        if (activeUsers.length === 0 && allUsersList.length > 0) {
+          console.warn('🦋 All users appear inactive based on timestamps – processing full list to keep bouquets spawning');
+          usersToProcess = allUsersList;
+        } else {
+          usersToProcess = activeUsers;
+        }
+
+        cache.set<UserWithStatusList>(cacheKey, usersToProcess, 60); // 60 second cache
+        console.log(`🔄 Cached ${usersToProcess.length} users for spawning (skipped ${Math.max(offlineCount, 0)} offline users)`);
       }
       
-      for (const user of allUsers) {
+      for (const user of usersToProcess) {
         try {
           const placedBouquets = await storage.getPlacedBouquets(user.id);
           const activeBouquets = placedBouquets.filter(pb => new Date(pb.expiresAt) > currentTime);
