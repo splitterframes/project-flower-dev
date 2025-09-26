@@ -133,7 +133,7 @@ app.use((req, res, next) => {
   // serve the app on port 5000 (or PORT from env)
   // this serves both the API and the client
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-  server.listen(port, "localhost", () => {
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
     
     // Initialize database keep-alive system
