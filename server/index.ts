@@ -16,6 +16,13 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 
 const app = express();
 
+const trustProxySetting = process.env.TRUST_PROXY;
+if (trustProxySetting && trustProxySetting !== 'false') {
+  const value = trustProxySetting === 'true' ? 1 : trustProxySetting;
+  app.set('trust proxy', value);
+  log(`trust proxy enabled with value: ${value}`);
+}
+
 // 🔒 SECURITY: Helmet middleware for security headers
 app.use(helmet({
   contentSecurityPolicy: {
