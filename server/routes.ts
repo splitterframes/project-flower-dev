@@ -42,12 +42,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate JWT token
       const token = generateToken({ id: user.id, username: user.username });
-      
+
+      // Determine if cookie should be marked secure (supports local HTTP even in production mode)
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isSecureCookie = isProduction && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+
       // Set secure HTTP-only cookie
       res.cookie('authToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isSecureCookie,
+        sameSite: isSecureCookie ? 'none' : 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/'
       });
@@ -88,12 +92,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate JWT token
       const token = generateToken({ id: user.id, username: user.username });
-      
+
+      // Determine if cookie should be marked secure (supports local HTTP even in production mode)
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isSecureCookie = isProduction && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+
       // Set secure HTTP-only cookie
       res.cookie('authToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isSecureCookie,
+        sameSite: isSecureCookie ? 'none' : 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/'
       });
@@ -119,10 +127,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Logout endpoint
   app.post("/api/auth/logout", (req, res) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isSecureCookie = isProduction && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+
     res.clearCookie('authToken', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isSecureCookie,
+      sameSite: isSecureCookie ? 'none' : 'strict',
       path: '/'
     });
     

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction, type RequestHandler } from "express";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
@@ -7,6 +7,12 @@ import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabaseKeepAlive } from "./dbKeepAlive";
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 const app = express();
 
@@ -25,21 +31,32 @@ app.use(helmet({
 }));
 
 // 🔒 SECURITY: Rate limiting for auth endpoints
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Max 5 login attempts per IP per 15 minutes
+const authWindowMs = parsePositiveInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000);
+const defaultMax = app.get("env") === "production" ? 5 : 100;
+const authMax = parsePositiveInt(process.env.AUTH_RATE_LIMIT_MAX, defaultMax);
+const disableAuthRateLimit = process.env.DISABLE_AUTH_RATE_LIMIT === "true";
+
+const baseAuthLimiter = rateLimit({
+  windowMs: authWindowMs,
+  max: authMax,
   message: { error: "Too many login attempts, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
+export const authLimiter: RequestHandler = disableAuthRateLimit
+  ? (_req, _res, next) => next()
+  : baseAuthLimiter;
+
 // Performance middleware - Enhanced compression
 app.use(compression({
   level: 6,           // Good compression vs CPU balance
   threshold: 1024,    // Compress responses > 1KB
-  filter: (req, res) => {
+  filter: (req: Request, res: Response) => {
     // Don't compress small responses or images
-    if (res.getHeader('Content-Type')?.includes('image/')) return false;
+    const contentType = res.getHeader('Content-Type');
+    if (typeof contentType === 'string' && contentType.includes('image/')) return false;
+    if (Array.isArray(contentType) && contentType.some(type => type.includes('image/'))) return false;
     return compression.filter(req, res);
   }
 }));

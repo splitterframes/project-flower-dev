@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,9 +61,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       >
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Welcome to Mariposa</DialogTitle>
-          <div id="auth-description" className="sr-only">
-            Anmelde- und Registrierungsdialog für Mariposa
-          </div>
+          <DialogDescription className="text-center text-slate-400">
+            Log dich ein oder erstelle einen neuen Account, um deinen Garten zu betreten.
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="login" className="w-full">
