@@ -2,43 +2,39 @@
  * Optimized API routes to reduce database queries and improve performance
  */
 import { Request, Response } from "express";
+import { CacheKeys, withCache } from "./cache";
+import {
+  getUserResourceSnapshot,
+  invalidateUserResourceCache,
+  RESOURCE_CACHE_TTL_SECONDS,
+  UserNotFoundError,
+} from "./userResourceCache";
 
 /**
  * GET /api/user/:userId/resources - Aggregated user resources in single query
  * Replaces separate calls to credits, suns, hearts, dna, tickets
  */
 export async function getUserResources(req: Request, res: Response) {
+  const userId = parseInt(req.params.userId);
+  const timerLabel = `[PERF] getUserResources(${userId})`;
+  console.time(timerLabel);
+
   try {
-    const userId = parseInt(req.params.userId);
-  const { postgresStorage: storage } = await import('./postgresStorage');
-    
-    console.time(`[PERF] getUserResources(${userId})`);
-    
-    // Get all resources in single database call
-    const user = await storage.getUser(userId);
-    if (!user) {
-      console.timeEnd(`[PERF] getUserResources(${userId})`);
+    const snapshot = await getUserResourceSnapshot(userId);
+    res.set(
+      'Cache-Control',
+      `public, max-age=${RESOURCE_CACHE_TTL_SECONDS}, stale-while-revalidate=${RESOURCE_CACHE_TTL_SECONDS * 2}`
+    );
+    res.json(snapshot);
+  } catch (error) {
+    if (error instanceof UserNotFoundError) {
       return res.status(404).json({ error: "User not found" });
     }
-    
-    const resources = {
-      credits: user.credits,
-      suns: user.suns,  
-      hearts: user.hearts,
-      dna: user.dna,
-      tickets: user.tickets,
-      lastUpdated: new Date().toISOString()
-    };
-    
-    console.timeEnd(`[PERF] getUserResources(${userId})`);
-    
-    // Cache for 5 seconds
-    res.set('Cache-Control', 'public, max-age=5, stale-while-revalidate=10');
-    res.json(resources);
-    
-  } catch (error) {
+
     console.error('[ERROR] getUserResources:', error);
     res.status(500).json({ error: "Failed to get user resources" });
+  } finally {
+    console.timeEnd(timerLabel);
   }
 }
 
@@ -47,41 +43,45 @@ export async function getUserResources(req: Request, res: Response) {
  * Combines butterflies, caterpillars, fish, flowers, seeds, bouquets
  */
 export async function getUserInventory(req: Request, res: Response) {
+  const userId = parseInt(req.params.userId);
+  const timerLabel = `[PERF] getUserInventory(${userId})`;
+  console.time(timerLabel);
+
   try {
-    const userId = parseInt(req.params.userId);
-  const { postgresStorage: storage } = await import('./postgresStorage');
-    
-    console.time(`[PERF] getUserInventory(${userId})`);
-    
-    // Parallel database queries for inventory items
-    const [butterflies, caterpillars, fish, flowers, seeds, bouquets] = await Promise.all([
-      storage.getUserButterflies(userId),
-      storage.getUserCaterpillars(userId), 
-      storage.getUserFish(userId),
-      storage.getUserFlowers(userId),
-      storage.getUserSeeds(userId),
-      storage.getUserBouquets(userId)
-    ]);
-    
-    const inventory = {
-      butterflies,
-      caterpillars, 
-      fish,
-      flowers,
-      seeds,
-      bouquets,
-      lastUpdated: new Date().toISOString()
-    };
-    
-    console.timeEnd(`[PERF] getUserInventory(${userId})`);
-    
-    // Cache for 10 seconds since inventory changes less frequently
+    const inventory = await withCache(
+      CacheKeys.USER_INVENTORY(userId),
+      async () => {
+        const { postgresStorage: storage } = await import('./postgresStorage');
+
+        const [butterflies, caterpillars, fish, flowers, seeds, bouquets] = await Promise.all([
+          storage.getUserButterflies(userId),
+          storage.getUserCaterpillars(userId),
+          storage.getUserFish(userId),
+          storage.getUserFlowers(userId),
+          storage.getUserSeeds(userId),
+          storage.getUserBouquets(userId),
+        ]);
+
+        return {
+          butterflies,
+          caterpillars,
+          fish,
+          flowers,
+          seeds,
+          bouquets,
+          lastUpdated: new Date().toISOString(),
+        };
+      },
+      10
+    );
+
     res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
     res.json(inventory);
-    
   } catch (error) {
     console.error('[ERROR] getUserInventory:', error);
     res.status(500).json({ error: "Failed to get user inventory" });
+  } finally {
+    console.timeEnd(timerLabel);
   }
 }
 
@@ -114,6 +114,7 @@ export async function updateUserResources(req: Request, res: Response) {
     const updatedUser = await storage.atomicUpdateUser(userId, updates);
     
     console.timeEnd(`[PERF] updateUserResources(${userId})`);
+    invalidateUserResourceCache(userId);
     
     res.json({
       success: true,

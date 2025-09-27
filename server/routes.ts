@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { postgresStorage as storage } from "./postgresStorage";
 import { insertUserSchema, loginSchema, createMarketListingSchema, buyListingSchema, plantSeedSchema, harvestFieldSchema, createBouquetSchema, placeBouquetSchema, unlockFieldSchema, collectSunSchema, placeButterflyOnFieldSchema, placeFlowerOnFieldSchema } from "@shared/schema";
@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import { generateToken, requireAuth, requireAuthenticatedUser, optionalAuth, type AuthenticatedRequest } from "./auth";
 import { getUserResources, getUserInventory, updateUserResources, warmupDatabase } from "./optimizedRoutes";
 import { cache, CacheKeys, withCache } from "./cache";
+import { getUserResourceSnapshot, invalidateUserResourceCache, RESOURCE_CACHE_TTL_SECONDS, UserNotFoundError } from "./userResourceCache";
 import { getUserCompleteState, getUserGardenState, getExhibitionSellStatusUltraBatch, getStaticGameData } from "./ultraOptimizedRoutes";
 import { hashPassword, verifyPassword, isPasswordHashed } from "./passwordSecurity";
 import { authLimiter } from "./index";
@@ -22,6 +23,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     standardHeaders: true,
     legacyHeaders: false,
   });
+  
+  const resourceCacheMaxAge = Math.max(1, RESOURCE_CACHE_TTL_SECONDS);
+  const resourceCacheStaleWhileRevalidate = resourceCacheMaxAge * 2;
+
+  const setResourceCacheHeaders = (res: Response) => {
+    res.set(
+      'Cache-Control',
+      `public, max-age=${resourceCacheMaxAge}, stale-while-revalidate=${resourceCacheStaleWhileRevalidate}`
+    );
+  };
   
   // Authentication routes - WITH RATE LIMITING
   app.post("/api/auth/register", authLimiter, async (req, res) => {
@@ -229,25 +240,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Credits routes - WITH CACHING
   app.get("/api/user/:id/credits", requireAuthenticatedUser, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.validatedUserId!; // Use validated user ID from middleware
-      
-      // 🚀 CACHE: Use cache with 10 second TTL for credits
-      const cacheKey = `user:${userId}:credits`;
-      const result = await withCache(cacheKey, async () => {
-        const user = await storage.getUser(userId);
-        if (!user) throw new Error("User not found");
-        return { credits: user.credits };
-      }, 10);
+      const userId = req.validatedUserId!;
+      const snapshot = await getUserResourceSnapshot(userId);
 
-      // Short cache for frequently updated data
-      res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
-      res.json(result);
+      setResourceCacheHeaders(res);
+      res.json({ credits: snapshot.credits });
     } catch (error) {
-      if (error instanceof Error && error.message === "User not found") {
-        res.status(404).json({ message: "User not found" });
-      } else {
-        res.status(500).json({ message: "Internal server error" });
+      if (error instanceof UserNotFoundError) {
+        return res.status(404).json({ message: "User not found" });
       }
+
+      console.error('Failed to fetch credits:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -266,9 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // 🚀 CACHE: Invalidate cache after update
-      cache.delete(`user:${userId}:credits`);
-      cache.delete(CacheKeys.USER_RESOURCES(userId));
+  // 🚀 CACHE: Invalidate aggregated resource snapshot
+  invalidateUserResourceCache(userId);
 
       res.json({ credits: user.credits });
     } catch (error) {
@@ -280,14 +283,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/hearts", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
+      const snapshot = await getUserResourceSnapshot(userId);
+
+      setResourceCacheHeaders(res);
+      res.json({ hearts: snapshot.hearts });
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ hearts: user.hearts || 0 });
-    } catch (error) {
+      console.error('Failed to fetch hearts:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -313,18 +318,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/suns", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
+      const snapshot = await getUserResourceSnapshot(userId);
+
+      setResourceCacheHeaders(res);
+      res.json({ suns: snapshot.suns });
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Prevent caching to ensure fresh data
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.json({ suns: user.suns || 100 });
-    } catch (error) {
+      console.error('Failed to fetch suns:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -344,6 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      invalidateUserResourceCache(userId);
       res.json({ suns: user.suns });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -354,18 +358,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/dna", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
+      const snapshot = await getUserResourceSnapshot(userId);
+
+      setResourceCacheHeaders(res);
+      res.json({ dna: snapshot.dna });
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Prevent caching to ensure fresh data
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.json({ dna: user.dna || 0 });
-    } catch (error) {
+      console.error('Failed to fetch dna:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -385,6 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      invalidateUserResourceCache(userId);
       res.json({ dna: user.dna });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -395,18 +398,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/tickets", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
+      const snapshot = await getUserResourceSnapshot(userId);
+
+      setResourceCacheHeaders(res);
+      res.json({ tickets: snapshot.tickets });
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Prevent caching to ensure fresh data
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.json({ tickets: user.tickets || 0 });
-    } catch (error) {
+      console.error('Failed to fetch tickets:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -426,6 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      invalidateUserResourceCache(userId);
       res.json({ tickets: user.tickets });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -436,14 +438,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:id/hearts", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
+      const snapshot = await getUserResourceSnapshot(userId);
+
+      setResourceCacheHeaders(res);
+      res.json({ hearts: snapshot.hearts });
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ hearts: user.hearts || 0 });
-    } catch (error) {
+      console.error('Failed to fetch hearts:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -463,6 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      invalidateUserResourceCache(userId);
       res.json({ hearts: user.hearts });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });

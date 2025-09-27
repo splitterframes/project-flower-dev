@@ -353,13 +353,28 @@ private async addPerformanceIndexes(): Promise<void> {
     
     const indexes = [
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_butterflies_user_id ON user_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_caterpillars_user_id ON user_caterpillars(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_fish_user_id ON user_fish(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_vip_butterflies_user_id ON user_vip_butterflies(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_flowers_user_id ON user_flowers(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_seeds_user_id ON user_seeds(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_bouquets_user_id ON user_bouquets(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_butterflies_user_id ON exhibition_butterflies(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_field_butterflies_user_id ON field_butterflies(user_id)',
-      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_flowers_user_id ON user_flowers(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_field_caterpillars_user_id ON field_caterpillars(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_field_fish_user_id ON field_fish(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_planted_fields_user_id ON planted_fields(user_id)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sun_spawns_user_id ON sun_spawns(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sun_spawns_expires_at ON sun_spawns(expires_at)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aquarium_fish_user_id ON aquarium_fish(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aquarium_tanks_user_id ON aquarium_tanks(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_collection_stats_user_id ON collection_stats(user_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_seller_id ON market_listings(seller_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_status ON market_listings(status)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_item_type ON market_listings(item_type)',
       'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_market_listings_is_active ON market_listings(is_active)',
-      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_frame_likes_frame_id ON exhibition_frame_likes(frame_id)'
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_exhibition_frame_likes_frame_id ON exhibition_frame_likes(frame_id)',
+      'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pond_feeding_progress_user_id ON pond_feeding_progress(user_id)'
     ];
     
     let addedCount = 0;
@@ -4046,6 +4061,7 @@ private async runBackgroundMigrations(): Promise<void> {
     }
     
     if (totalHourlyIncome === 0) {
+      console.log(`💰 User ${userId}: total hourly income 0 despite exhibition entries`);
       return { success: true, creditsEarned: 0 };
     }
     
@@ -4073,6 +4089,8 @@ private async runBackgroundMigrations(): Promise<void> {
         .where(eq(users.id, userId));
       
       console.log(`💰 User ${userId} earned ${totalCredits} credits from exhibition (${totalHourlyIncome}cr/h, ${minutesPerCredit.toFixed(1)}min/cr)`);
+    } else if (minutesElapsed > 0) {
+      console.log(`💰 User ${userId}: ${minutesElapsed} minutes elapsed but income ${totalHourlyIncome}cr/h yields <1 credit (needs ${minutesPerCredit.toFixed(1)} min per credit)`);
     }
     
     return { success: true, creditsEarned: totalCredits };

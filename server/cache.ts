@@ -114,6 +114,7 @@ export const CacheKeys = {
   
   // User-specific data (short TTL) 
   USER_RESOURCES: (userId: number) => `user:${userId}:resources`,
+  USER_INVENTORY: (userId: number) => `user:${userId}:inventory`,
   USER_BUTTERFLIES: (userId: number) => `user:${userId}:butterflies`,
   USER_EXHIBITION: (userId: number) => `user:${userId}:exhibition`,
   
