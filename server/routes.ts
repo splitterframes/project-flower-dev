@@ -2082,6 +2082,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.collectFieldButterfly(userId, fieldIndex);
       
       if (result.success) {
+        cache.delete(CacheKeys.USER_BUTTERFLIES(userId));
+        cache.delete(`user:${userId}:complete-state`);
+        cache.delete(`user:${userId}:garden-state`);
         res.json({ message: 'Schmetterling erfolgreich gesammelt!', butterfly: result.butterfly });
       } else {
         res.status(404).json({ message: 'Kein Schmetterling auf diesem Feld gefunden' });

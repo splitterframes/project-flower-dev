@@ -4189,6 +4189,7 @@ private async runBackgroundMigrations(): Promise<void> {
     lastSeen: string;
     totalLikes: number;
     lastActive: string;
+    lastPassiveIncomeAt: string | null;
     createdAt: string;
   }>> {
     try {
@@ -4254,6 +4255,12 @@ private async runBackgroundMigrations(): Promise<void> {
       
       const lastActiveDate = lastActivity instanceof Date ? lastActivity : new Date(lastActivity);
 
+      const lastPassiveIncomeAt = user.lastPassiveIncomeAt instanceof Date
+        ? user.lastPassiveIncomeAt.toISOString()
+        : user.lastPassiveIncomeAt
+          ? new Date(user.lastPassiveIncomeAt).toISOString()
+          : null;
+
       userList.push({
         id: user.id,
         username: user.username,
@@ -4262,6 +4269,7 @@ private async runBackgroundMigrations(): Promise<void> {
         lastSeen,
         totalLikes,
         lastActive: lastActiveDate.toISOString(),
+        lastPassiveIncomeAt,
         createdAt: (user.createdAt instanceof Date ? user.createdAt : new Date(user.createdAt)).toISOString()
       });
     }
@@ -4282,6 +4290,42 @@ private async runBackgroundMigrations(): Promise<void> {
       // Return empty array as fallback to prevent system crash
       return [];
     }
+  }
+
+  async getUsersForPassiveIncome(): Promise<Array<{
+    id: number;
+    createdAt: Date;
+    lastActive: Date | null;
+    lastPassiveIncomeAt: Date | null;
+  }>> {
+    const userRows: Array<{
+      id: number;
+      createdAt: Date | string;
+      updatedAt: Date | string | null;
+      lastPassiveIncomeAt: Date | string | null;
+    }> = await this.db.select({
+      id: users.id,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastPassiveIncomeAt: users.lastPassiveIncomeAt
+    }).from(users);
+
+    return userRows.map(({ id, createdAt, updatedAt, lastPassiveIncomeAt }) => {
+      const createdAtDate = createdAt instanceof Date ? createdAt : new Date(createdAt);
+      const lastActiveDate = updatedAt
+        ? (updatedAt instanceof Date ? updatedAt : new Date(updatedAt))
+        : null;
+      const lastPassiveIncomeDate = lastPassiveIncomeAt
+        ? (lastPassiveIncomeAt instanceof Date ? lastPassiveIncomeAt : new Date(lastPassiveIncomeAt))
+        : null;
+
+      return {
+        id,
+        createdAt: createdAtDate,
+        lastActive: lastActiveDate,
+        lastPassiveIncomeAt: lastPassiveIncomeDate
+      };
+    });
   }
 
   async likeExhibitionFrame(userId: number, frameOwnerId: number, frameId: number): Promise<{ success: boolean; message?: string }> {
@@ -7807,6 +7851,7 @@ private async runBackgroundMigrations(): Promise<void> {
 }
 
 export type UserWithStatusList = Awaited<ReturnType<PostgresStorage['getAllUsersWithStatus']>>;
+export type PassiveIncomeUserList = Awaited<ReturnType<PostgresStorage['getUsersForPassiveIncome']>>;
 export type UserWithStatus = UserWithStatusList[number];
 
 export const postgresStorage = new PostgresStorage();

@@ -1,4 +1,5 @@
-import { postgresStorage as storage, type UserWithStatusList } from './postgresStorage';
+import { postgresStorage as storage, type PassiveIncomeUserList } from './postgresStorage';
+import { cache, CacheKeys } from './cache';
 
 class PassiveIncomeProcessor {
   private isRunning = false;
@@ -38,29 +39,38 @@ class PassiveIncomeProcessor {
 
   private async processAllUsersPassiveIncome() {
     try {
-      // console.log('💰 Processing passive income for all users...'); // Reduced logging
-      
-      // 🎯 OPTIMIZATION: Only process passive income for recently active users  
-      const { cache } = await import('./cache');
-      const cacheKey = 'passive-income:active-users';
-      
-      let allUsers = cache.get<UserWithStatusList>(cacheKey);
-      if (!allUsers) {
-        const allUsersList = await storage.getAllUsersWithStatus();
-        
-        // Filter to only users active in last 30 minutes
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-        const activeUsers = allUsersList.filter(user => {
-          const lastActive = new Date(user.lastActive || user.createdAt);
-          return lastActive > thirtyMinutesAgo;
-        });
-        
-        allUsers = activeUsers;
-        cache.set<UserWithStatusList>(cacheKey, allUsers, 300); // 5 minute cache
-        const skipped = allUsersList.length - allUsers.length;
-        if (skipped > 0) {
-          console.log(`💰 Processing ${allUsers.length} active users (${skipped} offline users skipped)`);
+  const allUsersList = await storage.getUsersForPassiveIncome();
+      const nowMs = Date.now();
+      const activeThreshold = nowMs - 30 * 60 * 1000;
+      const staleIncomeThreshold = nowMs - 10 * 60 * 1000;
+
+      const usersToProcessMap = new Map<number, PassiveIncomeUserList[number]>();
+
+      for (const user of allUsersList) {
+        const lastActiveTime = user.lastActive ? user.lastActive.getTime() : 0;
+        if (lastActiveTime >= activeThreshold) {
+          usersToProcessMap.set(user.id, user);
+          continue;
         }
+
+        if (!user.lastPassiveIncomeAt) {
+          usersToProcessMap.set(user.id, user);
+          continue;
+        }
+
+        const lastIncomeTime = user.lastPassiveIncomeAt.getTime();
+        if (Number.isNaN(lastIncomeTime) || lastIncomeTime <= staleIncomeThreshold) {
+          usersToProcessMap.set(user.id, user);
+        }
+      }
+
+      let allUsers = Array.from(usersToProcessMap.values());
+      if (allUsers.length === 0) {
+        allUsers = allUsersList;
+      }
+
+      if (allUsers.length !== allUsersList.length) {
+        console.log(`💰 Passive income sweep: ${allUsers.length} users selected (${allUsersList.length - allUsers.length} deferred)`);
       }
       let totalCreditsAwarded = 0;
       let usersProcessed = 0;
@@ -71,6 +81,10 @@ class PassiveIncomeProcessor {
           if (result.success && result.creditsEarned && result.creditsEarned > 0) {
             totalCreditsAwarded += result.creditsEarned;
             usersProcessed++;
+
+            cache.delete(CacheKeys.USER_RESOURCES(user.id));
+            cache.delete(`user:${user.id}:complete-state`);
+            cache.delete(`user:${user.id}:garden-state`);
           }
         } catch (error) {
           console.error(`💰 Failed to process passive income for user ${user.id}:`, error);
