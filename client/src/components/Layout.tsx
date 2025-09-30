@@ -53,6 +53,8 @@ interface Loot {
   amount: number;
 }
 
+const APP_VERSION = "0.78";
+
 // Balloon component
 const BalloonComponent: React.FC<{ 
   balloon: Balloon; 
@@ -546,7 +548,9 @@ export const Layout: React.FC = () => {
             >
               Datenschutz
             </button>
-            <span>Copyright © Mariposa 2025</span>
+            <span>
+              Copyright © Mariposa 2025 · Version {APP_VERSION}
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <button 
