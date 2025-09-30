@@ -77,8 +77,17 @@ export class ButterflySpawner {
 
       for (const [userId, bouquets] of bouquetsByUser.entries()) {
         try {
-          const existingButterflies = await storage.getFieldButterflies(userId);
           const totalSlots = 4;
+          const existingButterflies = await storage.getFieldButterflies(userId);
+          const butterfliesPerBouquet = new Map<number, number>();
+          for (const butterfly of existingButterflies) {
+            if (typeof butterfly.bouquetId === 'number') {
+              butterfliesPerBouquet.set(
+                butterfly.bouquetId,
+                (butterfliesPerBouquet.get(butterfly.bouquetId) || 0) + 1
+              );
+            }
+          }
 
           for (const bouquet of bouquets) {
             totalChecked++;
@@ -88,7 +97,7 @@ export class ButterflySpawner {
               continue;
             }
 
-            const butterflyCount = existingButterflies.filter(fb => fb.bouquetId === bouquet.bouquetId).length;
+            const butterflyCount = butterfliesPerBouquet.get(bouquet.bouquetId) || 0;
             const rarity = bouquet.bouquetRarity as RarityTier || 'common';
 
             const result = await storage.spawnButterflyOnFieldWithSlot(
@@ -102,8 +111,13 @@ export class ButterflySpawner {
 
             if (result.success) {
               totalSpawns++;
-              existingButterflies.push(result.fieldButterfly);
-              console.log(`✨ User ${userId}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly.butterflyName} from ${rarity} bouquet #${bouquet.bouquetId}! (Slot ${currentSlot}/${totalSlots})`);
+              if (result.fieldButterfly) {
+                existingButterflies.push(result.fieldButterfly);
+                butterfliesPerBouquet.set(bouquet.bouquetId, butterflyCount + 1);
+                console.log(`✨ User ${userId}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly.butterflyName} from ${rarity} bouquet #${bouquet.bouquetId}! (Slot ${currentSlot}/${totalSlots})`);
+              } else {
+                console.warn(`✨ User ${userId}: Butterfly spawned but no field butterfly returned for bouquet #${bouquet.bouquetId}`);
+              }
 
               await storage.updateBouquetNextSpawnTime(userId, bouquet.fieldIndex, new Date());
             } else {

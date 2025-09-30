@@ -117,6 +117,7 @@ export const CacheKeys = {
   USER_INVENTORY: (userId: number) => `user:${userId}:inventory`,
   USER_BUTTERFLIES: (userId: number) => `user:${userId}:butterflies`,
   USER_EXHIBITION: (userId: number) => `user:${userId}:exhibition`,
+  USER_GARDEN_STATE: (userId: number) => `user:${userId}:garden-state`,
   
   // Exhibition sell status (medium TTL)
   EXHIBITION_SELL_STATUS: (butterflyId: number) => `exhibition:sell:${butterflyId}`,

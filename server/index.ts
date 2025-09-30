@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabaseKeepAlive } from "./dbKeepAlive";
+import { recordApiPerformance } from "./performanceMonitor";
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
@@ -86,6 +87,8 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
+      recordApiPerformance(req.method, path, res.statusCode, duration);
+
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       
       // Only log full response in development - saves significant CPU in production

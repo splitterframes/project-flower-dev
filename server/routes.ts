@@ -12,6 +12,7 @@ import { getUserResourceSnapshot, invalidateUserResourceCache, RESOURCE_CACHE_TT
 import { getUserCompleteState, getUserGardenState, getExhibitionSellStatusUltraBatch, getStaticGameData } from "./ultraOptimizedRoutes";
 import { hashPassword, verifyPassword, isPasswordHashed } from "./passwordSecurity";
 import { authLimiter } from "./index";
+import { getPerformanceSnapshot, PERFORMANCE_METRICS_ENABLED } from "./performanceMonitor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -33,6 +34,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `public, max-age=${resourceCacheMaxAge}, stale-while-revalidate=${resourceCacheStaleWhileRevalidate}`
     );
   };
+
+  if (PERFORMANCE_METRICS_ENABLED && process.env.ENABLE_PERF_METRICS_ENDPOINT === "true") {
+    app.get("/api/internal/perf-metrics", (req, res) => {
+      const token = process.env.PERF_METRICS_TOKEN;
+      if (token && req.headers["x-perf-token"] !== token) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const resetParam = req.query.reset;
+      const reset = typeof resetParam === "string" ? resetParam !== "false" : true;
+
+      const snapshot = getPerformanceSnapshot({ reset });
+      return res.json(snapshot);
+    });
+  }
   
   // Authentication routes - WITH RATE LIMITING
   app.post("/api/auth/register", authLimiter, async (req, res) => {

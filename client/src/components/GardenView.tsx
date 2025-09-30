@@ -140,14 +140,10 @@ export const GardenView: React.FC = () => {
     if (user) {
       // Use async function to ensure proper order
       const fetchAllData = async () => {
-        await fetchUnlockedFields(); // Load unlocked fields first
-        await fetchUserSeeds();
-        await fetchPlantedFields();
-        await fetchUserBouquets();
-        await fetchPlacedBouquets();
-        await fetchFieldButterflies();
-        await fetchSunSpawns();
-        await fetchUserButterflies();
+        await Promise.all([
+          fetchGardenSnapshot({ fresh: true }),
+          fetchInventorySnapshot({ fresh: true })
+        ]);
       };
       fetchAllData();
     }
@@ -158,7 +154,7 @@ export const GardenView: React.FC = () => {
     const handleRefreshInventory = async () => {
       if (user) {
         console.log('🌱 GardenView received inventory refresh event - updating seeds');
-        await fetchUserSeeds();
+        await fetchInventorySnapshot({ fresh: true });
       }
     };
 
@@ -171,22 +167,11 @@ export const GardenView: React.FC = () => {
   // Auto-refresh butterflies every 10 seconds
   useEffect(() => {
     if (!user) return;
-    
-    const interval = setInterval(() => {
-      fetchFieldButterflies();
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, [user]);
 
-  // Auto-refresh sun spawns every 10 seconds
-  useEffect(() => {
-    if (!user) return;
-    
     const interval = setInterval(() => {
-      fetchSunSpawns();
+      fetchGardenSnapshot();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [user]);
 
@@ -199,120 +184,58 @@ export const GardenView: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchUserButterflies = async () => {
+  const fetchInventorySnapshot = async (options: { fresh?: boolean } = {}) => {
     if (!user) return;
     try {
-      const response = await fetch(`/api/user/${user.id}/butterflies`);
-      if (response.ok) {
-        const data = await response.json();
-        setUserButterflies(data.butterflies || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user butterflies:', error);
-    }
-  };
-
-  const fetchUnlockedFields = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/user/${user.id}/unlocked-fields`);
-      if (response.ok) {
-        const data = await response.json();
-        const unlockedIndices = new Set(data.unlockedFields.map((field: any) => field.fieldIndex));
-        
-        // Update garden fields with unlocked status
-        setGardenFields(prev => prev.map(field => ({
-          ...field,
-          isUnlocked: unlockedIndices.has(field.id - 1) // Convert field ID to index
-        })));
-      }
-    } catch (error) {
-      console.error('Failed to fetch unlocked fields:', error);
-    }
-  };
-
-  const fetchUserSeeds = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/user/${user.id}/seeds`);
+      const query = options.fresh ? '?fresh=1' : '';
+      const response = await fetch(`/api/user/${user.id}/inventory${query}`);
       if (response.ok) {
         const data = await response.json();
         setUserSeeds(data.seeds || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user seeds:', error);
-    }
-  };
-
-  const fetchFieldButterflies = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/user/${user.id}/field-butterflies`);
-      if (response.ok) {
-        const data = await response.json();
-        setFieldButterflies(data.fieldButterflies || []);
-        updateGardenWithFieldButterflies(data.fieldButterflies || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch field butterflies:', error);
-    }
-  };
-
-  const fetchSunSpawns = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch('/api/garden/sun-spawns', {
-        headers: {
-          'x-user-id': user.id.toString()
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setSunSpawns(data.sunSpawns || []);
-        updateGardenWithSunSpawns(data.sunSpawns || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch sun spawns:', error);
-    }
-  };
-
-  const fetchPlantedFields = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/garden/fields/${user.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        updateGardenWithPlantedFields(data.fields || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch planted fields:', error);
-    }
-  };
-
-  const fetchUserBouquets = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/user/${user.id}/bouquets`);
-      if (response.ok) {
-        const data = await response.json();
         setUserBouquets(data.bouquets || []);
+        setUserButterflies(data.butterflies || []);
       }
     } catch (error) {
-      console.error('Failed to fetch user bouquets:', error);
+      console.error('Failed to fetch inventory snapshot:', error);
     }
   };
 
-  const fetchPlacedBouquets = async () => {
+  const fetchGardenSnapshot = async (options: { fresh?: boolean } = {}) => {
     if (!user) return;
     try {
-      const response = await fetch(`/api/user/${user.id}/placed-bouquets`);
+      const query = options.fresh ? '?fresh=1' : '';
+      const response = await fetch(`/api/user/${user.id}/garden-state${query}`);
       if (response.ok) {
         const data = await response.json();
-        setPlacedBouquets(data.placedBouquets || []);
-        updateGardenWithPlacedBouquets(data.placedBouquets || []);
+
+        const unlockedIndices = new Set((data.unlockedFields || []).map((field: any) => field.fieldIndex));
+        setGardenFields(prev => prev.map(field => {
+          const fieldIndex = field.id - 1;
+          const isUnlocked = unlockedIndices.has(fieldIndex);
+          return field.isUnlocked === isUnlocked ? field : { ...field, isUnlocked };
+        }));
+
+        if (Array.isArray(data.plantedFields)) {
+          updateGardenWithPlantedFields(data.plantedFields);
+        }
+
+        if (Array.isArray(data.fieldButterflies)) {
+          setFieldButterflies(data.fieldButterflies);
+          updateGardenWithFieldButterflies(data.fieldButterflies);
+        }
+
+        if (Array.isArray(data.sunSpawns)) {
+          setSunSpawns(data.sunSpawns);
+          updateGardenWithSunSpawns(data.sunSpawns);
+        }
+
+        if (Array.isArray(data.placedBouquets)) {
+          setPlacedBouquets(data.placedBouquets);
+          updateGardenWithPlacedBouquets(data.placedBouquets);
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch placed bouquets:', error);
+      console.error('Failed to fetch garden snapshot:', error);
     }
   };
 
@@ -473,7 +396,7 @@ export const GardenView: React.FC = () => {
 
       if (response.ok) {
   // Refresh unlocked fields and update UI properly without page reload
-  await fetchUnlockedFields();
+  await fetchGardenSnapshot({ fresh: true });
   // Subtract the pre-calculated cost to avoid overcharging (API expects delta)
   await updateCredits(user.id, -costBefore);
         showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${costBefore} Credits freigeschaltet.`, 'success');
@@ -530,8 +453,10 @@ export const GardenView: React.FC = () => {
         triggerFieldSpin(fieldIndex);
         
         // Refresh data
-        await fetchUserBouquets();
-        await fetchPlacedBouquets();
+        await Promise.all([
+          fetchInventorySnapshot({ fresh: true }),
+          fetchGardenSnapshot({ fresh: true })
+        ]);
       } else {
         const error = await response.json();
         showNotification(error.message || 'Fehler beim Platzieren', 'error');
@@ -581,9 +506,10 @@ export const GardenView: React.FC = () => {
         triggerFieldSpin(fieldIndex);
         
         // Refresh data
-        await fetchUserSeeds();
-        await fetchPlantedFields();
-        await fetchFieldButterflies();
+        await Promise.all([
+          fetchInventorySnapshot({ fresh: true }),
+          fetchGardenSnapshot({ fresh: true })
+        ]);
       } else {
         const error = await response.json();
         showNotification(error.message || 'Fehler beim Pflanzen', 'error');
@@ -623,7 +549,7 @@ export const GardenView: React.FC = () => {
         removeSunSpawn(fieldIndex);
         
         // Refresh sun spawns data
-        await fetchSunSpawns();
+  await fetchGardenSnapshot({ fresh: true });
         
         // Animate collection
         setCollectedSuns(prev => new Set(prev).add(fieldIndex));
@@ -678,9 +604,13 @@ export const GardenView: React.FC = () => {
         // Trigger field spin animation
         triggerFieldSpin(fieldIndex);
         
-        // Refresh data
-        await fetchFieldButterflies();
         const data = await response.json();
+
+        // Refresh data
+        await Promise.all([
+          fetchGardenSnapshot({ fresh: true }),
+          fetchInventorySnapshot({ fresh: true })
+        ]);
         console.log(`🦋 ${data.message}`);
       } else {
         const error = await response.json();
@@ -728,9 +658,10 @@ export const GardenView: React.FC = () => {
         }
         
         // Refresh all garden data
-        await fetchPlacedBouquets();
-        await fetchUserSeeds();
-        await fetchFieldButterflies();
+        await Promise.all([
+          fetchGardenSnapshot({ fresh: true }),
+          fetchInventorySnapshot({ fresh: true })
+        ]);
         
         // Remove visual feedback after short delay
         setTimeout(() => {
@@ -827,7 +758,10 @@ export const GardenView: React.FC = () => {
         }, 1500);
         
         // Refresh data immediately  
-        await fetchPlantedFields();
+        await Promise.all([
+          fetchGardenSnapshot({ fresh: true }),
+          fetchInventorySnapshot({ fresh: true })
+        ]);
       } else {
         const error = await response.json();
         showNotification(error.message || 'Fehler beim Ernten', 'error');
@@ -873,8 +807,10 @@ export const GardenView: React.FC = () => {
         console.log('🦋 Butterfly placed successfully!', data.message);
         
         // Refresh data to show the placed butterfly
-        await fetchFieldButterflies();
-        await fetchUserButterflies();
+        await Promise.all([
+          fetchGardenSnapshot({ fresh: true }),
+          fetchInventorySnapshot({ fresh: true })
+        ]);
         
         showNotification('Schmetterling platziert!', data.message, 'success');
       } else {

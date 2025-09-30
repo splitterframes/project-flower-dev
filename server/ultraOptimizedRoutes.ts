@@ -107,14 +107,15 @@ export async function getUserCompleteState(req: AuthenticatedRequest, res: Respo
 export async function getUserGardenState(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.validatedUserId!;
+    const forceFresh = req.query.fresh === "1";
     
     console.time(`[PERF] getUserGardenState(${userId})`);
     
     const { postgresStorage: storage } = await import('./postgresStorage');
     
     // Cache for 10 seconds since garden state changes frequently
-    const cacheKey = `user:${userId}:garden-state`;
-    const result = await withCache(cacheKey, async () => {
+    const cacheKey = CacheKeys.USER_GARDEN_STATE(userId);
+    const fetchGardenState = async () => {
       
       const [
         fieldButterflies,
@@ -123,7 +124,9 @@ export async function getUserGardenState(req: AuthenticatedRequest, res: Respons
         fieldCaterpillars,
         sunSpawns,
         pondProgress,
-        unlockedFields
+        unlockedFields,
+        plantedFields,
+        placedBouquets
       ] = await Promise.all([
   storage.getFieldButterflies(userId),
   storage.getFieldFlowers(userId),
@@ -131,7 +134,9 @@ export async function getUserGardenState(req: AuthenticatedRequest, res: Respons
   storage.getFieldCaterpillars(userId),
   storage.getActiveSunSpawnsForUser(userId),
         storage.getUserPondProgress(userId),
-        storage.getUnlockedFields(userId)
+        storage.getUnlockedFields(userId),
+        storage.getPlantedFields(userId),
+        storage.getPlacedBouquets(userId)
       ]);
       
       return {
@@ -142,10 +147,21 @@ export async function getUserGardenState(req: AuthenticatedRequest, res: Respons
         sunSpawns,
         pondProgress,
         unlockedFields,
+        plantedFields,
+        placedBouquets,
         lastUpdated: new Date().toISOString()
       };
-      
-    }, 10); // 10 second cache
+
+    };
+
+    let result;
+    if (forceFresh) {
+      cache.delete(cacheKey);
+      result = await fetchGardenState();
+      cache.set(cacheKey, result, 10);
+    } else {
+      result = await withCache(cacheKey, fetchGardenState, 10);
+    }
     
     console.timeEnd(`[PERF] getUserGardenState(${userId})`);
     

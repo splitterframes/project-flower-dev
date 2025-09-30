@@ -2,7 +2,7 @@
  * Optimized API routes to reduce database queries and improve performance
  */
 import { Request, Response } from "express";
-import { CacheKeys, withCache } from "./cache";
+import { cache, CacheKeys, withCache } from "./cache";
 import {
   getUserResourceSnapshot,
   invalidateUserResourceCache,
@@ -48,32 +48,40 @@ export async function getUserInventory(req: Request, res: Response) {
   console.time(timerLabel);
 
   try {
-    const inventory = await withCache(
-      CacheKeys.USER_INVENTORY(userId),
-      async () => {
-        const { postgresStorage: storage } = await import('./postgresStorage');
+    const cacheKey = CacheKeys.USER_INVENTORY(userId);
+    const forceFresh = req.query.fresh === "1";
 
-        const [butterflies, caterpillars, fish, flowers, seeds, bouquets] = await Promise.all([
-          storage.getUserButterflies(userId),
-          storage.getUserCaterpillars(userId),
-          storage.getUserFish(userId),
-          storage.getUserFlowers(userId),
-          storage.getUserSeeds(userId),
-          storage.getUserBouquets(userId),
-        ]);
+    const fetchInventoryData = async () => {
+      const { postgresStorage: storage } = await import('./postgresStorage');
 
-        return {
-          butterflies,
-          caterpillars,
-          fish,
-          flowers,
-          seeds,
-          bouquets,
-          lastUpdated: new Date().toISOString(),
-        };
-      },
-      10
-    );
+      const [butterflies, caterpillars, fish, flowers, seeds, bouquets] = await Promise.all([
+        storage.getUserButterflies(userId),
+        storage.getUserCaterpillars(userId),
+        storage.getUserFish(userId),
+        storage.getUserFlowers(userId),
+        storage.getUserSeeds(userId),
+        storage.getUserBouquets(userId),
+      ]);
+
+      return {
+        butterflies,
+        caterpillars,
+        fish,
+        flowers,
+        seeds,
+        bouquets,
+        lastUpdated: new Date().toISOString(),
+      };
+    };
+
+    let inventory;
+    if (forceFresh) {
+      cache.delete(cacheKey);
+      inventory = await fetchInventoryData();
+      cache.set(cacheKey, inventory, 10);
+    } else {
+      inventory = await withCache(cacheKey, fetchInventoryData, 10);
+    }
 
     res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
     res.json(inventory);
