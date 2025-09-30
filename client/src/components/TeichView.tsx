@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -28,6 +28,12 @@ const pondHoverCache = new Map<number, {
   timestamp: number 
 }>();
 const CACHE_TTL = 15000; // 15 seconds
+
+const isPondField = (fieldId: number) => {
+  const row = Math.floor((fieldId - 1) / 10);
+  const col = (fieldId - 1) % 10;
+  return row >= 1 && row <= 3 && col >= 1 && col <= 8;
+};
 
 // German rarity translation function
 const getRarityDisplayNameGerman = (rarity: string): string => {
@@ -172,7 +178,7 @@ import {
   Sparkles,
   Waves
 } from "lucide-react";
-import type { UserBouquet, PlacedBouquet, FieldButterfly, FieldFish } from "@shared/schema";
+import type { UserBouquet, PlacedBouquet, FieldButterfly, FieldFish, FieldFlower } from "@shared/schema";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpButton } from "./HelpButton";
 
@@ -244,15 +250,6 @@ export const TeichView: React.FC = () => {
   const { sunSpawns, setSunSpawns, removeSunSpawn, getSunSpawnOnField, setLoading } = useSunSpawns();
   const { showNotification } = useNotification();
 
-  // Function to check if a field is in the pond area (middle 8x3 fields)
-  const isPondField = (fieldId: number) => {
-    const row = Math.floor((fieldId - 1) / 10);
-    const col = (fieldId - 1) % 10;
-    
-    // Pond area: rows 1-3, columns 1-8 (0-indexed)
-    return row >= 1 && row <= 3 && col >= 1 && col <= 8;
-  };
-
   // Initialize garden fields (will be populated from backend)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
     return Array.from({ length: 50 }, (_, i) => ({
@@ -294,7 +291,7 @@ export const TeichView: React.FC = () => {
   } | null>(null);
   // Caterpillar modal removed - they spawn automatically from flowers
   const [userFlowers, setUserFlowers] = useState<any[]>([]);
-  const [fieldFlowers, setFieldFlowers] = useState<any[]>([]);
+  const [fieldFlowers, setFieldFlowers] = useState<FieldFlower[]>([]);
   const [placedFlowers, setPlacedFlowers] = useState<{
     id: number;
     fieldId: number;
@@ -335,6 +332,61 @@ export const TeichView: React.FC = () => {
     spawnedAt: Date;
     isGrowingIn: boolean;
   }[]>([]);
+
+  const pondFieldIds = useMemo(() => {
+    const ids: number[] = [];
+    for (let row = 1; row <= 3; row++) {
+      for (let col = 1; col <= 8; col++) {
+        const fieldId = row * 10 + col + 1;
+        ids.push(fieldId);
+      }
+    }
+    return ids;
+  }, []);
+
+  const fieldFlowersByIndex = useMemo(() => {
+    const map = new Map<number, FieldFlower>();
+    fieldFlowers.forEach((flower) => {
+      map.set(flower.fieldIndex, flower);
+    });
+    return map;
+  }, [fieldFlowers]);
+
+  const fieldFishByIndexMap = useMemo(() => {
+    const map = new Map<number, FieldFish>();
+    fieldFish.forEach((fish) => {
+      map.set(fish.fieldIndex, fish);
+    });
+    return map;
+  }, [fieldFish]);
+
+  const fieldCaterpillarsByIndexMemo = useMemo(() => {
+    const map = new Map<number, any[]>();
+    fieldCaterpillars.forEach((caterpillar: any) => {
+      const list = map.get(caterpillar.fieldIndex) ?? [];
+      list.push(caterpillar);
+      map.set(caterpillar.fieldIndex, list);
+    });
+    return map;
+  }, [fieldCaterpillars]);
+
+  const placedFlowersByFieldId = useMemo(() => {
+    const map = new Map<number, (typeof placedFlowers)[number]>();
+    placedFlowers.forEach((flower) => {
+      map.set(flower.fieldId, flower);
+    });
+    return map;
+  }, [placedFlowers]);
+
+  const placedFishByFieldId = useMemo(() => {
+    const map = new Map<number, (typeof placedFish)[number][]>();
+    placedFish.forEach((fish) => {
+      const list = map.get(fish.fieldId) ?? [];
+      list.push(fish);
+      map.set(fish.fieldId, list);
+    });
+    return map;
+  }, [placedFish]);
 
 
 
@@ -386,7 +438,7 @@ export const TeichView: React.FC = () => {
         const inheritedRarity = inheritCaterpillarRarity(butterflyRarity);
         
         // Sofort die echten Daten laden - permanente Raupe erscheint direkt
-        fetchTeichData();
+  fetchTeichData({ forceFresh: true });
         
       } else {
         console.error("🐛 ERROR: Failed to spawn caterpillar:", response.status);
@@ -422,8 +474,8 @@ export const TeichView: React.FC = () => {
         console.log('🐟 Fisch erfolgreich gesammelt!');
         toast.success(`${field.fishName} gesammelt!`);
         
-        // Refresh data to show updated state
-        fetchTeichData();
+  // Refresh data to show updated state
+  fetchTeichData({ forceFresh: true });
       } else {
         const errorData = await response.json();
         console.error('Field fish collection failed:', errorData);
@@ -456,8 +508,8 @@ export const TeichView: React.FC = () => {
         console.log('🐛 Raupe erfolgreich gesammelt!');
         toast.success(`${field.caterpillarName} gesammelt!`);
         
-        // Refresh data to show updated state
-        fetchTeichData();
+  // Refresh data to show updated state
+  fetchTeichData({ forceFresh: true });
       } else {
         const errorData = await response.json();
         console.error('Field caterpillar collection failed:', errorData);
@@ -471,186 +523,131 @@ export const TeichView: React.FC = () => {
     }
   };
 
-  const fetchTeichData = async () => {
+  const fetchTeichData = useCallback(async (options: { forceFresh?: boolean } = {}) => {
     if (!user) return;
-    console.log("🌸 FETCHTEICHDATA: Starting to fetch pond data...");
+
+    const forceFresh = options.forceFresh === true;
+    const query = forceFresh ? "?fresh=1" : "";
 
     try {
-      // Fetch pond-specific data including feeding progress
-      const [caterpillarRes, userCaterpillarsRes, pondProgressRes, flowersRes, fieldFlowersRes, fieldFishRes] = await Promise.all([
-        fetch(`/api/user/${user.id}/field-caterpillars`),
-        fetch(`/api/user/${user.id}/caterpillars`),
-        fetch(`/api/user/${user.id}/pond-progress`),
-        fetch(`/api/user/${user.id}/flowers`),
-        fetch(`/api/user/${user.id}/field-flowers`),
-        fetch(`/api/user/${user.id}/field-fish`)
+      const [gardenRes, inventoryRes] = await Promise.all([
+        fetch(`/api/user/${user.id}/garden-state${query}`),
+        fetch(`/api/user/${user.id}/inventory${query}`)
       ]);
 
-      console.log("🌸 FETCHTEICHDATA: All API responses received, checking status...");
-      if (caterpillarRes.ok && userCaterpillarsRes.ok && pondProgressRes.ok && flowersRes.ok && fieldFlowersRes.ok && fieldFishRes.ok) {
-        console.log("🌸 FETCHTEICHDATA: All responses OK, parsing JSON...");
-        const [caterpillarData, userCaterpillarsData, pondProgressData, flowersData, fieldFlowersData, fieldFishData] = await Promise.all([
-          caterpillarRes.json(),
-          userCaterpillarsRes.json(),
-          pondProgressRes.json(),
-          flowersRes.json(),
-          fieldFlowersRes.json(),
-          fieldFishRes.json()
-        ]);
-        console.log("🌸 FETCHTEICHDATA: JSON parsed, flowersData =", flowersData);
-        console.log("🌸 FETCHTEICHDATA: Starting field processing...");
-
-        // *** EMERGENCY FIX: Try setUserFlowers in try-catch ***
-        try {
-          console.log("🌸 FETCHTEICHDATA: About to set userFlowers...");
-          setUserFlowers(flowersData.flowers || []);
-          console.log("🌸 FETCHTEICHDATA: userFlowers SET! ✅ Length:", flowersData.flowers?.length);
-        } catch (setError) {
-          console.error("🌸 ERROR setting userFlowers:", setError);
-        }
-
-        console.log('🌊 Updating pond with field caterpillars:', caterpillarData.fieldCaterpillars);
-        
-        // 🐛 DEBUG: Check fieldCaterpillars state update
-        setFieldCaterpillars(caterpillarData.fieldCaterpillars || []);
-        console.log('🐛 fieldCaterpillars state updated with length:', caterpillarData.fieldCaterpillars?.length);
-
-        // Update pond fields with caterpillars and butterflies (no sun spawns in pond view)
-        const updatedFields = gardenFields.map((field) => {
-          const fieldIndex = field.id - 1;
-          
-          // Check for caterpillar (only on grass fields)
-          const caterpillar = !field.isPond ? caterpillarData.fieldCaterpillars.find((c: any) => c.fieldIndex === fieldIndex) : null;
-          
-          // 🐛 DEBUG: Log caterpillar check for specific fields
-          if (fieldIndex === 20 || fieldIndex === 10 || fieldIndex === 2) {
-            console.log(`🐛 Field ${field.id} (index ${fieldIndex}): isPond=${field.isPond}, caterpillar=${!!caterpillar}`);
-          }
-          
-          // Removed debug logging - bug fixed!
-          
-          // Check for field fish (only on pond fields) - BUG FIX: use fieldIndex (0-based) consistently
-          const fish = field.isPond ? fieldFishData.fieldFish.find((f: any) => f.fieldIndex === fieldIndex) : null;
-
-          return {
-            ...field,
-            // Clear all garden-related properties for pond view
-            hasPlant: false,
-            plantType: undefined,
-            isGrowing: false,
-            plantedAt: undefined,
-            growthTimeSeconds: undefined,
-            seedRarity: undefined,
-            flowerId: undefined,
-            flowerName: undefined,
-            flowerImageUrl: undefined,
-            hasBouquet: false,
-            bouquetId: undefined,
-            bouquetName: undefined,
-            bouquetRarity: undefined,
-            bouquetPlacedAt: undefined,
-            bouquetExpiresAt: undefined,
-            hasButterfly: false,
-            butterflyId: undefined,
-            butterflyName: undefined,
-            butterflyImageUrl: undefined,
-            butterflyRarity: undefined,
-            hasFish: !!fish,
-            fishId: fish ? fish.id : undefined,
-            fishName: fish ? fish.fishName : undefined,
-            fishImageUrl: fish ? fish.fishImageUrl : undefined,
-            fishRarity: fish ? fish.fishRarity : undefined,
-            // Only keep caterpillar data for grass fields
-            hasCaterpillar: !!caterpillar,
-            caterpillarId: caterpillar?.caterpillarId,
-            caterpillarName: caterpillar?.caterpillarName,
-            caterpillarImageUrl: caterpillar?.caterpillarImageUrl,
-            caterpillarRarity: caterpillar?.caterpillarRarity,
-            caterpillarSpawnedAt: caterpillar ? new Date(caterpillar.spawnedAt) : undefined,
-            // No sun spawns in pond view
-            hasSunSpawn: false,
-            sunSpawnAmount: undefined,
-            sunSpawnExpiresAt: undefined,
-            // Add feeding progress for pond fields from API data (only if > 0) - FIX: Use fieldIndex
-            feedingProgress: field.isPond && pondProgressData.pondProgress?.[field.id - 1] > 0 ? pondProgressData.pondProgress[field.id - 1] : undefined
-          };
+      if (!gardenRes.ok || !inventoryRes.ok) {
+        console.error("🌊 TeichView snapshot fetch failed", {
+          gardenStatus: gardenRes.status,
+          inventoryStatus: inventoryRes.status
         });
-
-        console.log("🌸 FETCHTEICHDATA: About to setGardenFields...");
-        setGardenFields(updatedFields);
-        console.log("🌸 FETCHTEICHDATA: setGardenFields DONE");
-        // Clear garden-specific data for pond view
-        setUserSeeds([]);
-        console.log("🌸 FETCHTEICHDATA: setUserSeeds DONE");
-        setUserBouquets([]);
-        console.log("🌸 FETCHTEICHDATA: setUserBouquets DONE");
-        setPlacedBouquets([]);
-        console.log("🌸 FETCHTEICHDATA: setPlacedBouquets DONE");
-        // No field butterflies needed in TeichView - nur pond-spezifische Daten
-        setFieldFish(fieldFishData.fieldFish || []);
-        console.log("🌸 FETCHTEICHDATA: setFieldFish DONE");
-        setFieldCaterpillars(caterpillarData.fieldCaterpillars);
-        console.log("🌸 FETCHTEICHDATA: setFieldCaterpillars DONE");
-        setSunSpawns([]); // No sun spawns in pond view
-        console.log("🌸 FETCHTEICHDATA: setSunSpawns DONE");
-        setUserButterflies([]); // No butterflies needed in TeichView
-        console.log("🌸 FETCHTEICHDATA: setUserButterflies DONE");
-        setUserCaterpillars(userCaterpillarsData.caterpillars || []);
-        console.log("🌸 FETCHTEICHDATA: setUserCaterpillars DONE");
-        console.log("🌸 FETCHTEICHDATA: Setting userFlowers to:", flowersData.flowers);
-        setUserFlowers(flowersData.flowers || []);  // BUGFIX: This was missing!
-        console.log("🌸 FETCHTEICHDATA: setUserFlowers COMPLETED ✅");
-        setFieldFlowers(fieldFlowersData.fieldFlowers || []);  // 🔧 CRITICAL FIX: This was completely missing!
-        console.log("🌸 FETCHTEICHDATA: setFieldFlowers COMPLETED ✅");
-      } else {
-        console.error("🌸 FETCHTEICHDATA ERROR: Some API responses failed", {
-          caterpillar: caterpillarRes.status,
-          userCaterpillars: userCaterpillarsRes.status,
-          pondProgress: pondProgressRes.status,
-          flowers: flowersRes.status,
-          fieldFlowers: fieldFlowersRes.status,
-          fieldFish: fieldFishRes.status
-        });
+        return;
       }
+
+      const [gardenData, inventoryData] = await Promise.all([
+        gardenRes.json(),
+        inventoryRes.json()
+      ]);
+
+      const fieldFishData = Array.isArray(gardenData.fieldFish) ? gardenData.fieldFish : [];
+      const fieldCaterpillarsData = Array.isArray(gardenData.fieldCaterpillars) ? gardenData.fieldCaterpillars : [];
+      const fieldFlowersData = Array.isArray(gardenData.fieldFlowers) ? gardenData.fieldFlowers : [];
+      const pondProgress = Array.isArray(gardenData.pondProgress) ? gardenData.pondProgress : [];
+
+      const fieldFishByIndex = new Map<number, FieldFish>();
+      fieldFishData.forEach((fish: FieldFish) => {
+        fieldFishByIndex.set(fish.fieldIndex, fish);
+      });
+
+      const fieldFlowersByIndex = new Map<number, FieldFlower>();
+      fieldFlowersData.forEach((flower: FieldFlower) => {
+        fieldFlowersByIndex.set(flower.fieldIndex, flower);
+      });
+
+      const fieldCaterpillarsByIndex = new Map<number, any[]>();
+      fieldCaterpillarsData.forEach((caterpillar: any) => {
+        const list = fieldCaterpillarsByIndex.get(caterpillar.fieldIndex) ?? [];
+        list.push(caterpillar);
+        fieldCaterpillarsByIndex.set(caterpillar.fieldIndex, list);
+      });
+
+      setGardenFields(prev => prev.map((field) => {
+        const fieldIndex = field.id - 1;
+        const pondProgressValue = pondProgress[fieldIndex];
+        const pondFish = field.isPond ? fieldFishByIndex.get(fieldIndex) : undefined;
+        const caterpillar = !field.isPond ? (fieldCaterpillarsByIndex.get(fieldIndex)?.[0] ?? null) : null;
+
+        return {
+          ...field,
+          hasPlant: false,
+          plantType: undefined,
+          isGrowing: false,
+          plantedAt: undefined,
+          growthTimeSeconds: undefined,
+          seedRarity: undefined,
+          flowerId: undefined,
+          flowerName: undefined,
+          flowerImageUrl: undefined,
+          hasBouquet: false,
+          bouquetId: undefined,
+          bouquetName: undefined,
+          bouquetRarity: undefined,
+          bouquetPlacedAt: undefined,
+          bouquetExpiresAt: undefined,
+          hasButterfly: false,
+          butterflyId: undefined,
+          butterflyName: undefined,
+          butterflyImageUrl: undefined,
+          butterflyRarity: undefined,
+          hasFish: Boolean(pondFish),
+          fishId: pondFish?.id,
+          fishName: pondFish?.fishName,
+          fishImageUrl: pondFish?.fishImageUrl,
+          fishRarity: pondFish?.fishRarity,
+          hasCaterpillar: Boolean(caterpillar),
+          caterpillarId: caterpillar?.caterpillarId,
+          caterpillarName: caterpillar?.caterpillarName,
+          caterpillarImageUrl: caterpillar?.caterpillarImageUrl,
+          caterpillarRarity: caterpillar?.caterpillarRarity,
+          caterpillarSpawnedAt: caterpillar ? new Date(caterpillar.spawnedAt) : undefined,
+          hasSunSpawn: false,
+          sunSpawnAmount: undefined,
+          sunSpawnExpiresAt: undefined,
+          feedingProgress: field.isPond && pondProgressValue > 0 ? pondProgressValue : undefined
+        };
+      }));
+
+      setFieldFish(fieldFishData);
+      setFieldCaterpillars(fieldCaterpillarsData);
+      setFieldFlowers(fieldFlowersData);
+
+      setUserSeeds([]);
+      setUserBouquets([]);
+      setPlacedBouquets([]);
+      setSunSpawns([]);
+      setUserButterflies([]);
+
+      setUserCaterpillars(Array.isArray(inventoryData.caterpillars) ? inventoryData.caterpillars : []);
+      setUserFlowers(Array.isArray(inventoryData.flowers) ? inventoryData.flowers : []);
     } catch (error) {
-      console.error('🌸 FETCHTEICHDATA CATCH ERROR:', error);
-      if (error instanceof Error) {
-        console.error('🌸 ERROR NAME:', error.name);
-        console.error('🌸 ERROR MESSAGE:', error.message);
-        console.error('🌸 ERROR STACK:', error.stack);
-      }
+      console.error('� Failed to load Teich snapshot:', error);
     }
-  };
+  }, [user]);
 
   // Frontend only displays backend data - no lifecycle logic
 
 
   useEffect(() => {
     fetchTeichData();
-    const interval = setInterval(fetchTeichData, 10000);
+    const interval = setInterval(() => fetchTeichData(), 10000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchTeichData]);
 
   // Pond field shaking animation system
   useEffect(() => {
     const startShaking = () => {
-      // Get all pond field IDs (middle 8x3 area: rows 1-3, cols 1-8)
-      const pondFields: number[] = [];
-      for (let row = 1; row <= 3; row++) {
-        for (let col = 1; col <= 8; col++) {
-          const fieldId = row * 10 + col + 1;
-          pondFields.push(fieldId);
-        }
-      }
-      
-      // Select random pond field
-      const randomField = pondFields[Math.floor(Math.random() * pondFields.length)];
+      const randomField = pondFieldIds[Math.floor(Math.random() * pondFieldIds.length)];
       setShakingField(randomField);
-      
-      // Stop shaking after 6 seconds
-      setTimeout(() => {
-        setShakingField(null);
-      }, 6000);
+      setTimeout(() => setShakingField(null), 6000);
     };
 
     // Start first shake after random delay (10-20s)
@@ -673,7 +670,7 @@ export const TeichView: React.FC = () => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [pondFieldIds]);
 
 
   // Fish shrinking system
@@ -807,8 +804,8 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        await updateCredits(user.id, -cost);
-        fetchTeichData();
+  await updateCredits(user.id, -cost);
+  fetchTeichData({ forceFresh: true });
         showNotification('Feld freigeschaltet!', `Du hast Feld ${fieldId} für ${cost} Credits freigeschaltet.`, 'success');
       } else {
         const error = await response.json();
@@ -836,7 +833,7 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchTeichData();
+  fetchTeichData({ forceFresh: true });
         showNotification('Samen gepflanzt!', 'Der Samen wurde erfolgreich gepflanzt.', 'success');
       } else {
         const error = await response.json();
@@ -867,9 +864,9 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        console.log('Blume erfolgreich geerntet!');
-        showNotification('Blume geerntet!', 'Die Blume wurde erfolgreich geerntet.', 'success');
-        fetchTeichData();
+  console.log('Blume erfolgreich geerntet!');
+  showNotification('Blume geerntet!', 'Die Blume wurde erfolgreich geerntet.', 'success');
+  fetchTeichData({ forceFresh: true });
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Blume konnte nicht geerntet werden.', 'error');
@@ -896,7 +893,7 @@ export const TeichView: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchTeichData();
+        fetchTeichData({ forceFresh: true });
         showNotification('Bouquet platziert!', 'Das Bouquet wurde erfolgreich platziert.', 'success');
       } else {
         const error = await response.json();
@@ -1035,7 +1032,7 @@ export const TeichView: React.FC = () => {
           console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
           
           // Refresh data to show spawned caterpillar
-          fetchTeichData();
+          fetchTeichData({ forceFresh: true });
         }, spawnTime);
 
     } catch (error) {
@@ -1115,8 +1112,8 @@ export const TeichView: React.FC = () => {
         });
         setIsFishRewardDialogOpen(true);
         
-        // Refresh data to show updated state
-        fetchTeichData();
+  // Refresh data to show updated state
+  fetchTeichData({ forceFresh: true });
       } else {
         const errorData = await response.json();
         console.error('Field fish collection failed:', errorData);
@@ -1155,9 +1152,9 @@ export const TeichView: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('🦋 Schmetterling erfolgreich gesammelt!');
-        showNotification('Schmetterling gesammelt!', result.message, 'success');
-        fetchTeichData();
+  console.log('🦋 Schmetterling erfolgreich gesammelt!');
+  showNotification('Schmetterling gesammelt!', result.message, 'success');
+  fetchTeichData({ forceFresh: true });
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Schmetterling konnte nicht gesammelt werden.', 'error');
@@ -1198,7 +1195,7 @@ export const TeichView: React.FC = () => {
           });
         }, 800);
         
-        fetchTeichData();
+  fetchTeichData({ forceFresh: true });
         
         // Prevent butterfly dialog from opening for 1.5 seconds
         setTimeout(() => {
@@ -1268,7 +1265,7 @@ export const TeichView: React.FC = () => {
           );
         }
         
-        fetchTeichData(); // Refresh field data
+  fetchTeichData({ forceFresh: true }); // Refresh field data
         setShakingField(null); // Stop shaking after feeding
       } else {
         const error = await response.json();
@@ -1306,7 +1303,7 @@ export const TeichView: React.FC = () => {
           showNotification('Schmetterling → Raupe!', `Schmetterling zu Raupe konvertiert! Fütterung ${result.feedingCount}/3 abgeschlossen.`, 'success');
         }
         
-        fetchTeichData(); // Refresh field data
+  fetchTeichData({ forceFresh: true }); // Refresh field data
         setShakingField(null); // Stop shaking after feeding
       } else {
         const error = await response.json();
@@ -1346,8 +1343,8 @@ export const TeichView: React.FC = () => {
         
         showNotification('Sonnen gesammelt!', result.message, 'success');
         
-        // Refresh garden data to sync with server
-        fetchTeichData();
+  // Refresh garden data to sync with server
+  fetchTeichData({ forceFresh: true });
       } else {
         const error = await response.json();
         showNotification('Fehler', error.message || 'Sonnen konnten nicht gesammelt werden.', 'error');
@@ -1428,7 +1425,6 @@ export const TeichView: React.FC = () => {
                             : 'border-slate-600 bg-slate-800 opacity-40'
                       }
                       ${spinningFields.has(field.id - 1) ? 'animate-field-spin' : ''}
-                      }
                       ${shakingField === field.id ? 'pond-shake' : ''}
                     `}
                     style={{
@@ -1453,7 +1449,7 @@ export const TeichView: React.FC = () => {
                           }
                         } else {
                           // Try to collect fish from pond field (convert field.id to 0-based index)
-                          const fishOnField = fieldFish.find(f => f.fieldIndex === field.id - 1);
+                          const fishOnField = fieldFishByIndexMap.get(field.id - 1);
                           if (fishOnField && !collectingFish.has(field.id)) {
                             console.log("🐟 Attempting to collect fish on field", field.id);
                             collectFish(field.id);
@@ -1519,8 +1515,8 @@ export const TeichView: React.FC = () => {
 
 
                     {/* Persistent field flowers from database (ALWAYS VISIBLE) */}
-                    {fieldFlowers.find(f => f.fieldIndex === field.id - 1) && (() => {
-                      const dbFlower = fieldFlowers.find(f => f.fieldIndex === field.id - 1)!;
+                    {fieldFlowersByIndex.get(field.id - 1) && (() => {
+                      const dbFlower = fieldFlowersByIndex.get(field.id - 1)!;
                       return (
                         <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
                           <RarityImage
@@ -1535,8 +1531,8 @@ export const TeichView: React.FC = () => {
                     })()}
 
                     {/* Local placed flowers with shimmer and dissolve animations */}
-                    {placedFlowers.find(f => f.fieldId === field.id) && (() => {
-                      const flower = placedFlowers.find(f => f.fieldId === field.id)!;
+                    {placedFlowersByFieldId.get(field.id) && (() => {
+                      const flower = placedFlowersByFieldId.get(field.id)!;
                       return (
                         <div 
                           className={`absolute inset-0 flex items-center justify-center cursor-pointer ${
@@ -1579,9 +1575,7 @@ export const TeichView: React.FC = () => {
                     )}
 
                     {/* Real Field Caterpillars from Database (PERMANENT - highest priority) */}
-                    {fieldCaterpillars
-                      .filter(c => c.fieldIndex === field.id - 1)
-                      .map(caterpillar => (
+                    {(fieldCaterpillarsByIndexMemo.get(field.id - 1) ?? []).map((caterpillar) => (
                       <CaterpillarHoverPreview
                         key={`real-caterpillar-${caterpillar.id}`}
                         caterpillarName={caterpillar.caterpillarName}
@@ -1701,9 +1695,7 @@ export const TeichView: React.FC = () => {
 
 
                     {/* Placed Fish Display */}
-                    {placedFish
-                      .filter(fish => fish.fieldId === field.id)
-                      .map(fish => (
+                    {(placedFishByFieldId.get(field.id) ?? []).map(fish => (
                         <div
                           key={fish.id}
                           className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
