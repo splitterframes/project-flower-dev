@@ -75,6 +75,166 @@ interface UserSeed {
   quantity: number;
 }
 
+const FIELD_COUNT = 50;
+
+interface PlantedFieldSnapshot {
+  fieldIndex: number;
+  seedRarity: string;
+  plantedAt: string;
+  isGrown?: boolean;
+  flowerId?: number;
+  flowerName?: string;
+  flowerImageUrl?: string;
+  seedName?: string;
+}
+
+interface SunSpawnSnapshot {
+  id: number;
+  fieldIndex: number;
+  spawnedAt: string;
+  expiresAt: string;
+  sunAmount: number;
+  isActive: boolean;
+}
+
+interface GardenSnapshotResponse {
+  unlockedFields?: Array<{ fieldIndex: number }>;
+  plantedFields?: PlantedFieldSnapshot[];
+  fieldButterflies?: FieldButterfly[];
+  sunSpawns?: SunSpawnSnapshot[];
+  placedBouquets?: Array<PlacedBouquet & { bouquetName?: string; bouquetRarity?: string }>;
+}
+
+const createEmptyGardenField = (id: number): GardenField => ({
+  id,
+  isUnlocked: false,
+  hasPlant: false,
+  plantType: undefined,
+  isGrowing: false,
+  plantedAt: undefined,
+  growthTimeSeconds: undefined,
+  seedRarity: undefined,
+  flowerId: undefined,
+  flowerName: undefined,
+  flowerImageUrl: undefined,
+  hasBouquet: false,
+  bouquetId: undefined,
+  bouquetName: undefined,
+  bouquetRarity: undefined,
+  bouquetPlacedAt: undefined,
+  bouquetExpiresAt: undefined,
+  hasButterfly: false,
+  butterflyId: undefined,
+  butterflyName: undefined,
+  butterflyImageUrl: undefined,
+  butterflyRarity: undefined,
+  hasSunSpawn: false,
+  sunSpawnAmount: undefined,
+  sunSpawnExpiresAt: undefined,
+});
+
+const buildGardenFieldsFromSnapshot = (
+  previousFields: GardenField[],
+  snapshot: GardenSnapshotResponse,
+  referenceTime: Date
+): GardenField[] => {
+  const nowMs = referenceTime.getTime();
+
+  const baseFields = Array.from({ length: FIELD_COUNT }, (_, index) => {
+    const previous = previousFields[index];
+    return {
+      ...createEmptyGardenField(index + 1),
+      ...(previous ? { isUnlocked: previous.isUnlocked } : {}),
+    } satisfies GardenField;
+  });
+
+  if (snapshot.unlockedFields) {
+    const unlockedSet = new Set(snapshot.unlockedFields.map((field) => field.fieldIndex));
+    baseFields.forEach((field, index) => {
+      field.isUnlocked = unlockedSet.has(index);
+    });
+  }
+
+  const plantedMap = new Map(
+    (snapshot.plantedFields ?? []).map((planted) => [planted.fieldIndex, planted])
+  );
+  baseFields.forEach((field, index) => {
+    const planted = plantedMap.get(index);
+    if (!planted) {
+      return;
+    }
+
+    const plantedAt = new Date(planted.plantedAt);
+    const growthTimeSeconds = getGrowthTime(planted.seedRarity as RarityTier);
+    const elapsedSeconds = (nowMs - plantedAt.getTime()) / 1000;
+    const isGrown = !!planted.isGrown || elapsedSeconds >= growthTimeSeconds;
+
+    field.hasPlant = true;
+    field.isGrowing = !isGrown;
+    field.plantType = planted.seedName;
+    field.plantedAt = plantedAt;
+    field.growthTimeSeconds = growthTimeSeconds;
+    field.seedRarity = planted.seedRarity;
+    field.flowerId = planted.flowerId;
+    field.flowerName = planted.flowerName;
+    field.flowerImageUrl = planted.flowerImageUrl;
+  });
+
+  const bouquetMap = new Map(
+    (snapshot.placedBouquets ?? []).map((bouquet) => [bouquet.fieldIndex, bouquet])
+  );
+  baseFields.forEach((field, index) => {
+    const bouquet = bouquetMap.get(index);
+    if (!bouquet) {
+      return;
+    }
+
+    field.hasBouquet = true;
+    field.bouquetId = bouquet.bouquetId;
+    field.bouquetName = (bouquet as any).bouquetName ?? field.bouquetName;
+    field.bouquetRarity = (bouquet as any).bouquetRarity ?? field.bouquetRarity;
+    field.bouquetPlacedAt = bouquet.placedAt ? new Date(bouquet.placedAt) : undefined;
+    field.bouquetExpiresAt = bouquet.expiresAt ? new Date(bouquet.expiresAt) : undefined;
+  });
+
+  const butterflyMap = new Map(
+    (snapshot.fieldButterflies ?? []).map((butterfly) => [butterfly.fieldIndex, butterfly])
+  );
+  baseFields.forEach((field, index) => {
+    const butterfly = butterflyMap.get(index);
+    if (!butterfly) {
+      return;
+    }
+
+    field.hasButterfly = true;
+    field.butterflyId = butterfly.butterflyId;
+    field.butterflyName = butterfly.butterflyName;
+    field.butterflyImageUrl = butterfly.butterflyImageUrl;
+    field.butterflyRarity = butterfly.butterflyRarity;
+  });
+
+  const activeSunSpawns = (snapshot.sunSpawns ?? []).filter((spawn) => {
+    if (!spawn.isActive) {
+      return false;
+    }
+    const expiresAt = new Date(spawn.expiresAt);
+    return expiresAt.getTime() > nowMs;
+  });
+  const sunSpawnMap = new Map(activeSunSpawns.map((spawn) => [spawn.fieldIndex, spawn]));
+  baseFields.forEach((field, index) => {
+    const spawn = sunSpawnMap.get(index);
+    if (!spawn) {
+      return;
+    }
+
+    field.hasSunSpawn = true;
+    field.sunSpawnAmount = spawn.sunAmount;
+    field.sunSpawnExpiresAt = new Date(spawn.expiresAt);
+  });
+
+  return baseFields;
+};
+
 // Calculate background position for panoramic garden image
 // 50 fields in 10x5 grid from one 2:1 ratio image (Gardenview.png)
 const getBackgroundPosition = (fieldIndex: number) => {
@@ -100,7 +260,7 @@ export const GardenView: React.FC = () => {
 
   // Initialize garden fields (will be populated from backend)
   const [gardenFields, setGardenFields] = useState<GardenField[]>(() => {
-    return Array.from({ length: 50 }, (_, i) => ({
+    return Array.from({ length: FIELD_COUNT }, (_, i) => ({
       id: i + 1,
       isUnlocked: false, // Will be loaded from backend
       hasPlant: false,
@@ -202,161 +362,58 @@ export const GardenView: React.FC = () => {
 
   const fetchGardenSnapshot = async (options: { fresh?: boolean } = {}) => {
     if (!user) return;
+
+    const shouldShowLoader = !!options.fresh;
+
     try {
-      const query = options.fresh ? '?fresh=1' : '';
-      const response = await fetch(`/api/user/${user.id}/garden-state${query}`);
-      if (response.ok) {
-        const data = await response.json();
-
-        const unlockedIndices = new Set((data.unlockedFields || []).map((field: any) => field.fieldIndex));
-        setGardenFields(prev => prev.map(field => {
-          const fieldIndex = field.id - 1;
-          const isUnlocked = unlockedIndices.has(fieldIndex);
-          return field.isUnlocked === isUnlocked ? field : { ...field, isUnlocked };
-        }));
-
-        if (Array.isArray(data.plantedFields)) {
-          updateGardenWithPlantedFields(data.plantedFields);
-        }
-
-        if (Array.isArray(data.fieldButterflies)) {
-          setFieldButterflies(data.fieldButterflies);
-          updateGardenWithFieldButterflies(data.fieldButterflies);
-        }
-
-        if (Array.isArray(data.sunSpawns)) {
-          setSunSpawns(data.sunSpawns);
-          updateGardenWithSunSpawns(data.sunSpawns);
-        }
-
-        if (Array.isArray(data.placedBouquets)) {
-          setPlacedBouquets(data.placedBouquets);
-          updateGardenWithPlacedBouquets(data.placedBouquets);
-        }
+      if (shouldShowLoader) {
+        setLoading(true);
       }
+      const query = options.fresh ? "?fresh=1" : "";
+      const response = await fetch(`/api/user/${user.id}/garden-state${query}`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data: GardenSnapshotResponse = await response.json();
+      const referenceTime = new Date();
+
+      setGardenFields((previousFields) =>
+        buildGardenFieldsFromSnapshot(previousFields, data, referenceTime)
+      );
+
+      setFieldButterflies(data.fieldButterflies ?? []);
+      setPlacedBouquets(data.placedBouquets ?? []);
+      setSunSpawns(data.sunSpawns ?? []);
+
+      const activeSunIndices = new Set(
+        (data.sunSpawns ?? [])
+          .filter((spawn) => spawn.isActive && new Date(spawn.expiresAt) > referenceTime)
+          .map((spawn) => spawn.fieldIndex)
+      );
+
+      setCollectedSuns((prev) => {
+        if (prev.size === 0) {
+          return prev;
+        }
+        const next = new Set(prev);
+        Array.from(next).forEach((index) => {
+          if (!activeSunIndices.has(index)) {
+            next.delete(index);
+          }
+        });
+        return next;
+      });
     } catch (error) {
-      console.error('Failed to fetch garden snapshot:', error);
+      console.error("Failed to fetch garden snapshot:", error);
+    } finally {
+      if (shouldShowLoader) {
+        setLoading(false);
+      }
     }
   };
 
-  const updateGardenWithPlacedBouquets = (placedBouquets: PlacedBouquet[]) => {
-    console.log('Updating garden with placed bouquets:', placedBouquets);
-    setGardenFields(prev => prev.map(field => {
-      const placedBouquet = placedBouquets.find(pb => pb.fieldIndex === field.id - 1);
-      if (placedBouquet) {
-        return {
-          ...field,
-          hasBouquet: true,
-          bouquetId: placedBouquet.bouquetId,
-          bouquetName: (placedBouquet as any).bouquetName || undefined,
-          bouquetRarity: (placedBouquet as any).bouquetRarity || "common",
-          bouquetPlacedAt: new Date(placedBouquet.placedAt),
-          bouquetExpiresAt: new Date(placedBouquet.expiresAt)
-        };
-      } else {
-        return {
-          ...field,
-          hasBouquet: false,
-          bouquetId: undefined,
-          bouquetName: undefined,
-          bouquetRarity: undefined,
-          bouquetPlacedAt: undefined,
-          bouquetExpiresAt: undefined
-        };
-      }
-    }));
-  };
-
-  const updateGardenWithFieldButterflies = (butterflies: FieldButterfly[]) => {
-    console.log('Updating garden with field butterflies:', butterflies);
-    setGardenFields(prev => prev.map(field => {
-      const butterfly = butterflies.find(bf => bf.fieldIndex === field.id - 1);
-      if (butterfly) {
-        return {
-          ...field,
-          hasButterfly: true,
-          butterflyId: butterfly.butterflyId,
-          butterflyName: butterfly.butterflyName,
-          butterflyImageUrl: butterfly.butterflyImageUrl,
-          butterflyRarity: butterfly.butterflyRarity
-        };
-      } else {
-        return {
-          ...field,
-          hasButterfly: false,
-          butterflyId: undefined,
-          butterflyName: undefined,
-          butterflyImageUrl: undefined,
-          butterflyRarity: undefined
-        };
-      }
-    }));
-  };
-
-  const updateGardenWithSunSpawns = (spawns: any[]) => {
-    console.log('Updating garden with sun spawns:', spawns);
-    setGardenFields(prev => prev.map(field => {
-      const sunSpawn = spawns.find(spawn => spawn.fieldIndex === field.id - 1 && spawn.isActive);
-      if (sunSpawn && new Date(sunSpawn.expiresAt) > new Date()) {
-        return {
-          ...field,
-          hasSunSpawn: true,
-          sunSpawnAmount: sunSpawn.sunAmount,
-          sunSpawnExpiresAt: new Date(sunSpawn.expiresAt)
-        };
-      } else {
-        return {
-          ...field,
-          hasSunSpawn: false,
-          sunSpawnAmount: undefined,
-          sunSpawnExpiresAt: undefined
-        };
-      }
-    }));
-  };
-
-  const updateGardenWithPlantedFields = (plantedFields: any[]) => {
-    console.log('Updating garden with planted fields:', plantedFields);
-    setGardenFields(prev => prev.map(field => {
-      const plantedField = plantedFields.find(pf => pf.fieldIndex === field.id - 1);
-      if (plantedField) {
-        const plantedAt = new Date(plantedField.plantedAt);
-        const growthTimeSeconds = getGrowthTime(plantedField.seedRarity as RarityTier);
-        const isGrown = plantedField.isGrown || 
-          (currentTime.getTime() - plantedAt.getTime()) / 1000 >= growthTimeSeconds;
-        
-        return {
-          ...field,
-          hasPlant: true,
-          isGrowing: !isGrown,
-          plantedAt,
-          growthTimeSeconds,
-          seedRarity: plantedField.seedRarity,
-          flowerId: plantedField.flowerId,
-          flowerName: plantedField.flowerName,
-          flowerImageUrl: plantedField.flowerImageUrl
-        };
-      }
-      // Field was harvested or never had a plant - clear only plant data
-      if (field.hasPlant) {
-        console.log(`Clearing field ${field.id} - was harvested`);
-      }
-      return {
-        ...field,
-        hasPlant: false,
-        isGrowing: false,
-        plantedAt: undefined,
-        growthTimeSeconds: undefined,
-        seedRarity: undefined,
-        flowerId: undefined,
-        flowerName: undefined,
-        flowerImageUrl: undefined
-        // Keep bouquet and butterfly data intact
-      };
-    }));
-    
-    console.log('New garden state:', gardenFields.filter(f => f.hasPlant).map(f => `Field ${f.id}: ${f.flowerName}`));
-  };
 
   if (!user) {
     return (
@@ -797,8 +854,8 @@ export const GardenView: React.FC = () => {
           'X-User-Id': user.id.toString()
         },
         body: JSON.stringify({
-          fieldIndex: selectedFieldIndex - 1, // Convert 1-based to 0-based index
-          butterflyId: butterflyId
+          fieldIndex: selectedFieldIndex,
+          butterflyId
         })
       });
 
@@ -854,10 +911,13 @@ export const GardenView: React.FC = () => {
               <span className="text-xs font-semibold text-green-300">Felder</span>
             </div>
             <div className="text-lg font-bold text-green-400 mb-1">
-              {gardenFields.filter(f => f.isUnlocked).length}/50
+              {gardenFields.filter(f => f.isUnlocked).length}/{FIELD_COUNT}
             </div>
             <div className="w-full bg-slate-700 rounded-full h-1">
-              <div className="bg-green-500 h-1 rounded-full" style={{width: `${(gardenFields.filter(f => f.isUnlocked).length / 50) * 100}%`}}></div>
+              <div
+                className="bg-green-500 h-1 rounded-full"
+                style={{ width: `${(gardenFields.filter((f) => f.isUnlocked).length / FIELD_COUNT) * 100}%` }}
+              ></div>
             </div>
           </div>
 

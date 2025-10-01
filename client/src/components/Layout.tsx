@@ -53,7 +53,7 @@ interface Loot {
   amount: number;
 }
 
-const APP_VERSION = "0.80";
+const APP_VERSION = "0.801";
 
 // Balloon component
 const BalloonComponent: React.FC<{ 
