@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { RarityImage } from "./RarityImage";
 import { Trophy, Plus, DollarSign, Clock, Star, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { HelpButton } from './HelpButton';
 import { getRarityColor, getRarityDisplayName, type RarityTier } from "@shared/rarity";
-import type { ExhibitionFrame, ExhibitionButterfly, UserButterfly, UserVipButterfly } from "@shared/schema";
+import type { ExhibitionFrame, ExhibitionButterfly, ExhibitionVipButterfly, UserButterfly, UserVipButterfly } from "@shared/schema";
 
 
 interface FrameLike {
@@ -19,17 +19,40 @@ interface FrameLike {
   isLiked: boolean;
 }
 
+type SellStatus = {
+  canSell: boolean;
+  timeRemainingMs: number;
+  likesCount?: number;
+};
+
+type SellStatusMap = Record<string, SellStatus>;
+
+type ModalButterfly =
+  | (ExhibitionButterfly & { isVip: false; butterflyRarity: RarityTier })
+  | (ExhibitionVipButterfly & {
+      isVip: true;
+      butterflyId: number;
+      butterflyName: string;
+      butterflyRarity: "vip";
+      butterflyImageUrl: string;
+    });
+
+const BASE_SELL_DURATION_MS = 72 * 60 * 60 * 1000;
+
+const buildStatusKey = (type: "normal" | "vip", id: number) => `${type}-${id}`;
+
 export const ExhibitionView: React.FC = () => {
   const { user } = useAuth();
   const { credits, setCredits } = useCredits();
   const [frames, setFrames] = useState<ExhibitionFrame[]>([]);
   const [exhibitionButterflies, setExhibitionButterflies] = useState<ExhibitionButterfly[]>([]);
-  const [exhibitionVipButterflies, setExhibitionVipButterflies] = useState<any[]>([]);
+  const [exhibitionVipButterflies, setExhibitionVipButterflies] = useState<ExhibitionVipButterfly[]>([]);
   const [userButterflies, setUserButterflies] = useState<UserButterfly[]>([]);
   const [userVipButterflies, setUserVipButterflies] = useState<UserVipButterfly[]>([]);
   const [frameLikes, setFrameLikes] = useState<FrameLike[]>([]);
-  const [sellStatuses, setSellStatuses] = useState<{[key: string]: {canSell: boolean, timeRemainingMs: number}}>({});
-  const [selectedButterfly, setSelectedButterfly] = useState<ExhibitionButterfly | null>(null);
+  const [sellStatuses, setSellStatuses] = useState<SellStatusMap>({});
+  const [selectedButterfly, setSelectedButterfly] = useState<ModalButterfly | null>(null);
+  const [selectedSellStatus, setSelectedSellStatus] = useState<SellStatus | null>(null);
   const [showButterflyDialog, setShowButterflyDialog] = useState(false);
   const [currentButterflyIndex, setCurrentButterflyIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,8 +82,8 @@ export const ExhibitionView: React.FC = () => {
     
     try {
       // OPTIMIZED: Single batch API call instead of N individual calls
-      const butterflyIds = exhibitionButterflies.map(b => b.id);
-      const vipButterflyIds = exhibitionVipButterflies.map(b => b.id);
+  const butterflyIds = exhibitionButterflies.map((b) => b.id);
+  const vipButterflyIds = exhibitionVipButterflies.map((b) => b.id);
       
       if (butterflyIds.length === 0 && vipButterflyIds.length === 0) {
         setSellStatuses({});
@@ -86,25 +109,25 @@ export const ExhibitionView: React.FC = () => {
         console.error('Batch sell-status failed, using fallback calculations');
         
         // Fallback: Calculate locally for all butterflies
-        const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+  const statuses: SellStatusMap = {};
         
         // Normal butterflies fallback
         exhibitionButterflies.forEach((butterfly) => {
           const placedTime = new Date(butterfly.placedAt).getTime();
-          const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-          statuses[`normal-${butterfly.id}`] = {
+          const timeRemainingMs = Math.max(0, placedTime + BASE_SELL_DURATION_MS - Date.now());
+          statuses[buildStatusKey("normal", butterfly.id)] = {
             canSell: timeRemainingMs <= 0,
-            timeRemainingMs: timeRemainingMs
+            timeRemainingMs,
           };
         });
         
         // VIP butterflies fallback
         exhibitionVipButterflies.forEach((vipButterfly) => {
           const placedTime = new Date(vipButterfly.placedAt).getTime();
-          const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-          statuses[`vip-${vipButterfly.id}`] = {
+          const timeRemainingMs = Math.max(0, placedTime + BASE_SELL_DURATION_MS - Date.now());
+          statuses[buildStatusKey("vip", vipButterfly.id)] = {
             canSell: timeRemainingMs <= 0,
-            timeRemainingMs: timeRemainingMs
+            timeRemainingMs,
           };
         });
         
@@ -114,23 +137,23 @@ export const ExhibitionView: React.FC = () => {
       console.error('Failed to load sell statuses:', error);
       
       // Emergency fallback: Calculate locally for all butterflies
-      const statuses: {[key: string]: {canSell: boolean, timeRemainingMs: number}} = {};
+  const statuses: SellStatusMap = {};
       
       exhibitionButterflies.forEach((butterfly) => {
         const placedTime = new Date(butterfly.placedAt).getTime();
-        const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-        statuses[`normal-${butterfly.id}`] = {
+        const timeRemainingMs = Math.max(0, placedTime + BASE_SELL_DURATION_MS - Date.now());
+        statuses[buildStatusKey("normal", butterfly.id)] = {
           canSell: timeRemainingMs <= 0,
-          timeRemainingMs: timeRemainingMs
+          timeRemainingMs,
         };
       });
       
       exhibitionVipButterflies.forEach((vipButterfly) => {
         const placedTime = new Date(vipButterfly.placedAt).getTime();
-        const timeRemainingMs = Math.max(0, placedTime + (72 * 60 * 60 * 1000) - Date.now());
-        statuses[`vip-${vipButterfly.id}`] = {
+        const timeRemainingMs = Math.max(0, placedTime + BASE_SELL_DURATION_MS - Date.now());
+        statuses[buildStatusKey("vip", vipButterfly.id)] = {
           canSell: timeRemainingMs <= 0,
-          timeRemainingMs: timeRemainingMs
+          timeRemainingMs,
         };
       });
       
@@ -222,8 +245,8 @@ export const ExhibitionView: React.FC = () => {
     try {
       const response = await fetch(`/api/user/${user.id}/butterflies`);
       if (response.ok) {
-        const data = await response.json();
-        setUserButterflies(data.butterflies || []);
+  const data = await response.json();
+  setUserButterflies(data.butterflies || []);
       }
     } catch (error) {
       console.error('Failed to fetch user butterflies:', error);
@@ -412,84 +435,89 @@ export const ExhibitionView: React.FC = () => {
 
   // Navigation helpers
   const getAllButterflies = () => {
-    // Combine normal and VIP butterflies for navigation
-    const normalButterflies = exhibitionButterflies.map(b => ({ ...b, isVip: false }));
-    const vipButterflies = exhibitionVipButterflies.map(vip => ({ 
-      id: vip.id,
-      userId: vip.userId,
-      frameId: vip.frameId,
-      slotIndex: vip.slotIndex,
+    const normalButterflies: ModalButterfly[] = exhibitionButterflies.map((b) => ({
+      ...b,
+      isVip: false,
+      butterflyRarity: b.butterflyRarity as RarityTier,
+    }));
+
+    const vipButterflies: ModalButterfly[] = exhibitionVipButterflies.map((vip) => ({
+      ...vip,
       butterflyId: vip.vipButterflyId,
       butterflyName: vip.vipButterflyName,
-      butterflyRarity: 'vip' as const,
+      butterflyRarity: "vip",
       butterflyImageUrl: vip.vipButterflyImageUrl,
-      placedAt: vip.placedAt,
-      createdAt: vip.createdAt,
-      isVip: true
+      isVip: true,
     }));
+
     return [...normalButterflies, ...vipButterflies];
   };
 
+  const resolveSellStatus = (butterfly: ModalButterfly | null): SellStatus | null => {
+    if (!butterfly) return null;
+    const key = buildStatusKey(butterfly.isVip ? "vip" : "normal", butterfly.id);
+    return sellStatuses[key] ?? null;
+  };
+
+  const openButterflyModal = (butterfly: ModalButterfly, index: number) => {
+    setCurrentButterflyIndex(index);
+    setSelectedButterfly(butterfly);
+    setSelectedSellStatus(resolveSellStatus(butterfly));
+    setShowButterflyDialog(true);
+  };
+
   const navigateToNextButterfly = () => {
-    const allButterflies = getAllButterflies();
+  const allButterflies = getAllButterflies();
     if (allButterflies.length <= 1) return;
     
     const nextIndex = (currentButterflyIndex + 1) % allButterflies.length;
     const nextButterfly = allButterflies[nextIndex];
-    setCurrentButterflyIndex(nextIndex);
-    setSelectedButterfly(nextButterfly);
+    openButterflyModal(nextButterfly, nextIndex);
   };
 
   const navigateToPreviousButterfly = () => {
-    const allButterflies = getAllButterflies();
+  const allButterflies = getAllButterflies();
     if (allButterflies.length <= 1) return;
     
     const prevIndex = currentButterflyIndex === 0 ? allButterflies.length - 1 : currentButterflyIndex - 1;
     const prevButterfly = allButterflies[prevIndex];
-    setCurrentButterflyIndex(prevIndex);
-    setSelectedButterfly(prevButterfly);
+    openButterflyModal(prevButterfly, prevIndex);
   };
 
   const handleButterflyClick = (butterfly: ExhibitionButterfly) => {
-    // Add frameId to the butterfly data for the modal
-    const butterflyWithFrame = {
+    const butterflyWithFrame: ModalButterfly = {
       ...butterfly,
-      frameId: butterfly.frameId
+      isVip: false,
+      butterflyRarity: butterfly.butterflyRarity as RarityTier,
     };
-    
-    // Find the index of this butterfly in the combined list
+
     const allButterflies = getAllButterflies();
-    const butterflyIndex = allButterflies.findIndex(b => b.id === butterfly.id && !b.isVip);
-    
-    setCurrentButterflyIndex(butterflyIndex >= 0 ? butterflyIndex : 0);
-    setSelectedButterfly(butterflyWithFrame);
-    setShowButterflyDialog(true);
+    const butterflyIndex = allButterflies.findIndex((b) => b.id === butterfly.id && b.isVip !== true);
+    openButterflyModal(butterflyWithFrame, butterflyIndex >= 0 ? butterflyIndex : 0);
   };
 
-  const handleVipButterflyClick = (vipButterfly: any) => {
-    // Convert VIP butterfly to normal butterfly format for the modal
-    const butterflyForModal = {
-      id: vipButterfly.id,
-      userId: vipButterfly.userId,
-      frameId: vipButterfly.frameId,
-      slotIndex: vipButterfly.slotIndex,
+  const handleVipButterflyClick = (vipButterfly: ExhibitionVipButterfly) => {
+    const butterflyForModal: ModalButterfly = {
+      ...vipButterfly,
       butterflyId: vipButterfly.vipButterflyId,
       butterflyName: vipButterfly.vipButterflyName,
-      butterflyRarity: 'vip',
+      butterflyRarity: "vip",
       butterflyImageUrl: vipButterfly.vipButterflyImageUrl,
-      placedAt: vipButterfly.placedAt,
-      createdAt: vipButterfly.createdAt,
-      isVip: true
+      isVip: true,
     };
-    
-    // Find the index of this VIP butterfly in the combined list
+
     const allButterflies = getAllButterflies();
-    const butterflyIndex = allButterflies.findIndex(b => b.id === vipButterfly.id && b.isVip);
-    
-    setCurrentButterflyIndex(butterflyIndex >= 0 ? butterflyIndex : 0);
-    setSelectedButterfly(butterflyForModal);
-    setShowButterflyDialog(true);
+    const butterflyIndex = allButterflies.findIndex((b) => b.id === vipButterfly.id && b.isVip === true);
+    openButterflyModal(butterflyForModal, butterflyIndex >= 0 ? butterflyIndex : 0);
   };
+
+  useEffect(() => {
+    if (!selectedButterfly) {
+      setSelectedSellStatus(null);
+      return;
+    }
+    setSelectedSellStatus(resolveSellStatus(selectedButterfly));
+  }, [selectedButterfly, sellStatuses]);
 
   const handleEmptySlotClick = (frameId: number, slotIndex: number) => {
     setSelectedSlot({ frameId, slotIndex });
@@ -584,9 +612,47 @@ export const ExhibitionView: React.FC = () => {
     setIsLoading(false);
   };
 
-  const renderFrame = (frame: ExhibitionFrame, index: number) => {
-    const frameButterflies = exhibitionButterflies.filter(b => b.frameId === frame.id);
-    const frameVipButterflies = exhibitionVipButterflies.filter(b => b.frameId === frame.id);
+  const currentFrame = frames[currentFrameIndex];
+
+  const currentFrameData = useMemo(() => {
+    if (!currentFrame) {
+      return {
+        frameButterflies: [] as ExhibitionButterfly[],
+        frameVipButterflies: [] as ExhibitionVipButterfly[],
+        normalStatusBySlot: new Map<number, SellStatus>(),
+        vipStatusBySlot: new Map<number, SellStatus>(),
+      };
+    }
+
+    const frameButterflies = exhibitionButterflies.filter((b) => b.frameId === currentFrame.id);
+    const frameVipButterflies = exhibitionVipButterflies.filter((b) => b.frameId === currentFrame.id);
+
+    const normalStatusBySlot = new Map<number, SellStatus>();
+    frameButterflies.forEach((butterfly) => {
+      const status = sellStatuses[buildStatusKey("normal", butterfly.id)];
+      if (status) {
+        normalStatusBySlot.set(butterfly.slotIndex, status);
+      }
+    });
+
+    const vipStatusBySlot = new Map<number, SellStatus>();
+    frameVipButterflies.forEach((vip) => {
+      const status = sellStatuses[buildStatusKey("vip", vip.id)];
+      if (status) {
+        vipStatusBySlot.set(vip.slotIndex, status);
+      }
+    });
+
+    return {
+      frameButterflies,
+      frameVipButterflies,
+      normalStatusBySlot,
+      vipStatusBySlot,
+    };
+  }, [currentFrame, exhibitionButterflies, exhibitionVipButterflies, sellStatuses]);
+
+  const renderFrame = (frame: ExhibitionFrame, frameData: typeof currentFrameData) => {
+    const { frameButterflies, frameVipButterflies, normalStatusBySlot, vipStatusBySlot } = frameData;
     const totalButterflies = frameButterflies.length + frameVipButterflies.length;
     const isFullFrame = totalButterflies === 10;
     const frameLike = frameLikes.find(fl => fl.frameId === frame.id);
@@ -666,9 +732,9 @@ export const ExhibitionView: React.FC = () => {
           <div className="bg-gradient-to-br from-amber-700 to-amber-900 p-8 rounded-lg border-4 border-amber-600 shadow-inner">
             <div className="bg-slate-100 p-7 rounded grid grid-cols-3 grid-rows-2 gap-3 h-[800px] place-items-center">
               {Array.from({ length: 6 }, (_, slotIndex) => {
-                const vipButterfly = frameVipButterflies.find(b => b.slotIndex === slotIndex);
+                const vipButterfly = frameVipButterflies.find((b) => b.slotIndex === slotIndex);
                 if (vipButterfly) {
-                  const vipStatus = sellStatuses[`vip-${vipButterfly.id}`];
+                  const vipStatus = vipStatusBySlot.get(slotIndex);
                   return (
                     <div
                       key={slotIndex}
@@ -710,9 +776,9 @@ export const ExhibitionView: React.FC = () => {
                   );
                 }
 
-                const normalButterfly = frameButterflies.find(b => b.slotIndex === slotIndex);
+                const normalButterfly = frameButterflies.find((b) => b.slotIndex === slotIndex);
                 if (normalButterfly) {
-                  const normalStatus = sellStatuses[`normal-${normalButterfly.id}`];
+                  const normalStatus = normalStatusBySlot.get(slotIndex);
                   return (
                     <div
                       key={slotIndex}
@@ -830,7 +896,7 @@ export const ExhibitionView: React.FC = () => {
       {/* Frame Display */}
       {frames.length > 0 && (
         <div className="max-w-7xl mx-auto">
-          {frames[currentFrameIndex] && renderFrame(frames[currentFrameIndex], currentFrameIndex)}
+          {currentFrame && renderFrame(currentFrame, currentFrameData)}
         </div>
       )}
       
@@ -870,16 +936,22 @@ export const ExhibitionView: React.FC = () => {
           userId: selectedButterfly.userId
         } : null}
         isOpen={showButterflyDialog}
-        onClose={() => setShowButterflyDialog(false)}
+        onClose={() => {
+          setShowButterflyDialog(false);
+          setSelectedButterfly(null);
+          setSelectedSellStatus(null);
+        }}
         onSold={() => {
           fetchExhibitionData();
           fetchUserButterflies();
           fetchUserVipButterflies();
+          loadSellStatuses();
         }}
         currentIndex={currentButterflyIndex}
         totalCount={getAllButterflies().length}
         onNext={navigateToNextButterfly}
         onPrevious={navigateToPreviousButterfly}
+        initialSellStatus={selectedSellStatus}
       />
 
       {/* Butterfly Inventory Dialog */}
