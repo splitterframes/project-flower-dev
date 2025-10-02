@@ -572,7 +572,15 @@ export const TeichView: React.FC = () => {
 
       setGardenFields(prev => prev.map((field) => {
         const fieldIndex = field.id - 1;
-        const pondProgressValue = pondProgress[fieldIndex];
+        const rawPondProgress = pondProgress[fieldIndex];
+        const pondProgressValue = typeof rawPondProgress === 'number'
+          ? rawPondProgress
+          : typeof rawPondProgress === 'string'
+            ? ((): number | undefined => {
+                const parsed = Number(rawPondProgress);
+                return Number.isNaN(parsed) ? undefined : parsed;
+              })()
+            : undefined;
         const pondFish = field.isPond ? fieldFishByIndex.get(fieldIndex) : undefined;
         const caterpillar = !field.isPond ? (fieldCaterpillarsByIndex.get(fieldIndex)?.[0] ?? null) : null;
 
@@ -612,7 +620,9 @@ export const TeichView: React.FC = () => {
           hasSunSpawn: false,
           sunSpawnAmount: undefined,
           sunSpawnExpiresAt: undefined,
-          feedingProgress: field.isPond && pondProgressValue > 0 ? pondProgressValue : undefined
+          feedingProgress: field.isPond && typeof pondProgressValue === 'number'
+            ? pondProgressValue
+            : undefined
         };
       }));
 
@@ -919,10 +929,12 @@ export const TeichView: React.FC = () => {
   const [isPlacingFlower, setIsPlacingFlower] = useState(false);
 
   const placeFlowerOnField = async (flowerId: number) => {
-    if (!user || selectedField === null || isPlacingFlower) return;
-    
+    const fieldId = selectedField;
+    if (!user || fieldId === null || isPlacingFlower) return;
+    const fieldIndex = fieldId - 1;
+
     setIsPlacingFlower(true);
-    console.log("🌸 PLACEFLOWER: Starting with flowerId:", flowerId, "selectedField:", selectedField);
+    console.log("🌸 PLACEFLOWER: Starting with flowerId:", flowerId, "selectedField:", fieldId);
 
     const flower = userFlowers.find(f => f.id === flowerId);
     if (!flower) {
@@ -939,11 +951,11 @@ export const TeichView: React.FC = () => {
     }
 
     // Check if field already has a placed flower (both local state and database)
-    const existingLocalFlower = placedFlowers.find(f => f.fieldId === selectedField);
-    const existingDbFlower = fieldFlowers.find(f => f.fieldIndex === selectedField - 1);
+    const existingLocalFlower = placedFlowers.find(f => f.fieldId === fieldId);
+    const existingDbFlower = fieldFlowers.find(f => f.fieldIndex === fieldIndex);
     
     if (existingLocalFlower || existingDbFlower) {
-      showNotification('Fehler', `Feld ${selectedField} ist bereits belegt. Wählen Sie ein leeres Grasfeld.`, 'info');
+      showNotification('Fehler', `Feld ${fieldId} ist bereits belegt. Wählen Sie ein leeres Grasfeld.`, 'info');
       setIsPlacingFlower(false);
       return;
     }
@@ -959,14 +971,15 @@ export const TeichView: React.FC = () => {
           'x-user-id': user.id.toString()
         },
         body: JSON.stringify({
-          fieldIndex: selectedField - 1,
+          fieldIndex,
           flowerId: flowerId
         })
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to place flower and spawn caterpillar');
+        throw new Error(responseData?.message || 'Failed to place flower and spawn caterpillar');
       }
 
       console.log("🌸 PLACEFLOWER: Flower placed and caterpillar spawned in one step ✅");
@@ -985,9 +998,10 @@ export const TeichView: React.FC = () => {
       // 🌸 NEW: Blume wird platziert und spawnt später eine Raupe (temporary visual only)
       // Add temporary visual flower that will spawn a caterpillar
       const tempFlowerId = Date.now();
+      const spawnedCaterpillar = responseData?.caterpillar;
       setPlacedFlowers(prev => [...prev, {
         id: tempFlowerId,
-        fieldId: selectedField,
+        fieldId,
         flowerImageUrl: flower.flowerImageUrl,
         flowerName: flower.flowerName,
         flowerRarity: flower.flowerRarity as RarityTier,
@@ -1014,6 +1028,7 @@ export const TeichView: React.FC = () => {
       
       // Animate flower disappearing and spawn caterpillar after rarity-based time
       setTimeout(async () => {
+          const spawnTimestamp = new Date();
           // Phase 1: Stop shimmering, start dissolving
           setPlacedFlowers(prev => 
             prev.map(f => 
@@ -1022,6 +1037,42 @@ export const TeichView: React.FC = () => {
                 : f
             )
           );
+
+          if (spawnedCaterpillar) {
+            const fallbackRarity = typeof flower.flowerRarity === 'string' ? flower.flowerRarity : 'common';
+            setGardenFields(prev => prev.map(field => {
+              if (field.id !== fieldId) {
+                return field;
+              }
+              return {
+                ...field,
+                hasCaterpillar: true,
+                caterpillarId: spawnedCaterpillar.id,
+                caterpillarName: spawnedCaterpillar.name,
+                caterpillarImageUrl: spawnedCaterpillar.imageUrl,
+                caterpillarRarity: fallbackRarity,
+                caterpillarSpawnedAt: spawnTimestamp
+              };
+            }));
+
+            setFieldCaterpillars(prev => {
+              const withoutField = prev.filter(c => c.fieldIndex !== fieldIndex);
+              return [
+                ...withoutField,
+                {
+                  id: spawnedCaterpillar.id,
+                  userId: user.id,
+                  fieldIndex,
+                  caterpillarId: spawnedCaterpillar.id,
+                  caterpillarName: spawnedCaterpillar.name,
+                  caterpillarImageUrl: spawnedCaterpillar.imageUrl,
+                  caterpillarRarity: fallbackRarity,
+                  spawnedAt: spawnTimestamp.toISOString(),
+                  __temp: true
+                }
+              ];
+            });
+          }
           
           // Phase 2: Remove flower completely after dissolve animation
           setTimeout(() => {
@@ -1029,7 +1080,7 @@ export const TeichView: React.FC = () => {
           }, 1500); // 1.5 seconds for dissolve animation
 
           // ✅ REMOVED: No separate caterpillar spawning needed - done in single API call above
-          console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${selectedField}!`);
+          console.log(`🐛 Caterpillar spawned from ${flower.flowerName} on field ${fieldId}!`);
           
           // Refresh data to show spawned caterpillar
           fetchTeichData({ forceFresh: true });
