@@ -9,6 +9,13 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabaseKeepAlive } from "./dbKeepAlive";
 import { recordApiPerformance } from "./performanceMonitor";
 
+// 🚀 Phase 3 Optimizations
+import { requestCoalescingMiddleware } from "./requestCoalescing";
+import { smartCache, cacheInvalidationMiddleware, cacheStatsEndpoint } from "./smartQueryCache";
+import { createOptimizedCompression, compressionStatsEndpoint } from "./compressionOptimizer";
+import { connectionHealth, healthCheckEndpoint, healthHeadersMiddleware } from "./connectionHealth";
+import { getQueryAnalysisEndpoint, analyzeQueryEndpoint } from "./queryAnalyzer";
+
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
   const parsed = parseInt(value, 10);
@@ -56,22 +63,21 @@ export const authLimiter: RequestHandler = disableAuthRateLimit
   ? (_req, _res, next) => next()
   : baseAuthLimiter;
 
-// Performance middleware - Enhanced compression
-app.use(compression({
-  level: 6,           // Good compression vs CPU balance
-  threshold: 1024,    // Compress responses > 1KB
-  filter: (req: Request, res: Response) => {
-    // Don't compress small responses or images
-    const contentType = res.getHeader('Content-Type');
-    if (typeof contentType === 'string' && contentType.includes('image/')) return false;
-    if (Array.isArray(contentType) && contentType.some(type => type.includes('image/'))) return false;
-    return compression.filter(req, res);
-  }
-}));
+// 🚀 PERFORMANCE: Optimized compression middleware (Phase 3)
+app.use(createOptimizedCompression());
+
+// 🚀 PERFORMANCE: Request coalescing (Phase 3) - Prevents duplicate concurrent requests
+app.use(requestCoalescingMiddleware);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser()); // Enable cookie parsing for JWT authentication
+
+// 🚀 PERFORMANCE: Cache invalidation middleware (Phase 3) - Auto-invalidate on mutations
+app.use(cacheInvalidationMiddleware);
+
+// 🚀 PERFORMANCE: Health headers (Phase 3) - Add database health info to responses
+app.use(healthHeadersMiddleware);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -115,6 +121,13 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // 🚀 Phase 3: Admin & Monitoring Endpoints
+  app.get('/api/health', healthCheckEndpoint);
+  app.get('/api/admin/cache-stats', cacheStatsEndpoint);
+  app.get('/api/admin/compression-stats', compressionStatsEndpoint);
+  app.get('/api/admin/query-stats', getQueryAnalysisEndpoint);
+  app.post('/api/admin/analyze-query', analyzeQueryEndpoint);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -165,5 +178,12 @@ app.use((req, res, next) => {
       challengeManager.start();
     });
 
+    // 🚀 Phase 3: Start connection health monitoring
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_HEALTH_MONITORING === 'true') {
+      connectionHealth.startMonitoring(30000); // Check every 30 seconds
+      log('🏥 Connection health monitoring started');
+    }
+
+    log('✅ All Phase 3 optimizations active: Request Coalescing, Smart Cache, Query Analysis, Health Monitoring');
   });
 })();
