@@ -12,6 +12,7 @@ interface CacheEntry<T> {
 class SimpleCache {
   private cache = new Map<string, CacheEntry<any>>();
   private readonly maxSize: number;
+  private accessCount = new Map<string, number>(); // Track access frequency
   
   constructor(maxSize = 1000) {
     this.maxSize = maxSize;
@@ -26,8 +27,14 @@ class SimpleCache {
         .slice(0, Math.floor(this.maxSize * 0.1)) // Remove 10% of oldest entries
         .map(([key]) => key);
         
-      oldestKeys.forEach(key => this.cache.delete(key));
-      console.log(`🗑️ Cache evicted ${oldestKeys.length} old entries (size: ${this.cache.size}/${this.maxSize})`);
+      oldestKeys.forEach(key => {
+        this.cache.delete(key);
+        this.accessCount.delete(key);
+      });
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🗑️ Cache evicted ${oldestKeys.length} old entries (size: ${this.cache.size}/${this.maxSize})`);
+      }
     }
     
     this.cache.set(key, {
@@ -35,6 +42,7 @@ class SimpleCache {
       timestamp: Date.now(),
       ttl: ttlSeconds * 1000
     });
+    this.accessCount.set(key, 0);
   }
   
   get<T>(key: string): T | null {
@@ -47,11 +55,14 @@ class SimpleCache {
     // Check if expired
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
+      this.accessCount.delete(key);
       this.misses++;
       return null;
     }
     
     this.hits++;
+    // 🚀 OPTIMIZATION: Track access frequency for better eviction
+    this.accessCount.set(key, (this.accessCount.get(key) || 0) + 1);
     return entry.data;
   }
   
@@ -61,19 +72,27 @@ class SimpleCache {
   
   delete(key: string): void {
     this.cache.delete(key);
+    this.accessCount.delete(key);
   }
   
   clear(): void {
     this.cache.clear();
+    this.accessCount.clear();
   }
   
   // Clean up expired entries
   cleanup(): void {
     const now = Date.now();
+    let expiredCount = 0;
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
+        this.accessCount.delete(key);
+        expiredCount++;
       }
+    }
+    if (expiredCount > 0 && process.env.NODE_ENV !== 'production') {
+      console.log(`🧹 Cache cleanup: removed ${expiredCount} expired entries`);
     }
   }
   

@@ -39,7 +39,8 @@ class PassiveIncomeProcessor {
 
   private async processAllUsersPassiveIncome() {
     try {
-  const allUsersList = await storage.getUsersForPassiveIncome();
+      const isProduction = process.env.NODE_ENV === 'production';
+      const allUsersList = await storage.getUsersForPassiveIncome();
       const nowMs = Date.now();
       const activeThreshold = nowMs - 30 * 60 * 1000;
       const staleIncomeThreshold = nowMs - 10 * 60 * 1000;
@@ -69,31 +70,38 @@ class PassiveIncomeProcessor {
         allUsers = allUsersList;
       }
 
-      if (allUsers.length !== allUsersList.length) {
+      if (allUsers.length !== allUsersList.length && !isProduction) {
         console.log(`💰 Passive income sweep: ${allUsers.length} users selected (${allUsersList.length - allUsers.length} deferred)`);
       }
       let totalCreditsAwarded = 0;
       let usersProcessed = 0;
 
-      for (const user of allUsers) {
-        try {
-          const result = await storage.processPassiveIncome(user.id);
-          if (result.success && result.creditsEarned && result.creditsEarned > 0) {
-            totalCreditsAwarded += result.creditsEarned;
-            usersProcessed++;
+      // 🚀 OPTIMIZATION: Process users in parallel batches
+      const BATCH_SIZE = 20; // Process 20 users at a time
+      for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
+        const batch = allUsers.slice(i, i + BATCH_SIZE);
+        
+        await Promise.all(batch.map(async (user) => {
+          try {
+            const result = await storage.processPassiveIncome(user.id);
+            if (result.success && result.creditsEarned && result.creditsEarned > 0) {
+              totalCreditsAwarded += result.creditsEarned;
+              usersProcessed++;
 
-            cache.delete(CacheKeys.USER_RESOURCES(user.id));
-            cache.delete(`user:${user.id}:complete-state`);
-            cache.delete(`user:${user.id}:garden-state`);
+              // 🚀 OPTIMIZATION: Batch cache invalidation
+              cache.delete(CacheKeys.USER_RESOURCES(user.id));
+              cache.delete(`user:${user.id}:complete-state`);
+              cache.delete(`user:${user.id}:garden-state`);
+            }
+          } catch (error) {
+            console.error(`💰 Failed to process passive income for user ${user.id}:`, error);
           }
-        } catch (error) {
-          console.error(`💰 Failed to process passive income for user ${user.id}:`, error);
-        }
+        }));
       }
 
-      if (usersProcessed > 0) {
+      if (usersProcessed > 0 && !isProduction) {
         console.log(`💰 Passive income processing complete: ${totalCreditsAwarded} credits awarded to ${usersProcessed} users`);
-      } else {
+      } else if (!isProduction) {
         console.log('💰 Passive income processing complete: No credits awarded this cycle');
       }
     } catch (error) {

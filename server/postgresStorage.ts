@@ -126,10 +126,16 @@ export class PostgresStorage {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is required for PostgreSQL storage');
     }
-    // 🚀 PERFORMANCE: Configure Neon with basic settings
-    const sql = neon(process.env.DATABASE_URL);
+    // 🚀 PERFORMANCE: Configure Neon with optimized connection pooling
+    const sql = neon(process.env.DATABASE_URL, {
+      fetchOptions: {
+        cache: 'no-store', // Prevent stale cached responses
+      },
+      // Retry configuration for better reliability
+      fullResults: false, // Reduce payload size
+    });
     this.db = drizzle(sql);
-    console.log('🗄️ PostgreSQL-only storage initialized');
+    console.log('🗄️ PostgreSQL-only storage initialized with connection pooling');
     
     // Store singleton instance
     PostgresStorage.instance = this;

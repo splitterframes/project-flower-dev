@@ -52,19 +52,26 @@ export class ButterflySpawner {
 
   private async checkForButterflySpawns() {
     try {
-      console.log('🦋 Checking individual bouquet spawn times...');
+      const isProduction = process.env.NODE_ENV === 'production';
+      if (!isProduction) {
+        console.log('🦋 Checking individual bouquet spawn times...');
+      }
       
       const currentTime = new Date();
       let totalSpawns = 0;
       let totalChecked = 0;
       
+      // 🚀 OPTIMIZATION: Get bouquets ready to spawn (already filtered in DB)
       const readyBouquets = await storage.getBouquetsReadyToSpawn(currentTime);
 
       if (readyBouquets.length === 0) {
-        console.log('🦋 No bouquets ready to spawn in this cycle');
+        if (!isProduction) {
+          console.log('🦋 No bouquets ready to spawn in this cycle');
+        }
         return;
       }
 
+      // 🚀 OPTIMIZATION: Group bouquets by user to minimize DB queries
       const bouquetsByUser = new Map<number, BouquetSpawnCandidate[]>();
       for (const bouquet of readyBouquets) {
         const list = bouquetsByUser.get(bouquet.userId) ?? [];
@@ -75,19 +82,26 @@ export class ButterflySpawner {
       let blockedDueToFields = 0;
       let probabilityFailures = 0;
 
-      for (const [userId, bouquets] of bouquetsByUser.entries()) {
-        try {
-          const totalSlots = 4;
-          const existingButterflies = await storage.getFieldButterflies(userId);
-          const butterfliesPerBouquet = new Map<number, number>();
-          for (const butterfly of existingButterflies) {
-            if (typeof butterfly.bouquetId === 'number') {
-              butterfliesPerBouquet.set(
-                butterfly.bouquetId,
-                (butterfliesPerBouquet.get(butterfly.bouquetId) || 0) + 1
-              );
+      // 🚀 OPTIMIZATION: Process users in parallel batches to improve throughput
+      const userEntries = Array.from(bouquetsByUser.entries());
+      const BATCH_SIZE = 10; // Process 10 users at a time
+      
+      for (let i = 0; i < userEntries.length; i += BATCH_SIZE) {
+        const batch = userEntries.slice(i, i + BATCH_SIZE);
+        
+        await Promise.all(batch.map(async ([userId, bouquets]) => {
+          try {
+            const totalSlots = 4;
+            const existingButterflies = await storage.getFieldButterflies(userId);
+            const butterfliesPerBouquet = new Map<number, number>();
+            for (const butterfly of existingButterflies) {
+              if (typeof butterfly.bouquetId === 'number') {
+                butterfliesPerBouquet.set(
+                  butterfly.bouquetId,
+                  (butterfliesPerBouquet.get(butterfly.bouquetId) || 0) + 1
+                );
+              }
             }
-          }
 
           for (const bouquet of bouquets) {
             totalChecked++;
@@ -114,8 +128,10 @@ export class ButterflySpawner {
               if (result.fieldButterfly) {
                 existingButterflies.push(result.fieldButterfly);
                 butterfliesPerBouquet.set(bouquet.bouquetId, butterflyCount + 1);
-                console.log(`✨ User ${userId}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly.butterflyName} from ${rarity} bouquet #${bouquet.bouquetId}! (Slot ${currentSlot}/${totalSlots})`);
-              } else {
+                if (!isProduction) {
+                  console.log(`✨ User ${userId}: Butterfly spawned on field ${result.fieldIndex}: ${result.fieldButterfly.butterflyName} from ${rarity} bouquet #${bouquet.bouquetId}! (Slot ${currentSlot}/${totalSlots})`);
+                }
+              } else if (!isProduction) {
                 console.warn(`✨ User ${userId}: Butterfly spawned but no field butterfly returned for bouquet #${bouquet.bouquetId}`);
               }
 
@@ -124,11 +140,15 @@ export class ButterflySpawner {
               switch (result.reason) {
                 case 'NO_FREE_FIELD':
                   blockedDueToFields++;
-                  console.warn(`🚫 User ${userId}: Garden full, bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots}) will retry in 60s`);
+                  if (!isProduction) {
+                    console.warn(`🚫 User ${userId}: Garden full, bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots}) will retry in 60s`);
+                  }
                   await storage.scheduleBouquetSpawnRetry(userId, bouquet.bouquetId, bouquet.fieldIndex);
                   break;
                 case 'BOUQUET_NOT_FOUND':
-                  console.warn(`⚠️ User ${userId}: Bouquet #${bouquet.bouquetId} missing during spawn attempt`);
+                  if (!isProduction) {
+                    console.warn(`⚠️ User ${userId}: Bouquet #${bouquet.bouquetId} missing during spawn attempt`);
+                  }
                   break;
                 case 'ERROR':
                   console.error(`❌ User ${userId}: Error spawning from bouquet #${bouquet.bouquetId}, scheduling retry in 120s`);
@@ -137,7 +157,9 @@ export class ButterflySpawner {
                 case 'PROBABILITY_FAIL':
                 default:
                   probabilityFailures++;
-                  console.log(`🎲 User ${userId}: Spawn probability check failed for ${rarity} bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots})`);
+                  if (!isProduction) {
+                    console.log(`🎲 User ${userId}: Spawn probability check failed for ${rarity} bouquet #${bouquet.bouquetId} (Slot ${currentSlot}/${totalSlots})`);
+                  }
                   await storage.updateBouquetNextSpawnTime(userId, bouquet.fieldIndex, new Date());
                   break;
               }
@@ -146,6 +168,7 @@ export class ButterflySpawner {
         } catch (error) {
           console.error(`🦋 Error processing bouquets for user ${userId}:`, error);
         }
+      }));
       }
 
       if (totalSpawns > 0) {
